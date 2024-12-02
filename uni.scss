@@ -1,0 +1,135 @@
+@import '@/uni_modules/uni-scss/variables.scss';
+@import "@/static/iconfont/index.scss";
+
+// #ifdef H5
+@import "@/uni_modules/element-ui/element.min.css";
+// #endif
+
+$ko-basic-border: 0.5px solid #dcdcdc;
+$ko-primary-color: #2979ff;
+
+page, view, text, video, image, button, rich-text, progress, scroll-view {
+  box-sizing: border-box;
+}
+
+
+// 超出换行
+@mixin basic-text-ellipsis($line: 2, $lineHeight: 1.3em) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $line;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: calc($lineHeight * $line);
+  line-height: $lineHeight;
+}
+
+button {
+  border: none;
+  outline: none;
+  background-color: initial;
+  box-shadow: none;
+  margin-left: initial;
+  margin-right: initial;
+  padding-left: initial;
+  padding-right: initial;
+  border-width: 0;
+  padding-block: 0;
+}
+
+button::after {
+  border: none;
+  display: none;
+}
+
+// 通用主按钮
+.ko-basic-button {
+  border-radius: 55px;
+  background: $ko-primary-color;
+  color: #fff;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+
+  // #endif
+}
+
+.ko-basic-button__card {
+  border-radius: 55px;
+  background: $ko-primary-color;
+  color: #fff;
+  font-size: 12px;
+  padding: 8px 12px;
+  line-height: 1.2;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+
+  // #endif
+
+  & + .ko-basic-button__card {
+    margin-left: 6px;
+  }
+}
+
+.ko-basic-box-shadow {
+  box-shadow: $uni-shadow-base;
+}
+
+.ko-basic-label {
+  color: $uni-info;
+}
+
+.ko-basic-money {
+  color: #e43d33;
+  font-weight: bold;
+}
+
+.ko-basic-footer {
+  height: 80px;
+  padding: 10px 10px 26px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9;
+  background: #FFF;
+  box-shadow: $uni-shadow-base;
+}
+
+// #ifdef H5
+.uni-section-content .uni-forms-item {
+  max-width: 800px;
+}
+
+.ko-basic-button {
+  max-width: 260px;
+}
+
+.ko-basic-popup {
+  max-width: 900px;
+
+  .ko-basic-popup__wrap {
+    > uni-view {
+      width: 100%;
+    }
+
+    .uni-forms-item__content {
+      width: 300px;
+    }
+  }
+
+  .ko-basic-button {
+    margin: 0 auto !important;
+  }
+}
+
+// #endif

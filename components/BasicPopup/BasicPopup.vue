@@ -1,0 +1,120 @@
+<script>
+import UniPopup from "@/uni_modules/uni-popup/components/uni-popup/uni-popup.vue";
+
+export default {
+  name: "BasicPopup",
+  components: {UniPopup},
+  props: {
+    type: {
+      type: String,
+      default: "center",
+    },
+    visible: Boolean,
+    close: {
+      type: Boolean,
+      default: true,
+    },
+    title: String,
+  },
+  data: () => ({}),
+  watch: {
+    visible: {
+      handler(val) {
+        this.$nextTick(() => {
+          if (val) this.$refs.PopupRef.open();
+          else this.$refs.PopupRef.close();
+        });
+      },
+      immediate: true,
+      deep: true,
+    },
+  },
+  methods: {
+    onChange(event) {
+      this.$emit("update:visible", event.show);
+    },
+    onClose() {
+      this.$refs.PopupRef.close();
+    },
+  },
+};
+</script>
+
+<template>
+  <UniPopup
+    :type="type"
+    ref="PopupRef"
+    @change="onChange"
+    :is-mask-click="false"
+    :safe-area="false"
+  >
+    <view class="ko-basic-popup" :class="[type, {close: close, 'show-title': !!title}]">
+      <button
+        v-if="close"
+        class="ko-basic-popup__close"
+        @click="onClose"
+      >
+        <i class="iconfont icon-guanbi" />
+      </button>
+
+      <view class="ko-basic-popup__header" v-if="!!title">{{ title }}</view>
+
+      <view class="ko-basic-popup__wrap">
+        <slot></slot>
+      </view>
+
+      <view class="ko-basic-popup__footer">
+        <slot name="footer"></slot>
+      </view>
+    </view>
+  </UniPopup>
+</template>
+
+<style scoped lang="scss">
+.ko-basic-popup {
+  position: relative;
+  background: #fff;
+  border-radius: 10px;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  max-height: 98vh;
+
+  &.close {
+    padding-top: 60px;
+  }
+
+  &.show-title {
+    padding-top: 0;
+  }
+
+  &.bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  &__header {
+    height: 60px;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 15px 0;
+    text-align: center;
+    box-shadow: $uni-shadow-base;
+    margin-bottom: 8px;
+  }
+
+  &__wrap {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &__close {
+    position: absolute;
+    right: 10px;
+    top: -8px;
+
+    .iconfont {
+      font-size: 26px;
+    }
+  }
+}
+</style>

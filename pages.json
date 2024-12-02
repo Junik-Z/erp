@@ -1,0 +1,224 @@
+{
+  "pages": [
+    {
+      "path": "pages/home/home",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "client",
+      "pages": [
+        {
+          "path": "sale/list",
+          "style": {
+            "navigationBarTitleText": "订单列表"
+          }
+        },
+        {
+          "path": "sale/place",
+          "style": {
+            "navigationBarTitleText": "销售下单"
+          }
+        },
+        {
+          "path": "stock/list",
+          "style": {
+            "navigationBarTitleText": "采购列表"
+          }
+        },
+        {
+          "path": "stock/place",
+          "style": {
+            "navigationBarTitleText": "采购订单"
+          }
+        }
+      ]
+    },
+    {
+      "root": "erp",
+      "pages": [
+        {
+          "path": "stock/stock",
+          "style": {
+            "navigationBarTitleText": "库存看版"
+          }
+        },
+        {
+          "path": "stock/verify",
+          "style": {
+            "navigationBarTitleText": "库存审核"
+          }
+        },
+        {
+          "path": "sale/sale",
+          "style": {
+            "navigationBarTitleText": "销售看版"
+          }
+        },
+        {
+          "path": "sale/order",
+          "style": {
+            "navigationBarTitleText": "销售订单"
+          }
+        },
+        {
+          "path": "sale/client",
+          "style": {
+            "navigationBarTitleText": "客户"
+          }
+        },
+        {
+          "path": "sale/refund",
+          "style": {
+            "navigationBarTitleText": "新增退货单"
+          }
+        },
+        {
+          "path": "purchase/purchase",
+          "style": {
+            "navigationBarTitleText": "采购看版"
+          }
+        },
+        {
+          "path": "purchase/order",
+          "style": {
+            "navigationBarTitleText": "采购订单"
+          }
+        },
+        {
+          "path": "purchase/client",
+          "style": {
+            "navigationBarTitleText": "供应商"
+          }
+        },
+        {
+          "path": "purchase/refund",
+          "style": {
+            "navigationBarTitleText": "退货处理"
+          }
+        },
+        {
+          "path": "produce/produce",
+          "style": {
+            "navigationBarTitleText": "生产看版"
+          }
+        },
+        {
+          "path": "produce/work",
+          "style": {
+            "navigationBarTitleText": "生产工单"
+          }
+        },
+        {
+          "path": "finance/finance",
+          "style": {
+            "navigationBarTitleText": "财务看版"
+          }
+        },
+        {
+          "path": "finance/classify",
+          "style": {
+            "navigationBarTitleText": "分类管理"
+          }
+        },
+        {
+          "path": "finance/ticket",
+          "style": {
+            "navigationBarTitleText": "单据凭证"
+          }
+        },
+        {
+          "path": "logistics/logistics",
+          "style": {
+            "navigationBarTitleText": "配送/物流"
+          }
+        },
+        {
+          "path": "product/product",
+          "style": {
+            "navigationBarTitleText": "产品管理"
+          }
+        },
+        {
+          "path": "product/added",
+          "style": {
+            "navigationBarTitleText": "产品"
+          }
+        },
+        {
+          "path": "qrcode/qrcode",
+          "style": {
+            "navigationBarTitleText": "登陆确认"
+          }
+        }
+      ]
+    },
+    {
+      "root": "admin",
+      "pages": [
+        {
+          "path": "admin/index",
+          "style": {
+            "navigationBarTitleText": "商户管理"
+          }
+        },
+        {
+          "path": "admin/member",
+          "style": {
+            "navigationBarTitleText": "商户成员管理"
+          }
+        },
+        {
+          "path": "merchants/merchants",
+          "style": {
+            "navigationBarTitleText": "商铺配置"
+          }
+        },
+        {
+          "path": "user/user",
+          "style": {
+            "navigationBarTitleText": "个人中心"
+          }
+        }
+      ]
+    },
+    {
+      "root": "shop",
+      "pages": [
+        {
+          "path": "list/list",
+          "style": {
+            "navigationBarTitleText": "产品列表"
+          }
+        }
+      ]
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "夸欧科技",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8",
+    "app-plus": {
+      "background": "#efeff4"
+    }
+  }
+}
