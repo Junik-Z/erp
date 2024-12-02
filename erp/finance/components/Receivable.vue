@@ -20,7 +20,7 @@ import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _get } from "@/utils";
-import KoTable from "@/components/KoTable/KoTable.vue";
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import mixins from "@/mixins/mixins";
 
 export default {

@@ -133,3 +133,29 @@ button::after {
 }
 
 // #endif
+
+.ko-basic-count {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  box-shadow: $uni-shadow-base;
+  padding: 10px 0;
+
+  &__wrap {
+    padding: 10px;
+  }
+
+  &__label {
+    padding: 10px 0 0;
+  }
+
+  &__info {
+    padding: 10px 0;
+
+    &--unit {
+      margin-left: 2px;
+    }
+  }
+}

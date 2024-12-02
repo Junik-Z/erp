@@ -100,10 +100,10 @@ export default {
 
 <template>
   <view class="ko-user">
-    <view class="ko-user__info">
+    <view class="ko-user__info" @click="onUpdateInfo">
       <UvAvatar :key="_user_.avatar" :size="120" :src="getImageUrl(_user_.avatar)" />
       <view class="ko-user__info--name">
-        {{ _user_.nickName || "张三" }}
+        {{ _user_.nickName || "-" }}
 
         <button class="ko-basic-button__card" @click="onUpdateInfo">
           <i class="iconfont icon-shuaxin"></i>

@@ -4,10 +4,12 @@ export const CONFIG = {
 
   // #ifdef MP
   BASE_URL: "http://192.168.0.7:8093/api",
+  // BASE_URL: "https://erp.kuaouyun.cn/api",
   // #endif
 
   // #ifdef H5
   BASE_URL: "/api",
+  // BASE_URL: "https://erp.kuaouyun.cn/api",
   // #endif
 
   TITLE: "夸欧托手掌柜",

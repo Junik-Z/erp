@@ -6,8 +6,8 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import UniDataSelect from "@/uni_modules/uni-data-select/components/uni-data-select/uni-data-select.vue";
-import PickerProduct from "@/components/PickerProduct/PickerProduct.vue";
+import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
+import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, showToast, yuanToPoints } from "@/utils";
 import { addedSaleReturnApi, getCustomerListApi, updateSaleReturnApi } from "@/api/erp/sale";
 

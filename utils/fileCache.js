@@ -1,6 +1,7 @@
 import { getImgUrl } from "@/api/user";
 // #ifdef MP
 const fn = uni.getFileSystemManager();
+
 // #endif
 
 function downloadImage(img, key) {
@@ -61,6 +62,7 @@ function getNameKey(name = "") {
 function getCacheFile(url) {
   if (!url) {
     url = "/files/down/static/match.png";
+    return "";
   }
 
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:image/")) {

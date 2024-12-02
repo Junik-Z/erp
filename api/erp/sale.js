@@ -71,10 +71,10 @@ export function unbindCustomerApi(data) {
  */
 export function getStatisticsApi(data) {
   return request({
-    url: '/sale/statistics',
+    url: "/sale/statistics",
     method: "get",
-    data
-  })
+    data,
+  });
 }
 
 
@@ -101,11 +101,44 @@ export function getSaleHistoryApi(data) {
 }
 
 /**
+ * @description 获取销售订单详情
+ */
+export function getSaleDetailApi(data) {
+  return request({
+    url: "/sale/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 新增销售订单
  */
 export function addedSaleApi(data) {
   return request({
     url: "/sale/add",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 提交销售订单
+ */
+export function submitSaleApi(data) {
+  return request({
+    url: "/sale/submit",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除销售订单
+ */
+export function removeSaleApi(data) {
+  return request({
+    url: "/sale/delete",
     method: "post",
     data,
   });

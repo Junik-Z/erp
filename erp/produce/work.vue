@@ -7,7 +7,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy, showToast } from "@/utils";
 import { addedProduceApi, updateProduceApi } from "@/api/erp/produce";
-import PickerProduct from "@/components/PickerProduct/PickerProduct.vue";
+import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
 import mixins from "@/mixins/mixins";
 import dayjs from "@/utils/dayjs";
 

@@ -11,10 +11,10 @@ import UniDatetimePicker
   from "@/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import UniDataSelect from "@/uni_modules/uni-data-select/components/uni-data-select/uni-data-select.vue";
-import PickerProduct from "@/components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, showToast, yuanToPoints } from "@/utils";
-import { addedSaleApi, getCustomerListApi, updateSaleApi } from "@/api/erp/sale";
+import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
+import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
+import { _deepCopy, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { addedSaleApi, getCustomerListApi, getSaleDetailApi, updateSaleApi } from "@/api/erp/sale";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -48,7 +48,13 @@ export default {
     supplierList: [],
     visible: false,
     loading: false,
+    option: {},
   }),
+  onLoad(option) {
+    this.option = option;
+    this.isEdit = !!option.id;
+    if (this.isEdit) this.getInfo();
+  },
   created() {
     this.getSupplierList();
   },
@@ -63,12 +69,18 @@ export default {
           }));
         });
     },
+    getInfo() {
+      getSaleDetailApi({id: this.option.id})
+        .then(res => {
+          const params = res.data;
+          params.totalAmount = transferYuan(params.totalAmount);
+          this.form = params;
+        });
+    },
     onSubmit() {
       this.$refs.FormRef.validate(valid => {
         if (!valid) {
           const params = _deepCopy(this.form);
-
-          console.log(params);
 
           params.totalAmount = yuanToPoints(params.totalAmount);
           this.loading = true;

@@ -18,7 +18,7 @@ import {
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import KoTable from "@/components/KoTable/KoTable.vue";
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import { _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 

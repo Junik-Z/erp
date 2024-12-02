@@ -6,7 +6,7 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import BasicMixins from "@/mixins/mixins";
-import { cancelSaleApi, getSaleHistoryApi, getSaleListApi } from "@/api/erp/sale";
+import { cancelSaleApi, getSaleHistoryApi, getSaleListApi, removeSaleApi, submitSaleApi } from "@/api/erp/sale";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -155,10 +155,49 @@ export default {
         },
       });
     },
-    onJump() {
-      // uni.navigateTo({
-      //   url: "/erp/stock/verify",
-      // });
+    onJump(item) {
+      uni.navigateTo({
+        url: `/erp/sale/order?id=${item.id}`,
+      });
+    },
+    // 提交销售订单
+    onSubmit(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要提交该销售订单吗？请注意，一旦提交，订单内容将无法再进行修改。",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__s_loading__", true);
+            submitSaleApi(item)
+              .then(() => {
+                uni.showToast({title: "提交成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__s_loading__", false);
+              });
+          }
+        },
+      });
+    },
+    onRemove(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要删除此销售订单吗？",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__r_loading__", true);
+            removeSaleApi(item)
+              .then(() => {
+                uni.showToast({title: "删除成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__r_loading__", false);
+              });
+          }
+        },
+      });
     },
     onTrigger(event) {
       const {path} = event.item || {};
@@ -176,7 +215,7 @@ export default {
       return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
     },
     // #endif
-  }
+  },
 };
 </script>
 
@@ -215,13 +254,39 @@ export default {
                   {{ item.remark }}
                 </UniCol>
               </UniRow>
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                v-if="!isHistory"
-              >
-                <button class="ko-basic-button__card" @click="onCancel(item)">取消</button>
-                <button class="ko-basic-button__card" @click="onJump(item)">修改</button>
-                <!--<button class="ko-basic-button__card" @click="onJump">申请入库</button>-->
+              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <button
+                  v-if="['CREATED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click="onSubmit(item)"
+                  :disabled="item.__s_loading__"
+                  :loading="item.__s_loading__"
+                >
+                  提交订单
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onJump(item)"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                >
+                  修改
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onCancel(item)"
+                  v-if="['CREATED'].includes(item.status)"
+                >
+                  取消
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onRemove(item)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                  v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+                >
+                  删除
+                </button>
               </view>
             </view>
           </BasicCard>

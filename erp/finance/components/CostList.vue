@@ -12,10 +12,10 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
-import KoTable from "@/components/KoTable/KoTable.vue";
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { addedCostApi, getCategoryListApi, getCostListApi, statisticsCostApi, updateCostApi } from "@/api/erp/finance";
-import UniDataSelect from "@/uni_modules/uni-data-select/components/uni-data-select/uni-data-select.vue";
+import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import mixins from "@/mixins/mixins";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";

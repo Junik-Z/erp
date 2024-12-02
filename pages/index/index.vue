@@ -47,7 +47,7 @@ export default {
   },
   methods: {
     onChange(event) {
-      const obj = this.gridList[event.detail.index];
+      const obj = this.getMenuList[event.detail.index];
       if (!obj.value) {
         uni.showToast({
           icon: "none",

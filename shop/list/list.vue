@@ -4,8 +4,8 @@ import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar
 import UniDataPicker from "@/uni_modules/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import mixins from "@/mixins/mixins";
-import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
-import UniBadge from "@/uni_modules/uni-badge/components/uni-badge/uni-badge.vue";
+import UniNumberBox from "@/shop/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
+import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _sum } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";

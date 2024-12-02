@@ -2,10 +2,6 @@
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniTable from "@/uni_modules/uni-table/components/uni-table/uni-table.vue";
-import UniTr from "@/uni_modules/uni-table/components/uni-tr/uni-tr.vue";
-import UniTh from "@/uni_modules/uni-table/components/uni-th/uni-th.vue";
-import UniTd from "@/uni_modules/uni-table/components/uni-td/uni-td.vue";
 import { cancelOutboundApi, confirmOutboundApi, getOutboundHistoryListApi, getOutboundListApi } from "@/api/erp/stock";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -15,7 +11,7 @@ import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 
 export default {
   name: "OUT",
-  components: {HistoryBar, LoadMore, UniCol, UniRow, UniTd, UniTh, UniTr, UniTable, BasicCard, UniListItem, UniList},
+  components: {HistoryBar, LoadMore, UniCol, UniRow, BasicCard, UniListItem, UniList},
   mixins: [mixins],
   data: () => ({
     loading: false,
@@ -111,7 +107,7 @@ export default {
                 </UniCol>
                 <UniCol :span="24" v-if="isHistory">
                   <label class="ko-basic-label">状态：</label>
-                  {{ ORDER_STATUS_ENUMS(item.status)}}
+                  {{ ORDER_STATUS_ENUMS(item.status) }}
                 </UniCol>
                 <UniCol :span="24">
                   <label class="ko-basic-label">备注：</label>
@@ -135,36 +131,7 @@ export default {
 
       <!-- #ifdef H5 -->
       <view style="padding: 10px;">
-        <UniTable
-          ref="table"
-          :loading="loading"
-          border
-          stripe
-          type="selection"
-          emptyText="暂无更多数据"
-          @selection-change="selectionChange"
-        >
-          <UniTr>
-            <UniTh width="150" align="center">序号</UniTh>
-            <UniTh width="150" align="center">商品名称</UniTh>
-            <UniTh align="center">仓库地址</UniTh>
-            <UniTh width="204" align="center">操作</UniTh>
-          </UniTr>
-          <uni-tr v-for="(item, index) in list" :key="index">
-            <UniTd>{{ item.date }}</UniTd>
-            <UniTd>
-              <view class="name">{{ item.name }}</view>
-            </UniTd>
-            <UniTd align="center">{{ item.address }}</UniTd>
-            <UniTd>
-              <view class="uni-group">
-                <button class="ko-basic-button__card" @click="onJump">审批</button>
-                <button class="ko-basic-button__card">修改</button>
-                <button class="ko-basic-button__card">删除</button>
-              </view>
-            </UniTd>
-          </uni-tr>
-        </UniTable>
+
       </view>
       <!-- #endif -->
     </UniList>

@@ -11,9 +11,9 @@ import UniDatetimePicker
   from "@/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import UniDataSelect from "@/uni_modules/uni-data-select/components/uni-data-select/uni-data-select.vue";
+import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import { addedPurchaseApi, getSupplierListApi, updatePurchaseApi } from "@/api/erp/purchase";
-import PickerProduct from "@/components/PickerProduct/PickerProduct.vue";
+import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, showToast, yuanToPoints } from "@/utils";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");

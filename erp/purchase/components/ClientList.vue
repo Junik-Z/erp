@@ -10,7 +10,7 @@ import getCacheFile from "@/utils/fileCache";
 import { _deepCopy, _isEqual } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import KoTable from "@/components/KoTable/KoTable.vue";
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
 
 export default {
   name: "ClientList",

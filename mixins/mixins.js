@@ -2,7 +2,7 @@ import { _get, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 
 // #ifdef H5
-import KoTable from "@/components/KoTable/KoTable.vue";
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
 // #endif
 
 const User = uni.getStorageSync("__USER_INFO__");
