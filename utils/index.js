@@ -483,8 +483,9 @@ export function _xor(arr1, arr2) {
 }
 
 export function _maxBy(array, iteratee) {
-  if (!array || !iteratee) return undefined;
-  return array.reduce((obj1, obj2) => {
+  if (!array || !iteratee || _isEmpty(array)) return undefined;
+
+  return array?.reduce((obj1, obj2) => {
     return iteratee(obj1) > iteratee(obj2) ? obj1 : obj2;
   });
 }

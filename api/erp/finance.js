@@ -23,6 +23,17 @@ export function getReceivableCountApi(data) {
 }
 
 /**
+ * @description 获取应收款明细
+ */
+export function getReceivableDetailApi(data) {
+  return request({
+    url: "/finance/receivable/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取应收款历史列表
  */
 export function getReceivableHistoryListApi(data) {
@@ -139,6 +150,17 @@ export function getPaidOrderListApi(data) {
 export function getPayableAchievableApi(data) {
   return request({
     url: "/finance/payable/achievable",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取付款订单详情
+ */
+export function getPayableDetailApi(data) {
+  return request({
+    url: "/finance/payable/detail",
     method: "get",
     data,
   });

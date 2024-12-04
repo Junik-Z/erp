@@ -68,12 +68,6 @@
           }
         },
         {
-          "path": "stock/verify",
-          "style": {
-            "navigationBarTitleText": "库存审核"
-          }
-        },
-        {
           "path": "sale/sale",
           "style": {
             "navigationBarTitleText": "销售看版"
@@ -213,6 +207,12 @@
           "path": "list/list",
           "style": {
             "navigationBarTitleText": "产品列表"
+          }
+        },
+        {
+          "path": "details/details",
+          "style": {
+            "navigationBarTitleText": "详情"
           }
         }
       ]

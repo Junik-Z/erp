@@ -23,6 +23,27 @@ export function getInboundListApi(data) {
 }
 
 /**
+ * @description 入库详情
+ */
+export function getInboundDetailApi(data) {
+  return request({
+    url: "/stock/inbound/detail",
+    method: "get",
+    data,
+  });
+}
+/**
+ * @description 出库详情
+ */
+export function getOutboundDetailApi(data) {
+  return request({
+    url: "/stock/outbound/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 入库历史列表
  */
 export function getInboundHistoryListApi(data) {

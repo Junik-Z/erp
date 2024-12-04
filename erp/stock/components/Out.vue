@@ -80,7 +80,7 @@ export default {
       <!-- #ifdef MP -->
       <UniListItem v-for="(item, index) of list" :key="index">
         <template #body>
-          <BasicCard>
+          <BasicCard @click="onJumpDetails(item, 'outbound')">
             <view class="ko-out__info">
               <UniRow gutter="10">
                 <UniCol :span="24">
@@ -97,7 +97,7 @@ export default {
                     ¥ {{ toYuan(item.totalAmount) }}元
                   </text>
                 </UniCol>
-                <UniCol :span="24"  v-if="false">
+                <UniCol :span="24" v-if="false">
                   <label class="ko-basic-label">总金额大写：</label>
                   <text class="ko-basic-money">
                     {{ toBigMoney(toYuan(item.totalAmount)) }}元
@@ -115,8 +115,12 @@ export default {
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
               >
-                <button v-if="['CREATED'].includes(item.status)" class="ko-basic-button__card" @click="onCancel(item)">取消出库</button>
-                <button v-if="['CREATED', 'CANCELLED'].includes(item.status)" class="ko-basic-button__card" @click="onConfirm(item)">确认出库</button>
+                <button v-if="['CREATED'].includes(item.status)" class="ko-basic-button__card" @click="onCancel(item)">
+                  取消出库
+                </button>
+                <button v-if="['CREATED', 'CANCELLED'].includes(item.status)" class="ko-basic-button__card"
+                        @click="onConfirm(item)">确认出库
+                </button>
               </view>
             </view>
           </BasicCard>

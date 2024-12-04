@@ -46,7 +46,7 @@ export default {
 </script>
 
 <template>
-  <BasicCard custom-class="ko-order-card">
+  <BasicCard custom-class="ko-order-card" @click="$emit('click')">
     <view class="ko-order-card__wrap">
       <UniRow gutter="10">
         <UniCol :span="24">

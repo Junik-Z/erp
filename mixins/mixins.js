@@ -1,4 +1,4 @@
-import { _get, _isEmpty, _omit, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
+import { _get, _isEmpty, _omit, _pick, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG } from "@/utils/config";
 import QS from "@/utils/qs.min";
@@ -61,6 +61,13 @@ export default {
     getQueryString(obj) {
       const q = QS.stringify(obj);
       return q && `?${q}` || "";
+    },
+
+    // 跳转到详情页面
+    onJumpDetails(node, page_type) {
+      uni.navigateTo({
+        url: `/shop/details/details?${QS.stringify({page_type, ...(_pick(node, ["id"]))})}`,
+      });
     },
   },
   components: {

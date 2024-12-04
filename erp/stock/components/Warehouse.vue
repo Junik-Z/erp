@@ -127,7 +127,7 @@ export default {
       <!-- #ifdef MP -->
       <UniListItem v-for="(item, index) of list" :key="index">
         <template #body>
-          <BasicCard>
+          <BasicCard @click="onJumpDetails(item, 'inbound')">
             <view class="ko-warehouse__info">
               <UniRow gutter="10">
                 <UniCol :span="24">

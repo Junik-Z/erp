@@ -92,7 +92,7 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef MP -->
-    <UniGrid :column="3" @change="onChange" @click.stop="() => {}" :key="key">
+    <UniGrid :column="3" :show-border="false" @change="onChange" @click.stop="() => {}" :key="key">
       <UniGridItem v-for="(item, index) of getMenuList" :key="item.value" :index="index">
         <!-- #endif -->
 

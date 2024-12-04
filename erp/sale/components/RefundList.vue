@@ -225,7 +225,7 @@ export default {
       <!-- #ifdef MP -->
       <UniListItem v-for="item of list" :key="item.id">
         <template #body>
-          <BasicCard>
+          <BasicCard @click="onJumpDetails(item, 'saleReturn')">
             <view class="ko-client__info">
               <view class="ko-client__info--name">
                 <label class="ko-basic-label">退货单号：</label>

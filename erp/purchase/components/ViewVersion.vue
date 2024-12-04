@@ -62,6 +62,7 @@ export default {
         unit: "",
       },
     ],
+    productPurchaseRankLoading: false,
   }),
   mounted() {
   },
@@ -81,9 +82,9 @@ export default {
             series: [],
           };
 
-          const maxAmounts = _maxBy(data.productPurchaseRank || [], (v) => v.amounts.length)?.amounts || [];
+          const maxAmounts = _maxBy((data.productPurchaseRank || []), (v) => v?.amounts?.length)?.amounts || [];
 
-          obj.series = maxAmounts.map((v, i) => ({
+          obj.series = maxAmounts?.map((v, i) => ({
             name: ["成交价", "上次成交价"][i],
             data: [],
           }))
@@ -96,12 +97,19 @@ export default {
             });
           });
 
-          this.productPurchaseRank = obj;
+          this.productPurchaseRank = _deepCopy(obj);
 
           // 供应商排名
           // console.log("供应商排名", data.supplierRank);
           this.supplierRank = this.getEcData(data.supplierRank);
 
+          this.$nextTick(() => {
+            this.$refs.PPRRef.mixinDatacomLoading = false;
+            this.$refs.PPRRef.showchart = true;
+            
+            this.$refs.SRRef.mixinDatacomLoading = false;
+            this.$refs.SRRef.showchart = true;
+          });
         })
         .finally(() => {
           this.loading = false;
@@ -140,6 +148,7 @@ export default {
         const opt = this.getBasicChartsOptions(data);
         return {
           ...opt,
+          height: "300px",
           yAxis: {
             ...opt.yAxis,
             gridType: "dash",
@@ -187,6 +196,7 @@ export default {
           type="column"
           :opts="getOptions(productPurchaseRank)"
           :chart-data="productPurchaseRank"
+          ref="PPRRef"
         />
       </UniSection>
 
@@ -195,6 +205,7 @@ export default {
           type="column"
           :opts="getOptions(supplierRank)"
           :chart-data="supplierRank"
+          ref="SRRef"
         />
       </UniSection>
     </view>

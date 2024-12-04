@@ -267,6 +267,7 @@ export default {
         <UniListItem v-for="(item, index) of list" :key="index">
           <template #body>
             <OrderCard
+              @click="onJumpDetails(item, 'payable')"
               :item="item"
               :operate="getOperateList(item)"
               @operate="onOperate"

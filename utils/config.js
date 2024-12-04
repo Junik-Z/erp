@@ -3,24 +3,23 @@ export const CONFIG = {
   APP_ID: "wx525c19deacc41329",
 
   // #ifdef MP
-  // BASE_URL: "http://192.168.0.7:8093/api",
-  // BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
+  BASE_URL: "http://192.168.0.7:8093/api",
+  BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
   // #endif
 
   // #ifdef H5
-  // BASE_URL: "/api",
+  BASE_URL: "/api",
   // BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
   // #endif
 
-  BASE_URL: "https://erp.kuaouyun.cn/api",
-  BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+  // BASE_URL: "https://erp.kuaouyun.cn/api",
+  // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
 
   TITLE: "托手掌柜",
 
   // 分享出去时的type： 0 - 微信小程序正式版 ；1 - 微信小程序开发版；2 - 微信小程序体验版
   SHARE_TYPE: 1,
 };
-
 
 /**
  * @description 系统角色枚举

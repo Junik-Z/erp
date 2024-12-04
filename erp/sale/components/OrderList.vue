@@ -229,7 +229,7 @@ export default {
       <!-- #ifdef MP -->
       <UniListItem v-for="item of list" :key="item.id">
         <template #body>
-          <BasicCard>
+          <BasicCard @click="onJumpDetails(item, 'sale')">
             <view class="ko-order__info">
               <UniRow gutter="10">
                 <UniCol :span="24">
