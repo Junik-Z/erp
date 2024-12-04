@@ -19,7 +19,7 @@ export default {
         ref: "WLRef",
       },
     ],
-    current: 1,
+    current: 0,
   }),
   onShow() {
     this.getList();
@@ -66,6 +66,7 @@ export default {
 <style scoped lang="scss">
 .ko-purchase {
   width: 100%;
+  padding-bottom: 50px;
 
   &__tabs {
     padding: 10px;

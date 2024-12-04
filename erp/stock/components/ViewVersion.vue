@@ -1,107 +1,160 @@
 <script>
 import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
-import UCountTo from "@/uni_modules/uview-ui/components/u-count-to/u-count-to.vue";
 import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
+import { getCountApi } from "@/api/erp/stock";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import { _get, _pick } from "@/utils";
+import mixins from "@/mixins/mixins";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 
 export default {
   name: "ViewVersion",
-  components: {QiunDataCharts, UCountTo, UniGridItem, UniGrid},
-  data: () => ({
-    chartData: {},
-    //您可以通过修改 config-ucharts.js 文件中下标为 ['column'] 的节点来配置全局默认参数，如都是默认参数，此处可以不传 opts 。实际应用过程中 opts 只需传入与全局默认参数中不一致的【某一个属性】即可实现同类型的图表显示不同的样式，达到页面简洁的需求。
-    opts: {
-      color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
-      padding: [15, 15, 0, 5],
-      enableScroll: false,
-      legend: {},
-      xAxis: {
-        disableGrid: true,
+  components: {UniSection, UniCol, UvCountTo, UniRow, QiunDataCharts, UniGridItem, UniGrid},
+  mixins: [mixins],
+  data() {
+    return {
+      loading: false,
+
+      data: {
+        "totalStock": 0,
+        "totalValue": 0,
+        "warningTrend": {},
+        "stockRank": {},
       },
-      yAxis: {
-        data: [
-          {
-            min: 0,
-          },
-        ],
-      },
-      extra: {
-        column: {
-          type: "group",
-          width: 30,
-          activeBgColor: "#000000",
-          activeBgOpacity: 0.08,
+
+      CountList: [
+        {
+          label: "库存总量",
+          key: "totalStock",
+          color: "#2979ff",
         },
-      },
-    },
-  }),
+        {
+          label: "库存总价值",
+          key: "totalValue",
+          color: "#2979ff",
+          unit: "元",
+        },
+      ],
+    };
+  },
   mounted() {
-    this.getServerData();
   },
   methods: {
-    getServerData() {
-      //模拟从服务器获取数据时的延时
-      setTimeout(() => {
-        //模拟服务器返回数据，如果数据格式和标准格式不同，需自行按下面的格式拼接
-        let res = {
-          categories: ["2018", "2019", "2020", "2021", "2022", "2023"],
-          series: [
-            {
-              name: "目标值",
-              data: [35, 36, 31, 33, 13, 34],
-            },
-            {
-              name: "完成量",
-              data: [18, 27, 21, 24, 6, 28],
-            },
-          ],
-        };
-        this.chartData = JSON.parse(JSON.stringify(res));
+    getList() {
+      this.loading = true;
+      getCountApi()
+        .then(res => {
+          const data = res.data;
+          this.data = _pick(data, ["totalStock", "totalValue"]);
 
-        console.log(this.chartData);
-      }, 500);
+          // 预警趋势 [预警库存, 现有库存]
+          const warningTrend = {
+            categories: [],
+            series: [
+              {
+                name: "预警库存",
+                color: "#EE6666",
+                data: [],
+              },
+              {
+                name: "现有库存",
+                color: "#1890FF",
+                data: [],
+              },
+            ],
+          };
+
+          ;(data.warningTrend || [])?.forEach(item => {
+            warningTrend.categories.push(item.name);
+            warningTrend.series[0].data.push(_get(item, "amounts.0") || 0);
+            warningTrend.series[1].data.push(_get(item, "amounts.1") || 0);
+          });
+
+          this.data.warningTrend = warningTrend;
+
+          // 存量类别排名
+          const stockRank = {
+            categories: [],
+            series: [
+              {
+                name: "排名",
+                data: [],
+              },
+            ],
+          };
+          ;(data.stockRank || [])?.forEach(item => {
+            stockRank.categories.push(item.name);
+            stockRank.series[0].data.push(item.amount || 0);
+          });
+          this.data.stockRank = stockRank;
+        })
+        .catch(() => {
+          this.data.warningTrend = {};
+          this.data.stockRank = {};
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
-
+  },
+  computed: {
+    getCountValue() {
+      return (item) => {
+        const value = _get(this.data, item.key);
+        return item.unit === "元" ? this.toYuan(value) : value;
+      };
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-view-version">
-    <UniGrid :column="2" :square="false" :show-border="false">
-      <UniGridItem>
-        <view class="ko-view-version__item">
-          <view>计划出库</view>
-          <view>
-            <UCountTo :start-val="30" :end-val="500" color="#2979ff" />
-            <text>件</text>
+    <view class="ko-basic-count__wrap">
+      <UniRow :gutter="20">
+        <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
+          <view class="ko-basic-count">
+            <view class="ko-basic-count__label">{{ item.label }}</view>
+            <view class="ko-basic-count__info">
+              <UvCountTo
+                :separator="item.unit === '元' ? ',' : ''"
+                :start-val="0"
+                bold
+                :end-val="getCountValue(item)"
+                :color="item.color ? item.color : '#2979ff'"
+              />
+              <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
+            </view>
           </view>
-        </view>
-      </UniGridItem>
-      <UniGridItem>
-        <view class="ko-view-version__item">
-          <view>库存预警</view>
-          <view>
-            <UCountTo :start-val="30" :end-val="500" color="#e43d33" />
-            <text>件</text>
-          </view>
-        </view>
-      </UniGridItem>
-    </UniGrid>
+        </UniCol>
+      </UniRow>
+    </view>
 
     <view class="ko-view-version__row">
-      <QiunDataCharts
-        type="column"
-        :opts="opts"
-        :chartData="chartData"
-      />
+      <UniSection title="库存预警趋势" type="line">
+        <QiunDataCharts
+          type="column"
+          :opts="getBasicChartsOptions(data.warningTrend)"
+          :chart-data="data.warningTrend"
+        />
+      </UniSection>
+
+      <UniSection title="存量类别排名" type="line">
+        <QiunDataCharts
+          type="column"
+          :opts="getBasicChartsOptions(data.stockRank)"
+          :chart-data="data.stockRank"
+        />
+      </UniSection>
     </view>
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-view-version {
-  //padding: 10px;
   margin-top: 10px;
 
   &__item {

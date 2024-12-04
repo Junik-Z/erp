@@ -19,7 +19,7 @@ import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-import { _isEqual } from "@/utils";
+import { _isEqual, _pick } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -161,13 +161,13 @@ export default {
     onConfirm(item) {
       uni.showModal({
         title: "温馨提示",
-        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认无误后可办理入库。`,
-        confirmText: "确认入库",
+        content: `请核对金额是否准确，确认后出账。`,
+        confirmText: "确认",
         success: (res) => {
           if (res.confirm) {
             finishPayableApi(item)
               .then(() => {
-                uni.showToast({title: "入库成功"});
+                uni.showToast({title: "操作成功"});
                 this.getList();
               });
           }
@@ -180,13 +180,17 @@ export default {
         .then(res => {
           this.count = res.data;
           console.log(res.data);
-        })
+        });
     },
-
     // 添加票据
     onAddedTicket(item) {
+      const q = this.getQueryString({
+        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
+        isReceivable: true,
+      });
+
       uni.navigateTo({
-        url: `/erp/finance/ticket?id=${item.id}&orderCode=${item.orderCode}`,
+        url: `/erp/finance/ticket${q}`,
       });
     },
 
@@ -199,9 +203,9 @@ export default {
       return (node) => {
         return this.operate.filter((item) => {
           if (item.type === "onConfirm") {
-            return node.confirmable;
+            return node.confirmable && !this.isHistory;
           }
-          return true;
+          return !this.isHistory;
         });
       };
     },
@@ -269,7 +273,6 @@ export default {
             />
           </template>
         </UniListItem>
-
         <LoadMore :loading="loading" />
         <!-- #endif -->
 

@@ -3,16 +3,22 @@ export const CONFIG = {
   APP_ID: "wx525c19deacc41329",
 
   // #ifdef MP
-  BASE_URL: "http://192.168.0.7:8093/api",
-  // BASE_URL: "https://erp.kuaouyun.cn/api",
+  // BASE_URL: "http://192.168.0.7:8093/api",
+  // BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
   // #endif
 
   // #ifdef H5
-  BASE_URL: "/api",
-  // BASE_URL: "https://erp.kuaouyun.cn/api",
+  // BASE_URL: "/api",
+  // BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
   // #endif
 
-  TITLE: "夸欧托手掌柜",
+  BASE_URL: "https://erp.kuaouyun.cn/api",
+  BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+
+  TITLE: "托手掌柜",
+
+  // 分享出去时的type： 0 - 微信小程序正式版 ；1 - 微信小程序开发版；2 - 微信小程序体验版
+  SHARE_TYPE: 1,
 };
 
 
@@ -49,6 +55,8 @@ export const MENU_LIST = [
     value: "/erp/stock/stock",
     modelKey: "stock",
     role: ["Admin", "Business", "Stock_Read", "Stock_Write"],
+    // 是否可以被分配角色
+    isUpRole: true,
   },
   {
     label: "销售",
@@ -56,6 +64,7 @@ export const MENU_LIST = [
     value: "/erp/sale/sale",
     modelKey: "sale",
     role: ["Admin", "Business", "Sales_Read", "Sales_Write"],
+    isUpRole: true,
   },
   {
     label: "采购",
@@ -63,6 +72,7 @@ export const MENU_LIST = [
     value: "/erp/purchase/purchase",
     modelKey: "purchase",
     role: ["Admin", "Business", "Purchase_Read", "Purchase_Write"],
+    isUpRole: true,
   },
   {
     label: "生产",
@@ -71,6 +81,7 @@ export const MENU_LIST = [
     isSetup: true,
     modelKey: "produce",
     role: ["Admin", "Business", "Produce_Read", "Produce_Write"],
+    isUpRole: true,
   },
   {
     label: "财务",
@@ -78,6 +89,7 @@ export const MENU_LIST = [
     value: "/erp/finance/finance",
     modelKey: "finance",
     role: ["Admin", "Business", "Finance_Read", "Finance_Write"],
+    isUpRole: true,
   },
   {
     label: "配送",
@@ -86,6 +98,7 @@ export const MENU_LIST = [
     isSetup: true,
     modelKey: "logistics",
     role: ["Admin", "Business", "Delivery_Read", "Delivery_Write"],
+    isUpRole: true,
   },
   {
     label: "产品管理",
@@ -93,23 +106,40 @@ export const MENU_LIST = [
     value: "/erp/product/product",
     modelKey: "product",
     role: ["Admin", "Business", "Product_Read", "Product_Write"],
+    isUpRole: true,
   },
   {
     label: "员工管理",
     icon: "icon-guanxiaobaotubiao38",
     value: "/admin/merchants/merchants",
     role: ["Admin", "Business"],
+    isUpRole: false,
   },
   {
     label: "个人中心",
     icon: "icon-gerenzhongxin",
     value: "/admin/user/user",
     role: ["Admin", "Business", "User"],
+    isUpRole: false,
   },
   {
     label: "超管",
     icon: "icon-chaojiguanliyuan",
     value: "/admin/admin/index",
     role: ["Admin"],
+    isUpRole: false,
   },
 ];
+
+/**
+ * @description 首页页面类型
+ * @type {{logout: string}}
+ */
+export const HOME_PAGE_TYPE_ENUMS = {
+  logout: "退出登陆",
+  ADDED_SALE: "分享出去添加销售单",
+  ADDED_PURCHASE: "分享出去添加采购单",
+  ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",
+  BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
+  BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
+};

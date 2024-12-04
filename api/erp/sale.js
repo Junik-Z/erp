@@ -34,6 +34,17 @@ export function editCustomerApi(data) {
 }
 
 /**
+ * @description 客户详情
+ */
+export function getCustomerInfoApi(data) {
+  return request({
+    url: "/customer/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 删除客户
  */
 export function removeCustomerApi(data) {
@@ -177,6 +188,16 @@ export function getSaleReturnListApi(data) {
     data,
   });
 }
+/**
+ * @description 获取退货销售订单详情
+ */
+export function getSaleReturnDetailApi(data) {
+  return request({
+    url: "/sale/return/detail",
+    method: "get",
+    data,
+  });
+}
 
 /**
  * @description 获取退货销售历史订单
@@ -217,6 +238,28 @@ export function updateSaleReturnApi(data) {
 export function cancelSaleReturnApi(data) {
   return request({
     url: "/sale/return/cancel",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除退货销售订单
+ */
+export function removeSaleReturnApi(data) {
+  return request({
+    url: "/sale/return/delete",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 确认退货销售订单
+ */
+export function confirmSaleReturnApi(data) {
+  return request({
+    url: "/purchase/confirm",
     method: "post",
     data,
   });

@@ -1,10 +1,11 @@
 <script>
 import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
-import { getWxQrCodeApi } from "@/api/user";
+import UniLoadMore from "@/uni_modules/uni-load-more/components/uni-load-more/uni-load-more.vue";
+import { CONFIG } from "@/utils/config";
 
 export default {
   name: "KoLogin",
-  components: {UniCard},
+  components: {UniLoadMore, UniCard},
   data() {
     return {
       qrimage: "",
@@ -18,28 +19,39 @@ export default {
   },
   onLoad() {
     // #ifdef H5
-    this.getQrCode();
+    this.getScan();
     uni.$on("$__login_success__", this.onSuccess);
+    uni.$on("$__success_code_images__", this.getCodeImage);
+    document.title = `欢迎登陆 —— ${CONFIG.TITLE}`;
     // #endif
   },
   methods: {
     getQrCode() {
-      this.loading = true;
-      getWxQrCodeApi()
-        .then(res => {
-          this.qrimage = res.data.code;
-          this.id = res.data.id;
+      /*  this.loading = true;
+       getWxQrCodeApi()
+         .then(res => {
+           this.qrimage = res.data.code;
+           this.id = res.data.id;
 
-          this.getScan();
-        })
-        .finally(() => {
-          this.loading = false;
-        });
+           this.getScan();
+         })
+         .finally(() => {
+           this.loading = false;
+         }); */
+
+
+      this.getScan();
+    },
+
+    getCodeImage(image) {
+      this.qrimage = image;
+      this.loading = false;
     },
 
     // 发起状态监听
     getScan() {
-      uni.$emit("$on_event_source", `?id=${this.id}`);
+      this.loading = true;
+      uni.$emit("$on_event_source");
     },
 
     // 接收到的消息
@@ -76,8 +88,16 @@ export default {
         sub-title="高效、便捷"
       >
 
-        <view class="ko-login__qrcode" :class="{'is-timeout': isTimeout}">
+        <view
+          class="ko-login__qrcode"
+          :class="{'is-timeout': isTimeout}"
+        >
           <image :src="qrimage" mode="widthFix" />
+          <!-- #ifdef H5 -->
+          <view class="ko-login__qrcode--loading" v-if="loading">
+            <UniLoadMore status="loading" :show-text="false" :icon-size="100" />
+          </view>
+          <!-- #endif -->
         </view>
 
         <template #actions v-if="isTimeout">
@@ -146,6 +166,7 @@ export default {
   &__qrcode {
     width: 320px;
     height: 320px;
+    position: relative;
 
     &.is-timeout {
       position: relative;
@@ -171,6 +192,18 @@ export default {
     img {
       width: 300px;
       height: 300px;
+    }
+
+    &--loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      z-index: 9;
     }
   }
 

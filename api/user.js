@@ -150,3 +150,10 @@ export function logoutApi(data) {
     data,
   });
 }
+
+/**
+ * @description 获取 socket 地址
+ */
+export function getWSUrl() {
+  return CONFIG.BASE_WS_URL;
+}

@@ -1,6 +1,17 @@
 import request from "@/request";
 
 /**
+ * @description 库存统计
+ */
+export function getCountApi(data) {
+  return request({
+    url: "/stock/count",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 入库列表
  */
 export function getInboundListApi(data) {

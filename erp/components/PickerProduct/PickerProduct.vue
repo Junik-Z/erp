@@ -5,7 +5,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import { _deepCopy, _sum } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
-import UniNumberBox from "@/shop/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
+import UniNumberBox from "@/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
 
 export default {
   name: "PickerProduct",
@@ -26,6 +26,7 @@ export default {
     },
     total: [String, Number],
     type: String, // 选择类型 purchase: 显示入库价格
+    isClient: Boolean, // 客户输入
   },
   data: () => ({
     list: [],
@@ -43,7 +44,7 @@ export default {
         },
         success: (res) => {
           // 通过eventChannel向被打开页面传送数据
-          res.eventChannel.emit("setShopList", {list: this.list, type: this.type});
+          res.eventChannel.emit("setShopList", {list: this.list, type: this.type, isClient: this.isClient});
         },
       });
     },
@@ -79,7 +80,7 @@ export default {
   <view class="ko-picker">
     <BasicCard v-for="(item, index) of list" :key="index">
       <view class="ko-picker__node">
-        <image mode="scaleToFill" class="ko-picker__node--image" :src="getImageUrl(item.images)" />
+        <image v-if="item.images" mode="scaleToFill" class="ko-picker__node--image" :src="getImageUrl(item.images)" />
 
         <view class="ko-picker__item">
           <UniRow>
@@ -121,7 +122,7 @@ export default {
         <label class="ko-basic-label">产品总额：</label>
         <text class="ko-basic-money">¥ {{ toYuan(getTotalMoney) }}元</text>
       </view>
-      <view style="margin-top: 4px;">
+      <view style="margin-top: 4px;" v-if="false">
         <label class="ko-basic-label">总额大写：</label>
         <text class="ko-basic-money">¥ {{ toBigMoney(toYuan(getTotalMoney)) }}</text>
       </view>

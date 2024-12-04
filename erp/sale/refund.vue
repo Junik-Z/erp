@@ -8,12 +8,15 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, showToast, yuanToPoints } from "@/utils";
-import { addedSaleReturnApi, getCustomerListApi, updateSaleReturnApi } from "@/api/erp/sale";
+import { _deepCopy, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { addedSaleReturnApi, getCustomerListApi, getSaleReturnDetailApi, updateSaleReturnApi } from "@/api/erp/sale";
+import UniSegmentedControl
+  from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 
 export default {
   name: "refund",
   components: {
+    UniSegmentedControl,
     PickerProduct,
     UniDataSelect,
     UniForms,
@@ -36,9 +39,32 @@ export default {
     supplierList: [],
     visible: false,
     loading: false,
+    options: {},
+    isEdit: false,
+
+
+    current: 0,
+    tabs: ["VIP客户", "其它客户"],
+
+    isClient: false,
   }),
   created() {
     this.getSupplierList();
+  },
+  onLoad(option) {
+    this.options = option;
+    this.isEdit = !!option.id;
+    if (this.isEdit) this.getInfo();
+
+    // 是否是客户下单
+    this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
+
+    if (this.isClient) {
+      this.current = 1;
+    } else {
+      this.getSupplierList();
+    }
+
   },
   methods: {
     // 供应商名称
@@ -51,6 +77,17 @@ export default {
           }));
         });
     },
+
+    getInfo() {
+      getSaleReturnDetailApi({id: this.options.id})
+        .then(res => {
+          const params = res.data;
+          params.totalAmount = transferYuan(params.totalAmount);
+          this.form = params;
+          console.log(res);
+        });
+    },
+
     onSubmit() {
       this.$refs.FormRef.validate(valid => {
         if (!valid) {
@@ -76,6 +113,18 @@ export default {
         }
       });
     },
+
+    onTabItem() {
+      if (this.current === 0) {
+        this.form.otherSupplier = "";
+        this.form.otherSupplierPhone = "";
+      }
+
+      if (this.current === 1) {
+        this.form.supplierId = "";
+      }
+
+    },
   },
 };
 </script>
@@ -90,8 +139,17 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="padding: 10px;">
-            <UniFormsItem label="客户：" name="supplierId">
+          <view style="margin: 0 30px 20px;" v-if="!isClient">
+            <UniSegmentedControl
+              :current.sync="current"
+              :values="tabs"
+              style-type="text"
+              @click-item="onTabItem"
+            />
+          </view>
+
+          <template v-if="current === 0">
+            <UniFormsItem label="VIP客户：" name="supplierId">
               <UniDataSelect
                 v-model="form.supplierId"
                 style="width: 100%;"
@@ -99,7 +157,25 @@ export default {
                 :localdata="supplierList"
               />
             </UniFormsItem>
-          </view>
+          </template>
+
+          <template v-if="current === 1">
+            <UniFormsItem :label="`${isClient ? '姓名' : '其它客户'}：`" name="otherSupplier">
+              <UniEasyinput
+                v-model="form.otherSupplier"
+                style="width: 100%;"
+                placeholder="请输入"
+              />
+            </UniFormsItem>
+            <UniFormsItem :label="`${isClient ? '联系电话' : '客户电话'}：`" name="otherSupplierPhone">
+              <UniEasyinput
+                v-model="form.otherSupplierPhone"
+                style="width: 100%;"
+                type="tel"
+                placeholder="请输入"
+              />
+            </UniFormsItem>
+          </template>
         </view>
       </UniSection>
 

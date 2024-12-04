@@ -5,7 +5,13 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
-import { cancelPurchaseApi, getPurchaseHistoryListApi, getPurchaseListApi } from "@/api/erp/purchase";
+import {
+  cancelPurchaseApi,
+  confirmPurchaseApi,
+  getPurchaseHistoryListApi,
+  getPurchaseListApi,
+  removePurchaseApi,
+} from "@/api/erp/purchase";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
@@ -28,9 +34,11 @@ export default {
           path: "share",
           openType: "share",
           params: {
-            title: "填写信息",
-            content: "邀请您填写信息，方便下次联系。",
-            path: "/erp/purchase/order?type=added",
+            title: `${_this.GET_USER_INFO?.nickName || ""}邀请您来下单啦！`,
+            path: "/erp/purchase/order",
+            query: {
+              PAGE_TYPE: "ADDED_PURCHASE",
+            },
           },
         },
         // #endif
@@ -97,7 +105,7 @@ export default {
               h("button",
                 {
                   class: "ko-basic-button__card",
-                  on: {click: _this.onCancelOrder.bind(_this, row)},
+                  on: {click: _this.onCancel.bind(_this, row)},
                 },
                 "取消",
               ),
@@ -126,7 +134,7 @@ export default {
           this.loading = false;
         });
     },
-    onCancelOrder(item) {
+    onCancel(item) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消 ${item.orderCode} 订单吗？`,
@@ -141,10 +149,10 @@ export default {
         },
       });
     },
-    onJump() {
-      // uni.navigateTo({
-      //   url: "/erp/stock/verify",
-      // });
+    onJump(item) {
+      uni.navigateTo({
+        url: `/erp/purchase/order?id=${item.id}`,
+      });
     },
     onTrigger(event) {
       const {path} = event.item || {};
@@ -153,6 +161,46 @@ export default {
         uni.navigateTo({url: path});
       }
     },
+
+    // 提交销售订单
+    onSubmit(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要提交该采购订单吗？请注意，一旦提交，订单内容将无法再进行修改。",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__s_loading__", true);
+            confirmPurchaseApi(item)
+              .then(() => {
+                uni.showToast({title: "提交成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__s_loading__", false);
+              });
+          }
+        },
+      });
+    },
+    onRemove(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要删除此采购订单吗？",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__r_loading__", true);
+            removePurchaseApi(item)
+              .then(() => {
+                uni.showToast({title: "删除成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__r_loading__", false);
+              });
+          }
+        },
+      });
+    },
   },
   computed: {
     // #ifdef H5
@@ -160,7 +208,7 @@ export default {
       return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
     },
     // #endif
-  }
+  },
 };
 </script>
 
@@ -184,7 +232,7 @@ export default {
                     ¥ {{ toYuan(item.totalAmount) }}元
                   </text>
                 </UniCol>
-                <UniCol :span="24">
+                <UniCol :span="24" v-if="false">
                   <label class="ko-basic-label">总金额大写：</label>
                   <text class="ko-basic-money">
                     {{ toBigMoney(toYuan(item.totalAmount)) }}元
@@ -200,9 +248,38 @@ export default {
                 </UniCol>
               </UniRow>
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
-                <button class="ko-basic-button__card" @click="onCancelOrder(item)">取消</button>
-                <button class="ko-basic-button__card" @click="onJump(item)">修改</button>
-                <!--<button class="ko-basic-button__card" @click="onJump">申请入库</button>-->
+                <button
+                  v-if="['CREATED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click="onSubmit(item)"
+                  :disabled="item.__s_loading__"
+                  :loading="item.__s_loading__"
+                >
+                  提交订单
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onJump(item)"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                >
+                  修改
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onCancel(item)"
+                  v-if="['CREATED'].includes(item.status)"
+                >
+                  取消
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onRemove(item)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                  v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+                >
+                  删除
+                </button>
               </view>
             </view>
           </BasicCard>

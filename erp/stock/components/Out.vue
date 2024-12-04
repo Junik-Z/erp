@@ -24,7 +24,7 @@ export default {
       const Func = this.isHistory ? getOutboundHistoryListApi : getOutboundListApi;
       Func()
         .then(res => {
-          // this.list = res.data;
+          this.list = res.data;
           console.log(res.data);
         })
         .finally(() => {
@@ -35,8 +35,6 @@ export default {
       uni.navigateTo({
         url: "/erp/stock/verify",
       });
-    },
-    selectionChange() {
     },
     onCancel(item) {
       uni.showModal({
@@ -56,8 +54,8 @@ export default {
     onConfirm(item) {
       uni.showModal({
         title: "温馨提示",
-        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认无误后可办理出库。`,
-        confirmText: "确认入库",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后扣除库存。`,
+        confirmText: "确认",
         success: (res) => {
           if (res.confirm) {
             confirmOutboundApi(item)
@@ -99,7 +97,7 @@ export default {
                     ¥ {{ toYuan(item.totalAmount) }}元
                   </text>
                 </UniCol>
-                <UniCol :span="24">
+                <UniCol :span="24"  v-if="false">
                   <label class="ko-basic-label">总金额大写：</label>
                   <text class="ko-basic-money">
                     {{ toBigMoney(toYuan(item.totalAmount)) }}元
@@ -116,10 +114,9 @@ export default {
               </UniRow>
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                v-if="!isHistory"
               >
-                <button class="ko-basic-button__card" @click="onCancel(item)">取消出库</button>
-                <button class="ko-basic-button__card" @click="onConfirm(item)">确认出库</button>
+                <button v-if="['CREATED'].includes(item.status)" class="ko-basic-button__card" @click="onCancel(item)">取消出库</button>
+                <button v-if="['CREATED', 'CANCELLED'].includes(item.status)" class="ko-basic-button__card" @click="onConfirm(item)">确认出库</button>
               </view>
             </view>
           </BasicCard>

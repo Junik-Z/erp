@@ -5,7 +5,13 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import { cancelSaleReturnApi, getSaleReturnHistoryApi, getSaleReturnListApi } from "@/api/erp/sale";
+import {
+  cancelSaleReturnApi,
+  confirmSaleReturnApi,
+  getSaleReturnHistoryApi,
+  getSaleReturnListApi,
+  removeSaleReturnApi,
+} from "@/api/erp/sale";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
@@ -29,7 +35,7 @@ export default {
           params: {
             title: "填写信息",
             content: "邀请您填写信息，方便下次联系。",
-            path: "/erp/sale/refund?type=added",
+            path: "/erp/sale/refund",
           },
         },
         // #endif
@@ -54,7 +60,8 @@ export default {
         {
           label: "退货单号",
           prop: "orderCode",
-        }, {
+        },
+        {
           label: "客户",
           prop: "customer",
           children: [
@@ -94,7 +101,7 @@ export default {
               h("button",
                 {
                   class: "ko-basic-button__card",
-                  on: {click: _this.onCancelOrder.bind(_this, row)},
+                  on: {click: _this.onCancel.bind(_this, row)},
                 },
                 "取消",
               ),
@@ -124,7 +131,7 @@ export default {
           this.loading = false;
         });
     },
-    onCancelOrder(item) {
+    onCancel(item) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消 ${item.orderCode} 订单吗？`,
@@ -139,16 +146,62 @@ export default {
         },
       });
     },
-    onJump() {
-      // uni.navigateTo({
-      //   url: "/erp/stock/verify",
-      // });
+    onJump(item) {
+      uni.navigateTo({
+        url: `/erp/sale/refund?id=${item.id}`,
+      });
     },
+
+    onSubmit(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要提交该销售退货订单吗？请注意，一旦提交，订单内容将无法再进行修改。",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__s_loading__", true);
+            confirmSaleReturnApi(item)
+              .then(() => {
+                uni.showToast({title: "提交成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__s_loading__", false);
+              });
+          }
+        },
+      });
+    },
+    onRemove(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要删除此销售退货订单吗？",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__r_loading__", true);
+            removeSaleReturnApi(item)
+              .then(() => {
+                uni.showToast({title: "删除成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__r_loading__", false);
+              });
+          }
+        },
+      });
+    },
+
     onTrigger(event) {
+
+      if ("uni") {
+        uni.navigateTo({
+          url: "/erp/sale/refund",
+        });
+        return false;
+      }
+
       const {path} = event.item || {};
-
       this.$refs.FabRef.close();
-
       if (path) {
         uni.navigateTo({url: path});
       }
@@ -190,11 +243,39 @@ export default {
               </UniRow>
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                v-if="!isHistory"
               >
-                <button class="ko-basic-button__card" @click="onCancelOrder(item)">取消</button>
-                <button class="ko-basic-button__card" @click="onJump(item)">修改</button>
-                <!--<button class="ko-basic-button__card" @click="onJump">申请入库</button>-->
+                <button
+                  v-if="['CREATED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click="onSubmit(item)"
+                  :disabled="item.__s_loading__"
+                  :loading="item.__s_loading__"
+                >
+                  提交订单
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onJump(item)"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                >
+                  修改
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onCancel(item)"
+                  v-if="['CREATED'].includes(item.status)"
+                >
+                  取消
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onRemove(item)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                  v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+                >
+                  删除
+                </button>
               </view>
             </view>
           </BasicCard>
@@ -226,9 +307,9 @@ export default {
         iconColor: "#fff",
       }'
       horizontal="right"
-      :content="content"
+      :content="[] || content"
       direction="vertical"
-      @trigger="onTrigger"
+      @fab-click="onTrigger"
     />
   </view>
 </template>
@@ -253,7 +334,6 @@ export default {
     color: $uni-base-color;
 
     &--name {
-      font-size: 20px;
       font-weight: bold;
       color: #333;
       margin-bottom: 10px;

@@ -12,6 +12,17 @@ export function getSupplierListApi(data) {
 }
 
 /**
+ * @description 获取供应商统计
+ */
+export function getCountSupplierApi(data) {
+  return request({
+    url: "/supplier/count",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 添加供应商
  */
 export function addedSupplierApi(data) {
@@ -89,11 +100,44 @@ export function getPurchaseHistoryListApi(data) {
 }
 
 /**
+ * @description 获取采购订单详情
+ */
+export function getPurchaseDetailApi(data) {
+  return request({
+    url: "/purchase/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 新增采购订单
  */
 export function addedPurchaseApi(data) {
   return request({
     url: "/purchase/add",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 确认采购订单
+ */
+export function confirmPurchaseApi(data) {
+  return request({
+    url: "/purchase/confirm",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除采购订单
+ */
+export function removePurchaseApi(data) {
+  return request({
+    url: "/purchase/delete",
     method: "post",
     data,
   });
@@ -144,6 +188,17 @@ export function getPurchaseReturnHistoryListApi(data) {
 }
 
 /**
+ * @description 获取退货采购订单详情
+ */
+export function getPurchaseReturnDetailApi(data) {
+  return request({
+    url: "/purchase/return/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 新增退货采购订单
  */
 export function addedPurchaseReturnApi(data) {
@@ -171,6 +226,28 @@ export function updatePurchaseReturnApi(data) {
 export function cancelPurchaseReturnApi(data) {
   return request({
     url: "/purchase/return/cancel",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 确认退货采购订单
+ */
+export function confirmPurchaseReturnApi(data) {
+  return request({
+    url: "/purchase/return/confirm",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除退货采购订单
+ */
+export function removePurchaseReturnApi(data) {
+  return request({
+    url: "/purchase/return/delete",
     method: "post",
     data,
   });

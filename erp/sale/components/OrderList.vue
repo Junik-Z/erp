@@ -36,9 +36,11 @@ export default {
           path: "share",
           openType: "share",
           params: {
-            title: "填写信息",
-            content: "邀请您填写信息，方便下次联系。",
-            path: "/erp/sale/order?type=added",
+            title: `${_this.GET_USER_INFO?.nickName || ""}邀请您来下单啦！`,
+            path: "/erp/sale/order",
+            query: {
+              PAGE_TYPE: "ADDED_SALE",
+            },
           },
         },
         // #endif
@@ -239,7 +241,7 @@ export default {
                     ¥ {{ toYuan(item.totalAmount) }}元
                   </text>
                 </UniCol>
-                <UniCol :span="24">
+                <UniCol :span="24"  v-if="false">
                   <label class="ko-basic-label">总金额大写：</label>
                   <text class="ko-basic-money">
                     {{ toBigMoney(toYuan(item.totalAmount)) }}元

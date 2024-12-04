@@ -1,12 +1,13 @@
 <script>
-import { getConfigApi, getMyInfoApi, getScanQrCodeApi, getSubscribeApi, isLogin } from "@/api/user";
-import { _get, _isEqual } from "@/utils";
+import { getConfigApi, getMyInfoApi, getScanQrCodeApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
+import { _get, _isEnv, _isEqual } from "@/utils";
 import dayjs from "@/utils/dayjs";
 
 export default {
   async onLaunch(option) {
     const {query} = option || {};
-    console.log(query, option);
+    console.log("App.vue", query, option, option.path);
+
     uni.setStorageSync("__APP_QUERY__", query);
 
     if (query?.scene) {
@@ -24,6 +25,8 @@ export default {
 
     uni.$on("$on_event_source", this.getEventSource);
 
+    uni.$on("$__initiate_web_socket__", this.initiateWebSocket);
+
     // 登陆完成后需要清除计时器
     uni.$on("$__login_success__",
       () => {
@@ -31,11 +34,14 @@ export default {
       });
 
     // #ifdef MP
-    await this.getInfo();
+    // 当进入的不是 [首页, 自助绑定] 时需要先获取用户信息
+    if (!["pages/home/home", "client/binding/binding"].includes(option.path)) {
+      await this.getInfo();
+    }
     // #endif
 
     // #ifdef MP-WEIXIN
-    this.requestSubscribeMessage();
+    !_isEnv() && this.requestSubscribeMessage();
     // #endif
   },
   onShow() {
@@ -61,8 +67,10 @@ export default {
     getInfo() {
       return Promise.all([this.getUserInfo(), this.getConfig()])
         .then((res) => {
-          // 获取所有信息成功
-          uni.$emit("$__get_info_success__", res);
+          setTimeout(() => {
+            // 获取所有信息成功
+            uni.$emit("$__get_info_success__", res);
+          }, 20);
         });
     },
 
@@ -151,8 +159,10 @@ export default {
     },
 
     // 开启长链接
-    getEventSource(query) {
-      const ESVm = new EventSource(`${getScanQrCodeApi()}${query}`);
+    getEventSource() {
+      const ESVm = new EventSource(getScanQrCodeApi());
+
+      console.log("触发调用了");
 
       uni.$__EVENT_SOUECE_VM__ = ESVm;
 
@@ -181,6 +191,60 @@ export default {
         uni.$emit("$__login_success__", scene);
         uni.setStorageSync("Cookie", scene);
       }, false);
+
+      // 获取到的二维码图片
+      ESVm.addEventListener("scanCode", (res) => {
+        const codeImage = res.data;
+        uni.$emit("$__success_code_images__", codeImage);
+      }, false);
+    },
+
+    // 发起 WebSocket
+    initiateWebSocket() {
+      try {
+        uni.$__SOCKET_TASK__ = uni.connectSocket({
+          url: getWSUrl(),
+          multiple: true,
+          // #ifndef H5
+          header: {
+            "Cookie": uni.getStorageSync("Cookie"),
+          },
+          // #endif
+          fail: (e) => {
+            console.error(e);
+          },
+        });
+
+        // #ifndef MP-TOUTIAO
+        uni.onSocketMessage(this.onMessage);
+        // 监听WebSocket错误
+        uni.onSocketError((res) => {
+          uni.showToast({
+            icon: "error",
+            duration: 3000,
+            title: "网络请求失败!",
+          });
+        });
+        uni.onSocketOpen((res) => {
+          console.log("connected");
+          this.connected = true;
+        });
+        // #endif
+
+        // #ifdef MP-TOUTIAO
+        socketTask.onMessage(this.onMessage);
+
+        socketTask.onSocketOpen((res) => {
+          console.log("connected");
+          this.connected = true;
+        });
+        // #endif
+      } catch (e) {
+
+      }
+    },
+    onMessage(res) {
+      console.log("WebSocket 接收到的消息", res);
     },
   },
 };

@@ -4,6 +4,7 @@ export default {
   props: {
     notPadding: Boolean,
     spacing: Number,
+    className: String,
   },
   methods: {
     onClick() {
@@ -17,7 +18,7 @@ export default {
   <view
     class="ko-basic-card ko-basic-box-shadow"
     @click.stop="onClick"
-    :class="{'not-padding': notPadding}"
+    :class="[{'not-padding': notPadding}, className || '']"
     :style="{ marginBottom: `${spacing || 0}px` }"
   >
     <slot></slot>

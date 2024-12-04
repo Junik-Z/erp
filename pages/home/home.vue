@@ -1,8 +1,6 @@
 <script>
-
 import ZeroLoading from "@/uni_modules/zero-loading/components/zero-loading/zero-loading.vue";
-import { _isEmpty } from "@/utils";
-import { isLogin } from "@/api/user";
+import { _isEmpty, _isEqual } from "@/utils";
 
 export default {
   name: "Home",
@@ -12,19 +10,19 @@ export default {
     vm: null,
   }),
   onLoad(option) {
-    this.option = option;
+    this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
-    switch (option.PAGE_TYPE) {
-      case "logout":
-        uni.$emit("$__get_all_info__");
-        break;
+    if (this.option?.scene) {
+      uni.setStorageSync("__APP_SCENE__", this.option?.scene);
     }
+
+    console.log("home.vue", option, this.option);
 
     // #ifdef H5
     this.handleH5Func();
     // #endif
 
-    // #ifndef H5
+    // #ifdef MP
     this.handleMPFunc();
     // #endif
   },
@@ -33,6 +31,9 @@ export default {
     beReady() {
       uni.$__home_set_timeout_vm__ && clearTimeout(uni.$__home_set_timeout_vm__);
       console.log("系统已经准好了");
+
+      uni.$emit("$__initiate_web_socket__");
+
       uni.reLaunch({
         url: "/pages/index/index",
       });
@@ -40,23 +41,15 @@ export default {
 
     // 处理 MP 的信息
     handleMPFunc() {
-      uni.$on("$__get_info_success__", this.beReady);
-
-      uni.$on("$__login_success__",
-        () => {
-          uni.$__home_set_timeout_vm__ && clearTimeout(uni.$__home_set_timeout_vm__);
-        });
-
-      console.log("是否登陆成功", isLogin());
-
-      if (isLogin()) {
-        uni.$__home_set_timeout_vm__ = setTimeout(() => {
-          if (!_isEmpty(uni.getStorageSync("__USER_INFO__"))) {
-            this.beReady();
-          }
-          uni.$__home_set_timeout_vm__ && clearTimeout(uni.$__home_set_timeout_vm__);
-        }, 1000);
+      // 处理重新登陆
+      if (_isEqual(this.option?.PAGE_TYPE, "logout")) {
       }
+
+      // 获取所有的用户信息
+      uni.$emit("$__get_all_info__");
+
+      // 获取成功后跳转到首页
+      uni.$on("$__get_info_success__", this.beReady);
     },
 
     // 处理 H5 的信息

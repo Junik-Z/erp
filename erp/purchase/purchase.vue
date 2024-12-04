@@ -6,10 +6,12 @@ import OrderList from "./components/OrderList.vue";
 import ClientList from "./components/ClientList.vue";
 import RefundList from "./components/RefundList.vue";
 import { _get, _isEqual } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "Purchase",
   components: {RefundList, ClientList, OrderList, ViewVersion, UniSegmentedControl},
+  mixins: [mixins],
   data: () => ({
     tabList: [
       {
@@ -63,8 +65,12 @@ export default {
   },
 
   onShareAppMessage(res) {
-    console.log(res);
-    return {};
+    const obj = res.target.dataset.params;
+    const query = this._GET_SHARE_APP_PARAMS_(obj);
+    return new Promise((resolve) => {
+      console.log(query);
+      resolve(query);
+    });
   },
 };
 </script>
@@ -88,6 +94,7 @@ export default {
 <style scoped lang="scss">
 .ko-purchase {
   width: 100%;
+  padding-bottom: 50px;
 
   &__tabs {
     padding: 10px;

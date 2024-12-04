@@ -323,7 +323,7 @@ export default {
             <BasicCard>
               <view class="ko-cost__info">
                 <UniRow :gutter="10">
-                  <UniCol :span="24">
+                  <UniCol :span="24" v-if="item.voucher">
                     <image class="ko-cost__voucher" mode="aspectFill" :src="getImageUrl(item.voucher)" />
                   </UniCol>
                   <UniCol :span="24">

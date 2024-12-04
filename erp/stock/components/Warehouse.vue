@@ -25,7 +25,7 @@ export default {
     const _this = this;
     return {
       loading: false,
-      list: [{}],
+      list: [],
       isHistory: false,
 
       // #ifdef H5
@@ -70,7 +70,6 @@ export default {
     getList() {
       this.loading = true;
       const Func = this.isHistory ? getInboundHistoryListApi : getInboundListApi;
-
       Func()
         .then(res => {
           this.list = res.data;
@@ -84,8 +83,6 @@ export default {
       uni.navigateTo({
         url: "/erp/stock/verify",
       });
-    },
-    selectionChange() {
     },
     onCancel(item) {
       uni.showModal({
@@ -105,8 +102,8 @@ export default {
     onConfirm(item) {
       uni.showModal({
         title: "温馨提示",
-        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认无误后可办理入库。`,
-        confirmText: "确认入库",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后增加库存。`,
+        confirmText: "确认",
         success: (res) => {
           if (res.confirm) {
             confirmInboundApi(item)
@@ -147,7 +144,7 @@ export default {
                     ¥ {{ toYuan(item.totalAmount) }}元
                   </text>
                 </UniCol>
-                <UniCol :span="24">
+                <UniCol :span="24" v-if="false">
                   <label class="ko-basic-label">总金额大写：</label>
                   <text class="ko-basic-money">
                     {{ toBigMoney(toYuan(item.totalAmount)) }}元
@@ -164,16 +161,22 @@ export default {
               </UniRow>
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                v-if="!isHistory"
               >
-                <button class="ko-basic-button__card" @click="onCancel(item)">取消入库</button>
-                <button class="ko-basic-button__card" @click="onConfirm(item)">确认入库</button>
+                <button v-if="['CREATED'].includes(item.status)" class="ko-basic-button__card" @click="onCancel(item)">
+                  取消入库
+                </button>
+                <button
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click="onConfirm(item)"
+                >
+                  确认入库
+                </button>
               </view>
             </view>
           </BasicCard>
         </template>
       </UniListItem>
-
       <LoadMore :loading="loading" />
       <!-- #endif -->
 

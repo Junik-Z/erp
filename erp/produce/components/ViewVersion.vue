@@ -1,40 +1,121 @@
 <script>
 import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
-import UCountTo from "@/uni_modules/uview-ui/components/u-count-to/u-count-to.vue";
 import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
+import { _flattenDeep, _get, _groupBy, _keys } from "@/utils";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import { getProduceStatisticsApi } from "@/api/erp/produce";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "ViewVersion",
-  components: {QiunDataCharts, UCountTo, UniGridItem, UniGrid},
+  components: {UniSection, UniCol, UvCountTo, UniRow, QiunDataCharts, UniGridItem, UniGrid},
+  mixins: [mixins],
   data: () => ({
-    chartData: {},
-    //您可以通过修改 config-ucharts.js 文件中下标为 ['column'] 的节点来配置全局默认参数，如都是默认参数，此处可以不传 opts 。实际应用过程中 opts 只需传入与全局默认参数中不一致的【某一个属性】即可实现同类型的图表显示不同的样式，达到页面简洁的需求。
-    opts: {
-      color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
-      padding: [15, 10, 0, 15],
-      enableScroll: false,
-      legend: {},
-      xAxis: {
-        disableGrid: true,
+    CountList: [
+      {
+        label: "已生产单数",
+        key: "producedProduceCount",
+        color: "#2979ff",
+        unit: "单",
       },
-      yAxis: {
-        gridType: "dash",
-        dashLength: 2,
+      {
+        label: "待生产单数",
+        key: "pendingProduceCount",
+        color: "#2979ff",
+        unit: "单",
       },
-      extra: {
-        line: {
-          type: "straight",
-          width: 2,
-          activeType: "hollow",
-        },
+      {
+        label: "商品存量",
+        key: "productStock",
+        color: "#2979ff",
       },
+      {
+        label: "产品库存预警",
+        key: "productStockWarning",
+        color: "#e43d33",
+        unit: "",
+      },
+    ],
+    loading: false,
+    data: {
+      "productStock": 0,
+      "productStockWarning": 0,
+      "pendingProduceCount": 0,
+      "producedProduceCount": 0,
+      "warningTrend": [],
+      "halfYearProduce": [],
     },
+
+    halfYearProduce: {},
+    warningTrend: {},
   }),
-  mounted() {
-    this.getServerData();
-  },
   methods: {
+    getList() {
+      this.loading = true;
+      getProduceStatisticsApi()
+        .then(res => {
+          const data = res.data;
+          this.data = data;
+          this.halfYearProduce = {};
+          this.warningTrend = {};
+
+          const obj = {
+            categories: (data.halfYearProduce || []).map(v => v.name),
+            series: [],
+          };
+
+          const list = _flattenDeep((data.halfYearProduce || [])?.map(v => v?.amountsWithName));
+          const group = _groupBy(list, (v) => v.name);
+          _keys(group).forEach(key => {
+            obj.series.push({
+              name: key,
+              data: _flattenDeep((data.halfYearProduce || [])
+                .map(v => {
+                  const list = v.amountsWithName || [];
+                  return list.find(j => j.name === key)?.amount || 0;
+                })),
+            });
+          });
+
+          this.halfYearProduce = obj;
+
+          const obj1 = {
+            categories: [],
+            series: [
+              {
+                name: "预警库存",
+                color: "#EE6666",
+                data: [],
+              },
+              {
+                name: "现有库存",
+                color: "#1890FF",
+                data: [],
+              },
+            ],
+          };
+
+
+          (data.warningTrend || [])?.forEach(item => {
+            obj1.categories.push(item.name);
+            obj1.series[0].data.push(_get(item, "amounts.0") || 0);
+            obj1.series[1].data.push(_get(item, "amounts.1") || 0);
+          });
+
+          this.warningTrend = obj1;
+
+          // this.supplierRank = this.getEcData(data.supplierRank);
+
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+
     getServerData() {
       //模拟从服务器获取数据时的延时
       setTimeout(() => {
@@ -43,15 +124,7 @@ export default {
           series: [
             {
               name: "成交量A",
-              data: [35, 8, 25, 37, 4, 20],
-            },
-            {
-              name: "成交量B",
-              data: [70, 40, 65, 100, 44, 68],
-            },
-            {
-              name: "成交量C",
-              data: [100, 80, 95, 150, 112, 132],
+              data: [{value: 35, color: "#000"}, 8, 25, 37, 4, 20],
             },
           ],
         };
@@ -60,56 +133,58 @@ export default {
     },
 
   },
+  computed: {
+    getCountValue() {
+      return (item) => {
+        const value = _get(this.data, item.key);
+        return item.unit === "元" ? this.toYuan(value) : value;
+      };
+    },
+  },
 };
 </script>
 
 <template>
   <view class="ko-view-version">
-    <UniGrid :column="2" :square="false" :show-border="false">
-      <UniGridItem>
-        <view class="ko-view-version__item">
-          <view>采购订单总额</view>
-          <view>
-            <UCountTo :start-val="30" :end-val="500" color="#2979ff" />
-            <text>元</text>
+
+    <view class="ko-basic-count__wrap">
+      <UniRow :gutter="20">
+        <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
+          <view class="ko-basic-count">
+            <view class="ko-basic-count__label">{{ item.label }}</view>
+            <view class="ko-basic-count__info">
+              <UvCountTo
+                :separator="item.unit === '元' ? ',' : ''"
+                :start-val="0"
+                bold
+                :end-val="getCountValue(item)"
+                :color="item.color ? item.color : '#2979ff'"
+              />
+              <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
+            </view>
           </view>
-        </view>
-      </UniGridItem>
-      <UniGridItem>
-        <view class="ko-view-version__item">
-          <view>签订供应商数量</view>
-          <view>
-            <UCountTo :start-val="30" :end-val="500" color="#e43d33" />
-            <text>家</text>
-          </view>
-        </view>
-      </UniGridItem>
-      <UniGridItem>
-        <view class="ko-view-version__item">
-          <view>采购订单签署数量</view>
-          <view>
-            <UCountTo :start-val="30" :end-val="500" color="#2979ff" />
-            <text>单</text>
-          </view>
-        </view>
-      </UniGridItem>
-      <UniGridItem>
-        <view class="ko-view-version__item">
-          <view>产品库存预警</view>
-          <view>
-            <UCountTo :start-val="30" :end-val="500" color="#2979ff" />
-            <text>件</text>
-          </view>
-        </view>
-      </UniGridItem>
-    </UniGrid>
+        </UniCol>
+      </UniRow>
+    </view>
 
     <view class="ko-view-version__row">
-      <QiunDataCharts
-        type="line"
-        :opts="opts"
-        :chartData="chartData"
-      />
+
+      <UniSection title="近半年生产情况" type="line">
+        <QiunDataCharts
+          type="line"
+          :opts="getBasicChartsOptions(halfYearProduce)"
+          :chart-data="halfYearProduce"
+        />
+      </UniSection>
+
+      <UniSection title="库存预警趋势" type="line">
+        <QiunDataCharts
+          type="column"
+          :opts="getBasicChartsOptions(warningTrend)"
+          :chart-data="warningTrend"
+        />
+      </UniSection>
+
     </view>
   </view>
 </template>

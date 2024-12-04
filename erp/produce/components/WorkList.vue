@@ -12,6 +12,7 @@ import {
   finishProduceApi,
   getProduceHistoryListApi,
   getProduceListApi,
+  removeProduceApi,
 } from "@/api/erp/produce";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
@@ -142,9 +143,14 @@ export default {
           this.loading = false;
         });
     },
-    onJump() {
+    onJump(row) {
+      let query = "";
+      if (row) {
+        query = `?id=${row.id}`;
+      }
+
       uni.navigateTo({
-        url: "/erp/produce/work",
+        url: "/erp/produce/work" + query,
       });
     },
     onCancel(item) {
@@ -204,6 +210,26 @@ export default {
         },
       });
     },
+
+    onRemove(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要删除此工单吗？",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__r_loading__", true);
+            removeProduceApi(item)
+              .then(() => {
+                uni.showToast({title: "删除成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__r_loading__", false);
+              });
+          }
+        },
+      });
+    },
   },
   computed: {
     // #ifdef H5
@@ -238,7 +264,7 @@ export default {
                   <label class="ko-basic-label">成品总值：</label>
                   <text class="ko-basic-money">¥ {{ toYuan(item.totalProductAmount) }}元</text>
                 </UniCol>
-                <UniCol :span="24">
+                <UniCol :span="24" v-if="false">
                   <label class="ko-basic-label">预计创造价值：</label>
                   <text class="ko-basic-money">¥ {{ toYuan(item.totalAmount) }}元</text>
                 </UniCol>
@@ -252,7 +278,6 @@ export default {
                 </UniCol>
               </UniRow>
               <view
-                v-if="!isHistory"
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
               >
                 <button
@@ -281,6 +306,22 @@ export default {
                   :disabled="item.__finish_loading__"
                 >
                   完成生产
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                  @click.stop="onJump(item)"
+                >
+                  修改
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                  @click.stop="onRemove(item)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                >
+                  删除
                 </button>
               </view>
             </view>
@@ -313,7 +354,7 @@ export default {
       }'
       horizontal="right"
       direction="vertical"
-      @fab-click="onJump"
+      @fab-click="onJump()"
     />
   </view>
 </template>

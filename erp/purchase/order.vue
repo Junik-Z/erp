@@ -12,15 +12,18 @@ import UniDatetimePicker
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
-import { addedPurchaseApi, getSupplierListApi, updatePurchaseApi } from "@/api/erp/purchase";
+import { addedPurchaseApi, getPurchaseDetailApi, getSupplierListApi, updatePurchaseApi } from "@/api/erp/purchase";
 import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, showToast, yuanToPoints } from "@/utils";
+import { _deepCopy, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import UniSegmentedControl
+  from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "Order",
   components: {
+    UniSegmentedControl,
     PickerProduct,
     UniDataSelect,
     BasicPopup,
@@ -48,9 +51,30 @@ export default {
     supplierList: [],
     visible: false,
     loading: false,
+
+    option: {},
+
+    current: 0,
+    tabs: ["VIP供应商", "其它供应商"],
+
+    isClient: false,
   }),
   created() {
     this.getSupplierList();
+  },
+  onLoad(option) {
+    this.option = option;
+    this.isEdit = !!option.id;
+    if (this.isEdit) this.getInfo();
+
+    // 是否是客户下单
+    this.isClient = _isEqual("ADDED_PURCHASE", option.PAGE_TYPE);
+
+    if (this.isClient) {
+      this.current = 1;
+    } else {
+      this.getSupplierList();
+    }
   },
   methods: {
     // 供应商名称
@@ -61,6 +85,14 @@ export default {
             text: item.name,
             value: item.id,
           }));
+        });
+    },
+    getInfo() {
+      getPurchaseDetailApi({id: this.option.id})
+        .then(res => {
+          const params = res.data;
+          params.totalAmount = transferYuan(params.totalAmount);
+          this.form = params;
         });
     },
     onSubmit() {
@@ -80,7 +112,13 @@ export default {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success() {
-                  uni.navigateBack();
+                  if (this.isClient) {
+                    uni.reLaunch({
+                      url: "/pages/index/index",
+                    });
+                  } else {
+                    uni.navigateBack();
+                  }
                 },
               });
             })
@@ -89,6 +127,18 @@ export default {
             });
         }
       });
+
+    },
+    onTabItem() {
+      if (this.current === 0) {
+        this.form.otherSupplier = "";
+        this.form.otherSupplierPhone = "";
+      }
+
+      if (this.current === 1) {
+        this.form.supplierId = "";
+      }
+
     },
   },
 };
@@ -104,14 +154,43 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <UniFormsItem label="供应商：" name="supplierId">
-            <UniDataSelect
-              v-model="form.supplierId"
-              style="width: 100%;"
-              placeholder="请选择"
-              :localdata="supplierList"
+          <view style="margin: 0 30px 20px;" v-if="!isClient">
+            <UniSegmentedControl
+              :current.sync="current"
+              :values="tabs"
+              style-type="text"
+              @click-item="onTabItem"
             />
-          </UniFormsItem>
+          </view>
+
+          <template v-if="current === 0">
+            <UniFormsItem label="VIP供应商：" name="supplierId">
+              <UniDataSelect
+                v-model="form.supplierId"
+                style="width: 100%;"
+                placeholder="请选择"
+                :localdata="supplierList"
+              />
+            </UniFormsItem>
+          </template>
+
+          <template v-if="current === 1">
+            <UniFormsItem :label="`${isClient ? '姓名' : '其它供应商'}：`" name="otherSupplier">
+              <UniEasyinput
+                v-model="form.otherSupplier"
+                style="width: 100%;"
+                placeholder="请输入"
+              />
+            </UniFormsItem>
+            <UniFormsItem :label="`${isClient ? '联系电话' : '供应商电话'}：`" name="otherSupplierPhone">
+              <UniEasyinput
+                v-model="form.otherSupplierPhone"
+                style="width: 100%;"
+                type="tel"
+                placeholder="请输入"
+              />
+            </UniFormsItem>
+          </template>
         </view>
       </UniSection>
 
@@ -123,6 +202,7 @@ export default {
                 v-model="form.details"
                 :total.sync="form.totalAmount"
                 type="purchase"
+                :is-client="isClient"
               />
             </view>
           </UniFormsItem>
@@ -131,21 +211,6 @@ export default {
 
       <UniSection title="其它信息" type="line">
         <view style="padding: 10px;">
-          <!--<UniFormsItem label="发货地址：">
-            <UniEasyinput placeholder="请输入发货地址" />
-          </UniFormsItem>
-          <UniFormsItem label="详细地址：">
-            <UniEasyinput placeholder="请输入详细地址" />
-          </UniFormsItem>
-          <UniFormsItem label="计划发货日期：">
-            <UniDatetimePicker
-              type="date"
-              :clear-icon="false"
-              v-model="single"
-              placeholder="请选择发货日期"
-            />
-
-          </UniFormsItem>-->
           <UniFormsItem label="备注：" name="remark">
             <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
           </UniFormsItem>

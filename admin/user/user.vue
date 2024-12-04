@@ -7,8 +7,7 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy } from "@/utils";
 import { logoutApi, updateMyInfoApi, uploadBase64Api } from "@/api/user";
-
-const fs = uni.getFileSystemManager();
+import { getImageBase64 } from "@/utils/processingFiles";
 
 export default {
   name: "user",
@@ -28,39 +27,29 @@ export default {
     };
   },
   onLoad() {
-    this.form = _deepCopy(this._user_);
+    this.form = _deepCopy(this.GET_USER_INFO) || _deepCopy(this.$options.data().form);
     uni.$on("$__update_user_info__", (data) => {
-      console.log(data);
-      this.$set(this, "_user_", data);
       this.form = _deepCopy(data);
     });
   },
   methods: {
     onUpdateInfo() {
-      this.form = _deepCopy(this._user_);
+      this.form = _deepCopy(this.GET_USER_INFO);
       this.visible = true;
     },
-
     getAvatarUrl(event) {
       const {avatarUrl} = event.detail;
 
       if (avatarUrl) {
-        fs.readFile({
-          filePath: avatarUrl,
-          encoding: "base64",
-          success: (e) => {
-            this.$set(this.form, "avatar", "data:image/png;base64," + e.data);
-          },
-          fail: (e) => {
-            console.error(e);
-          },
-        });
+        getImageBase64(avatarUrl)
+          .then((data) => {
+            this.$set(this.form, "avatar", data);
+          });
       }
     },
     onNickName(event) {
       event && this.$set(this.form, "nickName", event?.detail?.value);
     },
-
     async onSubmit() {
       this.loading = true;
       const params = _deepCopy(this.form);
@@ -80,7 +69,6 @@ export default {
           this.loading = false;
         });
     },
-
     onLogout() {
       this.logoutLoading = true;
       logoutApi()
@@ -88,10 +76,21 @@ export default {
         })
         .finally(() => {
           this.logoutLoading = false;
+          const scene = uni.getStorageSync("__APP_SCENE__");
           uni.clearStorageSync({});
+
+          // #ifdef H5
           uni.reLaunch({
-            url: "/pages/home/home?PAGE_TYPE=logout",
+            url: `/pages/login/login?PAGE_TYPE=logout&scene=${scene}`,
           });
+          // #endif
+
+          // #ifdef MP
+          uni.reLaunch({
+            url: `/pages/home/home?PAGE_TYPE=logout&scene=${scene}`,
+          });
+          // #endif
+
         });
     },
   },
@@ -101,9 +100,9 @@ export default {
 <template>
   <view class="ko-user">
     <view class="ko-user__info" @click="onUpdateInfo">
-      <UvAvatar :key="_user_.avatar" :size="120" :src="getImageUrl(_user_.avatar)" />
+      <UvAvatar :key="GET_USER_INFO.avatar" :size="120" :src="getImageUrl(GET_USER_INFO.avatar)" />
       <view class="ko-user__info--name">
-        {{ _user_.nickName || "-" }}
+        {{ GET_USER_INFO.nickName || "-" }}
 
         <button class="ko-basic-button__card" @click="onUpdateInfo">
           <i class="iconfont icon-shuaxin"></i>

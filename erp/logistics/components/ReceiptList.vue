@@ -1,7 +1,6 @@
 <script>
 import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
-import UCountTo from "@/uni_modules/uview-ui/components/u-count-to/u-count-to.vue";
 import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -20,7 +19,7 @@ export default {
     BasicPopup,
     UniFormsItem,
     UniEasyinput,
-    UniListItem, BasicCard, UniCol, UniRow, UniList, QiunDataCharts, UCountTo, UniGridItem, UniGrid,
+    UniListItem, BasicCard, UniCol, UniRow, UniList, QiunDataCharts, UniGridItem, UniGrid,
   },
   data: () => ({
     visible: false,

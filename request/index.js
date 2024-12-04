@@ -72,12 +72,20 @@ export default function request(config, isLoading = false, whole = false) {
             uni.setStorageSync("Cookie", "");
 
             try {
+              // #ifdef H5
+              uni.reLaunch({
+                url: "/pages/login/login",
+              });
+              // #endif
+
+              // #ifdef MP
               await goLogin();
               console.log("重新登陆了");
               query?.scene && (uni.__FLAG__ = false);
 
               uni.$emit("$__get_all_info__");
               isFlag = false;
+              // #endif
 
               /*  reqList.forEach(item => {
                  request(item.config, item.isLoading).then(item.resolve).catch(item.reject);

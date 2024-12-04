@@ -5,36 +5,17 @@ import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import { _get } from "@/utils";
+import { _deepCopy, _get } from "@/utils";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 
 export default {
   name: "ViewVersion",
-  components: {UniCol, UniRow, UvCountTo, QiunDataCharts},
+  components: {UniSection, UniCol, UniRow, UvCountTo, QiunDataCharts},
   mixins: [mixins],
   data() {
     return {
-      chartData: {},
-      //您可以通过修改 config-ucharts.js 文件中下标为 ['column'] 的节点来配置全局默认参数，如都是默认参数，此处可以不传 opts 。实际应用过程中 opts 只需传入与全局默认参数中不一致的【某一个属性】即可实现同类型的图表显示不同的样式，达到页面简洁的需求。
-      opts: {
-        color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
-        padding: [15, 10, 0, 15],
-        enableScroll: false,
-        legend: {},
-        xAxis: {
-          disableGrid: true,
-        },
-        yAxis: {
-          gridType: "dash",
-          dashLength: 2,
-        },
-        extra: {
-          line: {
-            type: "straight",
-            width: 2,
-            activeType: "hollow",
-          },
-        },
-      },
+      supplierRank: {},
+      productPurchaseRank: {},
 
       loading: false,
       data: {
@@ -83,7 +64,6 @@ export default {
     };
   },
   mounted() {
-    this.getServerData();
   },
   methods: {
     getList() {
@@ -93,10 +73,13 @@ export default {
           const data = res.data;
           this.data = data;
 
-          // 供应商排名
-          console.log("供应商排名", data.supplierRank);
           // 产品排名
-          console.log("产品排名", data.productPurchaseRank);
+          // console.log("产品排名", data.productPurchaseRank);
+          this.productPurchaseRank = this.getEcData(data.productPurchaseRank);
+
+          // 供应商排名
+          // console.log("供应商排名", data.supplierRank);
+          this.supplierRank = this.getEcData(data.supplierRank);
 
         })
         .finally(() => {
@@ -104,36 +87,51 @@ export default {
         });
     },
 
-    getServerData() {
-      //模拟从服务器获取数据时的延时
-      setTimeout(() => {
-        let res = {
-          categories: ["2018", "2019", "2020", "2021", "2022", "2023"],
-          series: [
-            {
-              name: "成交量A",
-              data: [35, 8, 25, 37, 4, 20],
-            },
-            {
-              name: "成交量B",
-              data: [70, 40, 65, 100, 44, 68],
-            },
-            {
-              name: "成交量C",
-              data: [100, 80, 95, 150, 112, 132],
-            },
-          ],
-        };
-        this.chartData = JSON.parse(JSON.stringify(res));
-      }, 500);
-    },
+    getEcData(data = []) {
+      const obj = {
+        categories: [],
+        series: [
+          {
+            name: "排名",
+            data: [],
+          },
+        ],
+      };
+      _deepCopy(data)
+        .forEach((item) => {
+          obj.categories.push(item.name);
+          obj.series[0].data.push(this.toYuan(item.amount));
+        });
 
+      return obj;
+    },
   },
   computed: {
     getCountValue() {
       return (item) => {
         const value = _get(this.data, item.key);
         return item.unit === "元" ? this.toYuan(value) : value;
+      };
+    },
+
+    getOptions() {
+      return (data) => {
+        const opt = this.getBasicChartsOptions(data);
+        return {
+          ...opt,
+          yAxis: {
+            ...opt.yAxis,
+            gridType: "dash",
+            dashLength: 2,
+            showTitle: true,
+            data: [
+              {
+                position: "left",
+                title: "单位(元)",
+              },
+            ],
+          },
+        };
       };
     },
   },
@@ -163,11 +161,21 @@ export default {
     </view>
 
     <view class="ko-view-version__row">
-      <QiunDataCharts
-        type="line"
-        :opts="opts"
-        :chartData="chartData"
-      />
+      <UniSection title="产品排行" type="line">
+        <QiunDataCharts
+          type="column"
+          :opts="getOptions(productPurchaseRank)"
+          :chart-data="productPurchaseRank"
+        />
+      </UniSection>
+
+      <UniSection title="客户排名" type="line">
+        <QiunDataCharts
+          type="column"
+          :opts="getOptions(supplierRank)"
+          :chart-data="supplierRank"
+        />
+      </UniSection>
     </view>
   </view>
 </template>

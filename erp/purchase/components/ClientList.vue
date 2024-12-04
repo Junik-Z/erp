@@ -5,16 +5,18 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import { getSupplierListApi, removeSupplierApi, unbindSupplierApi } from "@/api/erp/purchase";
-import getCacheFile from "@/utils/fileCache";
-import { _deepCopy, _isEqual } from "@/utils";
+import { bindSupplierApi, getSupplierListApi, removeSupplierApi, unbindSupplierApi } from "@/api/erp/purchase";
+import { _deepCopy, _isEmpty, _xor } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
+import PickerUser from "@/components/PickerUser/PickerUser.vue";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "ClientList",
-  components: {KoTable, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList},
+  components: {PickerUser, KoTable, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList},
+  mixins: [mixins],
   data() {
     const _this = this;
     return {
@@ -40,6 +42,11 @@ export default {
       ],
       list: [],
       loading: false,
+
+      visible: false,
+      bindUserList: [],
+      isBind: false,
+      item: {},
 
       // #ifdef H5
       columns: [
@@ -145,6 +152,11 @@ export default {
     },
 
     onTrigger(event) {
+      if ("uni") {
+        uni.navigateTo({url: "/erp/purchase/client"});
+        return false;
+      }
+
       const {path} = event.item || {};
       this.$refs.FabRef.close();
       if (path) {
@@ -173,25 +185,72 @@ export default {
       });
     },
 
-    onUnbind(row) {
+    // 解绑
+    onUnbind(user) {
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要解绑 ${row.name} 供应商吗？`,
+        content: `您确定要解绑供应商吗？`,
         success: (res) => {
           if (res.confirm) {
-            unbindSupplierApi(row)
+
+            Promise.all(
+              user.map(userId => unbindSupplierApi({
+                supplierId: this.item.id,
+                userId,
+              })),
+            )
               .then(() => {
-                uni.showToast({title: "删除成功"});
+                uni.showToast({title: "解绑成功"});
                 this.getList();
               });
           }
         },
       });
     },
+
+    // 绑定
+    onBind(user = []) {
+      Promise.all(
+        user.map(userId => bindSupplierApi({
+          supplierId: this.item.id,
+          userId,
+        })),
+      )
+        .then(() => {
+          uni.showToast({title: "绑定成功"});
+          this.getList();
+        });
+    },
+
+    onBindPopup(item, isBind) {
+
+      console.log(item);
+
+      this.bindUserList = _deepCopy(item)?.users?.map(v => v.userId) || [];
+      this.isBind = isBind;
+      this.item = item;
+      this.visible = true;
+    },
+
+    onConfirm(checked) {
+      const users = _xor(this.bindUserList, checked);
+      !_isEmpty(users) && this[this.isBind ? "onBind" : "onUnbind"](users);
+      this.visible = false;
+    },
+
   },
   computed: {
-    getImageUrl() {
-      return getCacheFile;
+    getBindingParams() {
+      return (node) => {
+        return {
+          path: "/client/binding/binding",
+          query: {
+            // 客户列表 ID
+            CLIENT_LIST_ID: node.id,
+            PAGE_TYPE: "BINDING_CLIENT_BY_PURCHASE",
+          },
+        };
+      };
     },
   },
 };
@@ -210,9 +269,16 @@ export default {
                 <view class="ko-client__info--name">{{ item.name }}</view>
               </view>
 
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
-                <button open-type="share" :data-params="item.id" class="ko-basic-button__card">邀请绑定微信</button>
-                <button @click="onUnbind(item)" class="ko-basic-button__card">解绑微信</button>
+              <view class="ko-client__info--button">
+                <button
+                  open-type="share"
+                  :data-params="getBindingParams(item)"
+                  class="ko-basic-button__card"
+                >
+                  邀请绑定
+                </button>
+                <button @click="onBindPopup(item, true)" class="ko-basic-button__card">绑定客户</button>
+                <button @click="onBindPopup(item, false)" class="ko-basic-button__card">解绑客户</button>
                 <button class="ko-basic-button__card" @click="onJump(item)">编辑</button>
                 <button class="ko-basic-button__card" @click="onRemove(item)">删除</button>
               </view>
@@ -236,6 +302,17 @@ export default {
       <!-- #endif -->
     </UniList>
 
+    <PickerUser
+      :visible.sync="visible"
+      :title="isBind ? '选择绑定客户' : '解绑客户'"
+      is-confirm
+      :value="bindUserList"
+      :disabled="isBind ? bindUserList : []"
+      :checked-list="isBind ? [] : bindUserList"
+      multiple
+      @confirm="onConfirm"
+    />
+
     <UniFab
       ref="FabRef"
       :pattern='{
@@ -246,9 +323,9 @@ export default {
         iconColor: "#fff",
       }'
       horizontal="right"
-      :content="content"
+      :content="[] || content"
       direction="vertical"
-      @trigger="onTrigger"
+      @fab-click="onTrigger"
     />
   </view>
 </template>
@@ -256,10 +333,6 @@ export default {
 <style scoped lang="scss">
 .ko-client {
   width: 100%;
-
-  .ko-basic-button__card {
-    margin: 5px;
-  }
 
   :deep(.uni-list-item__container ) {
     display: block;
@@ -272,6 +345,14 @@ export default {
     &--logo {
       display: flex;
       align-items: center;
+    }
+
+    &--button {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-top: 8px;
+      flex-wrap: wrap;
     }
 
     &--image {

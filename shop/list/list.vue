@@ -4,12 +4,13 @@ import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar
 import UniDataPicker from "@/uni_modules/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import mixins from "@/mixins/mixins";
-import UniNumberBox from "@/shop/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
+import UniNumberBox from "@/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _sum } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
+import PickerClass from "@/components/PickerClass/PickerClass.vue";
 
 export default {
   name: "list",
@@ -40,14 +41,27 @@ export default {
       visible: false,
 
       type: null,
+
+      isClient: false,
     };
   },
-  components: {UniListItem, UniList, BasicPopup, UniBadge, UniNumberBox, BasicCard, UniDataPicker, UniSearchBar},
+  components: {
+    PickerClass,
+    UniListItem,
+    UniList,
+    BasicPopup,
+    UniBadge,
+    UniNumberBox,
+    BasicCard,
+    UniDataPicker,
+    UniSearchBar,
+  },
   methods: {
     // 外部传入的商品列表
     setShopList(data) {
       const list = data.list || [];
       this.type = data.type;
+      this.isClient = data.isClient;
       list.forEach(item => {
         this.$set(this.selected, item.productId, item);
       });
@@ -78,9 +92,9 @@ export default {
     // 修改购买数量时触发
     onItemNumberChange(node, val) {
       const item = _deepCopy(node);
-
       if (_isEmpty(_get(this.selected, item.id))) {
         this.$set(this.selected, item.id, {
+          id: item.id,
           name: item.name,
           classId: item.classId,
           levelIds: item.levelIds,
@@ -98,7 +112,7 @@ export default {
     // 修改购买购买单价
     onChangePrice(node, val) {
       const item = _deepCopy(node);
-      this.$set(this.selected[item.id], "price", val);
+      this.$set(this.selected[item.id], "price", this.toFen(val));
     },
 
     // 点击选好了
@@ -145,24 +159,7 @@ export default {
     <view class="ko-shop-list__header">
       <UniSearchBar v-model="queryList.name" placeholder="请输入产品名称" />
       <view class="ko-shop-list__class">
-        <view style="margin-right: 10px;">
-          <label class="ko-basic-label" v-for="(item, index) of className" :key="item">
-            <text>{{ item }}</text>
-            <text style="margin: 0 5px" v-if="index < className.length - 1">/</text>
-          </label>
-        </view>
-        <UniDataPicker
-          popup-title="选择产品分类"
-          placeholder="请选择"
-          :localdata="classList"
-          v-model="queryList.classId"
-          :map="{text: 'name',value: 'id',}"
-          @change="onChangeClass"
-        >
-          <template>
-            <button class="ko-basic-button__card">选择分类</button>
-          </template>
-        </UniDataPicker>
+        <PickerClass v-model="queryList.classId" @change="getList" />
       </view>
     </view>
 
@@ -175,6 +172,7 @@ export default {
       >
         <view class="ko-shop">
           <image
+            v-if="item.images"
             class="ko-shop__image"
             :src="getImageUrl(item.images)"
             mode="scaleToFill"
@@ -230,6 +228,7 @@ export default {
           >
             <view class="ko-shop">
               <image
+                v-if="item.images"
                 class="ko-shop__image"
                 :src="getImageUrl(item.images)"
                 mode="scaleToFill"
@@ -240,8 +239,9 @@ export default {
                 </view>
                 <view class="ko-shop__info--yuan edit ko-basic-money">
                   ¥
-                  <text v-if="false">{{ toYuan(item.price) }}</text>
+                  <text v-if="isClient">{{ toYuan(item.price) }}</text>
                   <UniNumberBox
+                    v-else
                     :max="9999999999999999"
                     :value="toYuan(item.price)"
                     color="#e43d33"
@@ -249,14 +249,12 @@ export default {
                   />
                   元
                 </view>
-
                 <view class="ko-shop__info--number">
                   <UniNumberBox
                     :max="9999999"
                     :value="getSelectNumber(item)"
                     @change="onItemNumberChange(item, $event)"
                   />
-                  件
                 </view>
               </view>
             </view>
@@ -270,6 +268,7 @@ export default {
 <style scoped lang="scss">
 .ko-shop-list {
   padding-top: 100px;
+  padding-bottom: 100px;
 
   &__header {
     position: fixed;

@@ -72,6 +72,7 @@ export default {
 <style scoped lang="scss">
 .ko-stock {
   width: 100%;
+  padding-bottom: 50px;
 
   // #ifdef H5
   &__tabs {

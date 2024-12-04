@@ -5,14 +5,15 @@ import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UvAvatarGroup from "@/uni_modules/uv-avatar/components/uv-avatar-group/uv-avatar-group.vue";
-import { getUserListApi, setUserRoleApi } from "@/api/admin";
+import { getPermissionsApi, setUserRoleApi } from "@/api/admin";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _xor } from "@/utils";
+import PickerUser from "@/components/PickerUser/PickerUser.vue";
 
 export default {
   name: "SetRole",
-  components: {UvAvatar, BasicPopup, UvAvatarGroup, BasicCard, UniListItem, UniList},
+  components: {PickerUser, UvAvatar, BasicPopup, UvAvatarGroup, BasicCard, UniListItem, UniList},
   mixins: [mixins],
   data() {
     return {
@@ -20,18 +21,18 @@ export default {
       urls: [],
       visible: false,
       role: "",
-
-      userList: [],
       backup: [],
+
+      premList: {},
     };
   },
   methods: {
     getList() {
       this.loading = true;
-      getUserListApi()
+      getPermissionsApi()
         .then(res => {
-          this.userList = res.data;
           console.log(res.data);
+          this.premList = res.data;
         })
         .finally(() => {
           this.loading = false;
@@ -41,40 +42,46 @@ export default {
     // 开启设置用户权限
     onSetRole(type, item) {
       this.role = (item.role || []).find(v => v.indexOf(type) > -1);
-      this.backup = _deepCopy(this.userList);
+      this.backup = _deepCopy(_get(this.premList, this.role))?.map(v => v.userId) || [];
+
+      console.log(this.backup);
+
       this.visible = true;
     },
 
-    // 选中用户
-    onSelect(node) {
-      this.visible = false;
-      let ro = _deepCopy(node.role || []);
+    // 确认设置权限
+    onConfirm(checked) {
+      const users = _xor(this.backup, checked);
 
-      if (this.isSameRole(ro, this.role)) {
-        if (ro.indexOf(this.role) > -1) {
-          ro = ro.filter(v => v !== this.role);
-          this.$set(node, "role", ro);
+      if (_isEmpty(users)) {
+        this.visible = false;
+        return false;
+      }
+
+      const cUsers = users?.map(id => {
+        const node = this.$refs.PickerUserRef.getUserInfo(id);
+        if (node.role.indexOf(this.role) > -1) {
+          node.role = node.role?.filter(v => !_isEqual(v, this.role));
+        } else {
+          node.role.push(this.role);
         }
-        console.log("超管");
-      } else {
-        ro.push(this.role);
-        this.$set(node, "role", ro);
-      }
+        return setUserRoleApi(node);
+      });
 
-      if (!_isEqual(node.role, ro)) {
-        setUserRoleApi(node)
-          .then(() => {
-            uni.showToast({title: "设置成功"});
-            this.getList();
-          });
-      }
+      Promise.all(cUsers)
+        .then(() => {
+          uni.showToast({title: "设置成功"});
+          this.$refs.PickerUserRef.getList();
+          this.getList();
+        })
+        .finally(() => {
+          this.visible = false;
+        });
     },
   },
   computed: {
     getMenuList() {
-      return this.MenuList.filter(item => {
-        return !["/admin/merchants/merchants", "/admin/admin/index", '/admin/user/user'].includes(item.value);
-      });
+      return this.MenuList.filter(item => item.isUpRole);
     },
 
     getTitle() {
@@ -84,13 +91,7 @@ export default {
     getAvatarList() {
       return (type, item) => {
         const role = (item.role || []).find(v => v.indexOf(type) > -1);
-        return (this.userList || []).filter(child => this.isSameRole(child.role, role));
-      };
-    },
-
-    isSameRole() {
-      return (roles, role) => {
-        return roles.indexOf(role) > -1 || roles.indexOf("Business") > -1;
+        return (_get(this.premList, role) || []).map(v => this.getImageUrl(v.avatar));
       };
     },
 
@@ -153,33 +154,15 @@ export default {
       </UniListItem>
     </UniList>
 
-    <BasicPopup :visible.sync="visible" :title="getTitle">
-      <view class="ko-role__popup">
-        <view class="ko-role__popup--list">
-          <UniList>
-            <UniListItem v-for="(item, index) of backup" :key="index">
-              <template #body>
-                <BasicCard>
-                  <view class="ko-role__popup--info" @click="onSelect(item)">
-                    <view style="margin-right: 10px;">
-                      <checkbox :checked="isSameRole(item.role, role)" />
-                    </view>
-                    <UvAvatar :size="64" :src="getImageUrl(item.avatar)" />
-                    <text style="margin-left: 10px;">{{ item.nickName || "-" }}</text>
-
-                    <i v-if="isBusiness(item.role)" class="iconfont icon-shanghuguanli"></i>
-                  </view>
-                </BasicCard>
-              </template>
-            </UniListItem>
-          </UniList>
-        </view>
-      </view>
-
-      <template #footer v-if="false">
-        <button style="margin: 10px 40px 10px;" class="ko-basic-button">确认</button>
-      </template>
-    </BasicPopup>
+    <PickerUser
+      ref="PickerUserRef"
+      :visible.sync="visible"
+      :title="getTitle"
+      :value="backup"
+      is-confirm
+      @confirm="onConfirm"
+      hide-business
+    />
   </view>
 </template>
 

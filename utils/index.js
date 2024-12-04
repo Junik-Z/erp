@@ -466,9 +466,29 @@ export function _keys(obj) {
   return result;
 }
 
+// 对比两个数组中是否有一样的值
 export function _haveCommonElements(arr1, arr2) {
   return (arr2 || []).some(value => (arr1 || []).includes(value));
 }
+
+// 是否是开发者工具
+export function _isEnv() {
+  return _isEqual(uni.getDeviceInfo()?.platform, "devtools");
+}
+
+export function _xor(arr1, arr2) {
+  const set1 = new Set(arr1);
+  const set2 = new Set(arr2);
+  return Array.from(new Set([...set1].filter(x => !set2.has(x)).concat([...set2].filter(x => !set1.has(x)))));
+}
+
+export function _maxBy(array, iteratee) {
+  if (!array || !iteratee) return undefined;
+  return array.reduce((obj1, obj2) => {
+    return iteratee(obj1) > iteratee(obj2) ? obj1 : obj2;
+  });
+}
+
 
 /**
  财通

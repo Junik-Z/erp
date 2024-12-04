@@ -12,7 +12,7 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, showToast } from "@/utils";
 import { validatePhone } from "@/utils/validate";
-import { addedCustomerApi, editCustomerApi, getCustomerListApi } from "@/api/erp/sale";
+import { addedCustomerApi, editCustomerApi, getCustomerInfoApi } from "@/api/erp/sale";
 
 export default {
   name: "client",
@@ -83,17 +83,20 @@ export default {
 
     if (this.isEdit) this.getInfo();
 
+    // #ifdef MP
     this.$nextTick(() => {
       this.$refs.FormRef.setRules(this.rules);
       this.$refs.ContactFormRef.setRules(this.contactsRules);
     });
+    // #endif
   },
   methods: {
     // 获取客户详情
     getInfo() {
-      /* getCustomerListApi({id: this.option.id}).then(res => {
-        console.log(res);
-      }); */
+      getCustomerInfoApi({id: this.option.id})
+        .then(res => {
+          this.form = res.data;
+        });
     },
 
     // 添加联系人
@@ -124,9 +127,17 @@ export default {
 
           const params = _deepCopy(this.form);
           this.loading = true;
-
           Func(params)
-            .then(() => {
+            .then(async (res) => {
+              /*  const data = res.data;
+               const op = this.option;
+
+               // 当是分享出去让客户自己填写的时候同时要绑定用户
+               if (_isEqual(op.PAGE_TYPE, "ADDED_CLIENT_BY_SALE")) {
+                 await bindCustomerApi({id: data.id, userId: op.SHARE_USER_ID, customerId: this.GET_USER_INFO.userId});
+               }
+
+               await  */
               showToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success() {

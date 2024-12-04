@@ -49,6 +49,12 @@
           "style": {
             "navigationBarTitleText": "采购订单"
           }
+        },
+        {
+          "path": "binding/binding",
+          "style": {
+            "navigationBarTitleText": "自助关联"
+          }
         }
       ]
     },
@@ -148,7 +154,7 @@
         {
           "path": "logistics/logistics",
           "style": {
-            "navigationBarTitleText": "配送/物流"
+            "navigationBarTitleText": "配送"
           }
         },
         {

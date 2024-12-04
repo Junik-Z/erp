@@ -23,6 +23,27 @@ export function getProduceHistoryListApi(data) {
 }
 
 /**
+ * @description 获取生产统计
+ */
+export function getProduceStatisticsApi(data) {
+  return request({
+    url: "/produce/statistics",
+    method: "get",
+    data,
+  });
+}
+/**
+ * @description 获取生产工单详情
+ */
+export function getProduceDetailApi(data) {
+  return request({
+    url: "/produce/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 添加生产订单
  */
 export function addedProduceApi(data) {
@@ -61,6 +82,17 @@ export function finishProduceApi(data) {
 export function updateProduceApi(data) {
   return request({
     url: "/produce/update",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除生产订单
+ */
+export function removeProduceApi(data) {
+  return request({
+    url: "/produce/delete",
     method: "post",
     data,
   });

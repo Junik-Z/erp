@@ -19,7 +19,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get } from "@/utils";
+import { _get, _pick } from "@/utils";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import mixins from "@/mixins/mixins";
 
@@ -58,7 +58,6 @@ export default {
           type: "onAddedTicket",
         },
       ],
-
       count: {
         count: 0,
         customerCount: 0,
@@ -145,7 +144,7 @@ export default {
 
       Func()
         .then(res => {
-          // this.list = res.data;
+          this.list = res.data;
           console.log(res.data);
         })
         .finally(() => {
@@ -156,7 +155,7 @@ export default {
     getCount() {
       getReceivableCountApi()
         .then(res => {
-          console.log(res);
+          console.log(res.data);
           this.count = res.data;
         });
     },
@@ -179,13 +178,13 @@ export default {
     onConfirm(item) {
       uni.showModal({
         title: "温馨提示",
-        content: `请核对订单号 ${item.orderCode} 的各产品数量金额是否准确，确认无误后可办理入账。`,
-        confirmText: "确认入库",
+        content: `请核对金额是否准确，确认后入账。`,
+        confirmText: "确认",
         success: (res) => {
           if (res.confirm) {
             finishReceivableApi(item)
               .then(() => {
-                uni.showToast({title: "入账成功"});
+                uni.showToast({title: "操作成功"});
                 this.getList();
               });
           }
@@ -194,8 +193,13 @@ export default {
     },
     // 添加票据
     onAddedTicket(item) {
+      const q = this.getQueryString({
+        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
+        isReceivable: true,
+      });
+
       uni.navigateTo({
-        url: `/erp/finance/ticket?id=${item.id}&orderCode=${item.orderCode}`,
+        url: `/erp/finance/ticket${q}`,
       });
     },
 
@@ -208,9 +212,9 @@ export default {
       return (node) => {
         return this.operate.filter((item) => {
           if (item.type === "onConfirm") {
-            return node.confirmable;
+            return node.confirmable && !this.isHistory;
           }
-          return true;
+          return !this.isHistory;
         });
       };
     },

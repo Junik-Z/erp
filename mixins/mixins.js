@@ -1,5 +1,7 @@
-import { _get, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
+import { _get, _isEmpty, _omit, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
+import { CONFIG } from "@/utils/config";
+import QS from "@/utils/qs.min";
 
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
@@ -11,23 +13,54 @@ const Sys = uni.getStorageSync("__CONFIG_INFO__");
 export default {
   data() {
     return {
-      _user_: User || {},
-      _sys_: Sys || {},
+      MIXINS_OBJ: {
+        USER: User || {},
+        SYS: Sys || {},
+      },
     };
   },
   onShow() {
-    this._UP_INGO();
+    this.$nextTick(() => {
+      this._UP_INGO();
+    });
   },
   created() {
-    this._UP_INGO();
-    uni.$on("$__get_info_success__", this._UP_INGO);
+    this.$nextTick(() => {
+      this._UP_INGO();
+      uni.$on("$__get_info_success__", this._UP_INGO);
+    });
   },
   mounted() {
   },
   methods: {
     _UP_INGO(res) {
-      this._user_ = uni.getStorageSync("__USER_INFO__") || _get(res, "0");
-      this._sys_ = uni.getStorageSync("__CONFIG_INFO__") || _get(res, "1");
+      const UserInfo = uni.getStorageSync("__USER_INFO__") || _get(res, "0");
+      const SysInfo = uni.getStorageSync("__CONFIG_INFO__") || _get(res, "1");
+
+      this.$set(this.MIXINS_OBJ, "USER", UserInfo);
+      this.$set(this.MIXINS_OBJ, "SYS", SysInfo);
+    },
+
+    // 获取通用的分享 query 参数
+    _GET_SHARE_APP_PARAMS_(obj) {
+      const scene = uni.getStorageSync("__APP_SCENE__") || "";
+      // 添加默认的参数数据
+      const query = {
+        ...(obj.query || {}),
+        ...(scene ? {scene} : {}),
+        // 分享用户的ID
+        SHARE_USER_ID: this.GET_USER_INFO?.userId,
+      };
+      const path = `${obj.path}?${QS.stringify(query)}`;
+      const obQuery = {...obj, path, type: CONFIG.SHARE_TYPE};
+
+      return _omit(obQuery, ["query"]);
+    },
+
+    // 获取参数
+    getQueryString(obj) {
+      const q = QS.stringify(obj);
+      return q && `?${q}` || "";
     },
   },
   components: {
@@ -50,15 +83,15 @@ export default {
     },
 
     GET_USER_INFO() {
-      return this._user_ || {};
+      return this.MIXINS_OBJ?.USER || {};
     },
 
     GET_CONFIG_INFO() {
-      return this._sys_ || {};
+      return this.MIXINS_OBJ?.SYS || {};
     },
 
     GET_USER_ROLE() {
-      return _get(this._user_, "role") || [];
+      return _get(this.MIXINS_OBJ?.USER, "role") || [];
     },
 
     // 订单状态
@@ -112,6 +145,51 @@ export default {
         };
         return _get(obj, type) || "-";
       };
+    },
+
+    // 获取通用图标组件的参数
+    getBasicChartsOptions() {
+      return (data = {}) => {
+        // 空y轴数据
+        const notCat = _isEmpty(data.categories);
+        // 空x图表数据
+        const notSeries = data.series?.every(item => _isEmpty(item.data));
+
+        return {
+          color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
+          padding: [15, 15, 0, 5],
+          enableScroll: false,
+          legend: {
+            show: false,
+          },
+          xAxis: {
+            dashLength: 10,
+          },
+          yAxis: {
+            disableGrid: notCat && notSeries,
+            gridType: "dash",
+            dashLength: 2,
+            data: [],
+          },
+          extra: {
+            column: {
+              type: "group",
+              width: 16,
+              barBorderCircle: true,
+            },
+            line: {
+              type: "straight",
+              width: 2,
+              activeType: "hollow",
+            },
+          },
+        };
+      };
+    },
+
+    // 获取数据
+    GET_FUNC() {
+      return _get;
     },
   },
 };

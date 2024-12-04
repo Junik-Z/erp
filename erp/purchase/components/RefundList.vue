@@ -6,7 +6,13 @@ import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import { cancelPurchaseReturnApi, getPurchaseReturnHistoryListApi, getPurchaseReturnListApi } from "@/api/erp/purchase";
+import {
+  cancelPurchaseReturnApi,
+  confirmPurchaseReturnApi,
+  getPurchaseReturnHistoryListApi,
+  getPurchaseReturnListApi,
+  removePurchaseReturnApi,
+} from "@/api/erp/purchase";
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -142,19 +148,64 @@ export default {
       });
     },
 
-    onJump() {
-      // uni.navigateTo({
-      //   url: "/erp/stock/verify",
-      // });
+    onJump(item) {
+      uni.navigateTo({
+        url: `/erp/purchase/refund?id=${item.id}`,
+      });
     },
     onTrigger(event) {
-      const {path} = event.item || {};
+      if ("uni") {
+        uni.navigateTo({
+          url: "/erp/purchase/refund",
+        });
+        return false;
+      }
 
+      const {path} = event.item || {};
       this.$refs.FabRef.close();
 
       if (path) {
         uni.navigateTo({url: path});
       }
+    },
+
+    onSubmit(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要提交该采购退货订单吗？请注意，一旦提交，订单内容将无法再进行修改。",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__s_loading__", true);
+            confirmPurchaseReturnApi({id: item.id})
+              .then(() => {
+                uni.showToast({title: "提交成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__s_loading__", false);
+              });
+          }
+        },
+      });
+    },
+    onRemove(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要删除此采购退货订单吗？",
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(item, "__r_loading__", true);
+            removePurchaseReturnApi(item)
+              .then(() => {
+                uni.showToast({title: "删除成功"});
+                this.getList();
+              })
+              .finally(() => {
+                this.$set(item, "__r_loading__", false);
+              });
+          }
+        },
+      });
     },
   },
   computed: {
@@ -192,10 +243,41 @@ export default {
                   {{ item.remark || "-" }}
                 </UniCol>
               </UniRow>
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
-                <button class="ko-basic-button__card" @click="onCancel(item)">取消</button>
-                <button class="ko-basic-button__card" @click="onJump(item)">修改</button>
-                <!--<button class="ko-basic-button__card" @click="onJump">申请入库</button>-->
+              <view
+                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+              >
+                <button
+                  v-if="['CREATED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click="onSubmit(item)"
+                  :disabled="item.__s_loading__"
+                  :loading="item.__s_loading__"
+                >
+                  提交订单
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onJump(item)"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                >
+                  修改
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onCancel(item)"
+                  v-if="['CREATED'].includes(item.status)"
+                >
+                  取消
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onRemove(item)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                  v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+                >
+                  删除
+                </button>
               </view>
             </view>
           </BasicCard>
@@ -227,9 +309,9 @@ export default {
         iconColor: "#fff",
       }'
       horizontal="right"
-      :content="content"
+      :content="[] || content"
       direction="vertical"
-      @trigger="onTrigger"
+      @fab-click="onTrigger"
     />
   </view>
 </template>
@@ -254,7 +336,6 @@ export default {
     color: $uni-base-color;
 
     &--name {
-      font-size: 20px;
       font-weight: bold;
       color: #333;
       margin-bottom: 10px;

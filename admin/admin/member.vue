@@ -49,26 +49,24 @@ export default {
       getBusinessesUserListApi(params)
         .then((res) => {
           this.list = res.data;
-          // console.log(res.data);
+          console.log(res.data);
         })
         .finally(() => {
           this.loading = false;
         });
     },
 
-    setUserRole(row) {
-      this.$set(row, "__loading__", true);
-      setBusinessUserRoleApi(row)
+    setUserRole(item) {
+      this.$set(item, "__loading__", true);
+      setBusinessUserRoleApi({userId: item.userId, businessName: this.option.businessName})
         .then(() => {
-          uni.showToast({
-            title: "设置成功",
-          });
-
+          uni.showToast({title: "设置成功"});
           this.getList();
         })
         .finally(() => {
-          this.$set(row, "__loading__", false);
+          this.$set(item, "__loading__", false);
         });
+
       // this.visible = true;
       // this.form = _deepCopy(row);
       // this.$refs.FormRef.clearValidate();
@@ -94,7 +92,7 @@ export default {
     />
 
     <UniList>
-      <UniListItem v-for="item of list" :key="item.id">
+      <UniListItem v-for="(item, index) of list" :key="index">
         <template #body>
           <BasicCard>
             <i
@@ -114,7 +112,7 @@ export default {
                     <UniCol :span="24">
                       <view class="ko-member__item--info--name">
                         <label class="ko-basic-label">名称：</label>
-                        {{ item.nickName }}
+                        {{ item.nickName || "-" }}
                       </view>
                     </UniCol>
                     <UniCol :span="24">
@@ -131,6 +129,8 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="setUserRole(item)"
+                  :loading="item.__loading__"
+                  :disabled="item.__loading__"
                 >
                   设为商户
                 </button>

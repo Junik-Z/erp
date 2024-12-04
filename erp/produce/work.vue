@@ -6,7 +6,7 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy, showToast } from "@/utils";
-import { addedProduceApi, updateProduceApi } from "@/api/erp/produce";
+import { addedProduceApi, getProduceDetailApi, updateProduceApi } from "@/api/erp/produce";
 import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
 import mixins from "@/mixins/mixins";
 import dayjs from "@/utils/dayjs";
@@ -62,10 +62,20 @@ export default {
     option: {},
   }),
   onLoad(option) {
-    console.log(option);
     this.option = option;
+    this.isEdit = !!option.id;
+
+    if (this.isEdit) this.getInfo();
   },
   methods: {
+    getInfo() {
+      getProduceDetailApi({id: this.option.id})
+        .then(res => {
+          const params = res.data;
+          this.form = params;
+          console.log(params);
+        });
+    },
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
         if (!valid) {
@@ -156,7 +166,7 @@ export default {
         </view>
       </UniSection>
 
-      <UniSection title="预计创造价值" type="line">
+      <UniSection title="预计创造价值" type="line" v-if="false">
         <view style="padding: 10px;">
           <UniFormsItem label-width="30px" name="materialDetails">
             <view>

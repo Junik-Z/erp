@@ -19,6 +19,7 @@ export default {
     };
   },
   onLoad() {
+    console.log("首页权限", this.getRole, this.GET_USER_INFO);
   },
   computed: {
     CONFIG() {
@@ -32,19 +33,35 @@ export default {
       };
     },
     getRole() {
-      return _get(this._user_, "role") || [];
+      return _get(this.GET_USER_INFO, "role") || [];
     },
     getMenuList() {
       return _deepCopy(this.gridList)
         .flatMap(item => {
-          if (_haveCommonElements(this.getRole, item.role)) {
+          const role = this.GET_USER_INFO?.role || this.getRole;
+
+          if (_haveCommonElements(role, item.role)) {
             return [item];
           } else {
             return [];
           }
         });
     },
+    getRemark() {
+      return this.GET_CONFIG_INFO?.remark || "";
+    },
   },
+  // #ifdef H5
+  watch: {
+    getRemark: {
+      handler() {
+        document.title = `${this.getRemark} —— ${CONFIG.TITLE}`;
+      },
+      immediate: true,
+      deep: true,
+    },
+  },
+  // #endif
   methods: {
     onChange(event) {
       const obj = this.getMenuList[event.detail.index];
@@ -63,7 +80,17 @@ export default {
 
 <template>
   <view class="ko-home" :style="[getMenuButtonStyle]">
-    <view class="ko-home__title">{{ CONFIG.TITLE }}</view>
+    <view class="ko-home__header">
+      <view class="ko-home__header--title">{{ getRemark }}</view>
+
+      <view class="ko-home__title">
+        {{ CONFIG.TITLE }}
+      </view>
+    </view>
+
+    <!-- #ifdef H5 -->
+    <!-- #endif -->
+
     <!-- #ifdef MP -->
     <UniGrid :column="3" @change="onChange" @click.stop="() => {}" :key="key">
       <UniGridItem v-for="(item, index) of getMenuList" :key="item.value" :index="index">
@@ -109,11 +136,20 @@ export default {
 // #ifdef MP
 .ko-home {
   height: 100vh;
-  padding: 160px 20px;
+  padding: 120px 20px;
+
+  &__header {
+    &--title {
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+  }
 
   &__title {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 16px;
+    color: #8f939c;
     text-align: center;
     margin-bottom: 50px;
   }
@@ -197,11 +233,23 @@ export default {
 
   color: #fff;
   padding-top: 100px;
+  padding-bottom: 200px;
   position: relative;
 
+  &__header {
+    &--title {
+      font-size: 60px;
+      text-align: center;
+      line-height: 1.4;
+    }
+  }
+
   &__title {
-    font-size: 60px;
+    font-size: 28px;
     text-align: center;
+    line-height: 1.2;
+    margin-top: 10px;
+    color: #c7c9ce;
   }
 
   &__button {
@@ -276,6 +324,28 @@ export default {
     left: 50%;
     transform: translateX(-50%);
     width: 200px;
+  }
+
+  &__not-role {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9;
+    color: #8f939c;
+    text-align: center;
+    margin-top: 30px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    &--image {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+    }
   }
 }
 

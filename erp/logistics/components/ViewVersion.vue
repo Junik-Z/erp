@@ -1,17 +1,27 @@
 <script>
 import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
-import UCountTo from "@/uni_modules/uview-ui/components/u-count-to/u-count-to.vue";
 import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
+import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 
 export default {
   name: "ViewVersion",
-  components: {UniListItem, BasicCard, UniCol, UniRow, UniList, QiunDataCharts, UCountTo, UniGridItem, UniGrid},
+  components: {
+    UvCountTo,
+    UniListItem,
+    BasicCard,
+    UniCol,
+    UniRow,
+    UniList,
+    QiunDataCharts,
+    UniGridItem,
+    UniGrid,
+  },
   data: () => ({
     chartData: {},
     //您可以通过修改 config-ucharts.js 文件中下标为 ['column'] 的节点来配置全局默认参数，如都是默认参数，此处可以不传 opts 。实际应用过程中 opts 只需传入与全局默认参数中不一致的【某一个属性】即可实现同类型的图表显示不同的样式，达到页面简洁的需求。
@@ -75,7 +85,7 @@ export default {
         <view class="ko-view-version__item">
           <view>发件数</view>
           <view>
-            <UCountTo :start-val="30" :end-val="500" color="#2979ff" />
+            <UvCountTo :start-val="30" :end-val="500" color="#2979ff" />
             <text>件</text>
           </view>
         </view>
@@ -84,7 +94,7 @@ export default {
         <view class="ko-view-version__item">
           <view>收件数</view>
           <view>
-            <UCountTo :start-val="30" :end-val="500" color="#e43d33" />
+            <UvCountTo :start-val="30" :end-val="500" color="#e43d33" />
             <text>件</text>
           </view>
         </view>
@@ -93,7 +103,7 @@ export default {
         <view class="ko-view-version__item">
           <view>本月发出件数</view>
           <view>
-            <UCountTo :start-val="30" :end-val="500" color="#2979ff" />
+            <UvCountTo :start-val="30" :end-val="500" color="#2979ff" />
             <text>件</text>
           </view>
         </view>
@@ -102,7 +112,7 @@ export default {
         <view class="ko-view-version__item">
           <view>待处理件数</view>
           <view>
-            <UCountTo :start-val="30" :end-val="500" color="#2979ff" />
+            <UvCountTo :start-val="30" :end-val="500" color="#2979ff" />
             <text>件</text>
           </view>
         </view>

@@ -55,7 +55,6 @@ export function cancelReceivableApi(data) {
   });
 }
 
-
 /**
  * @description 获取应付款列表
  */
@@ -90,6 +89,17 @@ export function getPayableHistoryListApi(data) {
 }
 
 /**
+ * @description 获取可完成收款的订单
+ */
+export function getAchievableListApi(data) {
+  return request({
+    url: "/finance/receivable/achievable",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 完成付款
  */
 export function finishPayableApi(data) {
@@ -118,6 +128,17 @@ export function cancelPayableApi(data) {
 export function getPaidOrderListApi(data) {
   return request({
     url: "/finance/paid-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取可完成付款订单
+ */
+export function getPayableAchievableApi(data) {
+  return request({
+    url: "/finance/payable/achievable",
     method: "get",
     data,
   });

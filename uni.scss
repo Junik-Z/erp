@@ -86,6 +86,11 @@ button::after {
 
 .ko-basic-label {
   color: $uni-info;
+
+  &__images-wrap {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .ko-basic-money {
