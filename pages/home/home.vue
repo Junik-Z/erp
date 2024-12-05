@@ -32,7 +32,9 @@ export default {
       uni.$__home_set_timeout_vm__ && clearTimeout(uni.$__home_set_timeout_vm__);
       console.log("系统已经准好了");
 
+      // #ifdef MP
       uni.$emit("$__initiate_web_socket__");
+      // #endif
 
       uni.reLaunch({
         url: "/pages/index/index",

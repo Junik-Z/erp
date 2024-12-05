@@ -9,7 +9,7 @@ export const CONFIG = {
 
   // #ifdef H5
   BASE_URL: "/api",
-  // BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
+  BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
   // #endif
 
   // BASE_URL: "https://erp.kuaouyun.cn/api",
@@ -45,9 +45,35 @@ export const ROLE_LIST_ENUMS = {
 };
 
 /**
+ * sse 事件
+ * 类型 NewOrder
+ * 事件:
+ * OutboundOrder  出库单
+ * ProduceOrder  生产单
+ * PurchaseOrder 采购单
+ * SaleOrder  销售单
+ * InboundOrder  出库单
+ * PayableOrder  应付单
+ * ReceivableOrder  应收单
+ * DeliveryOrder  物流单
+ */
+
+/**
  * @description 系统菜单列表
  */
 export const MENU_LIST = [
+  // #ifdef H5
+  {
+    label: "大屏数据看版",
+    icon: "icon-dashboard",
+    value: "/admin/dashboard/dashboard",
+    modelKey: "stock",
+    role: ["Admin", "Business"],
+    // 是否可以被分配角色
+    isUpRole: false,
+  },
+  // #endif
+
   {
     label: "库存",
     icon: "icon-kucuntongjifenxi",
@@ -141,4 +167,18 @@ export const HOME_PAGE_TYPE_ENUMS = {
   ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",
   BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
+};
+
+/**
+ * @description WebSocket 消息类型
+ */
+export const WEB_SOCKET_ENUMS = {
+  OutboundOrder: "出库单",
+  ProduceOrder: "生产单",
+  PurchaseOrder: "采购单",
+  SaleOrder: "销售单",
+  InboundOrder: "出库单",
+  PayableOrder: "应付单",
+  ReceivableOrder: "应收单",
+  DeliveryOrder: "物流单",
 };

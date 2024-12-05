@@ -1,14 +1,17 @@
 <script>
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
-import ViewVersion from "@/erp/stock/components/ViewVersion.vue";
-import Warehouse from "@/erp/stock/components/Warehouse.vue";
-import Out from "@/erp/stock/components/Out.vue";
+import ViewVersion from "./components/ViewVersion.vue";
+import Warehouse from "./components/Warehouse.vue";
+import Out from "./components/Out.vue";
+import Verification from "./components/Verification.vue";
+
 import { _get, _isEqual } from "@/utils";
+import KoNotice from "@/components/Notice/Notice.vue";
 
 export default {
   name: "stock",
-  components: {Out, Warehouse, ViewVersion, UniSegmentedControl},
+  components: {Verification, KoNotice, Out, Warehouse, ViewVersion, UniSegmentedControl},
   data: () => ({
     tabList: [
       {
@@ -22,6 +25,10 @@ export default {
       {
         label: "出库审批",
         ref: "ORef",
+      },
+      {
+        label: "核对库存",
+        ref: "VRef",
       },
     ],
     current: 0,
@@ -57,6 +64,7 @@ export default {
 
 <template>
   <view class="ko-stock">
+    <KoNotice />
     <view class="ko-stock__tabs" style="padding: 10px;">
       <UniSegmentedControl :values="tabList" label-key="label" :current="current" @clickItem="onTab" />
     </view>
@@ -66,6 +74,8 @@ export default {
     <Warehouse ref="WRef" v-if="isEqual(getRefName, 'WRef')" />
 
     <Out ref="ORef" v-if="isEqual(getRefName, 'ORef')" />
+
+    <Verification ref="VRef" v-if="isEqual(getRefName, 'VRef')" />
   </view>
 </template>
 

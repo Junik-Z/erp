@@ -2,8 +2,6 @@
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import {
   cancelPurchaseApi,
@@ -17,10 +15,11 @@ import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _get, _isEqual } from "@/utils";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 
 export default {
   name: "OrderList",
-  components: {HistoryBar, LoadMore, UniFab, UniCol, UniRow, BasicCard, UniListItem, UniList},
+  components: {OrderCard, HistoryBar, LoadMore, UniFab, BasicCard, UniListItem, UniList},
   mixins: [BasicMixins],
   data() {
     const _this = this;
@@ -220,38 +219,13 @@ export default {
       <!-- #ifdef MP -->
       <UniListItem v-for="item of list" :key="item.id">
         <template #body>
-          <BasicCard  @click="onJumpDetails(item, 'purchase')">
-            <view class="ko-order__info">
-              <UniRow gutter="10">
-                <UniCol :span="24">
-                  <label class="ko-basic-label">订单编号：</label>{{ item.orderCode }}
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">订单总金额：</label>
-                  <text class="ko-basic-money">
-                    ¥ {{ toYuan(item.totalAmount) }}元
-                  </text>
-                </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">总金额大写：</label>
-                  <text class="ko-basic-money">
-                    {{ toBigMoney(toYuan(item.totalAmount)) }}元
-                  </text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">订单状态：</label>
-                  {{ ORDER_STATUS_ENUMS(item.status) }}
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">备注：</label>
-                  {{ item.remark }}
-                </UniCol>
-              </UniRow>
+          <OrderCard is-purchase :item="item" :is-history="isHistory" @click="onJumpDetails(item, 'purchase')">
+            <template #operate>
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click="onSubmit(item)"
+                  @click.stop="onSubmit(item)"
                   :disabled="item.__s_loading__"
                   :loading="item.__s_loading__"
                 >
@@ -259,21 +233,21 @@ export default {
                 </button>
                 <button
                   class="ko-basic-button__card"
-                  @click="onJump(item)"
+                  @click.stop="onJump(item)"
                   v-if="['CREATED', 'CANCELLED'].includes(item.status)"
                 >
                   修改
                 </button>
                 <button
                   class="ko-basic-button__card"
-                  @click="onCancel(item)"
+                  @click.stop="onCancel(item)"
                   v-if="['CREATED'].includes(item.status)"
                 >
                   取消
                 </button>
                 <button
                   class="ko-basic-button__card"
-                  @click="onRemove(item)"
+                  @click.stop="onRemove(item)"
                   :loading="item.__r_loading__"
                   :disabled="item.__r_loading__"
                   v-if="['CANCELLED', 'CREATED'].includes(item.status)"
@@ -281,8 +255,8 @@ export default {
                   删除
                 </button>
               </view>
-            </view>
-          </BasicCard>
+            </template>
+          </OrderCard>
         </template>
       </UniListItem>
       <LoadMore :loading="loading" />

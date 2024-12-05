@@ -32,6 +32,7 @@ export function getInboundDetailApi(data) {
     data,
   });
 }
+
 /**
  * @description 出库详情
  */
@@ -116,6 +117,51 @@ export function confirmOutboundApi(data) {
 export function cancelOutboundApi(data) {
   return request({
     url: "/stock/outbound/cancel",
+    method: "post",
+    data,
+  });
+}
+
+/** ———————————————— 核对 —————————————————— */
+/**
+ * @description 获取核对列表
+ */
+export function getCheckListApi(data) {
+  return request({
+    url: "/stock/check",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取入库核对列表
+ */
+export function getInboundDetailListApi(data) {
+  return request({
+    url: "/stock/inboundDetail",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取出库核对列表
+ */
+export function getOutboundDetailListApi(data) {
+  return request({
+    url: "/stock/outboundDetail",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 刷新产品库存
+ */
+export function refreshStockApi(data) {
+  return request({
+    url: "/stock/refresh",
     method: "post",
     data,
   });

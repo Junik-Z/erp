@@ -190,6 +190,8 @@ export default {
         uni.setStorageSync("__APP_SCENE__", scene);
         uni.$emit("$__login_success__", scene);
         uni.setStorageSync("Cookie", scene);
+
+        ESVm?.close();
       }, false);
 
       // 获取到的二维码图片
@@ -243,8 +245,15 @@ export default {
 
       }
     },
+
     onMessage(res) {
       console.log("WebSocket 接收到的消息", res);
+      try {
+        const data = JSON.parse(res.data);
+        uni.$emit("$__web_socket_message__", data);
+      } catch (e) {
+        uni.$emit("$__web_socket_message__", res);
+      }
     },
   },
 };

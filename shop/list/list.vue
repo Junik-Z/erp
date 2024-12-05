@@ -277,7 +277,7 @@ export default {
     right: 0;
     background: #FFFFFF;
     height: 100px;
-    z-index: 100;
+    z-index: 9;
   }
 
   &__class {
@@ -346,6 +346,8 @@ export default {
 
   &__popup {
     width: 100vw;
+    max-height: 96vh;
+    overflow-y: auto;
 
     &--wrap {
       padding: 0 5px;

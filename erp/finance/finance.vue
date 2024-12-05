@@ -4,11 +4,12 @@ import UniSegmentedControl
 import Receivable from "./components/Receivable.vue";
 import PayList from "./components/PayList.vue";
 import CostList from "./components/CostList.vue";
+import Verification from "./components/Verification.vue";
 import { _get, _isEqual } from "@/utils";
 
 export default {
   name: "finance",
-  components: {CostList, PayList, Receivable, UniSegmentedControl},
+  components: {Verification, CostList, PayList, Receivable, UniSegmentedControl},
   data: () => ({
     tabList: [
       {
@@ -23,8 +24,12 @@ export default {
         label: "成本统计",
         ref: "CLRef",
       },
+      {
+        label: "核对款项",
+        ref: "VRef",
+      },
     ],
-    current: 0,
+    current: 3,
   }),
   onShow() {
     this.getList();
@@ -67,6 +72,8 @@ export default {
     <PayList ref="PLRef" v-if="isEqual(getRefName,'PLRef')" />
 
     <CostList ref="CLRef" v-if="isEqual(getRefName,'CLRef')" />
+
+    <Verification ref="VRef" v-if="isEqual(getRefName,'VRef')" />
   </view>
 </template>
 

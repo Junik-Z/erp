@@ -45,6 +45,17 @@ export function getReceivableHistoryListApi(data) {
 }
 
 /**
+ * @description 获取用户应收款列表
+ */
+export function getReceivableCheckApi(data) {
+  return request({
+    url: "/finance/receivable/check",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 完成收款
  */
 export function finishReceivableApi(data) {
@@ -139,6 +150,17 @@ export function cancelPayableApi(data) {
 export function getPaidOrderListApi(data) {
   return request({
     url: "/finance/paid-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取用户应付款列表
+ */
+export function getPayableCheckApi(data) {
+  return request({
+    url: "/finance/payable/check",
     method: "get",
     data,
   });

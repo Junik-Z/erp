@@ -101,6 +101,16 @@ export default {
       return _get(this.MIXINS_OBJ?.USER, "role") || [];
     },
 
+    // 判断用户是否可以刷新库存
+    isRefreshStock() {
+      return ["Admin", "Business", "Stock_Write"].some(v => this.GET_USER_ROLE.includes(v));
+    },
+
+    // 判断用户是否可以刷新用户款项
+    isRefreshPayment() {
+      return ["Admin", "Business", "Finance_Write"].some(v => this.GET_USER_ROLE.includes(v));
+    },
+
     // 订单状态
     ORDER_STATUS_ENUMS() {
       return (type) => {
@@ -197,6 +207,15 @@ export default {
     // 获取数据
     GET_FUNC() {
       return _get;
+    },
+
+    // 当没有图片是用名称代替
+    notImageGetName() {
+      return (image, name) => {
+        if (!image && name) return name;
+
+        return "";
+      };
     },
   },
 };

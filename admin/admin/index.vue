@@ -12,11 +12,13 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import Basic from "@/mixins/mixins";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy } from "@/utils";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
   name: "Admin",
   mixins: [Basic],
   components: {
+    UvAvatar,
     FilePicker,
     UniForms,
     BasicPopup,
@@ -148,9 +150,12 @@ export default {
           <BasicCard @click="onJump(item)">
             <view class="ko-admin__item">
               <view class="ko-admin__item--info">
-                <image
+                <UvAvatar
                   class="ko-admin__item--info--image ko-basic-box-shadow"
                   :src="getImageUrl(item.logo)"
+                  :text="item.name"
+                  :size="72"
+                  random-bg-color
                 />
 
                 <view class="ko-admin__item--info--name">

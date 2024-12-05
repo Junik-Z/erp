@@ -119,7 +119,7 @@ export function convertSecondsToTime(seconds) {
 
 export function addUnit(val) {
   if (!val || _isString(val)) return val;
-  return `${val}rpx`;
+  return `${val}px`;
 }
 
 // 判断是否是开发者工具

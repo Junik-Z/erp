@@ -8,10 +8,12 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 
 export default {
   name: "Warehouse",
   components: {
+    OrderCard,
     HistoryBar,
     LoadMore,
     UniCol,
@@ -127,54 +129,26 @@ export default {
       <!-- #ifdef MP -->
       <UniListItem v-for="(item, index) of list" :key="index">
         <template #body>
-          <BasicCard @click="onJumpDetails(item, 'inbound')">
-            <view class="ko-warehouse__info">
-              <UniRow gutter="10">
-                <UniCol :span="24">
-                  <label class="ko-basic-label">订单编号：</label>
-                  {{ item.orderCode || "-" }}
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">订单类型：</label>
-                  {{ ORDER_TYPE_ENUMS(item.orderType) }}
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">订单总金额：</label>
-                  <text class="ko-basic-money">
-                    ¥ {{ toYuan(item.totalAmount) }}元
-                  </text>
-                </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">总金额大写：</label>
-                  <text class="ko-basic-money">
-                    {{ toBigMoney(toYuan(item.totalAmount)) }}元
-                  </text>
-                </UniCol>
-                <UniCol :span="24" v-if="isHistory">
-                  <label class="ko-basic-label">状态：</label>
-                  {{ ORDER_STATUS_ENUMS(item.status) }}
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">备注：</label>
-                  {{ item.remark || "-" }}
-                </UniCol>
-              </UniRow>
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-              >
-                <button v-if="['CREATED'].includes(item.status)" class="ko-basic-button__card" @click="onCancel(item)">
+          <OrderCard :item="item" @click="onJumpDetails(item, 'inbound')" :is-history="isHistory">
+            <template #operate>
+              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <button
+                  v-if="['CREATED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click.stop="onCancel(item)"
+                >
                   取消入库
                 </button>
                 <button
                   v-if="['CREATED', 'CANCELLED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click="onConfirm(item)"
+                  @click.stop="onConfirm(item)"
                 >
                   确认入库
                 </button>
               </view>
-            </view>
-          </BasicCard>
+            </template>
+          </OrderCard>
         </template>
       </UniListItem>
       <LoadMore :loading="loading" />

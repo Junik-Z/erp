@@ -68,6 +68,12 @@
           }
         },
         {
+          "path": "stock/check",
+          "style": {
+            "navigationBarTitleText": "核对库存"
+          }
+        },
+        {
           "path": "sale/sale",
           "style": {
             "navigationBarTitleText": "销售看版"
@@ -146,6 +152,12 @@
           }
         },
         {
+          "path": "finance/check",
+          "style": {
+            "navigationBarTitleText": "核对款项"
+          }
+        },
+        {
           "path": "logistics/logistics",
           "style": {
             "navigationBarTitleText": "配送"
@@ -196,6 +208,12 @@
           "path": "user/user",
           "style": {
             "navigationBarTitleText": "个人中心"
+          }
+        },
+        {
+          "path": "dashboard/dashboard",
+          "style": {
+            "navigationBarTitleText": "数据看版"
           }
         }
       ]

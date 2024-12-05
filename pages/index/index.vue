@@ -6,9 +6,10 @@ import UniDataCheckbox from "@/uni_modules/uni-data-checkbox/components/uni-data
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST } from "@/utils/config";
+import KoNotice from "@/components/Notice/Notice.vue";
 
 export default {
-  components: {UniGridItem, UniGrid, UniDataCheckbox},
+  components: {KoNotice, UniGridItem, UniGrid, UniDataCheckbox},
   mixins: [mixins],
   data() {
     return {
@@ -80,9 +81,10 @@ export default {
 
 <template>
   <view class="ko-home" :style="[getMenuButtonStyle]">
+    <KoNotice is-custom />
+
     <view class="ko-home__header">
       <view class="ko-home__header--title">{{ getRemark }}</view>
-
       <view class="ko-home__title">
         {{ CONFIG.TITLE }}
       </view>
