@@ -31,6 +31,9 @@ export default {
     isCheckStock: Boolean,
     // 是否是校验财务单
     isCheckFinance: Boolean,
+
+    // 显示完成订单
+    isFinished: Boolean,
   },
   methods: {
     onClickOperate(child, item) {
@@ -70,6 +73,12 @@ export default {
 <template>
   <BasicCard custom-class="ko-order-card" @click="$emit('click')">
     <view class="ko-order-card__wrap">
+      <view v-if="isFinished && ['FINISHED'].includes(item.status)" class="ko-order-card__finished">
+        <view class="ko-order-card__finished--text">
+          已完成
+        </view>
+      </view>
+
       <UniRow :gutter="20">
         <UniCol :span="24">
           <label class="ko-basic-label">订单编号：</label>
@@ -106,7 +115,7 @@ export default {
           <view class="ko-basic-label__images-wrap">
             <label class="ko-basic-label">{{ getCustomerName(item) }}：</label>
             <view style="margin-right: 10px;" v-if="GET_FUNC(item, 'customer.logo')">
-              <UvAvatar :src="getImageUrl(GET_FUNC(item, 'customer.logo'))" />
+              <UvAvatar :src="getImageUrl(GET_FUNC(item, 'customer.logo'))" random-bg-color />
             </view>
             <text>{{ GET_FUNC(item, "customer.name") || "-" }}</text>
           </view>
@@ -118,6 +127,7 @@ export default {
             <view style="margin-right: 10px;" v-if="GET_FUNC(item, 'user.avatar')">
               <UvAvatar
                 :size="38"
+                random-bg-color
                 :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
               />
             </view>
@@ -136,6 +146,7 @@ export default {
                     :size="64"
                     :src="getImageUrl(GET_FUNC(child, 'images'))"
                     shape="square"
+                    random-bg-color
                   />
                   <view style="margin-left: 10px; flex: 1;">
                     <UniRow :gutter="16">
@@ -153,6 +164,11 @@ export default {
               </BasicCard>
             </view>
           </view>
+        </UniCol>
+
+        <UniCol :span="24">
+          <label class="ko-basic-label">时间：</label>
+          {{ item.updateTime || "-" }}
         </UniCol>
 
         <UniCol :span="24">
@@ -179,7 +195,6 @@ export default {
 
 <style scoped lang="scss">
 .ko-order-card {
-
   &__wrap {
     display: flex;
     flex-direction: column;
@@ -214,6 +229,30 @@ export default {
       &:first-child {
         margin-left: 0;
       }
+    }
+  }
+
+  &__finished {
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: #fff;
+    width: 60px;
+    height: 60px;
+    overflow: hidden;
+    border-radius: 0 6px 0 0;
+
+    &--text {
+      position: absolute;
+      top: -17px;
+      right: -40px;
+      background: $ko-primary-color;
+      transform: rotate(45deg);
+      padding-top: 30px;
+      padding-bottom: 5px;
+      width: 100px;
+      text-align: center;
+      font-size: 12px;
     }
   }
 }

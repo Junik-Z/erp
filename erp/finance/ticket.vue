@@ -54,7 +54,7 @@ export default {
     list: [],
     loading: false,
 
-    // 是否是退款凭证
+    // 是否是要支付的订单
     isRefund: false,
 
     visible: false,
@@ -79,13 +79,17 @@ export default {
     isEdit: false,
     cLoading: false,
 
+    // 判断是付是应收款模块进来的
     isReceivable: false,
 
     confirmationList: [],
   }),
   onLoad(option) {
     this.option = option;
-    this.isRefund = ["SALE_RETURN", "PURCHASE_RETURN"].includes(option.orderType);
+
+    // 销售退货和采购的时候需要进行付款
+    this.isRefund = ["SALE_RETURN", "PURCHASE"].includes(option.orderType);
+
     this.isReceivable = option.isReceivable === "true";
 
     // #ifdef MP
@@ -207,7 +211,6 @@ export default {
     // 查询可确认订单
     queryConfirmOrder() {
       this.cLoading = true;
-
       const Func = this.isReceivable ? getAchievableListApi : getPayableAchievableApi;
 
       const params = _deepCopy(this.option);
@@ -280,7 +283,6 @@ export default {
                 <UniRow :gutter="10">
                   <UniCol :span="24" v-if="item.vouchers">
                     <label class="ko-basic-label">凭证：</label>
-
                     <image
                       class="ko-ticket__item--image ko-basic-box-shadow"
                       :src="getImageUrl(item.voucher)"
@@ -300,7 +302,7 @@ export default {
                     </text>
                   </UniCol>
                   <UniCol :span="24">
-                    <label class="ko-basic-label">更新时间：</label>
+                    <label class="ko-basic-label">时间：</label>
                     <text>{{ item.updateTime || "-" }}</text>
                   </UniCol>
                   <UniCol :span="24">

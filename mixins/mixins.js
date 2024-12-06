@@ -2,6 +2,7 @@ import { _get, _isEmpty, _omit, _pick, dealBigMoney, transferYuan, yuanToPoints 
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG } from "@/utils/config";
 import QS from "@/utils/qs.min";
+import { logoutApi } from "@/api/user";
 
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
@@ -69,6 +70,36 @@ export default {
         url: `/shop/details/details?${QS.stringify({page_type, ...(_pick(node, ["id"]))})}`,
       });
     },
+
+    // 处理重新登陆
+    onLogout(params = {}, isScene = true, path) {
+      let url = "/pages/home/home";
+      // #ifdef H5
+      url = "/pages/login/login";
+      // #endif
+
+      if (path) {
+        url = path;
+      }
+
+      return new Promise((resolve) => {
+        logoutApi()
+          .finally(() => {
+            const scene = (params?.scene || uni.getStorageSync("__APP_SCENE__"));
+            const obj = _omit(params || {}, ["scene"]);
+            const query = {
+              PAGE_TYPE: "logout",
+              ...(obj || {}),
+              ...(isScene ? {scene} : {}),
+            };
+            uni.clearStorageSync({});
+            uni.reLaunch({
+              url: `${url}?${QS.stringify(query)}`,
+            });
+          })
+          .finally(resolve);
+      });
+    },
   },
   components: {
     // #ifdef H5
@@ -89,26 +120,44 @@ export default {
       return getCacheFile;
     },
 
-    GET_USER_INFO() {
-      return this.MIXINS_OBJ?.USER || {};
-    },
-
-    GET_CONFIG_INFO() {
-      return this.MIXINS_OBJ?.SYS || {};
-    },
-
-    GET_USER_ROLE() {
-      return _get(this.MIXINS_OBJ?.USER, "role") || [];
-    },
-
     // 判断用户是否可以刷新库存
     isRefreshStock() {
-      return ["Admin", "Business", "Stock_Write"].some(v => this.GET_USER_ROLE.includes(v));
+      return this.isPerm("Stock_Write");
     },
 
     // 判断用户是否可以刷新用户款项
     isRefreshPayment() {
-      return ["Admin", "Business", "Finance_Write"].some(v => this.GET_USER_ROLE.includes(v));
+      return this.isPerm("Finance_Write");
+    },
+
+    // 判断是否是超管
+    isAdmin() {
+      return this.GET_USER_ROLE.includes("Admin");
+    },
+
+    // 判断是否是商铺管理员
+    isBusiness() {
+      return this.GET_USER_ROLE.includes("Business");
+    },
+
+    // 根据传入的参数判断是否有权限
+    isPerm() {
+      return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin || this.isBusiness;
+    },
+
+    // 用户信息
+    GET_USER_INFO() {
+      return this.MIXINS_OBJ?.USER || {};
+    },
+
+    // 商铺信息
+    GET_CONFIG_INFO() {
+      return this.MIXINS_OBJ?.SYS || {};
+    },
+
+    // 用户权限
+    GET_USER_ROLE() {
+      return _get(this.MIXINS_OBJ?.USER, "role") || [];
     },
 
     // 订单状态
@@ -209,13 +258,9 @@ export default {
       return _get;
     },
 
-    // 当没有图片是用名称代替
-    notImageGetName() {
-      return (image, name) => {
-        if (!image && name) return name;
-
-        return "";
-      };
+    // 获取店铺名称
+    GET_SHOP_NAME() {
+      return _get(this.GET_CONFIG_INFO, "remark") || "";
     },
   },
 };

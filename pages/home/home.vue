@@ -5,10 +5,11 @@ import { _isEmpty, _isEqual } from "@/utils";
 export default {
   name: "Home",
   components: {ZeroLoading},
-  data: () => ({
-    option: {},
-    vm: null,
-  }),
+  data() {
+    return {
+      option: {},
+    };
+  },
   onLoad(option) {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
@@ -29,11 +30,10 @@ export default {
   methods: {
     // 系统已经准备好了
     beReady() {
-      uni.$__home_set_timeout_vm__ && clearTimeout(uni.$__home_set_timeout_vm__);
       console.log("系统已经准好了");
 
       // #ifdef MP
-      uni.$emit("$__initiate_web_socket__");
+      uni.$emit("$__init_web_socket__");
       // #endif
 
       uni.reLaunch({
@@ -49,7 +49,6 @@ export default {
 
       // 获取所有的用户信息
       uni.$emit("$__get_all_info__");
-
       // 获取成功后跳转到首页
       uni.$on("$__get_info_success__", this.beReady);
     },

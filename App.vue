@@ -18,20 +18,11 @@ export default {
       await this.onLogin();
     }
 
-    uni.$on("$__get_all_info__",
-      async () => {
-        this.getInfo();
-      });
+    uni.$on("$__get_all_info__", this.getInfo);
 
-    uni.$on("$on_event_source", this.getEventSource);
+    uni.$on("$__init_event_source__", this.getEventSource);
 
-    uni.$on("$__initiate_web_socket__", this.initiateWebSocket);
-
-    // 登陆完成后需要清除计时器
-    uni.$on("$__login_success__",
-      () => {
-        uni.$__home_set_timeout_vm__ && clearTimeout(uni.$__home_set_timeout_vm__);
-      });
+    uni.$on("$__init_web_socket__", this.initiateWebSocket);
 
     // #ifdef MP
     // 当进入的不是 [首页, 自助绑定] 时需要先获取用户信息
@@ -83,6 +74,7 @@ export default {
           return res.data;
         });
     },
+
     // 获取配置信息
     getConfig() {
       return getConfigApi()
@@ -248,6 +240,7 @@ export default {
 
     onMessage(res) {
       console.log("WebSocket 接收到的消息", res);
+      // "{"data":{"type":"ReceivableOrder","comment":"有新应收单"},"askEnum":"NewOrder"}"
       try {
         const data = JSON.parse(res.data);
         uni.$emit("$__web_socket_message__", data);

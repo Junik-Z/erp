@@ -67,6 +67,8 @@ export default {
         <slot name="footer"></slot>
       </view>
     </view>
+
+    <slot name="hint"></slot>
   </UniPopup>
 </template>
 

@@ -42,6 +42,7 @@ export default {
     // 开启设置用户权限
     onSetRole(type, item) {
       this.role = (item.role || []).find(v => v.indexOf(type) > -1);
+
       this.backup = _deepCopy(_get(this.premList, this.role))?.map(v => v.userId) || [];
 
       console.log(this.backup);
@@ -91,6 +92,7 @@ export default {
     getAvatarList() {
       return (type, item) => {
         const role = (item.role || []).find(v => v.indexOf(type) > -1);
+
         return (_get(this.premList, role) || []).map(v => this.getImageUrl(v.avatar));
       };
     },

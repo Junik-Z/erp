@@ -11,6 +11,10 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import ProductCard from "@/components/ProductCard/ProductCard.vue";
 
 export default {
   name: "list",
@@ -46,6 +50,10 @@ export default {
     };
   },
   components: {
+    ProductCard,
+    UvAvatar,
+    UniCol,
+    UniRow,
     PickerClass,
     UniListItem,
     UniList,
@@ -133,6 +141,7 @@ export default {
 
     // 获取已经选的产品列表
     getSelectedList() {
+      console.log(this.selected);
       return Object.values(this.selected || {}).filter(item => item.productQuantity > 0) || [];
     },
 
@@ -217,7 +226,7 @@ export default {
       </view>
     </view>
 
-    <BasicPopup :visible.sync="visible" type="bottom">
+    <BasicPopup :visible.sync="visible" type="bottom" title="已选产品详情">
       <view class="ko-shop-list__popup">
         <view class="ko-shop-list__popup--wrap">
           <BasicCard
@@ -226,38 +235,13 @@ export default {
             v-for="(item, index) of getSelectedList"
             :key="index"
           >
-            <view class="ko-shop">
-              <image
-                v-if="item.images"
-                class="ko-shop__image"
-                :src="getImageUrl(item.images)"
-                mode="scaleToFill"
-              />
-              <view class="ko-shop__info">
-                <view class="ko-shop__info--name">
-                  {{ item.name }}
-                </view>
-                <view class="ko-shop__info--yuan edit ko-basic-money">
-                  ¥
-                  <text v-if="isClient">{{ toYuan(item.price) }}</text>
-                  <UniNumberBox
-                    v-else
-                    :max="9999999999999999"
-                    :value="toYuan(item.price)"
-                    color="#e43d33"
-                    @change="onChangePrice(item, $event)"
-                  />
-                  元
-                </view>
-                <view class="ko-shop__info--number">
-                  <UniNumberBox
-                    :max="9999999"
-                    :value="getSelectNumber(item)"
-                    @change="onItemNumberChange(item, $event)"
-                  />
-                </view>
-              </view>
-            </view>
+            <ProductCard
+              :node="item"
+              :is-edit-price="!isClient"
+              @change-price="onChangePrice"
+              is-product-quantity
+              @change-product-quantity="onItemNumberChange"
+            />
           </BasicCard>
         </view>
       </view>
@@ -346,19 +330,23 @@ export default {
 
   &__popup {
     width: 100vw;
-    max-height: 96vh;
-    overflow-y: auto;
 
     &--wrap {
-      padding: 0 5px;
+      padding: 10px 16px;
       max-height: 84vh;
       overflow-y: auto;
+    }
 
+    &--list {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
+
+      &--info {
+        flex: 1;
+      }
     }
   }
+
 }
 
 .ko-shop {

@@ -16,6 +16,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "Field",
@@ -31,6 +32,7 @@ export default {
     UniEasyinput,
     DaTreeVue2,
   },
+  mixins: [mixins],
   data: () => ({
     roomTreeData: [],
     visible: false,
@@ -168,7 +170,7 @@ export default {
 <template>
   <view class="ko-field">
     <view class="ko-field__row">
-      <BasicCard v-for="(item, index) in roomTreeData" :key="index">
+      <BasicCard v-for="(item, index) in roomTreeData" :key="index" :spacing="10">
         <view class="ko-field__info">
           <UniRow>
             <UniCol :span="12">
@@ -181,7 +183,10 @@ export default {
             </UniCol>
           </UniRow>
 
-          <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 10px;">
+          <view
+            v-if="isPerm('Product_Write')"
+            style="display: flex; align-items: center; justify-content: flex-end; padding-top: 10px;"
+          >
             <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
             <button
               class="ko-basic-button__card"
@@ -213,6 +218,7 @@ export default {
     </BasicPopup>
 
     <UniFab
+      v-if="isPerm('Product_Write')"
       ref="FabRef"
       :pattern="pattern"
       horizontal="right"

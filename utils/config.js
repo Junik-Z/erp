@@ -9,7 +9,7 @@ export const CONFIG = {
 
   // #ifdef H5
   BASE_URL: "/api",
-  BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
+  BASE_WS_URL: "/api/ws/app",
   // #endif
 
   // BASE_URL: "https://erp.kuaouyun.cn/api",
@@ -103,7 +103,7 @@ export const MENU_LIST = [
     label: "生产",
     icon: "icon-Datastatistics",
     value: "/erp/produce/produce",
-    isSetup: true,
+    checkField: "produceEnable",
     modelKey: "produce",
     role: ["Admin", "Business", "Produce_Read", "Produce_Write"],
     isUpRole: true,
@@ -120,7 +120,7 @@ export const MENU_LIST = [
     label: "配送",
     icon: "icon-daishouhuo",
     value: "/erp/logistics/logistics",
-    isSetup: true,
+    checkField: "deliveryEnable",
     modelKey: "logistics",
     role: ["Admin", "Business", "Delivery_Read", "Delivery_Write"],
     isUpRole: true,
@@ -162,6 +162,7 @@ export const MENU_LIST = [
  */
 export const HOME_PAGE_TYPE_ENUMS = {
   logout: "退出登陆",
+  reselect: "重新选择商户",
   ADDED_SALE: "分享出去添加销售单",
   ADDED_PURCHASE: "分享出去添加采购单",
   ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",

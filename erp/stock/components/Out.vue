@@ -61,7 +61,7 @@ export default {
           if (res.confirm) {
             confirmOutboundApi(item)
               .then(() => {
-                uni.showToast({title: "入库成功"});
+                uni.showToast({title: "出库成功"});
                 this.getList();
               });
           }
@@ -82,7 +82,7 @@ export default {
       <UniListItem v-for="(item, index) of list" :key="index">
         <template #body>
           <OrderCard :item="item" @click="onJumpDetails(item, 'outbound')" :is-history="isHistory">
-            <template #operate>
+            <template #operate v-if="isPerm('Stock_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   v-if="['CREATED'].includes(item.status)"

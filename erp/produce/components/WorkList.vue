@@ -279,6 +279,7 @@ export default {
               </UniRow>
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+                v-if="isPerm('Produce_Write')"
               >
                 <button
                   class="ko-basic-button__card"
@@ -345,6 +346,7 @@ export default {
     </UniList>
 
     <UniFab
+      v-if="isPerm('Produce_Write')"
       :pattern='{
         color: "#7A7E83",
         backgroundColor: "#fff",

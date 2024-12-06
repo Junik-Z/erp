@@ -143,9 +143,8 @@ export function cancelPayableApi(data) {
   });
 }
 
-
 /**
- * @description 获取已付款单据列表
+ * @description 获取已收款单据列表
  */
 export function getPaidOrderListApi(data) {
   return request({
@@ -222,7 +221,7 @@ export function confirmPaidOrderApi(data) {
 }
 
 /**
- * @description 获取已退款单据列表
+ * @description 获取付款单据列表
  */
 export function getReturnedOrderListApi(data) {
   return request({

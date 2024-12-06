@@ -181,7 +181,7 @@ export default {
                   </UniRow>
                 </view>
               </view>
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;" v-if="isPerm('Product_Write')">
                 <button class="ko-basic-button__card" @click="onFabClick(item)">编辑</button>
                 <button
                   class="ko-basic-button__card"
@@ -199,6 +199,7 @@ export default {
     </UniList>
 
     <UniFab
+      v-if="isPerm('Product_Write')"
       ref="FabRef"
       :pattern='{
         color: "#7A7E83",

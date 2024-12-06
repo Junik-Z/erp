@@ -13,11 +13,11 @@ export default {
   data: () => ({
     tabList: [
       {
-        label: "收款统计",
+        label: "应收款",
         ref: "VVRef",
       },
       {
-        label: "付款统计",
+        label: "应付款",
         ref: "PLRef",
       },
       {
@@ -29,7 +29,7 @@ export default {
         ref: "VRef",
       },
     ],
-    current: 3,
+    current: 0,
   }),
   onShow() {
     this.getList();

@@ -13,10 +13,12 @@ import {
 } from "@/api/erp/product";
 import { _deepCopy, _isEmpty } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "Classify",
   components: {LoadMore, UniFab, UniForms, BasicPopup, UniFormsItem, UniEasyinput, DaTreeVue2},
+  mixins: [mixins],
   data: () => ({
     roomTreeData: [],
     visible: false,
@@ -144,7 +146,7 @@ export default {
         @edit="onEdit"
         not-checked
         :max-level="6"
-        is-operate
+        :is-operate="isPerm('Product_Write')"
       />
       <LoadMore :loading="loading" />
     </view>
@@ -166,6 +168,7 @@ export default {
     </BasicPopup>
 
     <UniFab
+      v-if="isPerm('Product_Write')"
       ref="FabRef"
       :pattern="pattern"
       horizontal="right"

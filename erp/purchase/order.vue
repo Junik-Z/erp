@@ -12,17 +12,19 @@ import UniDatetimePicker
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
-import { addedPurchaseApi, getPurchaseDetailApi, getSupplierListApi, updatePurchaseApi } from "@/api/erp/purchase";
+import { addedPurchaseApi, getPurchaseDetailApi, updatePurchaseApi } from "@/api/erp/purchase";
 import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
+import PickerUser from "@/components/PickerUser/PickerUser.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "Order",
   components: {
+    PickerUser,
     UniSegmentedControl,
     PickerProduct,
     UniDataSelect,
@@ -48,7 +50,6 @@ export default {
       "remark": "",
       "details": [],
     },
-    supplierList: [],
     visible: false,
     loading: false,
 
@@ -72,21 +73,9 @@ export default {
 
     if (this.isClient) {
       this.current = 1;
-    } else {
-      this.getSupplierList();
     }
   },
   methods: {
-    // 供应商名称
-    getSupplierList() {
-      getSupplierListApi()
-        .then(res => {
-          this.supplierList = res.data?.map(item => ({
-            text: item.name,
-            value: item.id,
-          }));
-        });
-    },
     getInfo() {
       getPurchaseDetailApi({id: this.option.id})
         .then(res => {
@@ -165,11 +154,13 @@ export default {
 
           <template v-if="current === 0">
             <UniFormsItem label="VIP供应商：" name="supplierId">
-              <UniDataSelect
-                v-model="form.supplierId"
+              <PickerUser
                 style="width: 100%;"
+                v-model="form.supplierId"
                 placeholder="请选择"
-                :localdata="supplierList"
+                title="选择VIP供应商"
+                is-input
+                type="supplier"
               />
             </UniFormsItem>
           </template>

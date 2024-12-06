@@ -240,6 +240,12 @@ export default {
         uni.navigateTo({url: path});
       }
     },
+
+    onJumpInfo(item) {
+      uni.navigateTo({
+        url: "/erp/finance/check" + `?id=${item.id}&customer_type=sale`,
+      });
+    },
   },
   computed: {
     // #ifdef H5
@@ -270,28 +276,32 @@ export default {
       <!-- #ifdef MP -->
       <UniListItem v-for="item of list" :key="item.id">
         <template #body>
-          <BasicCard>
+          <BasicCard @click.stop="onJumpInfo(item)">
             <view class="ko-client__info">
               <view class="ko-client__info--logo">
-                <image
+                <UvAvatar
                   class="ko-client__info--image"
                   :src="getImageUrl(item.logo)"
+                  :size="64"
+                  random-bg-color
+                  :text="item.name || GET_SHOP_NAME"
                 />
                 <view class="ko-client__info--name">{{ item.name }}</view>
               </view>
 
-              <view class="ko-client__info--button">
+              <view class="ko-client__info--button" v-if="isPerm('Sales_Write')">
                 <button
+                  @click.stop="() => {}"
                   open-type="share"
                   :data-params="getBindingParams(item)"
                   class="ko-basic-button__card"
                 >
                   邀请绑定
                 </button>
-                <button @click="onBindPopup(item, true)" class="ko-basic-button__card">绑定客户</button>
-                <button @click="onBindPopup(item, false)" class="ko-basic-button__card">解绑客户</button>
-                <button class="ko-basic-button__card" @click="onJump(item)">编辑</button>
-                <button class="ko-basic-button__card" @click="onRemove(item)">删除</button>
+                <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__card">绑定客户</button>
+                <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__card">解绑客户</button>
+                <button class="ko-basic-button__card" @click.stop="onJump(item)">编辑</button>
+                <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
               </view>
             </view>
           </BasicCard>
@@ -325,6 +335,7 @@ export default {
     />
 
     <UniFab
+      v-if="isPerm('Sales_Write')"
       ref="FabRef"
       :pattern='{
         color: "#7A7E83",

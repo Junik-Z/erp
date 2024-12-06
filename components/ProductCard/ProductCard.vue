@@ -21,6 +21,10 @@ export default {
       },
     },
     readonly: Boolean,
+    // 是否可修改价格
+    isEditPrice: Boolean,
+    // 是否可修改数量
+    isProductQuantity: Boolean,
   },
   data() {
     return {
@@ -44,13 +48,20 @@ export default {
           });
       }
     },
+    onChangePrice(node, event) {
+      this.$emit("change-price", node, event);
+    },
+
+    onChangeProductQuantity(node, event) {
+      this.$emit("change-product-quantity", node, event);
+    },
   },
   mounted() {
     this.getExtendList();
 
-    setTimeout(() => {
-      this.getVmRect();
-    }, 10);
+    /*  setTimeout(() => {
+       this.getVmRect();
+     }, 10); */
   },
 };
 </script>
@@ -58,13 +69,14 @@ export default {
 <template>
   <BasicCard class="ko-product-card" :class-name="className">
     <view class="ko-product-card__wrap" :style="{'--product-root-width': width + 'px'}">
-      <UniRow gutter="10">
+      <UniRow :gutter="20">
         <UniCol :span="24" v-if="node.images">
           <view class="ko-product-card__item">
             <image
               class="ko-product-card__image"
               :src="getImageUrl(node.images)"
               mode="center"
+              style="width: 100%"
             />
           </view>
         </UniCol>
@@ -74,19 +86,22 @@ export default {
           </view>
         </UniCol>
 
-        <UniCol :span="12">
-          <view class="ko-product-card__item">
-            <label class="ko-basic-label">单价：</label>
-            <text class="ko-basic-money">¥ {{ toYuan(node.price) }}元</text>
-          </view>
-        </UniCol>
+        <template v-if="readonly">
+          <UniCol :span="12">
+            <view class="ko-product-card__item">
+              <label class="ko-basic-label">单价：</label>
+              <text class="ko-basic-money">¥ {{ toYuan(node.price) }}元</text>
+            </view>
+          </UniCol>
 
-        <UniCol :span="12">
-          <view class="ko-product-card__item">
-            <label class="ko-basic-label">数量：</label>
-            <text>{{ node.productQuantity || 0 }}</text>
-          </view>
-        </UniCol>
+          <UniCol :span="12">
+            <view class="ko-product-card__item">
+              <label class="ko-basic-label">数量：</label>
+              <text>{{ node.productQuantity || 0 }}</text>
+            </view>
+          </UniCol>
+
+        </template>
 
         <UniCol :span="12" v-for="field of FieldList" :key="field.id">
           <view class="ko-product-card__item">
@@ -94,6 +109,41 @@ export default {
             <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
           </view>
         </UniCol>
+
+        <template v-if="!readonly">
+          <UniCol :span="24">
+            <view class="ko-product-card__item" style="display: flex; align-items: center;">
+              <label class="ko-basic-label">单价：</label>
+              <text class="ko-basic-money" v-if="!isEditPrice">¥ {{ toYuan(node.price) }}元</text>
+              <view class="ko-basic-money" style="flex: 1; display: flex;align-items: center;" v-else>
+                ¥
+                <UniNumberBox
+                  :max="9999999999999999"
+                  :value="toYuan(node.price)"
+                  color="#e43d33"
+                  :width="120"
+                  @change="onChangePrice(node, $event)"
+                />
+                元
+              </view>
+            </view>
+          </UniCol>
+
+          <UniCol :span="24">
+            <view class="ko-product-card__item" style="display: flex; align-items: center;">
+              <label class="ko-basic-label">数量：</label>
+              <text v-if="!isProductQuantity">{{ node.productQuantity || 0 }}</text>
+              <view style="flex: 1;" v-else>
+                <UniNumberBox
+                  :max="9999999999999999"
+                  :value="node.productQuantity"
+                  :width="120"
+                  @change="onChangeProductQuantity(node, $event)"
+                />
+              </view>
+            </view>
+          </UniCol>
+        </template>
 
       </UniRow>
     </view>
@@ -107,13 +157,15 @@ export default {
   }
 
   &__image {
-    border-radius: 6px 6px 0 0;
-    width: var(--product-root-width, 360px);
+    border-radius: 6px;
+    //width: var(--product-root-width, 360px);
     height: 150px;
   }
 
   &__item {
     width: 100%;
+    overflow: hidden;
+    border-radius: 6px;
 
     &--name {
       text-align: center;

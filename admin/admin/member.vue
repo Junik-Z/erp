@@ -14,10 +14,12 @@ import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
   name: "member",
   components: {
+    UvAvatar,
     UniForms,
     BasicPopup,
     UniFormsItem,
@@ -102,9 +104,12 @@ export default {
 
             <view class="ko-member__item">
               <view class="ko-member__item--info">
-                <image
-                  class="ko-member__item--info--image ko-basic-box-shadow"
+                <UvAvatar
+                  class="ko-basic-box-shadow"
                   :src="getImageUrl(item.avatar)"
+                  :size="72"
+                  :text="item.nickName || GET_SHOP_NAME"
+                  random-bg-color
                 />
 
                 <view style="flex: 1; position: relative">
@@ -207,12 +212,6 @@ export default {
     &--info {
       display: flex;
       align-items: center;
-
-      &--image {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-      }
 
       &--name {
         padding-left: 10px;

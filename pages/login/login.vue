@@ -51,7 +51,7 @@ export default {
     // 发起状态监听
     getScan() {
       this.loading = true;
-      uni.$emit("$on_event_source");
+      uni.$emit("$__init_event_source__");
     },
 
     // 接收到的消息

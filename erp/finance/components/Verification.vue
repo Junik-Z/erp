@@ -1,5 +1,4 @@
 <script>
-import { refreshStockApi } from "@/api/erp/stock";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -9,8 +8,8 @@ import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import mixins from "@/mixins/mixins";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
-import { getCustomerListApi } from "@/api/erp/sale";
-import { getSupplierListApi } from "@/api/erp/purchase";
+import { getCustomerListApi, refreshCustomerApi } from "@/api/erp/sale";
+import { getSupplierListApi, refreshSupplierApi } from "@/api/erp/purchase";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
@@ -39,20 +38,19 @@ export default {
 
     onRefresh(item) {
       this.$set(item, "__r_loading__", true);
-      refreshStockApi({id: item.id})
+      ;[refreshCustomerApi, refreshSupplierApi][this.current]({id: item.id})
         .then(() => {
           uni.showToast({title: "刷新成功"});
           this.getList();
         })
         .finally(() => {
           this.$set(item, "__r_loading__", false);
-
         });
     },
 
     onJump(item) {
       uni.navigateTo({
-        url: "/erp/finance/check" + `?id=${item.id}`,
+        url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][this.current]}`,
       });
     },
   },
@@ -67,7 +65,7 @@ export default {
 
     <UniList>
       <view class="ko-verification__wrap">
-        <BasicCard @click="onJump(item)" v-for="(item, index) in list" :key="index">
+        <BasicCard :spacing="10" @click="onJump(item)" v-for="(item, index) in list" :key="index">
           <view class="ko-verification__info">
             <view class="ko-verification__info--wrap">
               <UvAvatar
@@ -77,7 +75,16 @@ export default {
                 :text="item.name"
                 random-bg-color
               />
-              <view class="ko-verification__info--name">{{ item.name }}</view>
+              <view style="padding-left: 20px;">
+                <UniRow :gutter="20">
+                  <UniCol :span="24">
+                    <view class="ko-verification__info--name">{{ item.name }}</view>
+                  </UniCol>
+                  <UniCol :span="24">
+                    <view class="ko-basic-money">¥ {{ toYuan(item.amount) }}元</view>
+                  </UniCol>
+                </UniRow>
+              </view>
             </view>
             <view
               v-if="isRefreshPayment"
@@ -124,7 +131,6 @@ export default {
 
     &--name {
       font-size: 18px;
-      padding-left: 10px;
     }
   }
 }

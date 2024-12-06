@@ -227,7 +227,7 @@ export default {
       <UniListItem v-for="item of list" :key="item.id">
         <template #body>
           <OrderCard is-sales :is-history="isHistory" :item="item" @click="onJumpDetails(item, 'saleReturn')">
-            <template #operate>
+            <template #operate v-if="isPerm('Sales_Write')">
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
               >
@@ -285,6 +285,7 @@ export default {
     </UniList>
 
     <UniFab
+      v-if="isPerm('Sales_Write')"
       ref="FabRef"
       :pattern='{
         color: "#7A7E83",

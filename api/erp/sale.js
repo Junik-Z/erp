@@ -67,6 +67,17 @@ export function bindCustomerApi(data) {
 }
 
 /**
+ * @description 刷新客户金额
+ */
+export function refreshCustomerApi(data) {
+  return request({
+    url: "/customer/refresh",
+    method: "post",
+    data,
+  });
+}
+
+/**
  * @description 解绑客户
  */
 export function unbindCustomerApi(data) {
@@ -260,7 +271,7 @@ export function removeSaleReturnApi(data) {
  */
 export function confirmSaleReturnApi(data) {
   return request({
-    url: "/purchase/confirm",
+    url: "/sale/return/confirm",
     method: "post",
     data,
   });

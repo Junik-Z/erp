@@ -1,6 +1,4 @@
 <script>
-import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
-import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
@@ -31,7 +29,10 @@ export default {
   name: "ViewVersion",
   components: {
     FilePicker,
-    UniEasyinput, BasicPopup, UniFormsItem, UniForms,
+    UniEasyinput,
+    BasicPopup,
+    UniFormsItem,
+    UniForms,
     UniFab,
     UvAvatar,
     UniDataSelect,
@@ -45,8 +46,6 @@ export default {
     UniList,
     QiunDataCharts,
     UvCountTo,
-    UniGridItem,
-    UniGrid,
   },
   mixins: [mixins],
   data() {
@@ -275,23 +274,25 @@ export default {
 
 <template>
   <view class="ko-cost">
-    <UniGrid :column="2" :square="false" :show-border="false">
-      <UniGridItem v-for="item of costList" :key="item.id">
-        <view class="ko-cost__item">
-          <view style="margin-bottom: 8px;">{{ item.name }}</view>
-          <view>
-            <UvCountTo
-              :start-val="0"
-              :end-val="toYuan(item.amount)"
-              color="#2979ff"
-              separator=","
-              bold
-            />
-            <text style="margin-left: 6px;">元</text>
+    <view class="ko-basic-count__wrap">
+      <UniRow :gutter="20">
+        <UniCol v-for="(item) of costList" :key="item.id" :span="item.span || 12">
+          <view class="ko-basic-count">
+            <view class="ko-basic-count__label">{{ item.name }}</view>
+            <view class="ko-basic-count__info">
+              <UvCountTo
+                :start-val="0"
+                :end-val="toYuan(item.amount)"
+                color="#2979ff"
+                separator=","
+                bold
+              />
+              <text class="ko-basic-count__info--unit">元</text>
+            </view>
           </view>
-        </view>
-      </UniGridItem>
-    </UniGrid>
+        </UniCol>
+      </UniRow>
+    </view>
 
     <view class="ko-cost__class">
       <view class="ko-cost__class--wrap">
@@ -310,7 +311,7 @@ export default {
           @clickItem="getList()"
         />
       </view>
-      <button @click="onJump">
+      <button @click="onJump" v-if="isPerm('Finance_Write')">
         <i style="font-size: 20px;" class="iconfont icon-fenjifenleiguanli" />
       </button>
     </view>
@@ -339,7 +340,8 @@ export default {
                     <text>{{ item.remark || "-" }}</text>
                   </UniCol>
                 </UniRow>
-                <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+                      v-if="isPerm('Finance_Write')">
                   <button class="ko-basic-button__card" @click.stop="onEdit(item)">修改</button>
                   <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
                 </view>
@@ -365,6 +367,7 @@ export default {
     </view>
 
     <UniFab
+      v-if="isPerm('Finance_Write')"
       ref="FabRef"
       :pattern='{
         color: "#7A7E83",

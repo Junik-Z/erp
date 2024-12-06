@@ -188,7 +188,7 @@ export default {
 };
 </script>
 <style lang="scss">
-$box-height: 26px;
+$box-height: 32px;
 $bg: #f5f5f5;
 $br: 2px;
 $color: #333;
@@ -207,7 +207,7 @@ $color: #333;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 0 8px;
+  padding: 0 12px;
   background-color: $bg;
   /* #ifdef H5 */
   cursor: pointer;
@@ -220,7 +220,7 @@ $color: #333;
   width: 40px;
   height: $box-height;
   text-align: center;
-  font-size: 14px;
+  font-size: 16px;
   border-width: 0;
   color: $color;
 }
@@ -239,7 +239,7 @@ $color: #333;
   // fix nvue
   line-height: 20px;
   margin-bottom: 2px;
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 300;
   color: $color;
 }

@@ -37,7 +37,7 @@ export default {
           span: 24,
         },
         {
-          label: "供应商总数",
+          label: "客户总数",
           key: "supplierCount",
           color: "#2979ff",
           unit: "个",

@@ -237,7 +237,7 @@ export default {
             @click="onJumpDetails(item, 'sale')"
             is-sales
           >
-            <template #operate>
+            <template #operate v-if="isPerm('Sales_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   v-if="['CREATED'].includes(item.status)"
@@ -293,6 +293,7 @@ export default {
     </UniList>
 
     <UniFab
+      v-if="isPerm('Sales_Write')"
       ref="FabRef"
       :pattern='{
         color: "#7A7E83",

@@ -130,7 +130,7 @@ export default {
       <UniListItem v-for="(item, index) of list" :key="index">
         <template #body>
           <OrderCard :item="item" @click="onJumpDetails(item, 'inbound')" :is-history="isHistory">
-            <template #operate>
+            <template #operate v-if="isPerm('Stock_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   v-if="['CREATED'].includes(item.status)"

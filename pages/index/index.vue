@@ -1,15 +1,34 @@
 <script>
 import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
-import { _deepCopy, _get, _haveCommonElements } from "@/utils";
+import { _deepCopy, _get, _haveCommonElements, _isEnv, _isEqual } from "@/utils";
 import UniDataCheckbox from "@/uni_modules/uni-data-checkbox/components/uni-data-checkbox/uni-data-checkbox.vue";
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST } from "@/utils/config";
 import KoNotice from "@/components/Notice/Notice.vue";
+import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
+import BusinessAdvertising from "@/components/BusinessAdvertising/BusinessAdvertising.vue";
 
 export default {
-  components: {KoNotice, UniGridItem, UniGrid, UniDataCheckbox},
+  components: {
+    BusinessAdvertising,
+    MerchantsHeader,
+    UvAvatar,
+    UniCol,
+    UniRow,
+    BasicCard,
+    BasicPopup,
+    KoNotice,
+    UniGridItem,
+    UniGrid,
+    UniDataCheckbox,
+  },
   mixins: [mixins],
   data() {
     return {
@@ -20,7 +39,18 @@ export default {
     };
   },
   onLoad() {
-    console.log("首页权限", this.getRole, this.GET_USER_INFO);
+    console.log("用户权限", this.GET_USER_ROLE);
+
+    // #ifdef MP
+    const scene = uni.getStorageSync("__APP_SCENE__");
+    if ((!scene || _isEqual(scene, "default")) && !_isEnv()) {
+      setTimeout(() => {
+        this.$nextTick(() => {
+          this.$refs.MHRef.onOpen();
+        });
+      }, 600);
+    }
+    // #endif
   },
   computed: {
     CONFIG() {
@@ -33,30 +63,27 @@ export default {
         "--ko-menu-height": (height || 0) + "px",
       };
     },
-    getRole() {
-      return _get(this.GET_USER_INFO, "role") || [];
-    },
     getMenuList() {
       return _deepCopy(this.gridList)
         .flatMap(item => {
-          const role = this.GET_USER_INFO?.role || this.getRole;
+          const role = this.GET_USER_ROLE;
 
-          if (_haveCommonElements(role, item.role)) {
+          // 判断是否有单独的字段校验
+          const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
+
+          if (_haveCommonElements(role, item.role) && checkField) {
             return [item];
           } else {
             return [];
           }
         });
     },
-    getRemark() {
-      return this.GET_CONFIG_INFO?.remark || "";
-    },
   },
   // #ifdef H5
   watch: {
-    getRemark: {
+    GET_SHOP_NAME: {
       handler() {
-        document.title = `${this.getRemark} —— ${CONFIG.TITLE}`;
+        document.title = `${this.GET_SHOP_NAME} —— ${CONFIG.TITLE}`;
       },
       immediate: true,
       deep: true,
@@ -83,18 +110,19 @@ export default {
   <view class="ko-home" :style="[getMenuButtonStyle]">
     <KoNotice is-custom />
 
-    <view class="ko-home__header">
-      <view class="ko-home__header--title">{{ getRemark }}</view>
-      <view class="ko-home__title">
-        {{ CONFIG.TITLE }}
-      </view>
-    </view>
+    <MerchantsHeader ref="MHRef" />
+
 
     <!-- #ifdef H5 -->
     <!-- #endif -->
 
     <!-- #ifdef MP -->
-    <UniGrid :column="3" :show-border="false" @change="onChange" @click.stop="() => {}" :key="key">
+    <UniGrid
+      :column="3"
+      :show-border="false"
+      @change="onChange"
+      @click.stop="() => {}"
+    >
       <UniGridItem v-for="(item, index) of getMenuList" :key="item.value" :index="index">
         <!-- #endif -->
 
@@ -139,22 +167,6 @@ export default {
 .ko-home {
   height: 100vh;
   padding: 120px 20px;
-
-  &__header {
-    &--title {
-      font-size: 28px;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-  }
-
-  &__title {
-    font-size: 16px;
-    color: #8f939c;
-    text-align: center;
-    margin-bottom: 50px;
-  }
 
   &__item {
     height: 100%;
@@ -223,6 +235,7 @@ export default {
     }
   }
 }
+
 
 // #endif
 

@@ -6,12 +6,13 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy } from "@/utils";
-import { logoutApi, updateMyInfoApi, uploadBase64Api } from "@/api/user";
+import { updateMyInfoApi, uploadBase64Api } from "@/api/user";
 import { getImageBase64 } from "@/utils/processingFiles";
+import LongPressButton from "@/components/LongPressButton/LongPressButton.vue";
 
 export default {
   name: "user",
-  components: {UniEasyinput, UniFormsItem, UniForms, BasicPopup, UvAvatar},
+  components: {LongPressButton, UniEasyinput, UniFormsItem, UniForms, BasicPopup, UvAvatar},
   mixins: [mixins],
   data() {
     return {
@@ -69,29 +70,9 @@ export default {
           this.loading = false;
         });
     },
-    onLogout() {
+    onClickLogout(isScene) {
       this.logoutLoading = true;
-      logoutApi()
-        .then(() => {
-        })
-        .finally(() => {
-          this.logoutLoading = false;
-          const scene = uni.getStorageSync("__APP_SCENE__");
-          uni.clearStorageSync({});
-
-          // #ifdef H5
-          uni.reLaunch({
-            url: `/pages/login/login?PAGE_TYPE=logout&scene=${scene}`,
-          });
-          // #endif
-
-          // #ifdef MP
-          uni.reLaunch({
-            url: `/pages/home/home?PAGE_TYPE=logout&scene=${scene}`,
-          });
-          // #endif
-
-        });
+      this.onLogout({}, isScene).finally(() => (this.logoutLoading = false));
     },
   },
 };
@@ -100,7 +81,13 @@ export default {
 <template>
   <view class="ko-user">
     <view class="ko-user__info" @click="onUpdateInfo">
-      <UvAvatar :key="GET_USER_INFO.avatar" :size="120" :src="getImageUrl(GET_USER_INFO.avatar)" />
+      <UvAvatar
+        :key="GET_USER_INFO.avatar"
+        :size="120"
+        :src="getImageUrl(GET_USER_INFO.avatar)"
+        :text="GET_USER_INFO.nickName || GET_SHOP_NAME"
+        random-bg-color
+      />
       <view class="ko-user__info--name">
         {{ GET_USER_INFO.nickName || "-" }}
 
@@ -112,14 +99,12 @@ export default {
     </view>
 
     <view class="ko-user__logout">
-      <button
-        class="ko-basic-button"
+      <LongPressButton
+        label="重新登录"
         :loading="logoutLoading"
-        :disabled="logoutLoading"
-        @click="onLogout"
-      >
-        重新登录
-      </button>
+        @click="onClickLogout(false)"
+        @long="onClickLogout(true)"
+      />
     </view>
 
     <BasicPopup :visible.sync="visible">

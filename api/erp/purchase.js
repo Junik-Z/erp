@@ -76,6 +76,16 @@ export function bindSupplierApi(data) {
     data,
   });
 }
+/**
+ * @description 刷新供应商金额
+ */
+export function refreshSupplierApi(data) {
+  return request({
+    url: "/supplier/refresh",
+    method: "post",
+    data,
+  });
+}
 
 /**
  * @description 获取采购订单列表

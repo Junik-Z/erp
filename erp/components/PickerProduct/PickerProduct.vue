@@ -67,6 +67,13 @@ export default {
     getTotalMoney() {
       this.$emit("update:total", this.getTotalMoney);
     },
+
+    list: {
+      handler(val) {
+        this.$emit("input", val);
+      },
+      deep: true,
+    },
   },
   computed: {
     getTotalMoney() {
@@ -80,7 +87,12 @@ export default {
   <view class="ko-picker">
     <BasicCard v-for="(item, index) of list" :key="index">
       <view class="ko-picker__node">
-        <image v-if="item.images" mode="scaleToFill" class="ko-picker__node--image" :src="getImageUrl(item.images)" />
+        <image
+          v-if="item.images"
+          mode="scaleToFill"
+          class="ko-picker__node--image"
+          :src="getImageUrl(item.images)"
+        />
 
         <view class="ko-picker__item">
           <UniRow>
@@ -96,7 +108,6 @@ export default {
               <view style="display: flex; align-items: center;">
                 <label class="ko-basic-label">数量：</label>
                 <UniNumberBox v-model="item.productQuantity" />
-                件
               </view>
             </UniCol>
             <UniCol :span="24">

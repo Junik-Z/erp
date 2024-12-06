@@ -78,6 +78,12 @@
                     "pathRewrite" : {
                         "^/api" : ""
                     }
+                },
+                "/api/ws" : {
+                    "target" : "ws://192.168.0.7:8093/apl/ws/",
+                    "changeOrigin" : true,
+                    "secure" : false,
+                    "ws" : true
                 }
             }
         }

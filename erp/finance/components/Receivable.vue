@@ -1,6 +1,4 @@
 <script>
-import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
-import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
 import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -37,8 +35,6 @@ export default {
     UniList,
     QiunDataCharts,
     UvCountTo,
-    UniGridItem,
-    UniGrid,
   },
   mixins: [mixins],
   data() {
@@ -64,6 +60,33 @@ export default {
         num: 0,
         settledCount: 0,
       },
+
+      CountList: [
+        {
+          label: "应收总额",
+          key: "count",
+          color: "#2979ff",
+          unit: "元",
+        },
+        {
+          label: "已收款总金额",
+          key: "settledCount",
+          color: "#2979ff",
+          unit: "元",
+        },
+        {
+          label: "对账订单数量",
+          key: "num",
+          color: "#2979ff",
+          unit: "单",
+        },
+        {
+          label: "对账客户数量",
+          key: "customerCount",
+          color: "#2979ff",
+          unit: "家",
+        },
+      ],
 
       // #ifdef H5
       columns: [
@@ -202,20 +225,12 @@ export default {
         url: `/erp/finance/ticket${q}`,
       });
     },
-
-    onOperate(type, item) {
-      this[type]?.(item);
-    },
   },
   computed: {
-    getOperateList() {
-      return (node) => {
-        return this.operate.filter((item) => {
-          if (item.type === "onConfirm") {
-            return node.confirmable && !this.isHistory;
-          }
-          return !this.isHistory;
-        });
+    getCountValue() {
+      return (item) => {
+        const value = _get(this.count, item.key);
+        return item.unit === "元" ? this.toYuan(value) : value;
       };
     },
     // #ifdef H5
@@ -229,46 +244,27 @@ export default {
 
 <template>
   <view class="ko-receivable">
-    <UniGrid :column="2" :square="false" :show-border="false">
-      <UniGridItem>
-        <view class="ko-receivable__item">
-          <view>应收总额</view>
-          <view>
-            <UvCountTo separator="," :start-val="0" :end-val="toYuan(count.count)" color="#2979ff" />
-            <text>元</text>
+    <view class="ko-basic-count__wrap">
+      <UniRow :gutter="20">
+        <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
+          <view class="ko-basic-count">
+            <view class="ko-basic-count__label">{{ item.label }}</view>
+            <view class="ko-basic-count__info">
+              <UvCountTo
+                :separator="item.unit === '元' ? ',' : ''"
+                :start-val="0"
+                bold
+                :end-val="getCountValue(item)"
+                :color="item.color ? item.color : '#2979ff'"
+              />
+              <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
+            </view>
           </view>
-        </view>
-      </UniGridItem>
-      <UniGridItem>
-        <view class="ko-receivable__item">
-          <view>已收款总金额</view>
-          <view>
-            <UvCountTo separator="," :start-val="0" :end-val="toYuan(count.settledCount)" color="#2979ff" />
-            <text>元</text>
-          </view>
-        </view>
-      </UniGridItem>
-      <UniGridItem>
-        <view class="ko-receivable__item">
-          <view>对账订单数量</view>
-          <view>
-            <UvCountTo :start-val="0" :end-val="count.num" color="#2979ff" />
-            <text>单</text>
-          </view>
-        </view>
-      </UniGridItem>
-      <UniGridItem>
-        <view class="ko-receivable__item">
-          <view>对账客户数量</view>
-          <view>
-            <UvCountTo :start-val="0" :end-val="count.customerCount" color="#2979ff" />
-            <text>家</text>
-          </view>
-        </view>
-      </UniGridItem>
-    </UniGrid>
+        </UniCol>
+      </UniRow>
+    </view>
 
-    <HistoryBar v-model="isHistory" text="收款统计" @change="getList" />
+    <HistoryBar v-model="isHistory" text="应收款" @change="getList" />
 
     <view class="ko-receivable__row">
       <UniList>
@@ -278,9 +274,28 @@ export default {
             <OrderCard
               @click="onJumpDetails(item, 'receivable')"
               :item="item"
-              :operate="getOperateList(item)"
-              @operate="onOperate"
-            />
+            >
+              <template #operate>
+                <view
+                  v-if="isPerm('Finance_Write') && !isHistory"
+                  style="display: flex; align-items: center; justify-content: center; padding-top: 8px;"
+                >
+                  <button
+                    v-if="item.confirmable"
+                    class="ko-basic-button__card"
+                    @click.stop="onConfirm(item)"
+                  >
+                    订单确认
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onAddedTicket(item)"
+                  >
+                    添加单据
+                  </button>
+                </view>
+              </template>
+            </OrderCard>
           </template>
         </UniListItem>
         <LoadMore :loading="loading" />

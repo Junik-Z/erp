@@ -13,11 +13,15 @@ import Basic from "@/mixins/mixins";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 
 export default {
   name: "Admin",
   mixins: [Basic],
   components: {
+    UniCol,
+    UniRow,
     UvAvatar,
     FilePicker,
     UniForms,
@@ -158,9 +162,21 @@ export default {
                   random-bg-color
                 />
 
-                <view class="ko-admin__item--info--name">
-                  <label class="ko-basic-label">名称：</label>
-                  {{ item.name }}
+                <view style="padding-left: 16px; flex: 1;">
+                  <UniRow :gutter="20">
+                    <UniCol :span="24">
+                      <view class="ko-admin__item--info--name">
+                        <label class="ko-basic-label">名称：</label>
+                        <text>{{ item.name || "-" }}</text>
+                      </view>
+                    </UniCol>
+                    <UniCol :span="24">
+                      <view>
+                        <label class="ko-basic-label">备注：</label>
+                        {{ item.remark || '-' }}
+                      </view>
+                    </UniCol>
+                  </UniRow>
                 </view>
               </view>
 
@@ -275,13 +291,10 @@ export default {
       }
 
       &--name {
-        padding-left: 10px;
-        font-size: 18px;
+        text {
+          font-size: 18px;
+        }
       }
-    }
-
-    .ko-basic-button__card {
-      margin: 0 5px;
     }
   }
 
