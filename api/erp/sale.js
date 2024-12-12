@@ -276,3 +276,27 @@ export function confirmSaleReturnApi(data) {
     data,
   });
 }
+
+
+/**
+ * @description 获取绑定用户信息
+ */
+export function getBindInfoApi(data) {
+  return request({
+    url: "/customer/getBindInfo",
+    method: "get",
+    data,
+  });
+}
+
+
+/**
+ * @description 获取本人的销售单
+ */
+export function getSaleMyListApi(data) {
+  return request({
+    url: "/sale/my",
+    method: "get",
+    data,
+  });
+}

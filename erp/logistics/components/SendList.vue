@@ -45,7 +45,7 @@ export default {
     getList() {
       this.loading = true;
       const Func = this.isHistory ? getDeliveryHistoryListApi : getDeliveryListApi;
-      Func()
+      Func({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.list = res.data;
           console.log(res.data);
@@ -107,7 +107,7 @@ export default {
           </BasicCard>
         </template>
       </UniListItem>
-      
+
       <LoadMore :loading="loading" />
     </UniList>
 

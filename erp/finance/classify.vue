@@ -13,7 +13,7 @@ import { addedCategoryApi, getCategoryListApi, removeCategoryApi, updateCategory
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-import { _deepCopy, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEqual } from "@/utils";
 
 export default {
   name: "classify",
@@ -175,6 +175,11 @@ export default {
               this.visible = false;
               this.getList();
             });
+        } else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
     },

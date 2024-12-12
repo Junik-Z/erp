@@ -67,7 +67,7 @@ export function getAllRect(selector, VM = this) {
 // 分转元
 export function transferYuan(points = 0) {
   const p = points / 100;
-  return isNaN(p) ? points : p;
+  return _round(Math.abs(isNaN(p) ? points : p), 2);
 }
 
 // 元转分
@@ -221,7 +221,7 @@ export function _get(obj, path, defaultValue = undefined) {
   if (obj == null) return defaultValue;
   if (typeof path === "string") path = path.split(".");
   let result = obj;
-  for (let i = 0; i < path.length; i++) {
+  for (let i = 0; i < path?.length; i++) {
     if (result == null || !(path[i] in result)) {
       return defaultValue;
     }
@@ -409,6 +409,25 @@ export function _orderBy(array, ...iteratees) {
   });
 }
 
+export function _sortBy(array, ...iteratees) {
+  // 如果没有提供迭代函数，则直接返回原始数组
+  if (!iteratees.length) return array;
+
+  // 使用数组的 sort 方法和自定义比较函数
+  return array.sort((a, b) => {
+    // 遍历所有的迭代函数
+    for (let i = 0; i < iteratees.length; i++) {
+      // 调用迭代函数并获取比较值
+      const result = iteratees[i](a) - iteratees[i](b);
+      // 如果结果不为 0，则根据结果排序
+      if (result !== 0) return result;
+    }
+    // 如果所有迭代函数的结果都为 0，则认为两个元素相等
+    return 0;
+  });
+}
+
+
 export function _omit(obj, keys) {
   // 确保输入是一个对象
   if (typeof obj !== "object" || obj === null) {
@@ -488,6 +507,14 @@ export function _maxBy(array, iteratee) {
   return array?.reduce((obj1, obj2) => {
     return iteratee(obj1) > iteratee(obj2) ? obj1 : obj2;
   });
+}
+
+export function _round(number, precision = 0) {
+  if (precision === 0) {
+    return Math.round(number);
+  }
+  const factor = Math.pow(10, precision);
+  return Math.round(number * factor) / factor;
 }
 
 

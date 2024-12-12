@@ -63,10 +63,21 @@
             {{ item.label }}
             <text class="da-tree-item__label--append" v-if="item.append">{{ item.append }}</text>
           </view>
-          <view class="ko-classify__button" v-if="isOperate">
-            <button v-if="hideChildren(item)" @click.stop="onAdded(item)">添加子级</button>
-            <button @click.stop="onEdit(item)">编辑</button>
-            <button @click.stop="onRemove(item)">删除</button>
+          <view class="ko-classify__button">
+            <slot v-if="$slots['operate-node']" name="operate-node" :node="item.originItem"></slot>
+
+            <template v-if="isOperate">
+              <button
+                class="ko-basic-button__card action"
+                @click.stop="onActionClick(item)"
+              >
+                <i class="iconfont icon-gengduocaozuo"></i>
+              </button>
+
+              <button v-if="hideChildren(item) && false" @click.stop="onAdded(item)">添加子级</button>
+              <button v-if="false" @click.stop="onEdit(item)">编辑</button>
+              <button v-if="false" @click.stop="onRemove(item)">删除</button>
+            </template>
           </view>
         </view>
       </view>
@@ -98,7 +109,7 @@ export default {
       type: Number,
       default: 10,
     },
-    isOperate: Boolean
+    isOperate: Boolean,
   },
   data() {
     return {
@@ -645,6 +656,7 @@ export default {
      * 点击标签
      */
     handleLabelClick(item) {
+      this.$emit("click-node", item);
       if (this.notChecked) {
         this.handleExpandedChange(item);
         return false;
@@ -977,6 +989,10 @@ export default {
     onEdit(item) {
       this.$emit("edit", item);
     },
+
+    onActionClick(item) {
+      this.$emit("action-click", item);
+    },
   },
   computed: {
     hideChildren() {
@@ -1177,10 +1193,18 @@ export default {
   display: flex;
   align-items: center;
 
-  button {
-    margin: 0 5px;
-    color: $ko-primary-color;
-    font-size: 12px;
+  //button {
+  //  margin: 0 5px;
+  //  color: $ko-primary-color;
+  //  font-size: 12px;
+  //}
+
+  .action {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 </style>

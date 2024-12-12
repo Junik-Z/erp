@@ -3,6 +3,23 @@
 
 // #ifdef H5
 @import "@/uni_modules/element-ui/element.min.css";
+
+body {
+  font-size: 14px;
+}
+
+$base-font-size: 136.6; // var(--ko-html-size);
+
+@function px2rem ($px, $base: $base-font-size) {
+  @return ($px / $base) * 1rem
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 // #endif
 
 $ko-basic-border: 0.5px solid #dcdcdc;
@@ -42,11 +59,16 @@ button::after {
   display: none;
 }
 
+.ko-basic-border__bottom {
+  border-bottom: 0.5px solid #c7c9ce;
+}
+
 // 通用主按钮
 .ko-basic-button {
   border-radius: 55px;
   background: $ko-primary-color;
   color: #fff;
+  padding: 0 15px;
 
   // #ifdef H5
   border: 0.1px solid transparent;
@@ -76,6 +98,28 @@ button::after {
   // #endif
 
   & + .ko-basic-button__card {
+    margin-left: 6px;
+  }
+}
+
+.ko-basic-button__user {
+  border-radius: 55px;
+  background: $ko-primary-color;
+  color: #fff;
+  font-size: 11px;
+  padding: 6px 10px;
+  line-height: 1.2;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+
+  // #endif
+
+  & + .ko-basic-button__user {
     margin-left: 6px;
   }
 }
@@ -110,35 +154,6 @@ button::after {
   box-shadow: $uni-shadow-base;
 }
 
-// #ifdef H5
-.uni-section-content .uni-forms-item {
-  max-width: 800px;
-}
-
-.ko-basic-button {
-  max-width: 260px;
-}
-
-.ko-basic-popup {
-  max-width: 900px;
-
-  .ko-basic-popup__wrap {
-    > uni-view {
-      width: 100%;
-    }
-
-    .uni-forms-item__content {
-      width: 300px;
-    }
-  }
-
-  .ko-basic-button {
-    margin: 0 auto !important;
-  }
-}
-
-// #endif
-
 .ko-basic-count {
   display: flex;
   flex-direction: column;
@@ -164,3 +179,62 @@ button::after {
     }
   }
 }
+
+
+// #ifdef H5
+.uni-section-content .uni-forms-item {
+  max-width: 800px;
+}
+
+.ko-basic-button {
+  max-width: 260px;
+}
+
+.ko-basic-popup {
+  max-width: 900px;
+
+  .ko-basic-popup__wrap {
+    .uni-forms-item__content {
+      width: 300px;
+    }
+  }
+
+  .ko-basic-button {
+    margin: 0 auto !important;
+  }
+}
+
+.ko-basic-page-background {
+  background: -webkit-radial-gradient(50% 35%, farthest-corner, #034f8e, #034987, #02366d, #002353);
+  background: radial-gradient(50% 35%, farthest-corner, #034f8e, #034987, #02366d, #002353);
+  color: #fff;
+}
+
+.ko-basic-count {
+  &__label {
+    font-size: px2rem(18);
+    padding: px2rem(20) 0 0;
+  }
+
+  &__info {
+    padding: px2rem(20) 0;
+  }
+
+  /deep/ .uv-count-num {
+    span {
+      font-size: px2rem(30)
+    }
+  }
+}
+
+.uni-section__content-title.distraction {
+  font-size: 18px !important;
+  font-weight: bold;
+}
+
+.ko-basic-added-form {
+  width: 800px;
+  margin: 0 auto;
+}
+
+// #endif

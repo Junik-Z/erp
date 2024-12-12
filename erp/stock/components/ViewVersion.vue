@@ -114,7 +114,7 @@ export default {
 <template>
   <view class="ko-view-version">
     <view class="ko-basic-count__wrap">
-      <UniRow :gutter="20">
+      <UniRow :gutter="10">
         <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
           <view class="ko-basic-count">
             <view class="ko-basic-count__label">{{ item.label }}</view>
@@ -156,6 +156,7 @@ export default {
 <style scoped lang="scss">
 .ko-view-version {
   margin-top: 10px;
+  padding-bottom: 80px;
 
   &__item {
     display: flex;

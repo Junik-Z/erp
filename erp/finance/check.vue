@@ -11,7 +11,7 @@ import {
   getReceivableCheckApi,
   getReturnedOrderListApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -155,7 +155,7 @@ export default {
                 <UniCol :span="24">
                   <view>
                     <label class="ko-basic-label">{{ current === 2 ? "收款金额" : "付款金额" }}：</label>
-                    <text class="ko-basic-money">¥ {{ toYuan(item.totalAmount) }}元</text>
+                    <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
                   </view>
                 </UniCol>
                 <UniCol :span="24">
@@ -179,7 +179,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-check {
-  padding-bottom: 50px;
+  padding-bottom: 80px;
 
 
   &__tabs {

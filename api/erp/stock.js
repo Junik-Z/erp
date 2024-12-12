@@ -166,3 +166,15 @@ export function refreshStockApi(data) {
     data,
   });
 }
+
+
+/**
+ * @description 获取出库核对列表
+ */
+export function getWarningListApi(data) {
+  return request({
+    url: "/stock/warningList",
+    method: "get",
+    data,
+  });
+}

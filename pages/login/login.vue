@@ -87,7 +87,6 @@ export default {
         title="欢迎登陆"
         sub-title="高效、便捷"
       >
-
         <view
           class="ko-login__qrcode"
           :class="{'is-timeout': isTimeout}"
@@ -244,6 +243,7 @@ export default {
   &__logo {
     width: 500px;
     height: 100%;
+    margin-right: 20px;
   }
 
   .ko-basic-button {

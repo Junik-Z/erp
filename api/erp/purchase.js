@@ -21,6 +21,16 @@ export function getCountSupplierApi(data) {
     data,
   });
 }
+/**
+ * @description 获取供应商详情
+ */
+export function getDetailSupplierApi(data) {
+  return request({
+    url: "/supplier/detail",
+    method: "get",
+    data,
+  });
+}
 
 /**
  * @description 添加供应商
@@ -76,6 +86,7 @@ export function bindSupplierApi(data) {
     data,
   });
 }
+
 /**
  * @description 刷新供应商金额
  */

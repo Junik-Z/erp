@@ -86,6 +86,11 @@
                     "ws" : true
                 }
             }
+        },
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : true
+            }
         }
     }
 }

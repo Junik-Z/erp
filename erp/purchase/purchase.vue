@@ -36,8 +36,10 @@ export default {
   onShow() {
     this.getList();
   },
-  mounted() {
-    this.getList();
+  onLoad(option) {
+    if (option.PAGE_INDEX) {
+      this.current = +option.PAGE_INDEX;
+    }
   },
   methods: {
     onTab(event) {
@@ -63,7 +65,11 @@ export default {
       return _isEqual;
     },
   },
-
+  mounted() {
+    // #ifdef H5
+    this.getList();
+    // #endif
+  },
   onShareAppMessage(res) {
     const obj = res.target.dataset.params;
     const query = this._GET_SHARE_APP_PARAMS_(obj);
@@ -94,7 +100,6 @@ export default {
 <style scoped lang="scss">
 .ko-purchase {
   width: 100%;
-  padding-bottom: 50px;
 
   &__tabs {
     padding: 10px;

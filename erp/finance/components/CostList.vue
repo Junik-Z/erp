@@ -122,7 +122,7 @@ export default {
           label: "总金额(元)",
           prop: "totalAmount",
           render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalAmount)}`);
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
           },
         },
         {
@@ -163,7 +163,7 @@ export default {
 
     // 获取分类
     getCategoryList() {
-      return getCategoryListApi()
+      return getCategoryListApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.categoryList = res.data?.map(item => ({text: item.name, value: item.id}));
           console.log(res.data);
@@ -218,6 +218,11 @@ export default {
 
               this.getList();
             });
+        } else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
     },
@@ -275,7 +280,7 @@ export default {
 <template>
   <view class="ko-cost">
     <view class="ko-basic-count__wrap">
-      <UniRow :gutter="20">
+      <UniRow :gutter="10">
         <UniCol v-for="(item) of costList" :key="item.id" :span="item.span || 12">
           <view class="ko-basic-count">
             <view class="ko-basic-count__label">{{ item.name }}</view>
@@ -333,7 +338,7 @@ export default {
                   </UniCol>
                   <UniCol :span="24">
                     <label class="ko-basic-label">金额：</label>
-                    <text class="ko-basic-money">¥ {{ toYuan(item.totalAmount) }}元</text>
+                    <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
                   </UniCol>
                   <UniCol :span="24">
                     <label class="ko-basic-label">备注：</label>

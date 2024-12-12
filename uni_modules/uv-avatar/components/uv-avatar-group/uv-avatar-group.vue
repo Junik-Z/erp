@@ -13,7 +13,7 @@
         :shape="shape"
         :mode="mode"
         random-bg-color
-        :text="index"
+        :text="names[index] || ''"
         :src="$uv.test.object(item) ? keyName && item[keyName] || item.url : item"
       />
       <view
@@ -21,13 +21,7 @@
         v-if="showMore && index === showUrl.length - 1 && (urls.length > maxCount || extraValue > 0)"
         @tap="clickHandler"
       >
-        <uv-text
-          color="#ffffff"
-          :size="size * 0.4"
-          :text="`+${extraValue || urls.length - showUrl.length}`"
-          align="center"
-          customStyle="justify-content: center"
-        ></uv-text>
+        <text style="display: flex; justify-content: center;align-items: center; color: #FFFFFF; font-size: 14px;">{{`+${extraValue || urls.length - showUrl.length}`}}</text>
       </view>
     </view>
   </view>
@@ -60,6 +54,14 @@ export default {
   mixins: [mpMixin, mixin, props],
   data() {
     return {};
+  },
+  props: {
+    names: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
   },
   computed: {
     showUrl() {

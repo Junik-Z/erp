@@ -1,17 +1,27 @@
 <script>
 import { getConfigApi, getMyInfoApi, getScanQrCodeApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
-import { _get, _isEnv, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEnv, _isEqual, _omit } from "@/utils";
 import dayjs from "@/utils/dayjs";
 
 export default {
   async onLaunch(option) {
-    const {query} = option || {};
-    console.log("App.vue", query, option, option.path);
+    const {query: _query} = option || {};
+    console.log("App.vue", _query, option, option.path);
+
+    let query = _deepCopy(_query);
+    // 是要进入扫码登陆页面
+    const isQrcodePage = _isEqual(option.path, "erp/qrcode/qrcode");
+
+    if (isQrcodePage) {
+      query.login_code = query.scene;
+      query = _omit(query, ["scene"]);
+    }
 
     uni.setStorageSync("__APP_QUERY__", query);
 
     if (query?.scene) {
-      uni.setStorageSync("__APP_SCENE__", query?.scene);
+      const arr = query.scene?.split("&") || [];
+      uni.setStorageSync("__APP_SCENE__", arr[0]);
     }
 
     if (!isLogin()) {
@@ -24,9 +34,11 @@ export default {
 
     uni.$on("$__init_web_socket__", this.initiateWebSocket);
 
+    uni.$on("$__update_config_info__", this.getConfig);
+
     // #ifdef MP
     // 当进入的不是 [首页, 自助绑定] 时需要先获取用户信息
-    if (!["pages/home/home", "client/binding/binding"].includes(option.path)) {
+    if (!["pages/home/home", "client/binding/binding", "/erp/sale/order", "/erp/purchase/order"].includes(option.path)) {
       await this.getInfo();
     }
     // #endif
@@ -55,12 +67,12 @@ export default {
     },
 
     // 获取必要的信息
-    getInfo() {
+    getInfo(isUpload = false) {
       return Promise.all([this.getUserInfo(), this.getConfig()])
         .then((res) => {
           setTimeout(() => {
             // 获取所有信息成功
-            uni.$emit("$__get_info_success__", res);
+            !isUpload && uni.$emit("$__get_info_success__", res);
           }, 20);
         });
     },
@@ -70,7 +82,7 @@ export default {
       return getMyInfoApi()
         .then((res) => {
           uni.setStorageSync("__USER_INFO__", res.data);
-          uni.$emit("$__update_user_info__", res.data);
+          uni.$emit("$__get_user_info_success__", res.data);
           return res.data;
         });
     },
@@ -80,7 +92,7 @@ export default {
       return getConfigApi()
         .then((res) => {
           uni.setStorageSync("__CONFIG_INFO__", res.data);
-          uni.$emit("$__update_config_info__", res.data);
+          uni.$emit("$__get_config_info_success__", res.data);
           return res.data;
         });
     },

@@ -33,21 +33,9 @@
           }
         },
         {
-          "path": "sale/place",
-          "style": {
-            "navigationBarTitleText": "销售下单"
-          }
-        },
-        {
           "path": "stock/list",
           "style": {
             "navigationBarTitleText": "采购列表"
-          }
-        },
-        {
-          "path": "stock/place",
-          "style": {
-            "navigationBarTitleText": "采购订单"
           }
         },
         {
@@ -71,6 +59,12 @@
           "path": "stock/check",
           "style": {
             "navigationBarTitleText": "核对库存"
+          }
+        },
+        {
+          "path": "stock/warning",
+          "style": {
+            "navigationBarTitleText": "库存预警"
           }
         },
         {
@@ -158,6 +152,12 @@
           }
         },
         {
+          "path": "finance/reconcile",
+          "style": {
+            "navigationBarTitleText": "对账客户"
+          }
+        },
+        {
           "path": "logistics/logistics",
           "style": {
             "navigationBarTitleText": "配送"
@@ -213,7 +213,14 @@
         {
           "path": "dashboard/dashboard",
           "style": {
-            "navigationBarTitleText": "数据看版"
+            "navigationBarTitleText": "数据看版",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "admin/store",
+          "style": {
+            "navigationBarTitleText": "信息设置"
           }
         }
       ]
@@ -231,6 +238,13 @@
           "path": "details/details",
           "style": {
             "navigationBarTitleText": "详情"
+          }
+        },
+        {
+          "path": "print/print",
+          "style": {
+            "navigationBarTitleText": "订单打印",
+            "navigationStyle": "custom"
           }
         }
       ]

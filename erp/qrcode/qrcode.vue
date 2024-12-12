@@ -1,22 +1,35 @@
 <script>
 import { getScanCallbackApi } from "@/api/user";
-import { showToast } from "@/utils";
+import { _deepCopy, _isEmpty, _omit, showToast } from "@/utils";
+import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "QrCode",
+  components: {MerchantsHeader},
   data: () => ({
     option: {},
   }),
+  mixins: [mixins],
   onLoad(option) {
-    this.option = option;
-    console.log(option, uni.getStorageSync("__USER_INFO__"));
+    let query = _deepCopy(_isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option);
+    query.login_code = decodeURIComponent(query.login_code || query.scene);
+    query = _omit(query, ["scene"]);
+
+    const arr = query.login_code?.split("&") || [];
+
+    this.option = query;
+    this.onLogInAgain({scene: arr[0]}, true)
+      .then(() => {
+        console.log(query, uni.getStorageSync("__USER_INFO__"));
+      });
   },
 
   methods: {
     getSuccess() {
       console.log(this.option, uni.getStorageSync("__USER_INFO__"));
-
-      getScanCallbackApi({id: this.option.scene})
+      const arr = this.option.login_code?.split("&") || [];
+      getScanCallbackApi({id: arr[1]})
         .then(res => {
           console.log(res);
           showToast({
@@ -24,7 +37,7 @@ export default {
             success() {
               console.log("授权成功");
               uni.reLaunch({
-                url: "/pages/home/home",
+                url: "/pages/index/index",
               });
             },
           });
@@ -36,6 +49,7 @@ export default {
 
 <template>
   <view class="ko-qrcode">
+    <MerchantsHeader is-qr-code />
 
     <view class="ko-qrcode__icon">
       <i class="iconfont icon-menhu-diannaoduandenglu"></i>
@@ -68,6 +82,7 @@ export default {
   .ko-basic-button {
     margin-top: 100px;
     padding: 0 60px;
+    margin-bottom: 120px;
   }
 }
 </style>

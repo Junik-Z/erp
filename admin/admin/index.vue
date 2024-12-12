@@ -163,7 +163,7 @@ export default {
                 />
 
                 <view style="padding-left: 16px; flex: 1;">
-                  <UniRow :gutter="20">
+                  <UniRow :gutter="10">
                     <UniCol :span="24">
                       <view class="ko-admin__item--info--name">
                         <label class="ko-basic-label">名称：</label>

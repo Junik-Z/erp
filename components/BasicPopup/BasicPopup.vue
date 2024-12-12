@@ -82,6 +82,10 @@ export default {
   flex-direction: column;
   max-height: 98vh;
 
+  // #ifdef H5
+  margin: 0 auto;
+  // #endif
+
   &.close {
     padding-top: 60px;
   }

@@ -62,6 +62,9 @@ export default function request(config, isLoading = false, whole = false) {
         if (res.statusCode === 200 && code === 200) {
           resolve(res.data);
         } else if (code === 401) {
+
+          if (uni.$__IS_LOGOUT_FLAG__) return false
+
           if (!isFlag) {
             isFlag = true;
 

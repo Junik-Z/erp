@@ -5,10 +5,11 @@ export default {
     notPadding: Boolean,
     spacing: Number,
     className: String,
+    noShadow: Boolean,
   },
   methods: {
-    onClick() {
-      this.$emit("click");
+    onClick(event) {
+      this.$emit("click", event);
     },
   },
 };
@@ -16,9 +17,9 @@ export default {
 
 <template>
   <view
-    class="ko-basic-card ko-basic-box-shadow"
+    class="ko-basic-card"
     @click.stop="onClick"
-    :class="[{'not-padding': notPadding}, className || '']"
+    :class="[{'not-padding': notPadding}, className || '', noShadow ? '' : 'ko-basic-box-shadow']"
     :style="{ marginBottom: `${spacing || 0}px` }"
   >
     <slot></slot>

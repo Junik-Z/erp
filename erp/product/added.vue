@@ -12,7 +12,7 @@ import {
   getProductFieldApi,
 } from "@/api/erp/product";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy, _isEmpty, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, showToast, transferYuan, yuanToPoints } from "@/utils";
 
 export default {
   name: "Added",
@@ -103,7 +103,7 @@ export default {
         });
     },
     getFieldList() {
-      getProductFieldApi()
+      getProductFieldApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
           console.log(res.data);
           this.fieldList = res.data;
@@ -152,6 +152,11 @@ export default {
               this.loading = false;
             });
 
+        } else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
     },
@@ -180,7 +185,7 @@ export default {
             />
           </UniFormsItem>
           <UniFormsItem label="产品名称：" name="name" required>
-            <UniEasyinput v-model="form.name" style="width: 100%;" placeholder="请输入" />
+            <UniEasyinput v-model.trim="form.name" style="width: 100%;" placeholder="请输入" />
           </UniFormsItem>
           <UniFormsItem label="入库价格：" name="purchasePrice" required>
             <UniEasyinput type="digit" v-model="form.purchasePrice" style="width: 100%;" placeholder="请输入" />

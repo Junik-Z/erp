@@ -1,6 +1,4 @@
 <script>
-import UniDatetimePicker
-  from "@/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -12,7 +10,7 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, showToast } from "@/utils";
 import { validatePhone } from "@/utils/validate";
-import { addedSupplierApi, editSupplierApi } from "@/api/erp/purchase";
+import { addedSupplierApi, editSupplierApi, getDetailSupplierApi } from "@/api/erp/purchase";
 
 export default {
   name: "client",
@@ -26,7 +24,6 @@ export default {
     UniCol,
     UniEasyinput,
     UniRow,
-    UniDatetimePicker,
   },
   data: () => ({
     form: {
@@ -80,13 +77,23 @@ export default {
   onLoad(option) {
     this.option = option;
     this.isEdit = !!option.id;
+    if (this.isEdit) this.getInfo();
 
+    // #ifdef MP
     this.$nextTick(() => {
       this.$refs.FormRef.setRules(this.rules);
       this.$refs.ContactFormRef.setRules(this.contactsRules);
     });
+    // #endif
   },
   methods: {
+    getInfo() {
+      getDetailSupplierApi({id: this.option.id})
+        .then(res => {
+          this.form = res.data;
+        });
+    },
+
     // 添加联系人
     addContacts(row) {
       this.contacts = {..._deepCopy(this.$options.data().contacts), ...row};
@@ -245,7 +252,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-client {
-  padding-bottom: 50px;
+  padding-bottom: 80px;
 
   &__popup {
     width: 90vw;

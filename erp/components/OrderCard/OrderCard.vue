@@ -31,7 +31,6 @@ export default {
     isCheckStock: Boolean,
     // 是否是校验财务单
     isCheckFinance: Boolean,
-
     // 显示完成订单
     isFinished: Boolean,
   },
@@ -73,22 +72,21 @@ export default {
 <template>
   <BasicCard custom-class="ko-order-card" @click="$emit('click')">
     <view class="ko-order-card__wrap">
-      <view v-if="isFinished && ['FINISHED'].includes(item.status)" class="ko-order-card__finished">
+      <view class="ko-order-card__finished">
         <view class="ko-order-card__finished--text">
-          已完成
+          {{ ORDER_STATUS_ENUMS(item.status) }}
         </view>
       </view>
-
-      <UniRow :gutter="20">
+      <UniRow :gutter="10">
         <UniCol :span="24">
           <label class="ko-basic-label">订单编号：</label>
           {{ item.orderCode || "-" }}
         </UniCol>
 
-        <UniCol :span="24" v-if="!isCheckStock">
+        <UniCol :span="24" v-if="!isCheckStock && (item.totalAmount && item.totalAmount !== 0)">
           <label class="ko-basic-label">订单总金额：</label>
           <text class="ko-basic-money">
-            ¥ {{ toYuan(item.totalAmount) }}元
+            {{ toYuan(item.totalAmount) }}元
           </text>
         </UniCol>
 
@@ -99,10 +97,10 @@ export default {
           </text>
         </UniCol>
 
-        <UniCol :span="24" v-if="isHistory">
-          <label class="ko-basic-label">订单状态：</label>
-          {{ ORDER_STATUS_ENUMS(item.status) }}
-        </UniCol>
+        <!-- <UniCol :span="24">
+           <label class="ko-basic-label">订单状态：</label>
+           {{ ORDER_STATUS_ENUMS(item.status) }}
+         </UniCol>-->
 
         <UniCol :span="24" v-if="false">
           <label class="ko-basic-label">总金额大写：</label>
@@ -114,8 +112,13 @@ export default {
         <UniCol :span="24" v-if="isCheckStock ? !['PRODUCTION'].includes(item.orderType) : true">
           <view class="ko-basic-label__images-wrap">
             <label class="ko-basic-label">{{ getCustomerName(item) }}：</label>
-            <view style="margin-right: 10px;" v-if="GET_FUNC(item, 'customer.logo')">
-              <UvAvatar :src="getImageUrl(GET_FUNC(item, 'customer.logo'))" random-bg-color />
+            <view style="margin-right: 10px;">
+              <UvAvatar
+                :size="38"
+                :text="GET_FUNC(item, 'customer.name')"
+                :src="getImageUrl(GET_FUNC(item, 'customer.logo'))"
+                random-bg-color
+              />
             </view>
             <text>{{ GET_FUNC(item, "customer.name") || "-" }}</text>
           </view>
@@ -124,11 +127,12 @@ export default {
         <UniCol :span="24">
           <view class="ko-basic-label__images-wrap">
             <label class="ko-basic-label">{{ `${isSalesPurchase ? "提单" : "下单"}` }}用户：</label>
-            <view style="margin-right: 10px;" v-if="GET_FUNC(item, 'user.avatar')">
+            <view style="margin-right: 10px;">
               <UvAvatar
                 :size="38"
                 random-bg-color
                 :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
+                :text="GET_FUNC(item, 'user.nickName')"
               />
             </view>
             <text>{{ GET_FUNC(item, "user.nickName") || "-" }}</text>
@@ -179,6 +183,7 @@ export default {
       <view class="ko-order-card__operate" v-if="$slots.operate">
         <slot name="operate" :node="item" />
       </view>
+
       <view class="ko-order-card__operate" v-if="operate.length > 0">
         <button
           class="ko-basic-button__card"

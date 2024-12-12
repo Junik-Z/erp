@@ -36,6 +36,16 @@ export default {
   onShow() {
     this.getList();
   },
+  mounted() {
+    // #ifdef H5
+    this.getList();
+    // #endif
+  },
+  onLoad(option) {
+    if (option.PAGE_INDEX) {
+      this.current = +option.PAGE_INDEX;
+    }
+  },
   methods: {
     onTab(event) {
       this.current = event.currentIndex;
@@ -92,7 +102,6 @@ export default {
 <style scoped lang="scss">
 .ko-stock {
   width: 100%;
-  padding-bottom: 50px;
 
   &__tabs {
     padding: 10px;

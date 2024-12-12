@@ -1,6 +1,6 @@
 <script>
 import UniDatetimePicker
-  from "@/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
+  from "@/erp/components/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
@@ -147,6 +147,7 @@ export default {
                 v-model="form.materialDetails"
                 :total.sync="form.totalRawMaterialAmount"
                 type="purchase"
+                hide-prices
               />
             </view>
           </UniFormsItem>
@@ -160,6 +161,7 @@ export default {
               <PickerProduct
                 v-model="form.productDetails"
                 :total.sync="form.totalProductAmount"
+                hide-prices
               />
             </view>
           </UniFormsItem>
@@ -170,7 +172,7 @@ export default {
         <view style="padding: 10px;">
           <UniFormsItem label-width="30px" name="materialDetails">
             <view>
-              <view class="ko-basic-money">¥ {{ toYuan(getTotalAmount) }}元</view>
+              <view class="ko-basic-money"> {{ toYuan(getTotalAmount) }}元</view>
               <view style="margin-top: 10px;" class="ko-basic-money">{{ toBigMoney(toYuan(getTotalAmount)) }}</view>
             </view>
           </UniFormsItem>
@@ -201,6 +203,6 @@ export default {
 
 <style scoped lang="scss">
 .ko-client {
-  padding-bottom: 50px;
+  padding-bottom: 80px;
 }
 </style>

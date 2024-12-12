@@ -41,6 +41,7 @@ export default {
   },
   onShow() {
     this.getList();
+    console.log("触发两次");
   },
   computed: {
     getTabList() {

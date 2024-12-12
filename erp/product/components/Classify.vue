@@ -10,14 +10,17 @@ import {
   deleteProductClassApi,
   editProductClassApi,
   getProductClassApi,
+  upDownPurchaseClassApi,
+  upDownSaleClassApi,
 } from "@/api/erp/product";
-import { _deepCopy, _isEmpty } from "@/utils";
+import { _deepCopy, _get, _isEmpty } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
+import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 
 export default {
   name: "Classify",
-  components: {LoadMore, UniFab, UniForms, BasicPopup, UniFormsItem, UniEasyinput, DaTreeVue2},
+  components: {UvActionSheet, LoadMore, UniFab, UniForms, BasicPopup, UniFormsItem, UniEasyinput, DaTreeVue2},
   mixins: [mixins],
   data: () => ({
     roomTreeData: [],
@@ -55,6 +58,7 @@ export default {
     },
 
     isEdit: false,
+    actionItem: {},
   }),
   created() {
     // this.getList();
@@ -85,6 +89,11 @@ export default {
 
               this.getList();
             });
+        } else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
     },
@@ -96,15 +105,15 @@ export default {
         this.form = _deepCopy(this.$options.data().form);
 
         if (!_isEmpty(row)) {
-          this.form = {...this.form, parentId: row.key};
+          this.form = {...this.form, parentId: row.id};
         }
       });
     },
     onRemove(row) {
-      const node = _deepCopy(row.originItem);
+      const node = _deepCopy(row);
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要删除 ${row.label} 分类吗？`,
+        content: `您确定要删除 ${node.name} 分类吗？`,
         success: (res) => {
           if (res.confirm) {
             deleteProductClassApi(node)
@@ -117,7 +126,7 @@ export default {
       });
     },
     onEdit(row) {
-      const node = _deepCopy(row.originItem);
+      const node = _deepCopy(row);
       this.isEdit = true;
       this.visible = true;
       this.$nextTick(() => {
@@ -126,8 +135,82 @@ export default {
       });
 
     },
+
+    upDownSale(row) {
+      row.saleOff = !row.saleOff;
+      uni.showModal({
+        title: "温馨提示",
+        content: `您确定要 ${row.saleOff ? "下架" : "上架"} 该分类到销售吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            upDownSaleClassApi(row)
+              .then(() => {
+                uni.showToast({title: "操作成功"});
+                this.getList();
+              });
+          }
+        },
+      });
+    },
+    upDownPurchase(row) {
+      row.purchaseOff = !row.purchaseOff;
+      uni.showModal({
+        title: "温馨提示",
+        content: `您确定要 ${row.purchaseOff ? "下架" : "上架"} 该分类到采购吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            upDownPurchaseClassApi(row)
+              .then(() => {
+                uni.showToast({title: "操作成功"});
+                this.getList();
+              });
+          }
+        },
+      });
+    },
+
+    onSelect(item) {
+      this[item.func](_get(_deepCopy(this.actionItem), "originItem"));
+    },
+
+    onOpenAction(row) {
+      console.log(row);
+      this.actionItem = _deepCopy(row);
+      this.$refs.UASRef.open();
+    },
   },
-  computed: {},
+  computed: {
+    getActionsList() {
+      return () => {
+        const item = _deepCopy(this.actionItem);
+        const {saleOff, purchaseOff} = _get(item, "originItem") || {};
+        return [
+          {
+            name: saleOff ? "上架销售" : "下架销售",
+            func: "upDownSale",
+          },
+          {
+            name: purchaseOff ? "上架采购" : "下架采购",
+            func: "upDownPurchase",
+          },
+          {
+            name: "添加子级",
+            func: "onAdded",
+            disabled: item.level > 6,
+          },
+          {
+            name: "编辑",
+            func: "onEdit",
+          },
+          {
+            name: "删除",
+            color: "#e43d33",
+            func: "onRemove",
+          },
+        ];
+      };
+    },
+  },
 };
 </script>
 
@@ -141,13 +224,22 @@ export default {
         valueField="id"
         defaultExpandAll
         :show-radio-icon="false"
-        @added="onAdded"
-        @remove="onRemove"
-        @edit="onEdit"
         not-checked
         :max-level="6"
         :is-operate="isPerm('Product_Write')"
-      />
+        @action-click="onOpenAction"
+      >
+        <template #operate-node="{node}">
+          <view class="ko-classify__off">
+            <view class="xiao" :class="{'is-active': node.saleOff}">
+              <text>销</text>
+            </view>
+            <view class="cai" :class="{'is-active': node.purchaseOff}">
+              <text>采</text>
+            </view>
+          </view>
+        </template>
+      </DaTreeVue2>
       <LoadMore :loading="loading" />
     </view>
 
@@ -175,15 +267,50 @@ export default {
       direction="vertical"
       @fabClick="onAdded()"
     />
+
+    <UvActionSheet
+      ref="UASRef"
+      :actions='getActionsList()'
+      safe-area-inset-bottom
+      round="10"
+      cancel-text="取消"
+      @select="onSelect"
+    />
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-classify {
   margin-top: 10px;
+  padding-bottom: 80px;
 
   &__row {
     padding: 10px;
+  }
+
+  &__off {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+
+    .xiao, .cai {
+      background: #18bc37;
+      border-radius: 50px;
+      padding: 4px;
+      font-size: 10px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.is-active {
+        background: #c7c9ce;
+      }
+    }
+
+    .xiao {
+      margin-right: 6px;
+    }
   }
 
   &__popup {

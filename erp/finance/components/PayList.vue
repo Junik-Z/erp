@@ -13,7 +13,7 @@ import {
   getPayableHistoryListApi,
   getPayableListApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
@@ -80,6 +80,7 @@ export default {
           key: "customerCount",
           color: "#2979ff",
           unit: "家",
+          func: "onJumpReconcile",
         },
       ],
 
@@ -119,7 +120,7 @@ export default {
           label: "总金额(元)",
           prop: "totalAmount",
           render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalAmount)}`);
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
           },
         },
         {
@@ -160,7 +161,7 @@ export default {
       this.loading = true;
       const Func = this.isHistory ? getPayableHistoryListApi : getPayableListApi;
 
-      Func()
+      Func({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.list = res.data;
         })
@@ -218,6 +219,20 @@ export default {
         url: `/erp/finance/ticket${q}`,
       });
     },
+
+    // 跳转到对账客户页面
+    onJumpReconcile() {
+      uni.navigateTo({
+        url: "/erp/finance/reconcile",
+      });
+    },
+
+    onFunc(item) {
+
+      if (item.func) {
+        this[item.func](item);
+      }
+    },
   },
   computed: {
     getCountValue() {
@@ -238,9 +253,9 @@ export default {
 <template>
   <view class="ko-pay">
     <view class="ko-basic-count__wrap">
-      <UniRow :gutter="20">
+      <UniRow :gutter="10">
         <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
-          <view class="ko-basic-count">
+          <view class="ko-basic-count" @click.stop="onFunc(item)">
             <view class="ko-basic-count__label">{{ item.label }}</view>
             <view class="ko-basic-count__info">
               <UvCountTo

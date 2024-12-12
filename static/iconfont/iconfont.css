@@ -1,3 +1,7 @@
+.icon-gengduocaozuo:before {
+  content: "\e683";
+}
+
 .icon-dashboard:before {
   content: "\e78b";
 }

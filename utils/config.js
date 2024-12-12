@@ -1,24 +1,47 @@
+// 请求地址
+let BASE_URL = "http://192.168.0.7:8093/api";
+let BASE_WS_URL = "ws://192.168.0.7:8093/api/ws/app";
+
+// #ifdef H5
+BASE_URL = "/api";
+BASE_WS_URL = "/api/ws/app";
+
+// BASE_URL: "https://erp.kuaouyun.cn/api",
+// BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+// #endif
+
+let type = "test";
+
+// type = "env";
+
 export const CONFIG = {
   // 请求头的参数
   APP_ID: "wx525c19deacc41329",
 
-  // #ifdef MP
-  BASE_URL: "http://192.168.0.7:8093/api",
-  BASE_WS_URL: "ws://192.168.0.7:8093/api/ws/app",
-  // #endif
-
-  // #ifdef H5
-  BASE_URL: "/api",
-  BASE_WS_URL: "/api/ws/app",
-  // #endif
-
-  // BASE_URL: "https://erp.kuaouyun.cn/api",
-  // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+  ...(
+    {
+      test: {
+        BASE_URL,
+        BASE_WS_URL,
+      },
+      env: {
+        BASE_URL: "https://erp.kuaouyun.cn/api",
+        BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+      },
+      prod: {
+        BASE_URL: "https://erp.kuaouyun.cn/api",
+        BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+      },
+    }[type]
+  ),
 
   TITLE: "托手掌柜",
 
   // 分享出去时的type： 0 - 微信小程序正式版 ；1 - 微信小程序开发版；2 - 微信小程序体验版
-  SHARE_TYPE: 1,
+  SHARE_TYPE: {test: 1, env: 2, prod: 3}[type],
+
+  // WEB rem 的转换率
+  H5_REM_SIZE: 136.6,
 };
 
 /**
@@ -63,7 +86,7 @@ export const ROLE_LIST_ENUMS = {
  */
 export const MENU_LIST = [
   // #ifdef H5
-  {
+  /* {
     label: "大屏数据看版",
     icon: "icon-dashboard",
     value: "/admin/dashboard/dashboard",
@@ -71,7 +94,7 @@ export const MENU_LIST = [
     role: ["Admin", "Business"],
     // 是否可以被分配角色
     isUpRole: false,
-  },
+  }, */
   // #endif
 
   {
@@ -168,6 +191,16 @@ export const HOME_PAGE_TYPE_ENUMS = {
   ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",
   BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
+};
+
+/**
+ * @description 页面类型对呀的页面地址
+ */
+export const PAGE_TYPE_CORRESPOND_PATH = {
+  ADDED_SALE: "/erp/sale/order",
+  BINDING_CLIENT_BY_SALE: "/client/binding/binding",
+  ADDED_PURCHASE: "/erp/purchase/order",
+  BINDING_CLIENT_BY_PURCHASE: "/client/binding/binding",
 };
 
 /**

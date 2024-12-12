@@ -16,8 +16,8 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _isEqual } from "@/utils";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import { _get, _isEqual, _pick } from "@/utils";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 
 export default {
   name: "RefundList",
@@ -87,7 +87,7 @@ export default {
           label: "总金额(元)",
           prop: "totalAmount",
           render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalAmount)}`);
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
           },
         },
         {
@@ -124,7 +124,7 @@ export default {
       this.loading = true;
       const Func = this.isHistory ? getSaleReturnHistoryApi : getSaleReturnListApi;
 
-      Func()
+      Func({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.list = res.data;
         })
@@ -207,6 +207,19 @@ export default {
         uni.navigateTo({url: path});
       }
     },
+
+    // 添加单据
+    onAddedDocuments(item) {
+      const q = this.getQueryString({
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId"]),
+        orderType: "SALE_RETURN",
+        noUnable: true,
+      });
+      uni.navigateTo({
+        url: `/erp/finance/ticket${q}`,
+      });
+    },
+
   },
   computed: {
     // #ifdef H5
@@ -239,6 +252,13 @@ export default {
                   :loading="item.__s_loading__"
                 >
                   提交订单
+                </button>
+                <button
+                  v-if="!['CANCELLED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click.stop="onAddedDocuments(item)"
+                >
+                  添加单据
                 </button>
                 <button
                   class="ko-basic-button__card"
@@ -285,7 +305,7 @@ export default {
     </UniList>
 
     <UniFab
-      v-if="isPerm('Sales_Write')"
+      v-if="isPerm('Sales_Write') && false"
       ref="FabRef"
       :pattern='{
         color: "#7A7E83",
@@ -305,6 +325,7 @@ export default {
 <style scoped lang="scss">
 .ko-client {
   width: 100%;
+  padding-bottom: 80px;
 
   .ko-basic-button__card {
     margin: 5px;

@@ -11,7 +11,7 @@ export function isLogin() {
 /**
  * @description 处理微信登陆
  */
-export function goLogin() {
+export function goLogin(tenantId = "") {
   return new Promise((resolve, reject) => {
     if (uni.__LOGIN_LOADING__) {
       reject("__stop__");
@@ -23,10 +23,12 @@ export function goLogin() {
         uni.__LOGIN_LOADING__ = true;
 
         const {code} = resp;
-        loginApi({code})
+        loginApi({code, tenantId})
           .then((res) => {
-            resolve(res);
             uni.$emit("$__login_success__", res);
+            console.log("$__login_success__", res.data);
+            uni.setStorageSync("__APP_SCENE__", res.data);
+            resolve(res);
           })
           .catch(reject)
           .finally(() => {

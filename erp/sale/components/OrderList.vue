@@ -10,8 +10,8 @@ import { cancelSaleApi, getSaleHistoryApi, getSaleListApi, removeSaleApi, submit
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _isEqual } from "@/utils";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import { _get, _pick } from "@/utils";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 
 export default {
   name: "OrderList",
@@ -68,6 +68,28 @@ export default {
         {
           label: "订单编号",
           prop: "orderCode",
+          width: 210,
+        },
+        {
+          label: "下单日期",
+          prop: "createTime",
+          width: 180,
+        },
+        {
+          label: "状态",
+          width: 80,
+          prop: "status",
+          render: (h, {row}) => {
+            return h("div", [_this.ORDER_STATUS_ENUMS(row.status)]);
+          },
+        },
+        {
+          label: "金额(元)",
+          prop: "totalAmount",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
+          },
         },
         {
           label: "客户",
@@ -76,11 +98,18 @@ export default {
             {
               label: "Logo",
               prop: "customer.logo",
+              width: 80,
               render: (h, {row}) => {
                 return h(
                   "div",
                   {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "customer.logo")), size: 64}})],
+                  [h(UvAvatar, {
+                    props: {
+                      src: _this.getImageUrl(_get(row, "customer.logo")),
+                      size: 64,
+                      text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
+                    },
+                  })],
                 );
               },
             },
@@ -91,11 +120,26 @@ export default {
           ],
         },
         {
-          label: "总金额(元)",
-          prop: "totalAmount",
-          render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalAmount)}`);
-          },
+          label: "下单用户",
+          prop: "customer",
+          children: [
+            {
+              label: "头像",
+              prop: "user.avatar",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 64}})],
+                );
+              },
+            },
+            {
+              label: "昵称",
+              prop: "user.nickName",
+            },
+          ],
         },
         /* {
           label: "产品详情",
@@ -107,26 +151,12 @@ export default {
         {
           label: "备注",
           prop: "remark",
+          minWidth: 120,
         },
         {
           label: "操作",
-          render(h, {row}) {
-            return h("div", [
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onCancel.bind(_this, row)},
-                },
-                "取消",
-              ),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onJump.bind(_this, row)},
-                }
-                , "修改"),
-            ]);
-          },
+          slot: "operate",
+          width: 380,
         },
       ],
       // #endif
@@ -136,7 +166,7 @@ export default {
     getList() {
       this.loading = true;
       const Func = this.isHistory ? getSaleHistoryApi : getSaleListApi;
-      Func()
+      Func({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.list = res.data;
         })
@@ -205,21 +235,35 @@ export default {
     },
     onTrigger(event) {
       const {path} = event.item || {};
-
       this.$refs.FabRef.close();
-
       if (path) {
         uni.navigateTo({url: path});
       }
     },
-  },
-  computed: {
-    // #ifdef H5
-    getColumns() {
-      return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
+
+    // 添加单据
+    onAddedDocuments(item) {
+      const q = this.getQueryString({
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId"]),
+        orderType: "SALE",
+        noUnable: true,
+      });
+      uni.navigateTo({
+        url: `/erp/finance/ticket${q}`,
+      });
     },
-    // #endif
+    // 申请退货
+    onReturn(item) {
+      uni.navigateTo({
+        url: "/erp/sale/refund?order_id=" + item.id,
+      });
+    },
+
+    onRowClick(row) {
+      this.onJumpDetails(row, "sale");
+    },
   },
+  computed: {},
 };
 </script>
 
@@ -239,6 +283,20 @@ export default {
           >
             <template #operate v-if="isPerm('Sales_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <button
+                  v-if="['FINISHED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click.stop="onReturn(item)"
+                >
+                  申请退货
+                </button>
+                <button
+                  v-if="!['CANCELLED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click.stop="onAddedDocuments(item)"
+                >
+                  付款
+                </button>
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
@@ -283,11 +341,70 @@ export default {
       <view style="padding: 10px;">
         <KoTable
           :loading="loading"
-          :columns="getColumns"
+          :columns="columns"
           :data="list"
           empty-text="暂无数据"
           stripe
-        />
+          @row-click="onRowClick"
+        >
+          <template #operate="{item}" v-if="isPerm('Sales_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                v-if="!['CANCELLED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onAddedDocuments(item)"
+              >
+                付款
+              </button>
+              <button
+                v-if="['FINISHED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onReturn(item)"
+              >
+                申请退货
+              </button>
+              <button
+                v-if="['FINISHED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onJumpPrint(item, 'sale')"
+              >
+                打印单据
+              </button>
+              <button
+                v-if="['CREATED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onSubmit(item)"
+                :disabled="item.__s_loading__"
+                :loading="item.__s_loading__"
+              >
+                提交订单
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onJump(item)"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              >
+                修改
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onCancel(item)"
+                v-if="['CREATED'].includes(item.status)"
+              >
+                取消
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onRemove(item)"
+                :loading="item.__r_loading__"
+                :disabled="item.__r_loading__"
+                v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+              >
+                删除
+              </button>
+            </view>
+          </template>
+        </KoTable>
       </view>
       <!-- #endif -->
     </UniList>
@@ -313,6 +430,7 @@ export default {
 <style scoped lang="scss">
 .ko-order {
   width: 100%;
+  padding-bottom: 80px;
 
   :deep(.uni-list-item__container ) {
     display: block;

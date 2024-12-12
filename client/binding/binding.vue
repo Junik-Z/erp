@@ -17,11 +17,12 @@ export default {
   onLoad(option) {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
-    // 获取所有的用户信息
-    uni.$emit("$__get_all_info__");
+    this.onLogInAgain(this.option).finally(() => {
+      setTimeout(() => {
+        this.beReady();
+      }, 100);
+    });
 
-    // 获取成功后跳转到首页
-    uni.$on("$__get_info_success__", this.beReady);
   },
   methods: {
     toIndex() {
@@ -84,6 +85,6 @@ export default {
 <style scoped lang="scss">
 .ko-binding {
   height: 100vh;
-  padding-bottom: 50px;
+  padding-bottom: 80px;
 }
 </style>

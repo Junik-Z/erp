@@ -7,19 +7,26 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import mixins from "@/mixins/mixins";
+import IndexUser from "@/components/IndexList/IndexList.vue";
+import ProductCard from "@/components/ProductCard/ProductCard.vue";
+import { getProductFieldApi } from "@/api/erp/product";
 
 export default {
   name: "Verification",
-  components: {UniList, UniCol, BasicCard, UniRow, LoadMore, PickerClass},
+  components: {ProductCard, IndexUser, UniList, UniCol, BasicCard, UniRow, LoadMore, PickerClass},
   mixins: [mixins],
   data() {
     return {
       list: [],
       queryList: {
         classId: "",
+        ...{pageSize: 1000000, pageNum: 0},
       },
       loading: false,
     };
+  },
+  created() {
+    this.getFieldList();
   },
   methods: {
     getList() {
@@ -30,6 +37,13 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+        });
+    },
+
+    getFieldList() {
+      getProductFieldApi({pageSize: 1000000, pageNum: 0})
+        .then(res => {
+          uni.$__FIELD_LIST__ = res.data;
         });
     },
 
@@ -61,7 +75,29 @@ export default {
       <PickerClass v-model="queryList.classId" @change="getList" />
     </view>
 
-    <UniList>
+    <view class="ko-verification__wrap">
+      <IndexUser :options="list" is-product :loading="loading">
+        <template #cell="{node}">
+          <ProductCard @click="onJump(node)" :node="node" is-verification :span="24" perm="Stock_Write">
+            <template #footer="{item}">
+              <view class="ko-verification__item">
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onRefresh(item)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                >
+                  刷新库存
+                </button>
+              </view>
+            </template>
+          </ProductCard>
+        </template>
+      </IndexUser>
+    </view>
+
+
+    <UniList v-if="false">
       <view class="ko-verification__wrap">
         <view class="ko-verification__wrap--item" v-for="(item, index) in list" :key="index">
           <BasicCard @click="onJump(item)">
@@ -119,64 +155,24 @@ export default {
 
 <style scoped lang="scss">
 .ko-verification {
-  padding-bottom: 50px;
+  height: calc(100vh - 60px);
+
+  display: flex;
+  flex-direction: column;
 
   &__class {
     padding: 10px;
   }
 
   &__wrap {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 5px;
-    //padding: 10px;
-    //column-count: 2; /* 定义列的数量 */
-    //column-gap: 10px; /* 定义列与列之间的间隙 */
-
-    &--item {
-      margin: 5px;
-      width: calc(50% - 10px);
-      //break-inside: avoid-column; /* 避免在元素内部断行 */
-      //margin-bottom: 10px; /* 定义元素之间的间隙 */
-    }
+    flex: 1;
+    position: relative;
   }
 
-  &__info {
+  &__item {
     display: flex;
-    flex-direction: column;
-    font-size: 14px;
-    color: $uni-base-color;
-
-    &--wrap {
-      //display: flex;
-      //align-items: center;
-      overflow: hidden;
-    }
-
-    &--image {
-      width: 100%;
-      height: 120px;
-      border-radius: 8px;
-    }
-
-    &--name {
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 10px;
-      text-align: center;
-
-      @include basic-text-ellipsis(1)
-    }
-
-    &--title {
-      display: flex;
-      align-items: center;
-
-      text {
-        flex: 1;
-      }
-    }
+    align-items: center;
+    justify-content: flex-start;
   }
 }
 </style>

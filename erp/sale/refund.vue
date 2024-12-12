@@ -1,6 +1,4 @@
 <script>
-import UniDatetimePicker
-  from "@/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
@@ -8,14 +6,17 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
-import { addedSaleReturnApi, getCustomerListApi, getSaleReturnDetailApi, updateSaleReturnApi } from "@/api/erp/sale";
+import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { addedSaleReturnApi, getSaleDetailApi, getSaleReturnDetailApi, updateSaleReturnApi } from "@/api/erp/sale";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
+import mixins from "@/mixins/mixins";
+import PickerUser from "@/components/PickerUser/PickerUser.vue";
 
 export default {
   name: "refund",
   components: {
+    PickerUser,
     UniSegmentedControl,
     PickerProduct,
     UniDataSelect,
@@ -24,8 +25,8 @@ export default {
     UniSection,
     UniFormsItem,
     UniEasyinput,
-    UniDatetimePicker,
   },
+  mixins: [mixins],
   data: () => ({
     form: {
       "orderCode": "",
@@ -44,42 +45,34 @@ export default {
 
 
     current: 0,
-    tabs: ["VIP客户", "其它客户"],
+    tabs: ["客户", "其它客户"],
 
     isClient: false,
+
+    orderId: false,
   }),
   created() {
-    this.getSupplierList();
   },
   onLoad(option) {
     this.options = option;
     this.isEdit = !!option.id;
-    if (this.isEdit) this.getInfo();
+    this.orderId = option.order_id || "";
+
+    if (this.isEdit || this.orderId) this.getInfo();
 
     // 是否是客户下单
     this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
 
     if (this.isClient) {
       this.current = 1;
-    } else {
-      this.getSupplierList();
     }
 
   },
   methods: {
-    // 供应商名称
-    getSupplierList() {
-      getCustomerListApi()
-        .then(res => {
-          this.supplierList = res.data?.map(item => ({
-            text: item.name,
-            value: item.id,
-          }));
-        });
-    },
-
     getInfo() {
-      getSaleReturnDetailApi({id: this.options.id})
+      const Func = this.orderId ? getSaleDetailApi : getSaleReturnDetailApi;
+
+      Func({id: this.options.id || this.orderId})
         .then(res => {
           const params = res.data;
           params.totalAmount = transferYuan(params.totalAmount);
@@ -94,6 +87,11 @@ export default {
           const params = _deepCopy(this.form);
           console.log(params);
           params.totalAmount = yuanToPoints(params.totalAmount);
+
+          if (this.orderId) {
+            params.saleOrderId = this.orderId;
+          }
+
           this.loading = true;
 
           const Func = this.isEdit ? updateSaleReturnApi : addedSaleReturnApi;
@@ -102,14 +100,25 @@ export default {
             .then(() => {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
-                success() {
-                  uni.navigateBack();
+                success: () => {
+                  if (this.orderId) {
+                    uni.redirectTo({
+                      url: "/erp/sale/sale?PAGE_INDEX=3",
+                    });
+                  } else {
+                    uni.navigateBack();
+                  }
                 },
               });
             })
             .finally(() => {
               this.loading = false;
             });
+        }else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
     },
@@ -139,7 +148,7 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="margin: 0 30px 20px;" v-if="!isClient">
+          <view style="margin: 0 30px 20px;" v-if="!isClient && false">
             <UniSegmentedControl
               :current.sync="current"
               :values="tabs"
@@ -149,17 +158,19 @@ export default {
           </view>
 
           <template v-if="current === 0">
-            <UniFormsItem label="VIP客户：" name="supplierId">
-              <UniDataSelect
-                v-model="form.supplierId"
+            <UniFormsItem label="客户：" name="supplierId">
+              <PickerUser
                 style="width: 100%;"
-                placeholder="请选择"
-                :localdata="supplierList"
+                is-input
+                title="选择客户"
+                v-model="form.supplierId"
+                type="client"
+                disabled
               />
             </UniFormsItem>
           </template>
 
-          <template v-if="current === 1">
+          <template v-if="current === 1 && false">
             <UniFormsItem :label="`${isClient ? '姓名' : '其它客户'}：`" name="otherSupplier">
               <UniEasyinput
                 v-model="form.otherSupplier"
@@ -186,6 +197,8 @@ export default {
               <PickerProduct
                 v-model="form.details"
                 :total.sync="form.totalAmount"
+                is-not-added
+                :is-edit-price="isPerm('Sales_Write')"
               />
             </view>
           </UniFormsItem>
@@ -194,20 +207,6 @@ export default {
 
       <UniSection title="其它信息" type="line">
         <view style="padding: 10px;">
-          <!--<UniFormsItem label="收货地址：">
-            <UniEasyinput placeholder="请输入" />
-          </UniFormsItem>
-          <UniFormsItem label="详细地址：">
-            <UniEasyinput placeholder="请输入" />
-          </UniFormsItem>
-          <UniFormsItem label="计划退货日期：">
-            <UniDatetimePicker
-              type="date"
-              :clear-icon="false"
-              v-model="single"
-              placeholder="请选择"
-            />
-          </UniFormsItem>-->
           <UniFormsItem label="备注：" name="remark">
             <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
           </UniFormsItem>
@@ -231,7 +230,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-refund {
-  padding-bottom: 50px;
+  padding-bottom: 80px;
 
   &__footer {
     padding: 10px 50px 50px;

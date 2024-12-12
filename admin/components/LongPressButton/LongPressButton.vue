@@ -8,7 +8,7 @@ export default {
     disabled: Boolean,
     longPressDuration: {
       type: Number,
-      default: 3,
+      default: 5,
     },
   },
   data() {

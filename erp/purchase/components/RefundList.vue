@@ -14,8 +14,8 @@ import {
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _isEqual } from "@/utils";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import { _get, _isEqual, _pick } from "@/utils";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 
 export default {
   name: "RefundList",
@@ -87,7 +87,7 @@ export default {
           label: "总金额(元)",
           prop: "totalAmount",
           render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalAmount)}`);
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
           },
         },
         {
@@ -123,7 +123,7 @@ export default {
     getList() {
       this.loading = true;
       const Func = this.isHistory ? getPurchaseReturnHistoryListApi : getPurchaseReturnListApi;
-      Func()
+      Func({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.list = res.data;
         })
@@ -206,6 +206,18 @@ export default {
         },
       });
     },
+    // 添加单据
+    onAddedDocuments(item) {
+      const q = this.getQueryString({
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId"]),
+        orderType: "PURCHASE_RETURN",
+        noUnable: true
+      });
+      uni.navigateTo({
+        url: `/erp/finance/ticket${q}`,
+      });
+    },
+
   },
   computed: {
     // #ifdef H5
@@ -231,6 +243,13 @@ export default {
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
               >
+                <button
+                  v-if="!['CANCELLED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click.stop="onAddedDocuments(item)"
+                >
+                  添加单据
+                </button>
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
@@ -285,7 +304,7 @@ export default {
     </UniList>
 
     <UniFab
-      v-if="isPerm('Purchase_Write')"
+      v-if="isPerm('Purchase_Write') && false"
       ref="FabRef"
       :pattern='{
         color: "#7A7E83",

@@ -1,22 +1,26 @@
 <script>
 import ZeroLoading from "@/uni_modules/zero-loading/components/zero-loading/zero-loading.vue";
 import { _isEmpty, _isEqual } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "Home",
   components: {ZeroLoading},
+  mixins: [mixins],
   data() {
     return {
       option: {},
     };
   },
-  onLoad(option) {
+  async onLoad(option) {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
-    if (this.option?.scene) {
-      uni.setStorageSync("__APP_SCENE__", this.option?.scene);
-    }
+    uni.$__FIELD_LIST__ = []
 
+    if (this.option?.scene) {
+      // uni.setStorageSync("__APP_SCENE__", this.option?.scene);
+      await this.onLogout(this.option, false, true);
+    }
     console.log("home.vue", option, this.option);
 
     // #ifdef H5
@@ -24,7 +28,7 @@ export default {
     // #endif
 
     // #ifdef MP
-    this.handleMPFunc();
+    await this.handleMPFunc();
     // #endif
   },
   methods: {
@@ -38,6 +42,11 @@ export default {
 
       uni.reLaunch({
         url: "/pages/index/index",
+        /* success: () => {
+          setTimeout(() => {
+            uni.setStorageSync("__APP_QUERY__", {});
+          }, 100);
+        }, */
       });
     },
 

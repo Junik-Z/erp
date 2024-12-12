@@ -14,7 +14,7 @@
       @focus="_onFocus"
       @blur="_onBlur"
       class="uni-numbox__value"
-      :type="step<1?'digit':'number'"
+      :type="type || (step<1?'digit':'number')"
       v-model="inputValue"
       :style="{background, color, width:widthWithPx}"
     />
@@ -67,6 +67,7 @@ export default {
       type: Number,
       default: 999999999999999,
     },
+    type: String,
     step: {
       type: Number,
       default: 1,
@@ -154,7 +155,6 @@ export default {
       this.$emit("change", +this.inputValue);
     },
     _getDecimalScale() {
-
       let scale = 1;
       // 浮点型
       if (~~this.step !== this.step) {
@@ -164,19 +164,27 @@ export default {
     },
     _onBlur(event) {
       this.$emit("blur", event);
+
       let value = event.detail.value;
       if (isNaN(value)) {
         this.inputValue = this.value;
         return;
       }
+
       value = +value;
       if (value > this.max) {
         value = this.max;
       } else if (value < this.min) {
         value = this.min;
       }
-      const scale = this._getDecimalScale();
-      this.inputValue = value.toFixed(String(scale).length - 1);
+
+      if (this.type === "digit") {
+        this.inputValue = value;
+      } else {
+        const scale = this._getDecimalScale();
+        this.inputValue = value.toFixed(String(scale).length - 1);
+      }
+
       this.$emit("input", +this.inputValue);
       this.$emit("update:modelValue", +this.inputValue);
       this.$emit("change", +this.inputValue);

@@ -11,10 +11,11 @@ import BasicMixins from "@/mixins/mixins";
 import { bindCustomerApi, getCustomerListApi, removeCustomerApi, unbindCustomerApi } from "@/api/erp/sale";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
+import IndexUser from "@/components/IndexList/IndexList.vue";
 
 export default {
   name: "ClientList",
-  components: {PickerUser, UvAvatar, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList},
+  components: {IndexUser, PickerUser, UvAvatar, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList},
   mixins: [BasicMixins],
   data() {
     const _this = this;
@@ -112,29 +113,7 @@ export default {
         {
           label: "操作",
           width: 260,
-          render(h, {row}) {
-            return h("div", [
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onUnbind.bind(_this, row)},
-                },
-                "解绑微信",
-              ),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onJump.bind(_this, row)},
-                }
-                , "修改"),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onRemove.bind(_this, row)},
-                }
-                , "删除"),
-            ]);
-          },
+          slot: "operate",
         },
       ],
       // #endif
@@ -143,10 +122,15 @@ export default {
   methods: {
     getList() {
       this.loading = true;
-      getCustomerListApi()
+      getCustomerListApi({pageSize: 1000000, pageNum: 0})
         .then((res) => {
           console.log("客户列表", res.data);
-          this.list = res.data;
+          this.list = (res.data || []).map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
         })
         .finally(() => {
           this.loading = false;
@@ -274,40 +258,36 @@ export default {
   <view class="ko-client">
     <UniList>
       <!-- #ifdef MP -->
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
-          <BasicCard @click.stop="onJumpInfo(item)">
-            <view class="ko-client__info">
-              <view class="ko-client__info--logo">
-                <UvAvatar
-                  class="ko-client__info--image"
-                  :src="getImageUrl(item.logo)"
-                  :size="64"
-                  random-bg-color
-                  :text="item.name || GET_SHOP_NAME"
-                />
-                <view class="ko-client__info--name">{{ item.name }}</view>
-              </view>
-
-              <view class="ko-client__info--button" v-if="isPerm('Sales_Write')">
-                <button
-                  @click.stop="() => {}"
-                  open-type="share"
-                  :data-params="getBindingParams(item)"
-                  class="ko-basic-button__card"
-                >
-                  邀请绑定
-                </button>
-                <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__card">绑定客户</button>
-                <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__card">解绑客户</button>
-                <button class="ko-basic-button__card" @click.stop="onJump(item)">编辑</button>
-                <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
-              </view>
+      <view class="ko-client__wrap">
+        <IndexUser :options="list" @click="onJumpInfo" button-perm="Sales_Write">
+          <template #default="{node}">
+            <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
+              <!--<button
+                @click.stop="() => {}"
+                open-type="share"
+                :data-params="getBindingParams(node)"
+                class="ko-basic-button__card"
+              >
+                邀请绑定
+              </button>-->
+              <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定客户</button>
+              <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑客户</button>
+              <button class="ko-basic-button__user" @click.stop="onJump(node)">编辑</button>
+              <button class="ko-basic-button__user" @click.stop="onRemove(node)">删除</button>
             </view>
-          </BasicCard>
-        </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
+          </template>
+        </IndexUser>
+      </view>
+      <!--
+       <button
+                    @click.stop="() => {}"
+                    open-type="share"
+                    :data-params="getBindingParams(item)"
+                    class="ko-basic-button__card"
+                  >
+                    邀请绑定
+                  </button>
+      -->
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
@@ -318,12 +298,30 @@ export default {
           :data="list"
           empty-text="暂无数据"
           stripe
-        />
+        >
+          <template #operate="{item}" v-if="isPerm('Sales_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <!--<button
+                @click.stop="() => {}"
+                open-type="share"
+                :data-params="getBindingParams(node)"
+                class="ko-basic-button__card"
+              >
+                邀请绑定
+              </button>-->
+              <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__user">绑定客户</button>
+              <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__user">解绑客户</button>
+              <button class="ko-basic-button__user" @click.stop="onJump(item)">编辑</button>
+              <button class="ko-basic-button__user" @click.stop="onRemove(item)">删除</button>
+            </view>
+          </template>
+        </KoTable>
       </view>
       <!-- #endif -->
     </UniList>
 
     <PickerUser
+      v-if="isPerm('Sales_Write')"
       :visible.sync="visible"
       :title="isBind ? '选择绑定客户' : '解绑客户'"
       is-confirm
@@ -356,7 +354,8 @@ export default {
 .ko-client {
   width: 100%;
 
-  .ko-basic-button__card {
+  &__wrap {
+    height: calc(100vh - 66px);
   }
 
   :deep(.uni-list-item__container ) {
@@ -403,5 +402,6 @@ export default {
       }
     }
   }
+
 }
 </style>

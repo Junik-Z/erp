@@ -111,7 +111,7 @@
 	import {
 		initVueI18n
 	} from '@dcloudio/uni-i18n'
-	import i18nMessages from './i18n/index.js'
+	import i18nMessages from './i18n'
 	const {
 		t
 	} = initVueI18n(i18nMessages)

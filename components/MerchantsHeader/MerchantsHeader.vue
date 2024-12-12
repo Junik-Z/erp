@@ -7,10 +7,8 @@ import BusinessAdvertising from "@/components/BusinessAdvertising/BusinessAdvert
 export default {
   name: "MerchantsHeader",
   components: {BusinessAdvertising, UvAvatar},
-  computed: {
-    CONFIG() {
-      return CONFIG;
-    },
+  props: {
+    isQrCode: Boolean,
   },
   mixins: [mixins],
   data() {
@@ -25,6 +23,20 @@ export default {
   },
   mounted() {
   },
+  computed: {
+    CONFIG() {
+      return CONFIG;
+    },
+
+    // 获取头像大小
+    getAvatarSize() {
+      let size = 100;
+      // #ifdef H5
+      size = 130;
+      // #endif
+      return size;
+    },
+  },
 };
 </script>
 
@@ -36,7 +48,7 @@ export default {
 
     <view @click.stop="onOpen()" class="ko-merchants-header__logo" v-else>
       <UvAvatar
-        :size="100"
+        :size="getAvatarSize"
         :src="getImageUrl(GET_CONFIG_INFO.logo)"
         random-bg-color
         :text="GET_SHOP_NAME"
@@ -47,7 +59,7 @@ export default {
       {{ CONFIG.TITLE }}
     </view>
 
-    <BusinessAdvertising :visible.sync="visible" />
+    <BusinessAdvertising :visible.sync="visible" :is-qr-code="isQrCode" />
   </view>
 </template>
 
@@ -73,5 +85,22 @@ export default {
     text-align: center;
     margin-bottom: 50px;
   }
+
+
+  // #ifdef H5
+  &__title {
+    font-size: 80px;
+    line-height: 1.2;
+  }
+
+
+  &__desc {
+    font-size: 16px;
+    color: #8f939c;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  // #endif
 }
 </style>

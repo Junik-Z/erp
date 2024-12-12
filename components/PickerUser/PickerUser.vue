@@ -6,36 +6,34 @@ import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-lis
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { getUserListApi } from "@/api/admin";
 import mixins from "@/mixins/mixins";
-import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isString, _keys, _omit } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
 import { getCustomerListApi } from "@/api/erp/sale";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { getSupplierListApi } from "@/api/erp/purchase";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
+import { isBoolean } from "@/components/da-tree-vue2/utils";
+import IndexUser from "../IndexList/IndexList.vue";
 
 export default {
   name: "PickerUser",
-  components: {UniSearchBar, UniSection, UniEasyinput, BasicPopup, UniListItem, UvAvatar, BasicCard, UniList},
+  components: {
+    IndexUser,
+    UniSearchBar,
+    UniSection,
+    UniEasyinput,
+    BasicPopup,
+    UniListItem,
+    UvAvatar,
+    BasicCard,
+    UniList,
+  },
   data() {
     return {
       list: [],
       checked: [],
       modelVisible: false,
       checkNode: {},
-      norGroupList: [],
-
-      groupObj: {},
-
-      filterText: undefined,
-
-      scrollViewId: "",
-      winHeight: 0,
-      itemHeight: 0,
-      winOffsetY: 0,
-      touchmove: false,
-      touchmoveIndex: -1,
-      touchmovable: true,
-      loaded: false,
     };
   },
   mixins: [mixins],
@@ -71,9 +69,21 @@ export default {
       type: String,
       default: "请选择",
     },
+
+    // 外部列表
+    isLongList: Boolean,
+    // 外部的列表
+    options: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
   },
   created() {
-    this.getList();
+    if (this.isInput && !this.isLongList) {
+      this.getList();
+    }
   },
   methods: {
     getList() {
@@ -90,36 +100,18 @@ export default {
       const lKey = {default: "nickName", client: "name", supplier: "name"}[this.type];
       const logoKey = {default: "avatar", client: "logo", supplier: "logo"}[this.type];
 
-      Func()
+      Func({pageSize: 10000})
         .then(res => {
-          const list = (res.data)
-            .map(item => {
-              const label = _get(item, lKey);
-              const __group__ = label?.charAt(0);
-              return {
-                ...item,
-                value: _get(item, vKey),
-                label,
-                logo: _get(item, logoKey),
-                __group__,
-              };
-            });
-          this.norGroupList = _deepCopy(list);
-
-          let obj = _groupBy(list, (v) => v.__group__);
-
-          _keys(obj).forEach(key => {
-            const list = obj[key];
-            if (key === "undefined") {
-              obj = _omit(obj, [key]);
-              obj["#"] = list;
-            }
-          });
-
-          this.groupObj = obj;
+          this.list = (res.data).map(item => ({
+            ...item,
+            value: _get(item, vKey),
+            label: _get(item, lKey),
+            logo: _get(item, logoKey),
+          }));
         })
         .finally(() => {
           this.loading = false;
+          this.checkNode = this.getUserInfo(this.value);
         });
     },
     onSelect(item) {
@@ -150,124 +142,77 @@ export default {
       }
     },
     getUserInfo(id) {
-      return _deepCopy(this.norGroupList.find(v => _isEqual(v.value, id)) || {});
+      return _deepCopy((this.list || []).find(v => _isEqual(v.value, id)) || {});
     },
     onConfirm() {
       this.$emit("confirm", this.checked);
 
       if (this.isInput) {
         this.$emit("input", this.checked[0]);
-        this.label = this.getUserInfo(this.checked[0])?.label;
+        this.checkNode = this.getUserInfo(this.checked[0]);
         this.modelVisible = false;
       }
     },
     onClick() {
+      if (isBoolean(this.disabled) && this.disabled) return false;
       this.modelVisible = true;
     },
-
-
-    // 服务索引列表
-    touchStart(e) {
-      this.touchmove = true;
-      let pageY = this.isPC ? e.pageY : e.touches[0].pageY;
-      let index = Math.floor((pageY - this.winOffsetY) / this.itemHeight);
-      let item = this.lists[index];
-      if (item) {
-        this.scrollViewId = "ko-index-list-" + index;
-        this.touchmoveIndex = index;
-      }
-    },
-    touchMove(e) {
-      // #ifndef APP-PLUS
-      let pageY = this.isPC ? e.pageY : e.touches[0].pageY;
-      let index = Math.floor((pageY - this.winOffsetY) / this.itemHeight);
-      if (this.touchmoveIndex === index) {
-        return false;
-      }
-      let item = this.lists[index];
-      if (item) {
-        this.scrollViewId = "ko-index-list-" + index;
-        this.touchmoveIndex = index;
-      }
-      // #endif
-
-      // #ifdef APP-PLUS
-      throttleTouchMove.call(this, e);
-      // #endif
-    },
-    touchEnd() {
-      this.touchmove = false;
-      // this.touchmoveIndex = -1
-    },
-
-    /**
-     * 兼容 PC
-     */
-
-    mousedown(e) {
-      if (!this.isPC) return;
-      this.touchStart(e);
-    },
-    mousemove(e) {
-      if (!this.isPC) return;
-      this.touchMove(e);
-    },
-    mouseleave(e) {
-      if (!this.isPC) return;
-      this.touchEnd(e);
-    },
-
-    // #ifdef H5
-    IsPC() {
-      const userAgentInfo = navigator.userAgent;
-      const Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
-      let flag = true;
-      for (let v = 0; v < Agents.length - 1; v++) {
-        if (userAgentInfo.indexOf(Agents[v]) > 0) {
-          flag = false;
-          break;
-        }
-      }
-      return flag;
-    },
-    // #endif
   },
   watch: {
-    /* value: {
-       handler() {
-         this.checked = _deepCopy(Array.isArray(this.value) ? this.value : this.value ? [this.value] : []);
-       },
-       immediate: true,
-       deep: true,
-     }, */
+    value: {
+      handler() {
+        if (this.isInput) {
+          setTimeout(() => {
+            if (this.isLongList) {
+              this.list = _deepCopy(this.options);
+            }
+
+            this.checkNode = this.getUserInfo(this.value);
+          }, 500);
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
     visible: {
       handler() {
         this.modelVisible = _deepCopy(this.visible);
+      },
+    },
+    modelVisible: {
+      handler() {
+        if (this.modelVisible && !this.isLongList) {
+          this.getList();
+        }
 
         if (this.isInput && _isString(this.value)) {
           this.checkNode = this.getUserInfo(this.value);
         }
 
-        if (this.visible) {
+        if (this.modelVisible) {
           this.checked = _deepCopy(Array.isArray(this.value) ? this.value : this.value ? [this.value] : []);
         } else {
           this.checked = [];
         }
-      },
-    },
-    modelVisible: {
-      handler() {
+
         this.$emit("update:visible", this.modelVisible);
       },
     },
+
+    options: {
+      handler() {
+        if (this.isLongList) {
+          this.list = _deepCopy(this.options);
+        }
+      },
+      deep: true,
+    },
   },
   computed: {
-    isBusiness() {
-      return (role) => (role || []).indexOf("Business") > -1;
-    },
     isChecked() {
       return (item) => this.checked.indexOf(item.value) > -1;
     },
+
     // 是否禁用
     getDisabled() {
       return (item) => {
@@ -276,25 +221,12 @@ export default {
         }
 
         const isArr = Array.isArray(this.disabled);
+
         if (isArr) {
           return this.disabled.indexOf(item.value) > -1;
         }
 
         return this.disabled;
-      };
-    },
-
-    getGroupKeyList() {
-      return _keys(this.groupObj);
-    },
-
-    getGroupList() {
-      return (key) => _get(this.groupObj, key);
-    },
-
-    getFilter() {
-      return (node) => {
-        return node?.label?.indexOf(this.filterText) > -1 || !this.filterText;
       };
     },
   },
@@ -306,11 +238,11 @@ export default {
     <UniEasyinput
       v-if="isInput"
       :placeholder="placeholder"
-      disabled
-      @click="onClick"
+      @click.stop="onClick"
       suffix-icon="down"
       :styles="{disableColor: 'transparent'}"
       :value="checkNode.label"
+      is-readonly
     />
 
     <BasicPopup
@@ -319,72 +251,14 @@ export default {
       :type="isInput ? 'bottom' : 'center'"
     >
       <view class="ko-picker-user__popup" :class="{'is-input': isInput}">
-        <UniSearchBar v-model="filterText" clear-button="auto" cancel-button="none" />
-
-        <view class="ko-picker-user__list">
-          <view class="ko-index-list" ref="ListRef" id="list">
-            <scroll-view :scroll-into-view="scrollViewId" class="ko-index-list__scroll" scroll-y>
-              <view
-                v-for="(key, idx) in getGroupKeyList"
-                :key="idx"
-                :id="'ko-index-list-' + idx"
-              >
-                <UniSection :title="key" type="line">
-                  <view
-                    class="ko-index-list__item"
-                    v-for="(item, index) in getGroupList(key)"
-                    :key="index"
-                    v-if="getFilter(item) && (hideBusiness ? !isBusiness(item.role) : true)"
-                  >
-                    <BasicCard style="width: 100%;">
-                      <view class="ko-picker-user__info" @click="onSelect(item)">
-                        <view style="margin-right: 10px;">
-                          <checkbox :checked="isChecked(item)" :disabled="getDisabled(item)" />
-                        </view>
-                        <UvAvatar
-                          :size="64"
-                          :src="getImageUrl(item.logo)"
-                          random-bg-color
-                          :text="item.label || GET_SHOP_NAME"
-                        />
-                        <view class="ko-picker-user__info--name">{{ item.label || "-" }}</view>
-                        <i v-if="isBusiness(item.role)" class="iconfont icon-shanghuguanli"></i>
-                      </view>
-                    </BasicCard>
-                  </view>
-                </UniSection>
-              </view>
-            </scroll-view>
-
-            <view
-              class="ko-index-list__menu"
-              @touchstart="touchStart"
-              @touchmove.stop.prevent="touchMove"
-              @touchend="touchEnd"
-              @mousedown.stop="mousedown"
-              @mousemove.stop.prevent="mousemove"
-              @mouseleave.stop="mouseleave"
-            >
-              <view
-                v-for="(key, index) in getGroupKeyList"
-                :key="index"
-                class="ko-index-list__menu-item"
-                :class="touchmoveIndex === index ? 'ko-index-list__menu--active' : ''"
-              >
-                <text
-                  class="ko-index-list__menu-text"
-                  :class="touchmoveIndex === index ? 'ko-index-list__menu-text--active' : ''"
-                >
-                  {{ key }}
-                </text>
-              </view>
-            </view>
-
-            <view v-if="touchmove && false" class="ko-index-list__alert-wrapper">
-              <text class="ko-index-list__alert">{{ getGroupKeyList[touchmoveIndex] }}</text>
-            </view>
-          </view>
-        </view>
+        <IndexUser
+          @click="onSelect"
+          :checked-list="checkedList"
+          :options="list"
+          :value="checked"
+          is-checked
+          :disabled="disabled"
+        />
       </view>
 
       <template #footer v-if="isConfirm">
@@ -402,14 +276,21 @@ export default {
 
 <style scoped lang="scss">
 .ko-picker-user {
-
   &__popup {
     height: 70vh;
+    // #ifdef MP
     width: 100vw;
+    // #endif
+    position: relative;
 
     &.is-input {
       height: 80vh;
     }
+
+    // #ifdef H5
+    width: 800px;
+    // #endif
+
   }
 
   /deep/ input[disabled] {
@@ -441,111 +322,6 @@ export default {
       flex: 1;
       padding-left: 10px;
     }
-
-    .iconfont.icon-shanghuguanli {
-      position: absolute;
-      right: -6px;
-      top: -10px;
-      color: #f3a73f;
-      font-size: 18px;
-    }
-  }
-}
-
-.ko-index-list {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  /* #ifndef APP-NVUE */
-  display: flex;
-  /* #endif */
-  flex-direction: row;
-
-  &__scroll {
-    flex: 1;
-  }
-
-  &__menu {
-    width: 30px;
-    padding-right: 10px;
-    /* #ifndef APP-NVUE */
-    display: flex;
-    /* #endif */
-    flex-direction: column;
-  }
-
-  &__menu-item {
-    /* #ifndef APP-NVUE */
-    display: flex;
-    /* #endif */
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    /* #ifdef H5 */
-    cursor: pointer;
-    /* #endif */
-  }
-
-  &__menu-text {
-    font-size: 16px;
-    text-align: center;
-    color: #aaa;
-  }
-
-  &__menu--active {
-  }
-
-  &__menu-text--active {
-    border-radius: 16px;
-    width: 16px;
-    height: 16px;
-    line-height: 16px;
-    background-color: #007aff;
-    color: #fff;
-  }
-
-  &__alert-wrapper {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    /* #ifndef APP-NVUE */
-    display: flex;
-    /* #endif */
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &__alert {
-    width: 80px;
-    height: 80px;
-    border-radius: 80px;
-    text-align: center;
-    line-height: 80px;
-    font-size: 35px;
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
-  &__item {
-    //padding: 10px 16px 10px 26px;
-    //border-bottom: 0.5px solid #c7c9ce;
-
-    padding-left: 16px;
-    padding-right: 8px;
-
-    font-size: 14px;
-    /* #ifndef APP-NVUE */
-    display: flex;
-    /* #endif */
-    flex: 1;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
   }
 }
 </style>

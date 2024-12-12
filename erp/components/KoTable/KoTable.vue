@@ -44,7 +44,6 @@ export default {
     ElTableColumn: TableColumn,
     RenderDom,
   },
-
   methods: {
     getColBind(item) {
       return {
@@ -52,12 +51,16 @@ export default {
         ..._pick(item, _keys(TableColumn.props)),
       };
     },
+    onRowClick(...arg) {
+      this.$emit("row-click", ...arg);
+    },
   },
-
   computed: {
     getElementTableProps() {
       return _pick(this.$props, _keys(Table.props));
     },
+  },
+  mounted() {
   },
 };
 // #endif
@@ -65,14 +68,16 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <ElTable v-bind="getElementTableProps">
+  <ElTable v-bind="getElementTableProps" @row-click="onRowClick">
     <ElTableColumn
       v-for="(item, index) of columns"
       :key="index"
       v-bind="getColBind(item)"
     >
-      <template v-if="item.render" #default="{row, column, $index}">
-        <RenderDom :row="row" :column="column" :index="$index" :render="item.render" />
+      <template v-if="item.render || item.slot" #default="{row, column, $index}">
+        <slot v-if="item.slot" :name="item.slot" :item="row" :column="column" :index="$index"></slot>
+
+        <RenderDom v-if="item.render && !item.slot" :row="row" :column="column" :index="$index" :render="item.render" />
       </template>
 
       <template v-if="item.children">
@@ -81,8 +86,9 @@ export default {
           :key="index + '————' + jIndex"
           v-bind="getColBind(child)"
         >
-          <template v-if="child.render" #default="{row, column, $index}">
-            <RenderDom :row="row" :column="column" :index="$index" :render="child.render" />
+          <template v-if="child.render || child.slot" #default="{row, column, $index}">
+            <slot v-if="child.slot" :name="child.slot" :item="row" :column="column" :index="$index"></slot>
+            <RenderDom v-if="child.render" :row="row" :column="column" :index="$index" :render="child.render" />
           </template>
         </ElTableColumn>
       </template>

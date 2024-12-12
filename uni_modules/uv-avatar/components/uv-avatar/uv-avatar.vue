@@ -23,12 +23,7 @@
       <!-- #ifndef MP-WEIXIN && MP-QQ && MP-BAIDU  -->
       <template v-if="mpAvatar && allowMp"></template>
       <!-- #endif -->
-      <uv-icon
-        v-else-if="icon"
-        :name="icon"
-        :size="fontSize"
-        :color="color"
-      ></uv-icon>
+      <slot v-else-if="icon" name="icon"></slot>
       <image
         class="uv-avatar__image"
         v-else-if="src || defaultUrl"
@@ -41,15 +36,13 @@
 					height: $uv.addUnit(size)
 				}]"
       ></image>
-
-      <uv-text
+      <text
         v-if="!(src) && getText"
-        :text="getText"
-        :size="fontSize"
-        :color="color"
-        align="center"
-        customStyle="justify-content: center"
-      />
+        :style="{fontSize: fontSize,color: color}"
+        style="display: flex; align-items: center; justify-content: center"
+      >
+        {{ getText }}
+      </text>
     </slot>
   </view>
 </template>

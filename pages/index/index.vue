@@ -1,7 +1,5 @@
 <script>
-import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
-import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
-import { _deepCopy, _get, _haveCommonElements, _isEnv, _isEqual } from "@/utils";
+import { _deepCopy, _get, _haveCommonElements } from "@/utils";
 import UniDataCheckbox from "@/uni_modules/uni-data-checkbox/components/uni-data-checkbox/uni-data-checkbox.vue";
 
 import mixins from "@/mixins/mixins";
@@ -25,8 +23,6 @@ export default {
     BasicCard,
     BasicPopup,
     KoNotice,
-    UniGridItem,
-    UniGrid,
     UniDataCheckbox,
   },
   mixins: [mixins],
@@ -39,17 +35,19 @@ export default {
     };
   },
   onLoad() {
-    console.log("用户权限", this.GET_USER_ROLE);
+    uni.$__FIELD_LIST__ = [];
+
+    // console.log("用户权限", this.GET_USER_ROLE);
 
     // #ifdef MP
-    const scene = uni.getStorageSync("__APP_SCENE__");
+    /* const scene = uni.getStorageSync("__APP_SCENE__");
     if ((!scene || _isEqual(scene, "default")) && !_isEnv()) {
       setTimeout(() => {
         this.$nextTick(() => {
           this.$refs.MHRef.onOpen();
         });
       }, 600);
-    }
+    } */
     // #endif
   },
   computed: {
@@ -91,16 +89,21 @@ export default {
   },
   // #endif
   methods: {
-    onChange(event) {
-      const obj = this.getMenuList[event.detail.index];
-      if (!obj.value) {
+    onChange(item) {
+      if (!item.value) {
         uni.showToast({
           icon: "none",
           title: "功能正在开发中，尽情期待。",
         });
         return false;
       }
-      uni.navigateTo({url: obj.value});
+      uni.navigateTo({url: item.value});
+    },
+
+    onJumpStore() {
+      uni.navigateTo({
+        url: "/admin/admin/store",
+      });
     },
   },
 };
@@ -112,31 +115,36 @@ export default {
 
     <MerchantsHeader ref="MHRef" />
 
+    <button class="ko-home__store" @click="onJumpStore" v-if="isBusiness || isAdmin">
+      <i class="iconfont icon-shezhi"></i>
+    </button>
 
     <!-- #ifdef H5 -->
     <!-- #endif -->
 
     <!-- #ifdef MP -->
-    <UniGrid
-      :column="3"
-      :show-border="false"
-      @change="onChange"
+    <UniRow
       @click.stop="() => {}"
+      :gutter="20"
     >
-      <UniGridItem v-for="(item, index) of getMenuList" :key="item.value" :index="index">
+      <UniCol
+        v-for="(item, index) of getMenuList"
+        :key="item.value"
+        :index="index"
+        :span="8"
+      >
         <!-- #endif -->
 
         <!-- #ifdef H5 -->
         <div class="ko-home__wrap">
           <div class="ko-home__content">
             <button
-              v-for="(item, index) of getMenuList"
+              v-for="(item) of getMenuList"
               :key="item.value"
               class="ko-home__item--button"
-              @click.stop="onChange({detail: {index}})"
             >
               <!-- #endif -->
-              <view class="ko-home__item">
+              <view class="ko-home__item" @click="onChange(item)">
                 <i :class="['iconfont', item.icon]"></i>
                 <text>{{ item.label }}</text>
               </view>
@@ -147,8 +155,8 @@ export default {
         <!-- #endif -->
 
         <!-- #ifdef MP -->
-      </UniGridItem>
-    </UniGrid>
+      </UniCol>
+    </UniRow>
     <!-- #endif -->
 
     <view class="ko-home__not-role" v-if="!getMenuList.length">
@@ -182,6 +190,10 @@ export default {
       margin-bottom: 10px;
     }
 
+    .iconfont.icon-kucuntongjifenxi {
+      margin-left: 20px;
+    }
+
     &--checkbox {
       position: absolute;
       right: 0;
@@ -191,12 +203,6 @@ export default {
       align-items: center;
       justify-content: flex-end;
       height: 30px;
-    }
-  }
-
-  /deep/ uni-grid-item {
-    .iconfont.icon-kucuntongjifenxi {
-      margin-left: 20px;
     }
   }
 
@@ -234,8 +240,20 @@ export default {
       margin-bottom: 20px;
     }
   }
-}
 
+  &__store {
+    position: fixed;
+    top: var(--ko-menu-top);
+    left: var(--ko-menu-left);
+    height: var(--ko-menu-height, 32px);
+    z-index: 88;
+
+    .icon-shezhi {
+      height: var(--ko-menu-height, 32px);
+      font-size: 26px;
+    }
+  }
+}
 
 // #endif
 
@@ -307,6 +325,10 @@ export default {
       font-size: 100px;
       width: 100px;
       height: 100px;
+
+      &.icon-kucuntongjifenxi {
+        margin-left: 30px;
+      }
     }
 
     &--checkbox {
@@ -323,13 +345,6 @@ export default {
     &--button {
       color: #fff;
       margin: 0 20px 20px;
-
-
-      &:nth-child(1) {
-        .iconfont {
-          margin-left: 30px;
-        }
-      }
     }
   }
 
@@ -360,6 +375,18 @@ export default {
       width: 120px;
       height: 120px;
       margin-bottom: 20px;
+    }
+  }
+
+  &__store {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    z-index: 88;
+
+    .icon-shezhi {
+      font-size: 30px;
+      color: #fff;
     }
   }
 }

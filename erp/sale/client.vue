@@ -1,6 +1,4 @@
 <script>
-import UniDatetimePicker
-  from "@/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -26,7 +24,6 @@ export default {
     UniCol,
     UniEasyinput,
     UniRow,
-    UniDatetimePicker,
   },
   data: () => ({
     form: {
@@ -265,7 +262,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-client {
-  padding-bottom: 50px;
+  padding-bottom: 80px;
 
   &__popup {
     width: 90vw;

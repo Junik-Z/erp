@@ -2,7 +2,7 @@ import { _get, _isEmpty, _omit, _pick, dealBigMoney, transferYuan, yuanToPoints 
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG } from "@/utils/config";
 import QS from "@/utils/qs.min";
-import { logoutApi } from "@/api/user";
+import { goLogin, logoutApi } from "@/api/user";
 
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
@@ -28,7 +28,19 @@ export default {
   created() {
     this.$nextTick(() => {
       this._UP_INGO();
-      uni.$on("$__get_info_success__", this._UP_INGO);
+
+      uni.$on("$__get_info_success__", () => {
+        this?.getList?.();
+        this._UP_INGO();
+      });
+
+      uni.$on("$__get_user_info_success__", () => {
+        this._UP_INGO();
+      });
+
+      uni.$on("$__get_config_info_success__", () => {
+        this._UP_INGO();
+      });
     });
   },
   mounted() {
@@ -71,8 +83,15 @@ export default {
       });
     },
 
+    // 跳转到打印页面
+    onJumpPrint(node, page_type) {
+      uni.navigateTo({
+        url: `/shop/print/print?${QS.stringify({page_type, ...(_pick(node, ["id"]))})}`,
+      });
+    },
+
     // 处理重新登陆
-    onLogout(params = {}, isScene = true, path) {
+    onLogout(params = {}, path, noJump = false) {
       let url = "/pages/home/home";
       // #ifdef H5
       url = "/pages/login/login";
@@ -83,21 +102,55 @@ export default {
       }
 
       return new Promise((resolve) => {
+        uni.$__IS_LOGOUT_FLAG__ = true;
         logoutApi()
           .finally(() => {
-            const scene = (params?.scene || uni.getStorageSync("__APP_SCENE__"));
-            const obj = _omit(params || {}, ["scene"]);
-            const query = {
-              PAGE_TYPE: "logout",
-              ...(obj || {}),
-              ...(isScene ? {scene} : {}),
-            };
-            uni.clearStorageSync({});
-            uni.reLaunch({
-              url: `${url}?${QS.stringify(query)}`,
+            setTimeout(() => {
+              const obj = _omit(params || {}, ["scene"]);
+              const query = {
+                PAGE_TYPE: "logout",
+                ...(obj || {}),
+              };
+
+              uni.clearStorageSync({});
+
+              console.log("params?.scene", params?.scene);
+
+              goLogin(params?.scene || "")
+                .finally(() => {
+                  setTimeout(() => {
+                    if (!noJump) {
+                      uni.reLaunch({
+                        url: `${url}?${QS.stringify(query)}`,
+                      });
+                    }
+
+                    uni.$__IS_LOGOUT_FLAG__ = false;
+
+                    resolve();
+                  }, 10);
+                });
+            }, 50);
+          });
+      });
+    },
+
+    // 根据传入的参数进行重新登陆
+    onLogInAgain(option, flag = false) {
+      return new Promise((resolve) => {
+        if (option?.scene || flag) {
+          this.onLogout(option, false, true)
+            .finally(() => {
+              setTimeout(() => {
+                // 获取所有的用户信息
+                uni.$emit("$__get_all_info__", true);
+                uni.$emit("$__init_web_socket__");
+                resolve();
+              }, 100);
             });
-          })
-          .finally(resolve);
+        } else {
+          resolve();
+        }
       });
     },
   },
@@ -145,6 +198,10 @@ export default {
       return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin || this.isBusiness;
     },
 
+    px2rem() {
+      return (px) => `${(px || 0) / CONFIG.H5_REM_SIZE}px`;
+    },
+
     // 用户信息
     GET_USER_INFO() {
       return this.MIXINS_OBJ?.USER || {};
@@ -164,8 +221,9 @@ export default {
     ORDER_STATUS_ENUMS() {
       return (type) => {
         return {
-          CREATED: "已创建",
+          CREATED: "待处理",
           FINISHED: "已完成",
+          APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
         }[type] || "-";
       };
@@ -221,13 +279,23 @@ export default {
         // 空x图表数据
         const notSeries = data.series?.every(item => _isEmpty(item.data));
 
+        let padding = [15, 15, 0, 5];
+
+        // #ifdef H5
+        padding = [20, 20, 20, 20];
+        // #endif
+
         return {
           color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
-          padding: [15, 15, 0, 5],
+          padding,
+          // #ifdef H5
+          height: 360,
+          // #endif
           enableScroll: false,
           legend: {
             show: false,
           },
+
           xAxis: {
             dashLength: 10,
           },

@@ -6,7 +6,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { getInboundDetailListApi, getOutboundDetailListApi } from "@/api/erp/stock";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 
 export default {
   name: "check",
@@ -45,7 +45,6 @@ export default {
 <template>
   <view class="ko-check">
     <KoNotice />
-
     <view class="ko-check__tabs" style="padding: 10px;">
       <UniSegmentedControl :values="tabList" :current.sync="current" @clickItem="getList" />
     </view>

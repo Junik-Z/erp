@@ -27,7 +27,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import { _deepCopy, _isEmpty, _isEqual, _pick, showToast, transferYuan, yuanToPoints } from "@/utils";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 
 export default {
   name: "Ticket",
@@ -83,13 +83,17 @@ export default {
     isReceivable: false,
 
     confirmationList: [],
+
+    // 处理不可完成订单
+    noUnable: true,
   }),
   onLoad(option) {
     this.option = option;
-
+    this.noUnable = option.noUnable === "true";
     // 销售退货和采购的时候需要进行付款
     this.isRefund = ["SALE_RETURN", "PURCHASE"].includes(option.orderType);
 
+    // 是否是应收模块
     this.isReceivable = option.isReceivable === "true";
 
     // #ifdef MP
@@ -138,12 +142,10 @@ export default {
             : this.isRefund ? addedReturnedOrderApi : addedPaidOrderApi;
           const params = _deepCopy(this.form);
 
-          params.supplierId = this.option.supplierId;
-          params.orderType = this.option.orderType;
-          params.purchaserId = this.option.purchaserId;
+          const obj = _pick(_deepCopy(this.option), ["supplierId", "orderType", "purchaserId", "orderCode"]);
           params.totalAmount = yuanToPoints(params.totalAmount);
 
-          Func(params)
+          Func({...params, ...obj})
             .then(() => {
               uni.showToast({title: "操作成功"});
               this.getList();
@@ -292,7 +294,7 @@ export default {
                   <UniCol :span="24">
                     <label class="ko-basic-label">金额：</label>
                     <text class="ko-basic-money">
-                      ¥ {{ toYuan(item.totalAmount) }}元
+                      {{ toYuan(item.totalAmount) }}元
                     </text>
                   </UniCol>
                   <UniCol :span="24" v-if="false">
@@ -402,7 +404,7 @@ export default {
       :offset-button="70"
     />
 
-    <view class="ko-ticket__footer ko-basic-footer">
+    <view class="ko-ticket__footer ko-basic-footer" v-if="!noUnable">
       <button class="ko-basic-button" @click="onPrevious">{{ ["取消", "上一步"][step] || "取消" }}</button>
       <button
         class="ko-basic-button"
@@ -455,6 +457,8 @@ export default {
 
     .ko-basic-button {
       width: 40%;
+      padding: 0 10px;
+
     }
   }
 

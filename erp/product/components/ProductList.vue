@@ -12,18 +12,30 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
-import { deleteProductApi, getProductFieldApi, getProductListApi } from "@/api/erp/product";
+import {
+  deleteProductApi,
+  getProductFieldApi,
+  getProductListApi,
+  upDownPurchaseApi,
+  upDownSaleApi,
+} from "@/api/erp/product";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
-import { _get, _isEmpty } from "@/utils";
+import { _deepCopy, _get, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniDataPicker from "@/uni_modules/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
+import IndexUser from "@/components/IndexList/IndexList.vue";
+import ProductCard from "@/components/ProductCard/ProductCard.vue";
 
 export default {
   name: "ProductList",
   mixins: [mixins],
   components: {
+    ProductCard,
+    IndexUser,
+    UvActionSheet,
     PickerClass,
     UniDataPicker,
     UniCard,
@@ -44,15 +56,16 @@ export default {
   },
   data: () => ({
     list: [],
-    loading: false,
+    loading: true,
 
-    fieldList: [],
     className: [],
     classList: [],
 
     queryList: {
       classId: "",
+      ...{pageSize: 1000000, pageNum: 0}
     },
+    actionItem: {},
   }),
   created() {
     this.getSelectList();
@@ -71,10 +84,9 @@ export default {
     },
 
     getSelectList() {
-      Promise.all([getProductFieldApi()])
-        .then(res => {
-          [this.fieldList] = res.map(item => item.data || []);
-        });
+      getProductFieldApi({pageSize: 1000000, pageNum: 0}).then(res => {
+        uni.$__FIELD_LIST__ = res.data;
+      });
     },
 
     onFabClick(item) {
@@ -106,16 +118,47 @@ export default {
       });
     },
 
-    // 选中分类
-    onChangeClass(event) {
-      this.className = event.detail.value?.map(item => item.text) || [];
-      this.getList();
+    upDownSale(row) {
+      row.saleOff = !row.saleOff;
+      uni.showModal({
+        title: "温馨提示",
+        content: `您确定要 ${row.saleOff ? "下架" : "上架"} 该产品到销售吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            upDownSaleApi(row)
+              .then(() => {
+                uni.showToast({title: "操作成功"});
+                this.getList();
+              });
+          }
+        },
+      });
     },
 
-    onAllClass() {
-      this.queryList.classId = "";
-      this.className = [];
-      this.getList();
+    upDownPurchase(row) {
+      row.purchaseOff = !row.purchaseOff;
+      uni.showModal({
+        title: "温馨提示",
+        content: `您确定要 ${row.purchaseOff ? "下架" : "上架"} 该产品到采购吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            upDownPurchaseApi(row)
+              .then(() => {
+                uni.showToast({title: "操作成功"});
+                this.getList();
+              });
+          }
+        },
+      });
+    },
+
+    onActionClick(item) {
+      this.actionItem = item;
+      this.$refs.UASRef.open();
+    },
+
+    onSelect(item) {
+      this[item.func](_deepCopy(this.actionItem));
     },
   },
   computed: {
@@ -124,79 +167,64 @@ export default {
         return _get(item, `extend.${child.fieldCode}`) || "-";
       };
     },
+
+    getActionsList() {
+      return () => {
+        if (!this.isPerm("Product_Write")) return [];
+        const {saleOff, purchaseOff} = this.actionItem || {};
+
+        return [
+          {
+            name: saleOff ? "上架销售" : "下架销售",
+            func: "upDownSale",
+          },
+          {
+            name: purchaseOff ? "上架采购" : "下架采购",
+            func: "upDownPurchase",
+          },
+          {
+            name: "编辑",
+            func: "onFabClick",
+          },
+          {
+            name: "删除",
+            color: "#e43d33",
+            func: "onRemove",
+          },
+        ];
+      };
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-product">
-    <view class="ko-product__class">
-      <PickerClass v-model="queryList.classId" @change="getList" />
-    </view>
-
-    <UniList>
-      <view class="ko-product__wrap">
-        <view class="ko-product__wrap--item" v-for="(item, index) in list" :key="index">
-          <BasicCard>
-            <view class="ko-product__info">
-              <view class="ko-product__info--wrap">
-                <image
-                  v-if="item.images"
-                  class="ko-product__info--image"
-                  :src="getImageUrl(item.images)"
-                  mode="aspectFill"
-                />
-                <view style="flex: 1; margin-top: 8px;">
-                  <UniRow gutter="10">
-                    <UniCol :span="24">
-                      <view class="ko-product__info--name">{{ item.name }}</view>
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">产品分类：</label>{{ item.className || "-" }}
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">入库价格：</label>
-                      <text class="ko-basic-money">¥ {{ toYuan(item.purchasePrice) }}元</text>
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">销售价格：</label>
-                      <text class="ko-basic-money">¥ {{ toYuan(item.salePrice) }}元</text>
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">预警库存：</label>
-                      {{ item.stockWarning }}
-                    </UniCol>
-                    <UniCol :span="24" v-for="child of fieldList" :key="child.id">
-                      <label class="ko-basic-label">{{ child.fieldName }}：</label>
-                      {{ getFieldValue(item, child) }}
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">产品介绍：</label>
-                      {{ item.description || "-" }}
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">备注：</label>
-                      {{ item.remark || "-" }}
-                    </UniCol>
-                  </UniRow>
-                </view>
-              </view>
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;" v-if="isPerm('Product_Write')">
-                <button class="ko-basic-button__card" @click="onFabClick(item)">编辑</button>
-                <button
-                  class="ko-basic-button__card"
-                  @click="onRemove(item)"
-                  :loading="item.__remove_loading__"
-                >
-                  删除
-                </button>
-              </view>
-            </view>
-          </BasicCard>
-        </view>
+    <view class="ko-product__wrap">
+      <view class="ko-product__class">
+        <PickerClass v-model="queryList.classId" @change="getList" />
       </view>
-      <LoadMore :loading="loading" />
-    </UniList>
+      <view class="ko-product__list">
+        <IndexUser :options="list" is-product :loading="loading">
+          <template #cell="{node}">
+            <view class="ko-product__wrap--item">
+              <ProductCard :node="node" is-list :span="24" perm="Product_Write">
+                <template #footer="{item}">
+                  <view class="ko-product__item--footer">
+                    <button
+                      class="ko-basic-button__card action"
+                      @click="onActionClick(item)"
+                    >
+                      <i class="iconfont icon-gengduocaozuo"></i>
+                    </button>
+                  </view>
+                </template>
+              </ProductCard>
+            </view>
+          </template>
+        </IndexUser>
+      </view>
+    </view>
 
     <UniFab
       v-if="isPerm('Product_Write')"
@@ -206,74 +234,54 @@ export default {
         backgroundColor: "#fff",
         selectedColor: "#007AFF",
         buttonColor: "#007AFF",
-        iconColor: "#fff",
+        iconColor: "#fff"
       }'
       horizontal="right"
       direction="vertical"
+      :offset-button="10"
       @fabClick="onFabClick"
+    />
+
+    <UvActionSheet
+      ref="UASRef"
+      :actions='getActionsList()'
+      safe-area-inset-bottom
+      round="10"
+      cancel-text="取消"
+      @select="onSelect"
     />
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-product {
-  margin-top: 10px;
-  padding-bottom: 40px;
-
   &__class {
     padding: 0 10px 15px;
   }
 
   &__wrap {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 5px;
-    //padding: 10px;
-    //column-count: 2; /* 定义列的数量 */
-    //column-gap: 10px; /* 定义列与列之间的间隙 */
-
-    &--item {
-      margin: 5px;
-      width: calc(50% - 10px);
-      //break-inside: avoid-column; /* 避免在元素内部断行 */
-      //margin-bottom: 10px; /* 定义元素之间的间隙 */
-    }
-  }
-
-  &__info {
+    height: calc(100vh - 56px);
     display: flex;
     flex-direction: column;
-    font-size: 14px;
-    color: $uni-base-color;
+  }
 
-    &--wrap {
-      //display: flex;
-      //align-items: center;
-      overflow: hidden;
-    }
+  &__list {
+    flex: 1;
+    position: relative;
+  }
 
-    &--image {
-      width: 100%;
-      height: 120px;
-      border-radius: 8px;
-    }
-
-    &--name {
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 10px;
-      text-align: center;
-
-      @include basic-text-ellipsis(1)
-    }
-
-    &--title {
+  &__item {
+    &--footer {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
 
-      text {
-        flex: 1;
+      .action {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
     }
   }

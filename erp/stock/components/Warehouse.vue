@@ -8,7 +8,9 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import { _get } from "@/utils";
 
 export default {
   name: "Warehouse",
@@ -40,28 +42,85 @@ export default {
         {
           label: "订单编号",
           prop: "orderCode",
-          render: (h, params) => {
-            console.log(params);
-            return h("div", "你是什什么鬼");
+          render: (h, {row}) => {
+            return h("div", row.orderCode);
+          },
+        },
+        {
+          label: "订单类型",
+          prop: "orderType",
+          render: (h, {row}) => {
+            return h("div", _this.ORDER_TYPE_ENUMS(row.orderType));
           },
         },
         {
           label: "总金额(元)",
           prop: "totalAmount",
           render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalAmount)}`);
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
           },
         },
-        /* {
-          label: "产品详情",
-          prop: "details",
-          render: (h, {row}) => {
-            return h("div", row.details);
-          },
-        }, */
+        {
+          label: "供应商",
+          prop: "customer",
+          children: [
+            {
+              label: "Logo",
+              prop: "customer.logo",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {
+                    props: {
+                      src: _this.getImageUrl(_get(row, "customer.logo")),
+                      size: 64,
+                      text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
+                    },
+                  })],
+                );
+              },
+            },
+            {
+              label: "名称",
+              prop: "customer.name",
+            },
+          ],
+        },
+        {
+          label: "下单用户",
+          prop: "customer",
+          children: [
+            {
+              label: "头像",
+              prop: "user.avatar",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 64}})],
+                );
+              },
+            },
+            {
+              label: "昵称",
+              prop: "user.nickName",
+            },
+          ],
+        },
+        {
+          label: "时间",
+          prop: "createTime",
+        },
         {
           label: "备注",
           prop: "remark",
+        },
+        {
+          label: "操作",
+          slot: "operate",
         },
 
       ],
@@ -72,7 +131,7 @@ export default {
     getList() {
       this.loading = true;
       const Func = this.isHistory ? getInboundHistoryListApi : getInboundListApi;
-      Func()
+      Func({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.list = res.data;
           console.log(res.data);
@@ -116,6 +175,10 @@ export default {
           }
         },
       });
+    },
+
+    onRowClick(row) {
+      this.onJumpDetails(row, "inbound");
     },
   },
 };
@@ -162,7 +225,27 @@ export default {
           :data="list"
           empty-text="暂无数据"
           stripe
-        />
+          @row-click="onRowClick"
+        >
+          <template #operate="{item}" v-if="isPerm('Stock_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                v-if="['CREATED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onCancel(item)"
+              >
+                取消入库
+              </button>
+              <button
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onConfirm(item)"
+              >
+                确认入库
+              </button>
+            </view>
+          </template>
+        </KoTable>
       </view>
       <!-- #endif -->
     </UniList>
@@ -172,6 +255,7 @@ export default {
 <style scoped lang="scss">
 .ko-warehouse {
   width: 100%;
+  padding-bottom: 80px;
 
   :deep(.uni-list-item__container ) {
     display: block;

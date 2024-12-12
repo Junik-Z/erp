@@ -1,6 +1,6 @@
 <script>
 import { getInboundDetailApi, getOutboundDetailApi } from "@/api/erp/stock";
-import { _get, _isEqual } from "@/utils";
+import { _get, _isEqual, _sum } from "@/utils";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
@@ -38,7 +38,7 @@ const Func = {
 };
 
 export default {
-  name: "details",
+  name: "DetailsOrder",
   mixins: [mixins],
   components: {UvAvatar, UniCol, UniRow, ProductCard, UniSection, UniForms},
   onLoad(option) {
@@ -84,6 +84,10 @@ export default {
     isShowPlaceOrder() {
       return !["PRODUCTION"].includes(this.node.orderType);
     },
+
+    getTotal() {
+      return _sum((this.node?.details || [])?.map(item => ((item.price || 0) * (item.productQuantity || 0))));
+    },
   },
 };
 </script>
@@ -116,6 +120,19 @@ export default {
       </view>
     </UniSection>
 
+    <UniSection title="配送信息" type="line">
+      <view class="ko-details__item">
+        <view class="ko-details__cell">
+          <label class="ko-basic-label">电话：</label>
+          <text class="ko-details__cell--text">{{ node.orderPhone }}</text>
+        </view>
+        <view class="ko-details__cell">
+          <label class="ko-basic-label">地址：</label>
+          <text class="ko-details__cell--text">{{ node.orderAddress }}</text>
+        </view>
+      </view>
+    </UniSection>
+
     <template v-if="isProduce">
       <UniSection title="材料明细" type="line">
         <view class="ko-details__item">
@@ -124,12 +141,13 @@ export default {
               style="width: 100%;"
               :node="item"
               readonly
+              hide-prices
             />
           </view>
 
-          <view class="ko-details__cell" style="margin-top: 20px;">
+          <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
             <label class="ko-basic-label">共计：</label>
-            <text class="ko-details__cell--text ko-basic-money">¥ {{ toYuan(node.totalRawMaterialAmount) }}元</text>
+            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalRawMaterialAmount) }}元</text>
           </view>
         </view>
       </UniSection>
@@ -141,12 +159,13 @@ export default {
               style="width: 100%;"
               :node="item"
               readonly
+              hide-prices
             />
           </view>
 
-          <view class="ko-details__cell" style="margin-top: 20px;">
+          <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
             <label class="ko-basic-label">共计：</label>
-            <text class="ko-details__cell--text ko-basic-money">¥ {{ toYuan(node.totalProductAmount) }}元</text>
+            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalProductAmount) }}元</text>
           </view>
         </view>
       </UniSection>
@@ -160,12 +179,18 @@ export default {
               style="width: 100%;"
               :node="item"
               readonly
+              emphasis-on-quantity
             />
           </view>
 
-          <view class="ko-details__cell" style="margin-top: 20px;">
+          <view class="ko-details__cell" style="margin-top: 20px;" v-if="getTotal">
             <label class="ko-basic-label">共计：</label>
-            <text class="ko-details__cell--text ko-basic-money">¥ {{ toYuan(node.totalAmount) }}元</text>
+            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getTotal) }}元</text>
+          </view>
+
+          <view class="ko-details__cell" style="margin-top: 10px;" v-if="node.totalAmount">
+            <label class="ko-basic-label">实付金额：</label>
+            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
           </view>
         </view>
       </UniSection>

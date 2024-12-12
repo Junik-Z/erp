@@ -43,27 +43,27 @@ export default {
           label: "计划完成时间",
           prop: "planFinishDate",
         },
-        {
-          label: "原材料价格(元)",
-          prop: "totalRawMaterialAmount",
-          render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalRawMaterialAmount)}`);
-          },
-        },
-        {
-          label: "产品总价(元)",
-          prop: "totalProductAmount",
-          render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalProductAmount)}`);
-          },
-        },
-        {
-          label: "创造价值(元)",
-          prop: "totalAmount",
-          render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, `¥ ${_this.toYuan(row.totalAmount)}`);
-          },
-        },
+        /*  {
+           label: "原材料价格(元)",
+           prop: "totalRawMaterialAmount",
+           render: (h, {row}) => {
+             return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalRawMaterialAmount)}`);
+           },
+         },
+         {
+           label: "产品总价(元)",
+           prop: "totalProductAmount",
+           render: (h, {row}) => {
+             return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalProductAmount)}`);
+           },
+         },
+         {
+           label: "创造价值(元)",
+           prop: "totalAmount",
+           render: (h, {row}) => {
+             return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
+           },
+         }, */
         {
           label: "状态",
           prop: "status",
@@ -134,7 +134,7 @@ export default {
     getList() {
       this.loading = true;
       const Func = this.isHistory ? getProduceHistoryListApi : getProduceListApi;
-      Func()
+      Func({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.list = res.data;
           console.log(res.data);
@@ -256,17 +256,17 @@ export default {
                   <label class="ko-basic-label">计划编号：</label>
                   <text>{{ item.orderCode }}</text>
                 </UniCol>
-                <UniCol :span="24">
+                <UniCol :span="24" v-if="false">
                   <label class="ko-basic-label">原材料总值：</label>
-                  <text class="ko-basic-money">¥ {{ toYuan(item.totalRawMaterialAmount) }}元</text>
+                  <text class="ko-basic-money"> {{ toYuan(item.totalRawMaterialAmount) }}元</text>
                 </UniCol>
-                <UniCol :span="24">
+                <UniCol :span="24" v-if="false">
                   <label class="ko-basic-label">成品总值：</label>
-                  <text class="ko-basic-money">¥ {{ toYuan(item.totalProductAmount) }}元</text>
+                  <text class="ko-basic-money"> {{ toYuan(item.totalProductAmount) }}元</text>
                 </UniCol>
                 <UniCol :span="24" v-if="false">
                   <label class="ko-basic-label">预计创造价值：</label>
-                  <text class="ko-basic-money">¥ {{ toYuan(item.totalAmount) }}元</text>
+                  <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
                 </UniCol>
                 <UniCol :span="24">
                   <label class="ko-basic-label">预计完成时间：</label>

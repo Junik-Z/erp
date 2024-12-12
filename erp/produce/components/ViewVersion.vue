@@ -38,6 +38,7 @@ export default {
         key: "productStockWarning",
         color: "#e43d33",
         unit: "",
+        func: "onJumpWarning",
       },
     ],
     loading: false,
@@ -80,6 +81,10 @@ export default {
                 })),
             });
           });
+
+          if (obj.series.length === 0) {
+            obj.series.push({name: "", data: []});
+          }
 
           this.halfYearProduce = obj;
 
@@ -132,6 +137,20 @@ export default {
       }, 500);
     },
 
+    // 跳转到库存预警页面
+    onJumpWarning() {
+      uni.navigateTo({
+        url: "/erp/stock/warning",
+      });
+    },
+
+    onFunc(item) {
+      console.log(item);
+
+      if (item.func) {
+        this[item.func](item);
+      }
+    },
   },
   computed: {
     getCountValue() {
@@ -148,9 +167,9 @@ export default {
   <view class="ko-view-version">
 
     <view class="ko-basic-count__wrap">
-      <UniRow :gutter="20">
+      <UniRow :gutter="10">
         <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
-          <view class="ko-basic-count">
+          <view class="ko-basic-count" @click.stop="onFunc(item)">
             <view class="ko-basic-count__label">{{ item.label }}</view>
             <view class="ko-basic-count__info">
               <UvCountTo

@@ -92,8 +92,14 @@ export default {
     getAvatarList() {
       return (type, item) => {
         const role = (item.role || []).find(v => v.indexOf(type) > -1);
-
         return (_get(this.premList, role) || []).map(v => this.getImageUrl(v.avatar));
+      };
+    },
+
+    getNameList() {
+      return (type, item) => {
+        const role = (item.role || []).find(v => v.indexOf(type) > -1);
+        return (_get(this.premList, role) || []).map(v => v.nickName);
       };
     },
 
@@ -122,10 +128,11 @@ export default {
                 <view class="ko-role__item--read">
                   <label class="ko-basic-label">查看：</label>
                   <UvAvatarGroup
-                    size="40"
+                    size="52"
                     gap="0.4"
                     :max-count="8"
                     :urls="getAvatarList('Read', item)"
+                    :names="getNameList('Read', item)"
                   />
                   <button
                     class="ko-basic-button__card"
@@ -138,9 +145,10 @@ export default {
                   <label class="ko-basic-label">管理：</label>
                   <UvAvatarGroup
                     :max-count="8"
-                    size="40"
+                    size="52"
                     gap="0.4"
                     :urls="getAvatarList('Write', item)"
+                    :names="getNameList('Write', item)"
                   />
                   <button
                     class="ko-basic-button__card"
@@ -162,6 +170,7 @@ export default {
       :title="getTitle"
       :value="backup"
       is-confirm
+      multiple
       @confirm="onConfirm"
       hide-business
     />
@@ -199,7 +208,7 @@ export default {
     &--read {
       display: flex;
       align-items: center;
-      height: 50px;
+      height: 64px;
 
       .ko-basic-button__card {
         width: 40px;

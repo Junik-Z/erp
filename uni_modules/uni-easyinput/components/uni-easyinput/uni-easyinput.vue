@@ -1,5 +1,14 @@
 <template>
-  <view class="uni-easyinput" :class="{ 'uni-easyinput-error': msg }" :style="boxStyle" @click="$emit('click')">
+  <view
+    class="uni-easyinput"
+    :class="{ 'uni-easyinput-error': msg }"
+    :style="boxStyle"
+  >
+    <view
+      @click="$emit('click', $event)"
+      class="uni-easyinput__readonly"
+      v-if="isReadonly"
+    ></view>
     <view class="uni-easyinput__content" :class="inputContentClass" :style="inputContentStyle">
       <uni-icons v-if="prefixIcon" class="content-clear-icon" :type="prefixIcon" color="#c0c4cc"
                  @click="onClickIcon('prefix')" size="22"></uni-icons>
@@ -324,6 +333,7 @@ export default {
       default: false,
     },
     // #endif
+    isReadonly: Boolean,
   },
   data() {
     return {
@@ -612,6 +622,20 @@ $uni-border-1: #dcdfe6 !default;
   text-align: left;
   color: #333;
   font-size: 14px;
+
+  // #ifdef H5
+  cursor: pointer;
+  // #endif
+
+  &__readonly {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 22;
+    cursor: pointer;
+  }
 }
 
 .uni-easyinput__content {

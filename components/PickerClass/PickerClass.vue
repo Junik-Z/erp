@@ -1,6 +1,5 @@
 <script>
 import { getProductClassApi } from "@/api/erp/product";
-import { _isEmpty } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import DaTreeVue2 from "@/components/da-tree-vue2/index.vue";
 
@@ -20,13 +19,31 @@ export default {
       type: String,
       default: "产品分类",
     },
+    type: String,
+    watchType: Boolean,
+  },
+  watch: {
+    type: {
+      handler() {
+        if (this.watchType) {
+          this.getClassList();
+        }
+      },
+      deep: true,
+    },
   },
   created() {
-    /* _isEmpty(uni.$__product_class_list__) &&  */this.getClassList();
+    /* _isEmpty(uni.$__product_class_list__) &&  */
+    !this.watchType && this.getClassList();
   },
   methods: {
     getClassList() {
-      getProductClassApi()
+      const params = {
+        purchase: {purchaseOff: false},
+        sale: {saleOff: false},
+      }[this.type];
+
+      getProductClassApi(params)
         .then(res => {
           this.classList = res.data;
           uni.$__product_class_list__ = res.data;
@@ -62,7 +79,6 @@ export default {
   <view class="ko-picker-class">
     <view class="ko-picker-class__wrap">
       <view class="ko-picker-class__name">
-
         <view class="ko-picker-class__name--wrap">
           {{ checkedItem.label || "" }}
         </view>
@@ -78,7 +94,12 @@ export default {
       <button class="ko-basic-button__card" @click="onOpen">分类</button>
     </view>
 
-    <BasicPopup type="bottom" :visible.sync="visible" :title="title">
+    <BasicPopup
+      style="z-index: 99;"
+      type="bottom"
+      :visible.sync="visible"
+      :title="title"
+    >
       <view class="ko-picker-class__popup">
         <DaTreeVue2
           ref="DaTreeRef"
@@ -109,7 +130,6 @@ export default {
     flex: 1;
     display: flex;
     align-items: center;
-    overflow: hidden;
 
     &--wrap {
       flex: 1;
@@ -129,5 +149,9 @@ export default {
   &__popup {
     height: 80vh;
   }
+
+  // #ifdef H5
+
+  // #endif
 }
 </style>

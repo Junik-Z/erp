@@ -16,10 +16,20 @@
  *
  -->
 <template>
-  <view class="chartsview" :id="'ChartBoxId'+cid">
-    <view v-if="mixinDatacomLoading">
+  <view
+    class="chartsview"
+    :id="'ChartBoxId'+cid"
+    :style="[rootStyle]"
+  >
+    <view
+      v-if="loading"
+      :style="{ height: cHeight + 'px', background: background }"
+      class="chartsview__loading"
+    >
       <!-- 自定义加载状态，请改这里 -->
-      <qiun-loading :loadingType="loadingType" />
+      <view class="chartsview__loading--center">
+        <qiun-loading :loadingType="loadingType" />
+      </view>
     </view>
     <view v-if="mixinDatacomErrorMessage && errorShow" @tap="reloading">
       <!-- 自定义错误提示，请改这里 -->
@@ -158,6 +168,8 @@
 <script>
 import uCharts from "../../js_sdk/u-charts/u-charts.js";
 import cfu from "../../js_sdk/u-charts/config-ucharts.js";
+import { addUnit } from "@/utils";
+
 // #ifdef APP-VUE || H5
 import cfe from "../../js_sdk/u-charts/config-echarts.js";
 
@@ -390,6 +402,9 @@ export default {
         return [];
       },
     },
+
+    loading: Boolean,
+    height: [String, Number],
   },
   data() {
     return {
@@ -406,7 +421,12 @@ export default {
       openmouse: false,
       pixel: 1,
       cWidth: 375,
-      cHeight: 250,
+      // #ifdef MP
+      cHeight: 260,
+      // #endif
+      // #ifdef H5
+      cHeight: 300,
+      // #endif
       showchart: false,
       echarts: false,
       echartsResize: {
@@ -474,6 +494,7 @@ export default {
     this.mixinDatacomLoading = false;
     this.mixinDatacomErrorMessage = "暂不支持NVUE";
     // #endif
+
     // #ifdef H5
     this.inH5 = true;
     if (this.inWin === true) {
@@ -483,9 +504,11 @@ export default {
       this.echarts = true;
     }
     // #endif
+
     this.$nextTick(() => {
       this.beforeInit();
     });
+
     // #ifndef MP-ALIPAY || MP-BAIDU || MP-TOUTIAO || APP-VUE
     const time = this.inH5 ? 500 : 200;
     const _this = this;
@@ -636,6 +659,12 @@ export default {
     },
     chartDataProps() {
       return JSON.parse(JSON.stringify(this.chartData));
+    },
+
+    rootStyle() {
+      return {
+        "--ko-height": addUnit(this.height),
+      };
     },
   },
   methods: {
@@ -878,6 +907,7 @@ export default {
     },
     init() {
       let cid = this.cid;
+      const _this = this;
       let chartdom = uni
         .createSelectorQuery()
         // #ifndef MP-ALIPAY
@@ -890,7 +920,7 @@ export default {
             this.showchart = true;
             this.lastDrawTime = Date.now();
             this.cWidth = data.width;
-            this.cHeight = data.height;
+            this.cHeight = _this.height || data.height;
             if (this.echarts !== true) {
               cfu.option[cid].background = this.background == "rgba(0,0,0,0)" ? "#FFFFFF" : this.background;
               cfu.option[cid].canvas2d = this.type2d;
@@ -1652,13 +1682,26 @@ export default {
 </script>
 <!-- #endif -->
 
-<style scoped>
+<style scoped lang="scss">
 .chartsview {
   width: 100%;
-  height: 100%;
   display: flex;
   flex: 1;
   justify-content: center;
   align-items: center;
+  position: relative;
+
+  &__loading {
+    /* position: absolute;
+     top: 0;
+     left: 0;
+     bottom: 0;
+     right: 0;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 88;
+    background: rgba(255, 255, 255, 0.6) !important;
+  }
 }
 </style>

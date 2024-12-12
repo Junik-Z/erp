@@ -12,10 +12,14 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
+import IndexUser from "@/components/IndexList/IndexList.vue";
 
 export default {
   name: "ClientList",
-  components: {UvAvatar, PickerUser, KoTable, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList},
+  components: {
+    IndexUser,
+    UvAvatar, PickerUser, KoTable, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList,
+  },
   mixins: [mixins],
   data() {
     const _this = this;
@@ -141,10 +145,14 @@ export default {
   methods: {
     getList() {
       this.loading = true;
-      getSupplierListApi()
+      getSupplierListApi({pageSize: 1000000, pageNum: 0})
         .then((res) => {
-          console.log(res);
-          this.list = res.data;
+          this.list = (res.data || []).map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
         })
         .finally(() => {
           this.loading = false;
@@ -266,39 +274,26 @@ export default {
   <view class="ko-client">
     <UniList>
       <!-- #ifdef MP -->
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
-          <BasicCard @click.stop="onJumpInfo(item)">
-            <view class="ko-client__info">
-              <view class="ko-client__info--logo">
-                <UvAvatar
-                  class="ko-client__info--image"
-                  :src="getImageUrl(item.logo)"
-                  random-bg-color
-                  :text="item.name || GET_SHOP_NAME"
-                />
-                <view class="ko-client__info--name">{{ item.name }}</view>
-              </view>
-
-              <view class="ko-client__info--button" v-if="isPerm('Purchase_Write')">
-                <button
-                  @click.stop="() => {}"
-                  open-type="share"
-                  :data-params="getBindingParams(item)"
-                  class="ko-basic-button__card"
-                >
-                  邀请绑定
-                </button>
-                <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__card">绑定客户</button>
-                <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__card">解绑客户</button>
-                <button class="ko-basic-button__card" @click.stop="onJump(item)">编辑</button>
-                <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
-              </view>
+      <view class="ko-client__wrap">
+        <IndexUser :options="list" @click="onJumpInfo" button-perm="Purchase_Write">
+          <template #default="{node}">
+            <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
+              <!--<button
+                @click.stop="() => {}"
+                open-type="share"
+                :data-params="getBindingParams(node)"
+                class="ko-basic-button__card"
+              >
+                邀请绑定
+              </button>-->
+              <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定客户</button>
+              <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑客户</button>
+              <button class="ko-basic-button__user" @click.stop="onJump(node)">编辑</button>
+              <button class="ko-basic-button__user" @click.stop="onRemove(node)">删除</button>
             </view>
-          </BasicCard>
-        </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
+          </template>
+        </IndexUser>
+      </view>
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
@@ -315,6 +310,7 @@ export default {
     </UniList>
 
     <PickerUser
+      v-if="isPerm('Purchase_Write')"
       :visible.sync="visible"
       :title="isBind ? '选择绑定客户' : '解绑客户'"
       is-confirm
@@ -346,6 +342,10 @@ export default {
 <style scoped lang="scss">
 .ko-client {
   width: 100%;
+
+  &__wrap {
+    height: calc(100vh - 66px);
+  }
 
   :deep(.uni-list-item__container ) {
     display: block;

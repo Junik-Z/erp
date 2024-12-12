@@ -8,7 +8,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import { _deepCopy } from "@/utils";
 import { updateMyInfoApi, uploadBase64Api } from "@/api/user";
 import { getImageBase64 } from "@/utils/processingFiles";
-import LongPressButton from "@/components/LongPressButton/LongPressButton.vue";
+import LongPressButton from "@/admin/components/LongPressButton/LongPressButton.vue";
 
 export default {
   name: "user",
@@ -29,7 +29,7 @@ export default {
   },
   onLoad() {
     this.form = _deepCopy(this.GET_USER_INFO) || _deepCopy(this.$options.data().form);
-    uni.$on("$__update_user_info__", (data) => {
+    uni.$on("$__get_user_info_success__", (data) => {
       this.form = _deepCopy(data);
     });
   },
@@ -63,16 +63,18 @@ export default {
       await updateMyInfoApi(params)
         .then(async () => {
           uni.showToast({title: "信息更新成功"});
-          uni.$emit("$__get_all_info__");
+          uni.$emit("$__get_all_info__", true);
           this.visible = false;
         })
         .finally(() => {
           this.loading = false;
         });
     },
-    onClickLogout(isScene) {
+    onClickLogout(flag) {
       this.logoutLoading = true;
-      this.onLogout({}, isScene).finally(() => (this.logoutLoading = false));
+      this.onLogout({
+        scene: flag ? "" : "default",
+      }).finally(() => (this.logoutLoading = false));
     },
   },
 };
@@ -102,8 +104,8 @@ export default {
       <LongPressButton
         label="重新登录"
         :loading="logoutLoading"
-        @click="onClickLogout(false)"
-        @long="onClickLogout(true)"
+        @click="onClickLogout(true)"
+        @long="onClickLogout(false)"
       />
     </view>
 
@@ -120,6 +122,7 @@ export default {
               >
                 <UvAvatar :size="120" :src="getImageUrl(form.avatar)" />
               </button>
+              <view style="width: 100%; text-align: center; font-size: 12px; color: #ccc;">点击可更换头像</view>
             </view>
           </UniFormsItem>
           <UniFormsItem label="昵称" name="nickName">
@@ -189,6 +192,7 @@ export default {
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
       flex: 1;
       width: 100%;
     }

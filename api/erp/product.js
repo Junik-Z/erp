@@ -142,3 +142,48 @@ export function deleteProductApi(data) {
     data,
   });
 }
+
+/**
+ * @description 上下架销售
+ */
+export function upDownSaleApi(data) {
+  return request({
+    url: "/product/upDownSale",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 上下架采购
+ */
+export function upDownPurchaseApi(data) {
+  return request({
+    url: "/product/upDownPurchase",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 上下架销售分类
+ */
+export function upDownSaleClassApi(data) {
+  return request({
+    url: "/product/class/upDownSale",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 上下架采购分类
+ */
+export function upDownPurchaseClassApi(data) {
+  return request({
+    url: "/product/class/upDownPurchase",
+    method: "post",
+    data,
+  });
+}

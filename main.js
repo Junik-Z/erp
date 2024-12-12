@@ -1,3 +1,7 @@
+// #ifdef H5
+import "@/admin/dashboard/flexible";
+// #endif
+
 // #ifndef VUE3
 import Vue from "vue";
 import App from "./App";

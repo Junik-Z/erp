@@ -264,7 +264,7 @@ export function confirmReturnedOrderApi(data) {
   });
 }
 
-/** ———————————— 其它费用 —————————————— */
+//** ———————————— 其它费用 —————————————— */
 
 /**
  * @description 获取其它费用列表
@@ -361,6 +361,30 @@ export function updateCategoryApi(data) {
   return request({
     url: "/cost/updateCategory",
     method: "post",
+    data,
+  });
+}
+
+// ———————————————— 未结清用户 ——————————————
+
+/**
+ * @description 获取未结清客户列表
+ */
+export function getUnpaidCustomerApi(data) {
+  return request({
+    url: "/finance/unpaid/customer",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取未结清供应商列表
+ */
+export function getUnpaidSupplierApi(data) {
+  return request({
+    url: "/finance/unpaid/supplier",
+    method: "get",
     data,
   });
 }

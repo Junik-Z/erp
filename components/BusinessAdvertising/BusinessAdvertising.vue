@@ -14,10 +14,12 @@ export default {
   mixins: [mixins],
   props: {
     visible: Boolean,
+    isQrCode: Boolean,
   },
   data() {
     return {
       merchantsList: [],
+      loading: false,
     };
   },
   watch: {
@@ -32,7 +34,7 @@ export default {
     getMerchantsList() {
       if (_isEmpty(uni.$__merchants_list__)) {
         this.loading = true;
-        getBusinessesListApi()
+        getBusinessesListApi({pageSize: 5})
           .then(res => {
             this.merchantsList = res.data;
             uni.$__merchants_list__ = res.data;
@@ -46,12 +48,17 @@ export default {
     },
 
     onMerchants(item) {
-      this.onLogout({
-        scene: item.name,
-        PAGE_TYPE: "reselect",
-      })
+      this.loading = true;
+      this.onLogout(
+        {
+          scene: item.name,
+          PAGE_TYPE: "reselect",
+        },
+        this.isQrCode ? "/erp/qrcode/qrcode" : "",
+      )
         .finally(() => {
           this.$emit("update:visible", false);
+          this.loading = false;
         });
     },
   },
@@ -72,13 +79,13 @@ export default {
   <BasicPopup :visible.sync="modelVisible">
     <view class="ko-merchants">
       <BasicCard :spacing="10" v-for="item of merchantsList" :key="item.id">
-        <button @click.stop="onMerchants(item)">
-          <UniRow :gutter="18">
+        <button @click.stop="onMerchants(item)" :disabled="loading">
+          <UniRow :gutter="10">
             <UniCol :span="24">
               <view style="display: flex; justify-content: center; align-items: center;">
                 <UvAvatar
                   :src="getImageUrl(item.logo)"
-                  :size="84"
+                  :size="64"
                   random-bg-color
                   :text="item.remark || GET_SHOP_NAME"
                 />

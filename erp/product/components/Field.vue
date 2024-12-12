@@ -11,7 +11,7 @@ import {
   editProductFieldApi,
   getProductFieldApi,
 } from "@/api/erp/product";
-import { _deepCopy, _isEmpty } from "@/utils";
+import { _deepCopy, _get, _isEmpty } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -99,7 +99,7 @@ export default {
   methods: {
     getList() {
       this.loading = true;
-      getProductFieldApi()
+      getProductFieldApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
           this.roomTreeData = res.data;
         })
@@ -122,6 +122,11 @@ export default {
 
               this.getList();
             });
+        }else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
     },
@@ -231,6 +236,7 @@ export default {
 <style scoped lang="scss">
 .ko-field {
   margin-top: 10px;
+  padding-bottom: 80px;
 
   &__row {
     padding: 10px;

@@ -7,17 +7,16 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniDataCheckbox from "@/uni_modules/uni-data-checkbox/components/uni-data-checkbox/uni-data-checkbox.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
-import UniDatetimePicker
-  from "@/uni_modules/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import { addedPurchaseApi, getPurchaseDetailApi, updatePurchaseApi } from "@/api/erp/purchase";
 import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEqual, _keys, _pick, showToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
+import { getBindInfoApi, getSaleMyListApi } from "@/api/erp/sale";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -30,7 +29,6 @@ export default {
     UniDataSelect,
     BasicPopup,
     UniEasyinput,
-    UniDatetimePicker,
     UniFormsItem,
     UniForms,
     UniDataCheckbox,
@@ -56,12 +54,28 @@ export default {
     option: {},
 
     current: 0,
-    tabs: ["VIP供应商", "其它供应商"],
+    tabs: ["供应商", "其它供应商"],
 
     isClient: false,
+
+    rules: {
+      orderPhone: {
+        rules: [
+          {
+            format: "string",
+            validateFunction: function (rule, value, data, callback) {
+              const regexMobile = /^1[3-9]\d{9}$/;
+              if (!regexMobile.test(value)) {
+                return callback("手机号码不合法");
+              }
+              callback();
+            },
+          },
+        ],
+      },
+    },
   }),
   created() {
-    this.getSupplierList();
   },
   onLoad(option) {
     this.option = option;
@@ -73,7 +87,20 @@ export default {
 
     if (this.isClient) {
       this.current = 1;
+
+      this.onLogInAgain(this.option)
+        .finally(() => {
+          setTimeout(() => {
+            this.getBindInfo();
+            this.getMyList();
+          }, 100);
+        });
     }
+
+
+    // #ifdef MP
+    this.$refs.FormRef.setRules(this.rules);
+    // #endif
   },
   methods: {
     getInfo() {
@@ -89,9 +116,9 @@ export default {
         if (!valid) {
           const params = _deepCopy(this.form);
 
-          console.log(params);
-
           params.totalAmount = yuanToPoints(params.totalAmount);
+          // params.details = this.$refs.PPRef.getDiscountedPrices();
+
           this.loading = true;
 
           const Func = this.isEdit ? updatePurchaseApi : addedPurchaseApi;
@@ -114,6 +141,11 @@ export default {
             .finally(() => {
               this.loading = false;
             });
+        } else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
 
@@ -129,17 +161,44 @@ export default {
       }
 
     },
+
+    onSupplierId(val) {
+      const node = this.$refs.UserRef.getUserInfo(val) || {};
+      this.form.orderAddress = node.address;
+      this.form.orderPhone = _get(node, "contacts.0.phone");
+    },
+
+    getMyList() {
+      console.log(this.GET_USER_INFO, "用户信息");
+      getSaleMyListApi()
+        .then(res => {
+          this.orderList = res.data;
+        });
+    },
+    getBindInfo() {
+      getBindInfoApi()
+        .then(res => {
+          console.log(res);
+        });
+    },
+
+    onReOrder(node) {
+      const form = _pick(node, _keys(this.form));
+      form.purchaserId = UserInfo.userId;
+      this.form = _deepCopy(form);
+    },
   },
 };
 </script>
 
 <template>
-  <view class="ko-order">
+  <view class="ko-order ko-basic-added-form">
     <UniForms
       :model="form"
       label-width="120px"
       label-align="right"
       ref="FormRef"
+      :rules="rules"
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
@@ -153,35 +212,49 @@ export default {
           </view>
 
           <template v-if="current === 0">
-            <UniFormsItem label="VIP供应商：" name="supplierId">
+            <UniFormsItem label="供应商：" name="supplierId">
               <PickerUser
                 style="width: 100%;"
                 v-model="form.supplierId"
                 placeholder="请选择"
-                title="选择VIP供应商"
+                title="选择供应商"
                 is-input
                 type="supplier"
+                ref="UserRef"
+                @input="onSupplierId"
+
               />
             </UniFormsItem>
           </template>
 
           <template v-if="current === 1">
-            <UniFormsItem :label="`${isClient ? '姓名' : '其它供应商'}：`" name="otherSupplier">
+            <UniFormsItem :label="`${isClient ? '姓名' : '名称'}：`" name="otherSupplier">
               <UniEasyinput
                 v-model="form.otherSupplier"
                 style="width: 100%;"
                 placeholder="请输入"
               />
             </UniFormsItem>
-            <UniFormsItem :label="`${isClient ? '联系电话' : '供应商电话'}：`" name="otherSupplierPhone">
+            <!--<UniFormsItem :label="`${isClient ? '联系电话' : '供应商电话'}：`" name="otherSupplierPhone">
               <UniEasyinput
                 v-model="form.otherSupplierPhone"
                 style="width: 100%;"
                 type="tel"
                 placeholder="请输入"
               />
-            </UniFormsItem>
+            </UniFormsItem>-->
           </template>
+        </view>
+      </UniSection>
+
+      <UniSection title="配送信息" type="line">
+        <view style="padding: 10px;">
+          <UniFormsItem label="电话：" name="orderPhone">
+            <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
+          </UniFormsItem>
+          <UniFormsItem label="地址：" name="orderAddress">
+            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+          </UniFormsItem>
         </view>
       </UniSection>
 
@@ -194,6 +267,8 @@ export default {
                 :total.sync="form.totalAmount"
                 type="purchase"
                 :is-client="isClient"
+                is-actual
+                ref="PPRef"
               />
             </view>
           </UniFormsItem>
@@ -231,6 +306,17 @@ export default {
 
   &__footer {
     padding: 10px 50px 50px;
+
+    // #ifdef H5
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ko-basic-button {
+      width: 200px;
+    }
+
+    // #endif
   }
 }
 </style>
