@@ -34,7 +34,7 @@ export default {
     getMerchantsList() {
       if (_isEmpty(uni.$__merchants_list__)) {
         this.loading = true;
-        getBusinessesListApi({pageSize: 5})
+        getBusinessesListApi({pageSize: 5, pageNum: 0})
           .then(res => {
             this.merchantsList = res.data;
             uni.$__merchants_list__ = res.data;
@@ -115,7 +115,9 @@ export default {
 
 <style scoped lang="scss">
 .ko-merchants {
+  // #ifdef MP
   width: 90vw;
+  // #endif
   height: 60vh;
   padding: 16px;
 }

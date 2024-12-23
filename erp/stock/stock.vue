@@ -33,7 +33,7 @@ export default {
     ],
     current: 0,
   }),
-  onLoad() {
+  onShow() {
     this.getList();
   },
   methods: {
@@ -85,7 +85,7 @@ export default {
 
   // #ifdef H5
   &__tabs {
-    width: 300px;
+    width: 400px;
   }
 
   // #endif

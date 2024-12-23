@@ -125,25 +125,27 @@ export default {
         },
       });
     },
+
     onEdit(row) {
       const node = _deepCopy(row);
       this.isEdit = true;
       this.visible = true;
       this.$nextTick(() => {
-        this.$refs.FormRef.clearValidate();
+        this.$refs?.FormRef?.clearValidate?.();
         this.form = {...node};
       });
 
     },
 
     upDownSale(row) {
-      row.saleOff = !row.saleOff;
+      const node = _deepCopy(row);
+      node.saleOff = !node.saleOff;
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要 ${row.saleOff ? "下架" : "上架"} 该分类到销售吗？`,
+        content: `您确定要 ${node.saleOff ? "下架" : "上架"} 该分类到销售吗？`,
         success: (res) => {
           if (res.confirm) {
-            upDownSaleClassApi(row)
+            upDownSaleClassApi(node)
               .then(() => {
                 uni.showToast({title: "操作成功"});
                 this.getList();
@@ -153,13 +155,14 @@ export default {
       });
     },
     upDownPurchase(row) {
-      row.purchaseOff = !row.purchaseOff;
+      const node = _deepCopy(row);
+      node.purchaseOff = !node.purchaseOff;
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要 ${row.purchaseOff ? "下架" : "上架"} 该分类到采购吗？`,
+        content: `您确定要 ${node.purchaseOff ? "下架" : "上架"} 该分类到采购吗？`,
         success: (res) => {
           if (res.confirm) {
-            upDownPurchaseClassApi(row)
+            upDownPurchaseClassApi(node)
               .then(() => {
                 uni.showToast({title: "操作成功"});
                 this.getList();
@@ -168,13 +171,10 @@ export default {
         },
       });
     },
-
     onSelect(item) {
       this[item.func](_get(_deepCopy(this.actionItem), "originItem"));
     },
-
     onOpenAction(row) {
-      console.log(row);
       this.actionItem = _deepCopy(row);
       this.$refs.UASRef.open();
     },
@@ -229,6 +229,26 @@ export default {
         :is-operate="isPerm('Product_Write')"
         @action-click="onOpenAction"
       >
+        <!-- #ifdef H5 -->
+        <template #node="{node, item}">
+          <div style="display: flex; align-items: center; justify-content: center;">
+            <view class="ko-classify__off">
+              <view @click.stop="upDownSale(node)" class="xiao" :class="{'is-active': node.saleOff}">
+                <text>销</text>
+              </view>
+              <view @click.stop="upDownPurchase(node)" class="cai" :class="{'is-active': node.purchaseOff}">
+                <text>采</text>
+              </view>
+            </view>
+
+            <button class="ko-basic-button__card" v-if="item.level <= 10" @click.stop="onAdded(node)">添加子级</button>
+            <button class="ko-basic-button__card" @click.stop="onEdit(node)">编辑</button>
+            <button class="ko-basic-button__card" @click.stop="onRemove(node)">删除</button>
+          </div>
+        </template>
+        <!-- #endif -->
+
+        <!-- #ifdef MP -->
         <template #operate-node="{node}">
           <view class="ko-classify__off">
             <view class="xiao" :class="{'is-active': node.saleOff}">
@@ -239,6 +259,7 @@ export default {
             </view>
           </view>
         </template>
+        <!-- #endif -->
       </DaTreeVue2>
       <LoadMore :loading="loading" />
     </view>
@@ -265,9 +286,10 @@ export default {
       :pattern="pattern"
       horizontal="right"
       direction="vertical"
-      @fabClick="onAdded()"
+      @fab-click="onAdded()"
     />
 
+    <!-- #ifdef MP -->
     <UvActionSheet
       ref="UASRef"
       :actions='getActionsList()'
@@ -276,6 +298,7 @@ export default {
       cancel-text="取消"
       @select="onSelect"
     />
+    <!-- #endif -->
   </view>
 </template>
 
@@ -286,6 +309,12 @@ export default {
 
   &__row {
     padding: 10px;
+
+    /* #ifdef H5 */
+    width: 900px;
+    margin: 0 auto;
+    /* #endif */
+
   }
 
   &__off {
@@ -314,7 +343,9 @@ export default {
   }
 
   &__popup {
+    // #ifdef MP
     width: 90vw;
+    // #endif
     padding: 16px;
     background: #fff;
     border-radius: 8px;

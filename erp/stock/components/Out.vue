@@ -224,7 +224,6 @@ export default {
             <template #operate="{item}" v-if="isPerm('Stock_Write')">
               <view style="display: flex; align-items: center; justify-content: center;">
                 <button
-                  v-if="['FINISHED'].includes(item.status)"
                   class="ko-basic-button__card"
                   @click.stop="onJumpPrint(item, 'outbound')"
                 >

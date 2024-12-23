@@ -289,13 +289,23 @@ export function getBindInfoApi(data) {
   });
 }
 
-
 /**
  * @description 获取本人的销售单
  */
 export function getSaleMyListApi(data) {
   return request({
     url: "/sale/my",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取其它费用列表
+ */
+export function getOtherCostListApi(data) {
+  return request({
+    url: "/sale/otherCostList",
     method: "get",
     data,
   });

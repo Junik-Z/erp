@@ -1,23 +1,34 @@
 <script>
 // #ifdef H5
-import { InputNumber } from "@/uni_modules/element-ui/element.min";
+import { InputNumber, Tree } from "@/uni_modules/element-ui/element.min";
 // #endif
-import { getProductFieldApi, getProductListApi } from "@/api/erp/product";
+import { getProductClassApi, getProductFieldApi, getProductListApi } from "@/api/erp/product";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _sum } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _sum, showToast } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
+import { checkInOutOrderApi, getCheckListApi } from "@/api/erp/stock";
 
 export default {
   name: "list",
-  onLoad() {
+  onLoad(option) {
+    this.isJudge = _isEqual(option.judge, "true");
+
+    this.getFieldList();
+
+    if (this.isJudge) {
+      this.type = "purchase";
+      this.getList();
+      this.getClassList();
+    }
+
     const EC = this.getOpenerEventChannel();
     EC?.on?.("on_to_take_over", (obj) => {
       // #ifdef H5
@@ -29,8 +40,8 @@ export default {
       // #endif
     });
 
-    this.getFieldList();
-    this.getList();
+
+    uni.setNavigationBarTitle({title: this.isJudge ? "库存盘点" : "选择产品"});
 
     // #ifdef H5
     setTimeout(() => {
@@ -78,6 +89,13 @@ export default {
 
       // 外部传入的列表
       EXList: [],
+
+      classList: [],
+
+      // 是否是盘点库存
+      isJudge: false,
+
+      sLoading: false,
     };
   },
   components: {
@@ -89,6 +107,9 @@ export default {
     UniNumberBox,
     BasicCard,
     UniSearchBar,
+    // #ifdef H5
+    Tree,
+    // #endif
   },
   methods: {
     // 外部传入的商品列表
@@ -102,6 +123,12 @@ export default {
       list.forEach(item => {
         this.$set(this.selected, item.productId, item);
       });
+
+      // 必须在这里调用，否则将判断不了上下架状态
+      this.getList();
+      // #ifdef H5
+      this.getClassList();
+      // #endif
     },
 
     getFieldList() {
@@ -119,10 +146,22 @@ export default {
         sale: {saleOff: false},
       }[this.type];
 
-      getProductListApi({...this.queryList, ...params})
+      const Func = this.isJudge ? getCheckListApi : getProductListApi;
+
+      // 盘点的不需要区分上下架
+      Func({...this.queryList, ...(this.isJudge ? {} : params)})
         .then(res => {
           this.productList = res.data
-            .map(item => ({...item, productId: item.id}));
+            .map(item => {
+              const obj = {
+                ...item,
+                productId: item.id,
+              };
+              if (this.isJudge) {
+                this.onItemNumberChange(obj, obj.quantity);
+              }
+              return obj;
+            });
         })
         .finally(() => {
           this.loading = false;
@@ -176,6 +215,41 @@ export default {
     // 点击选好了
     onSubmit() {
       const list = _deepCopy(this.getSelectedList);
+
+      if (this.isJudge) {
+
+        const details = (list || []).filter(item => !!this.productList.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
+
+        if (details.length <= 0) {
+          showToast({title: "您还未盘点选任何产品"});
+          return false;
+        }
+
+        uni.showModal({
+          title: "温馨提示",
+          content: "请仔细核对您的盘点数量，确保所有数据准确无误。",
+          success: (res) => {
+            if (res.confirm) {
+              this.sLoading = true;
+              checkInOutOrderApi({details: list})
+                .then(() => {
+                  showToast({
+                    title: "提交成功",
+                    success() {
+                      uni.navigateBack({});
+                    },
+                  });
+                })
+                .finally(() => {
+                  this.sLoading = false;
+                });
+            }
+          },
+        });
+
+        return false;
+      }
+
       const total = _deepCopy(this.getTotalMoney);
 
       // #ifndef H5
@@ -204,6 +278,46 @@ export default {
     onVisible() {
       this.visible = true;
     },
+
+    onCancel() {
+      setTimeout(() => {
+        this.$nextTick(() => {
+          this.getList();
+        });
+      });
+    },
+
+    // #ifdef H5
+    // 获取产品粉来
+    getClassList() {
+      const params = {
+        purchase: {purchaseOff: false},
+        sale: {saleOff: false},
+      }[this.type];
+
+      // 盘点不需要传上下架数据
+      getProductClassApi({...(this.isJudge ? {} : params), pageNum: 0, pageSize: 1000})
+        .then(res => {
+          this.classList = res.data;
+          uni.$__product_class_list__ = res.data;
+        });
+    },
+
+    onCheck(node) {
+      console.log(node);
+      if (_isEqual(this.queryList.classId, node.id)) {
+        this.queryList.classId = "";
+        this.$refs.TreeRef.setCheckedKeys([]);
+      } else {
+        this.queryList.classId = node.id;
+        this.$refs.TreeRef.setCheckedKeys([node.id]);
+      }
+
+      this.$nextTick(() => {
+        this.getList();
+      });
+    },
+    // #endif
   },
   computed: {
     // 获取已选的件数
@@ -233,7 +347,6 @@ export default {
       };
     },
 
-
     // #ifdef H5
     getTableData() {
       return Object.values(this.selected || {});
@@ -241,8 +354,13 @@ export default {
 
     getTableColumns() {
       const before = [
+        // {
+        //   type: "selection",
+        //   width: 55,
+        // },
         {
-          type: "selection",
+          label: "序号",
+          type: "index",
           width: 55,
         },
         {
@@ -317,7 +435,7 @@ export default {
           },
         },
         {
-          label: "数量",
+          label: this.isJudge ? "盘点数量" : "数量",
           prop: "productQuantity",
           fixed: "right",
           width: 220,
@@ -340,9 +458,26 @@ export default {
             );
           },
         },
-      ]?.filter(item => !(this.hidePrices && _isEqual(item.prop, this.getMoneyKey)));
+      ]?.filter(item => {
+        // 盘点不需要显示价格
+        if (this.isJudge) return !_isEqual(item.prop, "price");
 
-      return [...before, ...fieldList, ...after];
+        return !(this.hidePrices && _isEqual(item.prop, this.getMoneyKey));
+      });
+
+      const judge = [];
+
+      if (this.isJudge) {
+        judge.push({
+          label: "库存预警数量",
+          prop: "stockWarning",
+          render: (h, {row}) => {
+            return h("label", {class: "ko-basic-money"}, [row.stockWarning]);
+          },
+        });
+      }
+
+      return [...before, ...fieldList, ...judge, ...after];
     },
     // #endif
   },
@@ -360,10 +495,18 @@ export default {
     <div class="ko-shop-list__title">
       <!-- #endif -->
       <view class="ko-shop-list__header">
-        <UniSearchBar v-model="queryList.name" placeholder="请输入产品名称" />
+        <UniSearchBar
+          @confirm="getList()"
+          @cancel="onCancel"
+          v-model="queryList.name"
+          placeholder="请输入产品名称"
+        />
+
+        <!-- #ifdef MP -->
         <view class="ko-shop-list__class">
-          <PickerClass watch-type :type="type" v-model="queryList.classId" @change="getList" />
+          <PickerClass watch-type :type="type" v-model="queryList.classId" @change="getList()" />
         </view>
+        <!-- #endif -->
       </view>
       <!-- #ifdef H5 -->
     </div>
@@ -377,37 +520,65 @@ export default {
         is-selected
         :hide-prices="hidePrices"
         :extra="{type: type}"
+        :safe-area-inset-bottom="false"
+        :loading="loading"
+        @number-change="onItemNumberChange"
+        :is-judge="isJudge"
+        v20241216
       >
-        <template #cell="{node, selected, hidePrices, extra}">
-          <view class="ko-shop-list__card">
-            <ProductCard
-              :node="node"
-              is-editor
-              is-list
-              :selected="selected"
-              @number-change="onItemNumberChange"
-              :hide-prices="hidePrices"
-              :type="extra.type"
-            />
-          </view>
-        </template>
+        <!-- <template #cell="{node, selected, hidePrices, extra}">
+           <view class="ko-shop-list__card">
+             <ProductCard
+               :node="node"
+               is-editor
+               is-list
+               :selected="selected"
+               @number-change="onItemNumberChange"
+               :hide-prices="hidePrices"
+               :type="extra.type"
+             />
+           </view>
+         </template>-->
       </IndexList>
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <KoTable
-        :columns="getTableColumns"
-        :loading="loading"
-        :data="productList"
-      />
+      <div class="ko-shop-list__center" style="flex: 1; height: 100%;">
+        <div style="height: 100%; overflow-y: auto">
+          <Tree
+            node-key="id"
+            ref="TreeRef"
+            :data="classList"
+            :show-checkbox="true"
+            :props="{label: 'name'}"
+            check-strictly
+            :default-checked-keys="[queryList.classId]"
+            @check="onCheck"
+            style="min-height: 100%;"
+          />
+        </div>
+        <div style="height: 100%; overflow-y: auto; flex: 1;">
+          <KoTable
+            :columns="getTableColumns"
+            :loading="loading"
+            :data="productList"
+          />
+        </div>
+      </div>
       <!-- #endif -->
     </view>
 
     <!-- #ifdef H5 -->
     <div class="ko-shop-list__submit">
-      <p class="ko-basic-money" v-if="!hidePrices">共计：{{ toYuan(getTotalMoney) }}元</p>
-      <p class="ko-basic-label">已选：{{ getSelectedList.length }}</p>
-      <button class="ko-basic-button" @click="onSubmit()">选好了</button>
+      <div style="display: flex;align-items: center; justify-content: center;">
+        <p style="width: 100%; white-space: nowrap; margin-right: 40px" class="ko-basic-label" v-if="!isJudge">
+          已选：{{ getSelectedList.length }}</p>
+        <p style="width: 100%; white-space: nowrap;" class="ko-basic-money" v-if="!hidePrices">
+          共计：{{ toYuan(getTotalMoney) }}元</p>
+      </div>
+      <button class="ko-basic-button" @click="onSubmit()" :lodaing="sLoading" :disabled="sLoading">
+        {{ isJudge ? "提交" : "选好了" }}
+      </button>
     </div>
     <!-- #endif -->
 
@@ -415,7 +586,7 @@ export default {
     <view class="ko-shop-list__footer ko-basic-footer">
       <view class="ko-shop-list__footer--info">
         <!--<view><label class="ko-basic-label">已选：</label>10件</view>-->
-        <view v-if="!hidePrices && getTotalMoney">
+        <view v-if="!hidePrices && getTotalMoney && !isJudge">
           <label class="ko-basic-label"> 共计：</label>
           <text style="color: #e43d33; font-weight: bold;"> {{ toYuan(getTotalMoney) }}元</text>
         </view>
@@ -429,16 +600,18 @@ export default {
           查看
         </button>
         <!-- 圆角类名：ko-shop-list__footer--button ok -->
-        <button class="ko-basic-button" @click="onSubmit()">选好了</button>
+        <button class="ko-basic-button" @click="onSubmit()" :lodaing="sLoading" :disabled="sLoading">
+          {{ isJudge ? "提交" : "选好了" }}
+        </button>
       </view>
     </view>
-    <BasicPopup
+    <!--<BasicPopup
       :visible.sync="visible"
       type="bottom"
       title="已选产品详情"
     >
       <view class="ko-shop-list__popup">
-        <view class="ko-shop-list__popup--wrap">
+        <view class="ko-shop-list__popup&#45;&#45;wrap">
           <BasicCard
             class="ko-shop-list__item"
             not-padding
@@ -456,7 +629,7 @@ export default {
           </BasicCard>
         </view>
       </view>
-    </BasicPopup>
+    </BasicPopup>-->
     <!-- #endif -->
 
   </view>
@@ -466,12 +639,17 @@ export default {
 .ko-shop-list {
   // #ifdef MP
   padding-top: 100px;
+  padding-bottom: 100px;
+  height: 100vh;
   // #endif
 
-  padding-bottom: 100px;
+  // #ifdef H5
+  padding-bottom: 20px;
+  height: calc(100vh - 50px);
+  // #endif
+
   display: flex;
   flex-direction: column;
-  height: 100vh;
 
   &__header {
     // #ifdef MP
@@ -480,14 +658,15 @@ export default {
     left: 0;
     right: 0;
     z-index: 9;
+    height: 100px;
     // #endif
 
     // #ifdef H5
     width: 800px;
+    height: 56px;
     // #endif
 
     background: #FFFFFF;
-    height: 100px;
   }
 
   &__title {
@@ -514,6 +693,7 @@ export default {
 
     // #ifdef H5
     padding: 20px;
+    overflow: hidden;
     // #endif
   }
 
@@ -603,14 +783,29 @@ export default {
     .ko-basic-label, .ko-basic-money {
       width: 100%;
       text-align: center;
-      margin-top: 20px;
     }
 
     .ko-basic-button {
-      margin-top: 30px;
+      margin-top: 10px;
       width: 260px;
     }
 
+  }
+
+  &__center {
+    display: flex;
+    overflow: hidden;
+
+    /deep/ .el-tree {
+      width: 260px;
+      margin-right: 20px;
+      border: 1px solid #EBEEF5;
+      padding: 10px;
+
+      .el-checkbox {
+        margin-right: 6px;
+      }
+    }
   }
 
   // #endif

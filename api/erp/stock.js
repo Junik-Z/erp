@@ -178,3 +178,14 @@ export function getWarningListApi(data) {
     data,
   });
 }
+
+/**
+ * @description 盘点库存
+ */
+export function checkInOutOrderApi(data) {
+  return request({
+    url: "/stock/checkInOutOrder",
+    method: "post",
+    data,
+  });
+}

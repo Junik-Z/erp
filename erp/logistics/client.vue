@@ -10,8 +10,8 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, showToast } from "@/utils";
 import { validatePhone } from "@/utils/validate";
-import { addedCustomerApi, editCustomerApi, getCustomerInfoApi } from "@/api/erp/sale";
 import { isNumber } from "@/components/da-tree-vue2/utils";
+import { addedLogisticsApi, editLogisticsApi, getLogisticsInfoApi } from "@/api/erp/logistics";
 
 export default {
   name: "client",
@@ -45,7 +45,7 @@ export default {
         rules: [
           {
             required: true,
-            errorMessage: "请填写供应商名称",
+            errorMessage: "请填写物流商名称",
           },
         ],
         validateTrigger: "submit",
@@ -90,9 +90,9 @@ export default {
     // #endif
   },
   methods: {
-    // 获取客户详情
+    // 获取物流商详情
     getInfo() {
-      getCustomerInfoApi({id: this.option.id})
+      getLogisticsInfoApi({id: this.option.id})
         .then(res => {
           this.form = res.data;
         });
@@ -128,7 +128,7 @@ export default {
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
         if (!valid) {
-          const Func = this.isEdit ? editCustomerApi : addedCustomerApi;
+          const Func = this.isEdit ? editLogisticsApi : addedLogisticsApi;
 
           const params = _deepCopy(this.form);
           this.loading = true;
@@ -137,7 +137,7 @@ export default {
               /*  const data = res.data;
                const op = this.option;
 
-               // 当是分享出去让客户自己填写的时候同时要绑定用户
+               // 当是分享出去让物流商自己填写的时候同时要绑定用户
                if (_isEqual(op.PAGE_TYPE, "ADDED_CLIENT_BY_SALE")) {
                  await bindCustomerApi({id: data.id, userId: op.SHARE_USER_ID, customerId: this.GET_USER_INFO.userId});
                }
@@ -172,7 +172,7 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <UniFormsItem label="客户名称：" name="name">
+          <UniFormsItem label="物流商名称：" name="name">
             <UniEasyinput v-model="form.name" placeholder="请输入" />
           </UniFormsItem>
           <UniFormsItem label="Logo：" name="logo">

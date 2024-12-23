@@ -85,7 +85,7 @@ export default {
   &__tabs {
     padding: 10px;
     // #ifdef H5
-    width: 300px;
+    width: 400px;
     // #endif
   }
 }

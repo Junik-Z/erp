@@ -122,5 +122,11 @@ export default {
       font-size: 26px;
     }
   }
+
+  &__footer {
+    // #ifdef H5
+    padding-bottom: 20px;
+    // #endif
+  }
 }
 </style>

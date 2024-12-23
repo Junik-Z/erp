@@ -115,7 +115,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-client">
+  <view class="ko-client ko-basic-added-form">
     <UniForms
       :model="form"
       label-width="120px"
@@ -204,5 +204,12 @@ export default {
 <style scoped lang="scss">
 .ko-client {
   padding-bottom: 80px;
+
+  /* #ifdef H5 */
+  .ko-basic-button {
+    margin: 0 auto !important;
+  }
+
+  /* #endif */
 }
 </style>

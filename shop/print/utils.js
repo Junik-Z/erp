@@ -20,4 +20,9 @@ export function cmToPx(cm, dpi = getDPI()) {
   return Math.floor(cm * dpi / 2.54);
 }
 
+
+export function pointToPx(point) {
+  return `${point * (getDPI() / 72)}px`
+}
+
 // #endif

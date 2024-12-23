@@ -12,12 +12,12 @@ import { getCustomerListApi, refreshCustomerApi } from "@/api/erp/sale";
 import { getSupplierListApi, refreshSupplierApi } from "@/api/erp/purchase";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
-import IndexUser from "@/components/IndexList/IndexList.vue";
+import IndexList from "@/components/IndexList/IndexList.vue";
 
 export default {
   name: "Verification",
   components: {
-    IndexUser,
+    IndexList,
     UvAvatar,
     UniSegmentedControl,
     UniList,
@@ -98,61 +98,21 @@ export default {
     </view>
 
     <view class="ko-verification__content">
-      <IndexUser
+      <IndexList
         @click="onJump"
         :options="list"
         :events="getEvents"
         @click-item="onClickItem"
         show-amount
+        :is-supplier="!!current"
+        :loading="loading"
       />
-      <!--<LoadMore :loading="loading" />-->
     </view>
-
-    <UniList v-if="false">
-      <view class="ko-verification__wrap">
-        <BasicCard :spacing="10" @click="onJump(item)" v-for="(item, index) in list" :key="index">
-          <view class="ko-verification__info">
-            <view class="ko-verification__info--wrap">
-              <UvAvatar
-                :size="64"
-                :src="getImageUrl(item.logo)"
-                mode="aspectFill"
-                :text="item.name"
-                random-bg-color
-              />
-              <view style="padding-left: 20px;">
-                <UniRow :gutter="10">
-                  <UniCol :span="24">
-                    <view class="ko-verification__info--name">{{ item.name }}</view>
-                  </UniCol>
-                  <UniCol :span="24">
-                    <view class="ko-basic-money"> {{ toYuan(item.amount) }}元</view>
-                  </UniCol>
-                </UniRow>
-              </view>
-            </view>
-            <view
-              v-if="isRefreshPayment && !isReconcile"
-              style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-            >
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onRefresh(item)"
-                :loading="item.__r_loading__"
-                :disabled="item.__r_loading__"
-              >
-                刷新款项
-              </button>
-            </view>
-          </view>
-        </BasicCard>
-      </view>
-      <LoadMore :loading="loading" />
-    </UniList>
   </view>
 </template>
 
 <style scoped lang="scss">
+/* #ifdef MP */
 .ko-verification {
   display: flex;
   flex-direction: column;
@@ -167,26 +127,30 @@ export default {
     flex: 1;
     position: relative;
   }
+}
 
-  &__wrap {
-    padding: 14px;
-    position: relative;
-    height: 100%;
+/* #endif */
+
+/* #ifdef H5 */
+.ko-verification {
+  width: 1366px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 88vh;
+
+  &__tabs {
+    padding: 10px;
   }
 
-  &__info {
-    display: flex;
-    flex-direction: column;
-
-    &--wrap {
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    &--name {
-      font-size: 18px;
-    }
+  &__content {
+    width: 1000px;
+    margin: 0 auto;
+    height: 100%;
+    flex: 1;
+    position: relative;
   }
 }
+
+/* #endif */
 </style>

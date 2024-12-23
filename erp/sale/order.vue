@@ -1,15 +1,8 @@
 <script>
-import UniGroup from "@/uni_modules/uni-group/components/uni-group/uni-group.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniDataCheckbox from "@/uni_modules/uni-data-checkbox/components/uni-data-checkbox/uni-data-checkbox.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _keys, _pick, showToast, transferYuan, yuanToPoints } from "@/utils";
 import { addedSaleApi, getBindInfoApi, getSaleDetailApi, getSaleMyListApi, updateSaleApi } from "@/api/erp/sale";
@@ -21,80 +14,77 @@ import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-lis
 import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
+import FeesList from "@/erp/components/FeesList/FeesList.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "Order",
   components: {
-    LoadMore,
     OrderCard,
-    UniListItem,
+    LoadMore,
     UniList,
+    UniListItem,
+    FeesList,
     PickerUser,
     UniSegmentedControl,
     PickerProduct,
-    UniDataSelect,
-    BasicPopup,
     UniEasyinput,
     UniFormsItem,
     UniForms,
-    UniDataCheckbox,
-    BasicCard,
     UniSection,
-    UniCol,
-    UniRow,
-    UniGroup,
   },
   mixins: [mixins],
-  data: () => ({
-    form: {
-      "orderCode": "",
-      "supplierId": "",
-      "purchaserId": UserInfo.userId,
-      "otherSupplier": "",
-      "otherSupplierPhone": "",
-      "totalAmount": null,
-      "remark": "",
-      "orderAddress": "",
-      "orderPhone": "",
-      "details": [],
-    },
-    supplierList: [],
-    visible: false,
-    loading: false,
-    option: {},
-
-    rules: {
-      orderPhone: {
-        rules: [
-          {
-            format: "string",
-            validateFunction: function (rule, value, data, callback) {
-              const regexMobile = /^1[3-9]\d{9}$/;
-              if (!regexMobile.test(value)) {
-                return callback("手机号码不合法");
-              }
-              callback();
-            },
-          },
-        ],
+  data() {
+    return {
+      form: {
+        "orderCode": "",
+        "supplierId": "",
+        "purchaserId": UserInfo.userId,
+        "otherSupplier": "",
+        "otherSupplierPhone": "",
+        "totalAmount": null,
+        "remark": "",
+        "orderAddress": "",
+        "orderPhone": "",
+        "details": [],
+        fees: {},
       },
-    },
+      supplierList: [],
+      visible: false,
+      loading: false,
+      option: {},
 
-    current: null,
-    tabs: ["客户", "其它客户"],
+      rules: {
+        orderPhone: {
+          rules: [
+            {
+              format: "string",
+              validateFunction: function (rule, value, data, callback) {
+                const regexMobile = /^1[3-9]\d{9}$/;
+                if (!regexMobile.test(value)) {
+                  return callback("手机号码不合法");
+                }
+                callback();
+              },
+            },
+          ],
+        },
+      },
 
-    isClient: false,
+      current: null,
+      tabs: ["客户", "其它客户"],
 
-    clientTabs: ["下单", "历史下单"],
-    clientCurrent: 0,
-    orderList: [],
+      isClient: false,
 
-    // 客户绑定用户列表
-    bindList: [],
+      clientTabs: ["下单", "历史下单"],
+      clientCurrent: 0,
+      orderList: [],
 
-  }),
+      // 客户绑定用户列表
+      bindList: [],
+    };
+  },
   onLoad(option) {
     // PAGE_TYPE=ADDED_SALE&scene=default&SHARE_USER_ID=ad41944d8cb44faea09da9d69fe67d26
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
@@ -322,6 +312,12 @@ export default {
                 />
               </view>
             </UniFormsItem>
+          </view>
+        </UniSection>
+
+        <UniSection title="其它费用" type="line">
+          <view style="padding: 10px;">
+            <FeesList v-model="form.fees" is-form />
           </view>
         </UniSection>
 

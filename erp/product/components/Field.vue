@@ -89,12 +89,36 @@ export default {
     },
 
     isEdit: false,
+
+    // #ifdef H5
+    columns: [
+      {
+        label: "序号",
+        type: "index",
+        width: 80,
+      },
+      {
+        label: "字段名称",
+        prop: "fieldName",
+      },
+      {
+        label: "字段编码",
+        prop: "fieldCode",
+      },
+      {
+        label: "操作",
+        slot: "operate",
+      },
+    ],
+    // #endif
   }),
   created() {
     // this.getList();
+    // #ifdef MP
     this.$nextTick(() => {
       this.$refs.FormRef.setRules(this.rules);
     });
+    // #endif
   },
   methods: {
     getList() {
@@ -122,7 +146,7 @@ export default {
 
               this.getList();
             });
-        }else {
+        } else {
           uni.showToast({
             title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
             icon: "none",
@@ -163,7 +187,7 @@ export default {
       this.isEdit = true;
       this.visible = true;
       this.$nextTick(() => {
-        this.$refs.FormRef.clearValidate();
+        this.$refs?.FormRef?.clearValidate?.();
         this.form = {...node};
       });
     },
@@ -175,6 +199,7 @@ export default {
 <template>
   <view class="ko-field">
     <view class="ko-field__row">
+      <!-- #ifdef MP -->
       <BasicCard v-for="(item, index) in roomTreeData" :key="index" :spacing="10">
         <view class="ko-field__info">
           <UniRow>
@@ -203,8 +228,33 @@ export default {
           </view>
         </view>
       </BasicCard>
-
       <LoadMore :loading="loading" />
+      <!-- #endif -->
+
+      <!-- #ifdef H5 -->
+      <view style="padding: 10px;">
+        <KoTable
+          :loading="loading"
+          :columns="columns"
+          :data="roomTreeData"
+          empty-text="暂无数据"
+          stripe
+        >
+          <template #operate="{item}" v-if="isPerm('Product_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
+              <button
+                class="ko-basic-button__card"
+                @click="onRemove(item)"
+                :loading="item.__remove_loading__"
+              >
+                删除
+              </button>
+            </view>
+          </template>
+        </KoTable>
+      </view>
+      <!-- #endif -->
     </view>
 
     <BasicPopup :visible.sync="visible">
@@ -228,7 +278,7 @@ export default {
       :pattern="pattern"
       horizontal="right"
       direction="vertical"
-      @fabClick="onAdded()"
+      @fab-click="onAdded()"
     />
   </view>
 </template>
@@ -249,7 +299,9 @@ export default {
   }
 
   &__popup {
+    // #ifdef MP
     width: 90vw;
+    // #endif
     padding: 16px;
     background: #fff;
     border-radius: 8px;

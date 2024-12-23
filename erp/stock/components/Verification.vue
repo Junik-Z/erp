@@ -7,13 +7,13 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import mixins from "@/mixins/mixins";
-import IndexUser from "@/components/IndexList/IndexList.vue";
+import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import { getProductFieldApi } from "@/api/erp/product";
 
 export default {
   name: "Verification",
-  components: {ProductCard, IndexUser, UniList, UniCol, BasicCard, UniRow, LoadMore, PickerClass},
+  components: {ProductCard, IndexList, UniList, UniCol, BasicCard, UniRow, LoadMore, PickerClass},
   mixins: [mixins],
   data() {
     return {
@@ -23,6 +23,34 @@ export default {
         ...{pageSize: 1000000, pageNum: 0},
       },
       loading: false,
+
+      /* #ifdef H5 */
+      FieldList: [],
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 80,
+        },
+        {
+          label: "产品名称",
+          prop: "name",
+        },
+        {
+          label: "分类",
+          prop: "className",
+        },
+        {
+          label: "备注",
+          prop: "remark",
+          minWidth: 120,
+        },
+        {
+          label: "操作",
+          slot: "operate",
+        },
+      ],
+      // #endif
     };
   },
   created() {
@@ -44,9 +72,9 @@ export default {
       getProductFieldApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
           uni.$__FIELD_LIST__ = res.data;
+          this.FieldList = res.data;
         });
     },
-
     onRefresh(item) {
       this.$set(item, "__r_loading__", true);
       refreshStockApi({id: item.id})
@@ -59,12 +87,65 @@ export default {
 
         });
     },
-
     onJump(item) {
       uni.navigateTo({
         url: "/erp/stock/check" + `?id=${item.id}`,
       });
     },
+
+    onJudge() {
+      uni.navigateTo({
+        url: "/shop/list/list?judge=true",
+      });
+    },
+  },
+  computed: {
+    // #ifdef H5
+    columnsList() {
+      return [
+        {
+          label: "序号",
+          type: "index",
+          width: 80,
+        },
+        {
+          label: "产品名称",
+          prop: "name",
+        },
+        {
+          label: "分类",
+          prop: "className",
+        },
+        {
+          label: "数量",
+          prop: "quantity",
+          render: (h, {row}) => {
+            return h("label", {class: "ko-basic-money"}, [row.quantity]);
+          },
+        },
+        {
+          label: "预警数量",
+          prop: "stockWarning",
+          render: (h, {row}) => {
+            return h("label", {class: "ko-basic-money"}, [row.stockWarning]);
+          },
+        },
+        ...(this.FieldList.map(item => ({
+          label: item.fieldName,
+          prop: `extend.${item.fieldCode}`,
+        }))),
+        {
+          label: "备注",
+          prop: "remark",
+          minWidth: 120,
+        },
+        {
+          label: "操作",
+          slot: "operate",
+        },
+      ];
+    },
+    // #endif
   },
 };
 </script>
@@ -73,10 +154,12 @@ export default {
   <view class="ko-verification">
     <view class="ko-verification__class">
       <PickerClass v-model="queryList.classId" @change="getList" />
+      <button class="ko-basic-button__card" @click.stop="onJudge" style="margin-left: 8px">库存盘点</button>
     </view>
 
     <view class="ko-verification__wrap">
-      <IndexUser :options="list" is-product :loading="loading">
+      <!-- #ifdef MP -->
+      <IndexList :options="list" is-product :loading="loading">
         <template #cell="{node}">
           <ProductCard @click="onJump(node)" :node="node" is-verification :span="24" perm="Stock_Write">
             <template #footer="{item}">
@@ -93,63 +176,36 @@ export default {
             </template>
           </ProductCard>
         </template>
-      </IndexUser>
-    </view>
+      </IndexList>
+      <!-- #endif -->
 
-
-    <UniList v-if="false">
-      <view class="ko-verification__wrap">
-        <view class="ko-verification__wrap--item" v-for="(item, index) in list" :key="index">
-          <BasicCard @click="onJump(item)">
-            <view class="ko-verification__info">
-              <view class="ko-verification__info--wrap">
-                <image
-                  v-if="item.images"
-                  class="ko-verification__info--image"
-                  :src="getImageUrl(item.images)"
-                  mode="aspectFill"
-                />
-                <view style="flex: 1; margin-top: 8px;">
-                  <UniRow gutter="10">
-                    <UniCol :span="24">
-                      <view class="ko-verification__info--name">{{ item.name }}</view>
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">产品分类：</label>{{ item.className || "-" }}
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">库存数量：</label>{{ item.quantity || "0" }}
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">库存预警数量：</label>{{ item.stockWarning || "0" }}
-                    </UniCol>
-                    <UniCol :span="24">
-                      <label class="ko-basic-label">备注：</label>
-                      {{ item.remark || "-" }}
-                    </UniCol>
-                  </UniRow>
-                </view>
-              </view>
-              <view
-                v-if="isRefreshStock"
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+      <!-- #ifdef H5 -->
+      <view style="padding: 10px;">
+        <KoTable
+          :loading="loading"
+          :columns="columnsList"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+          @row-click="onJump"
+        >
+          <template #operate="{item}" v-if="isPerm('Stock_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onRefresh(item)"
+                :loading="item.__r_loading__"
+                :disabled="item.__r_loading__"
               >
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onRefresh(item)"
-                  :loading="item.__r_loading__"
-                  :disabled="item.__r_loading__"
-                >
-                  刷新库存
-                </button>
-              </view>
+                刷新库存
+              </button>
             </view>
-          </BasicCard>
-        </view>
+          </template>
+        </KoTable>
       </view>
-      <LoadMore :loading="loading" />
-    </UniList>
+      <!-- #endif -->
 
+    </view>
   </view>
 </template>
 
@@ -162,6 +218,19 @@ export default {
 
   &__class {
     padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    /* #ifdef H5 */
+    width: 1366px;
+    margin: 0 auto;
+
+    .ko-picker-class {
+      flex: 1;
+    }
+
+    /* #endif */
   }
 
   &__wrap {

@@ -111,14 +111,14 @@ export default {
 </script>
 
 <template>
-  <view class="ko-role">
+  <view class="ko-role ko-basic-added-form">
     <UniList>
       <UniListItem v-for="(item, index) of getMenuList" :key="index">
         <template #body>
           <BasicCard>
             <view class="ko-role__item">
               <view class="ko-role__item--header">
-                <view>
+                <view class="ko-role__item--header--info">
                   <i class="iconfont" :class="[item.icon]"></i>
                   <view class="ko-basic-label">{{ item.label }}</view>
                 </view>
@@ -182,6 +182,7 @@ export default {
   padding-bottom: 40px;
 
   &__item {
+    /* #ifdef MP */
     &--header {
       display: flex;
       align-items: center;
@@ -200,6 +201,38 @@ export default {
         }
       }
     }
+
+    /* #endif */
+
+    /* #ifdef H5 */
+    &--header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &--info {
+        height: 100%;
+      }
+
+      .ko-basic-label {
+        text-align: center;
+
+      }
+
+      .iconfont {
+        font-size: 60px;
+        display: inline-block;
+        height: 60px;
+
+        &.icon-kucuntongjifenxi {
+          margin-left: 30px;
+          width: 60px;
+        }
+      }
+    }
+
+    /* #endif */
+
 
     &--user {
       margin-top: 20px;
@@ -220,39 +253,6 @@ export default {
         align-items: center;
         justify-content: center;
         padding-top: 4px;
-      }
-    }
-  }
-
-  &__popup {
-    width: 98vw;
-
-    &--list {
-      height: 67vh;
-      overflow-y: auto;
-    }
-
-    &--info {
-      display: flex;
-      align-items: center;
-      position: relative;
-
-      .icon-shanghuguanli {
-        position: absolute;
-        top: -10px;
-        right: -6px;
-        color: #f3a73f;
-        font-size: 18px;
-      }
-
-      &:before {
-        content: " ";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 2;
       }
     }
   }

@@ -24,10 +24,11 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, _isEmpty, _isEqual, _pick, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _pick, showToast, transferYuan, yuanToPoints } from "@/utils";
 import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
   name: "Ticket",
@@ -47,46 +48,97 @@ export default {
     UniList,
   },
   mixins: [mixins],
-  data: () => ({
-    option: {},
+  data() {
+    const _this = this;
 
-    step: 0,
-    list: [],
-    loading: false,
+    return {
+      option: {},
 
-    // 是否是要支付的订单
-    isRefund: false,
+      step: 0,
+      list: [],
+      loading: false,
 
-    visible: false,
+      // 是否是要支付的订单
+      isRefund: false,
 
-    form: {
-      totalAmount: "",
-      voucher: "",
-      remark: "",
-    },
-    rules: {
-      totalAmount: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入单据金额",
-          },
-        ],
+      visible: false,
+
+      form: {
+        totalAmount: "",
+        voucher: "",
+        remark: "",
       },
-    },
+      rules: {
+        totalAmount: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入单据金额",
+            },
+          ],
+        },
+      },
 
-    sLoading: false,
-    isEdit: false,
-    cLoading: false,
+      sLoading: false,
+      isEdit: false,
+      cLoading: false,
 
-    // 判断是付是应收款模块进来的
-    isReceivable: false,
+      // 判断是付是应收款模块进来的
+      isReceivable: false,
 
-    confirmationList: [],
+      confirmationList: [],
 
-    // 处理不可完成订单
-    noUnable: true,
-  }),
+      // 处理不可完成订单
+      noUnable: true,
+
+      // #ifdef H5
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 55,
+        },
+        {
+          label: "时间",
+          prop: "createTime",
+        },
+        {
+          label: "凭证",
+          prop: "voucher",
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: _this.getImageUrl(_get(row, "voucher")),
+                  size: 64,
+                  shape: "square",
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "备注",
+          prop: "remark",
+        },
+        {
+          label: "金额",
+          prop: "totalAmount",
+          render: (h, {row}) => {
+            return h("label", {class: "ko-basic-money"}, [_this.toYuan(row.totalAmount)]);
+          },
+        },
+        {
+          label: "操作",
+          width: 260,
+          slot: "operate",
+        },
+      ],
+      // #endif
+    };
+  },
   onLoad(option) {
     this.option = option;
     this.noUnable = option.noUnable === "true";
@@ -125,7 +177,10 @@ export default {
       params.totalAmount = transferYuan(params.totalAmount);
 
       this.form = params;
+
+      // #ifdef MP
       this.$refs.FormRef.clearValidate();
+      // #endif
     },
 
     // 添加修改单据
@@ -276,6 +331,7 @@ export default {
 <template>
   <view class="ko-ticket">
     <view class="ko-ticket__wrap">
+      <!-- #ifdef MP -->
       <UniList>
         <view style="padding: 10px;">
           <BasicCard :spacing="10" v-for="(item, index) of list" :key="index">
@@ -322,9 +378,28 @@ export default {
             </view>
           </BasicCard>
         </view>
-
         <LoadMore :loading="loading" :content-text="{contentnomore: '没有更多单据了'}" />
       </UniList>
+      <!-- #endif -->
+
+      <!-- #ifdef H5 -->
+      <KoTable
+        :columns="columns"
+        :loading="loading"
+        :data="list"
+      >
+        <template #operate="{item}">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <view class="ko-ticket__item--button" v-if="step === 0 && item.orderStatus !== 'FINISHED'">
+              <button class="ko-basic-button__card" @click.stop="addedTicket(item)">修改</button>
+            </view>
+            <view class="ko-ticket__item--button" v-if="step === 1 && item.orderStatus !== 'FINISHED'">
+              <button class="ko-basic-button__card" @click.stop="onConfirmOrder(item)">确认单据金额</button>
+            </view>
+          </view>
+        </template>
+      </KoTable>
+      <!-- #endif -->
     </view>
 
     <BasicPopup :visible.sync="visible">
@@ -404,6 +479,7 @@ export default {
       :offset-button="70"
     />
 
+    <!-- #ifdef MP -->
     <view class="ko-ticket__footer ko-basic-footer" v-if="!noUnable">
       <button class="ko-basic-button" @click="onPrevious">{{ ["取消", "上一步"][step] || "取消" }}</button>
       <button
@@ -415,6 +491,21 @@ export default {
         {{ ["下一步", "查询可完成订单"][step] }}
       </button>
     </view>
+    <!-- #endif -->
+
+    <!-- #ifdef H5 -->
+    <view class="ko-ticket__footer" v-if="!noUnable">
+      <button class="ko-basic-button" @click="onPrevious">{{ ["取消", "上一步"][step] || "取消" }}</button>
+      <button
+        class="ko-basic-button"
+        @click="onNext"
+        :loading="cLoading"
+        :disabled="cLoading"
+      >
+        {{ ["下一步", "查询可完成订单"][step] }}
+      </button>
+    </view>
+    <!-- #endif -->
   </view>
 </template>
 
@@ -423,8 +514,14 @@ export default {
   padding-bottom: 90px;
 
   &__wrap {
+    // #ifdef MP
     height: calc(100vh - 90px);
+    // #endif
     overflow-y: auto;
+
+    // #ifdef H5
+    padding: 20px;
+    // #endif
   }
 
   &__item {
@@ -453,18 +550,29 @@ export default {
   &__footer {
     display: flex;
     align-items: center;
+    // #ifdef MP
     justify-content: space-around;
+    // #endif
+    // #ifdef H5
+    justify-content: center;
+    margin-top: 30px;
+    .ko-basic-button {
+      margin: 20px;
+    }
+
+    // #endif
 
     .ko-basic-button {
       width: 40%;
       padding: 0 10px;
-
     }
   }
 
   &__popup {
+    // #ifdef MP
     width: 96vw;
     height: 70vh;
+    // #endif
     background: #fff;
     padding: 10px;
   }

@@ -19,6 +19,7 @@ export default {
   },
   methods: {
     onTouchStart() {
+      console.log("事件开始");
       this.timeline = +new Date();
     },
     onTouchEnd() {
@@ -40,6 +41,7 @@ export default {
 </script>
 
 <template>
+  <!-- #ifdef MP -->
   <button
     :class="[isCard ? 'ko-basic-button__card' : 'ko-basic-button']"
     @touchstart="onTouchStart"
@@ -52,6 +54,21 @@ export default {
       <text>{{ label }}</text>
     </slot>
   </button>
+  <!-- #endif -->
+  <!-- #ifdef H5 -->
+  <button
+    :class="[isCard ? 'ko-basic-button__card' : 'ko-basic-button']"
+    @pointerdown="onTouchStart"
+    @pointerup="onTouchEnd"
+    @pointermove="onTouchMove"
+    :disabled="disabled || loading"
+    :loading="loading"
+  >
+    <slot>
+      <text>{{ label }}</text>
+    </slot>
+  </button>
+  <!-- #endif -->
 </template>
 
 <style scoped lang="scss">

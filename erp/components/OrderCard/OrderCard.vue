@@ -33,6 +33,10 @@ export default {
     isCheckFinance: Boolean,
     // 显示完成订单
     isFinished: Boolean,
+    // 是否是财务模块
+    isFinance: Boolean,
+    // 是否是配送模块
+    isLogistics: Boolean,
   },
   methods: {
     onClickOperate(child, item) {
@@ -73,8 +77,11 @@ export default {
   <BasicCard custom-class="ko-order-card" @click="$emit('click')">
     <view class="ko-order-card__wrap">
       <view class="ko-order-card__finished">
-        <view class="ko-order-card__finished--text">
+        <view class="ko-order-card__finished--text" v-if="!isFinance">
           {{ ORDER_STATUS_ENUMS(item.status) }}
+        </view>
+        <view class="ko-order-card__finished--text" v-else>
+          {{ FINANCE_ORDER_STATUS_ENUMS(item.status) }}
         </view>
       </view>
       <UniRow :gutter="10">
@@ -83,7 +90,7 @@ export default {
           {{ item.orderCode || "-" }}
         </UniCol>
 
-        <UniCol :span="24" v-if="!isCheckStock && (item.totalAmount && item.totalAmount !== 0)">
+        <UniCol :span="24" v-if="!isCheckStock && !isLogistics && (item.totalAmount && item.totalAmount !== 0)">
           <label class="ko-basic-label">订单总金额：</label>
           <text class="ko-basic-money">
             {{ toYuan(item.totalAmount) }}元
@@ -92,10 +99,11 @@ export default {
 
         <UniCol :span="24" v-if="!isSalesPurchase">
           <label class="ko-basic-label">订单类型：</label>
-          <text>
+          <text class="ko-order-card__order-type" :class="[item.orderType]">
             {{ ORDER_TYPE_ENUMS(item.orderType) }}
           </text>
         </UniCol>
+
 
         <!-- <UniCol :span="24">
            <label class="ko-basic-label">订单状态：</label>
@@ -109,66 +117,107 @@ export default {
           </text>
         </UniCol>
 
-        <UniCol :span="24" v-if="isCheckStock ? !['PRODUCTION'].includes(item.orderType) : true">
-          <view class="ko-basic-label__images-wrap">
-            <label class="ko-basic-label">{{ getCustomerName(item) }}：</label>
-            <view style="margin-right: 10px;">
-              <UvAvatar
-                :size="38"
-                :text="GET_FUNC(item, 'customer.name')"
-                :src="getImageUrl(GET_FUNC(item, 'customer.logo'))"
-                random-bg-color
-              />
+        <block v-if="!isLogistics">
+          <UniCol
+            :span="24"
+            v-if="isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType)"
+          >
+            <view class="ko-basic-label__images-wrap">
+              <label class="ko-basic-label">{{ getCustomerName(item) }}：</label>
+              <view style="margin-right: 10px;">
+                <UvAvatar
+                  :size="38"
+                  :text="GET_FUNC(item, 'customer.name') || ''"
+                  :src="getImageUrl(GET_FUNC(item, 'customer.logo'))"
+                  random-bg-color
+                />
+              </view>
+              <text>{{ GET_FUNC(item, "customer.name") || "-" }}</text>
             </view>
-            <text>{{ GET_FUNC(item, "customer.name") || "-" }}</text>
-          </view>
-        </UniCol>
+          </UniCol>
 
-        <UniCol :span="24">
-          <view class="ko-basic-label__images-wrap">
-            <label class="ko-basic-label">{{ `${isSalesPurchase ? "提单" : "下单"}` }}用户：</label>
-            <view style="margin-right: 10px;">
-              <UvAvatar
-                :size="38"
-                random-bg-color
-                :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
-                :text="GET_FUNC(item, 'user.nickName')"
-              />
+          <UniCol :span="24">
+            <view class="ko-basic-label__images-wrap">
+              <label class="ko-basic-label">{{ `${isSalesPurchase ? "提单" : "下单"}` }}用户：</label>
+              <view style="margin-right: 10px;">
+                <UvAvatar
+                  :size="38"
+                  random-bg-color
+                  :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
+                  :text="GET_FUNC(item, 'user.nickName') || ''"
+                />
+              </view>
+              <text>{{ GET_FUNC(item, "user.nickName") || "-" }}</text>
             </view>
-            <text>{{ GET_FUNC(item, "user.nickName") || "-" }}</text>
-          </view>
-        </UniCol>
+          </UniCol>
 
-        <UniCol :span="24" v-if="isCheckStock">
-          <view class="ko-order-card__details">
-            <label class="ko-basic-label">产品详情：</label>
-            <view class="ko-order-card__details--wrap">
-              <BasicCard v-for="child of item.details">
-                <view class="ko-order-card__details--cell">
-                  <UvAvatar
-                    v-if="GET_FUNC(child, 'images')"
-                    :size="64"
-                    :src="getImageUrl(GET_FUNC(child, 'images'))"
-                    shape="square"
-                    random-bg-color
-                  />
-                  <view style="margin-left: 10px; flex: 1;">
-                    <UniRow :gutter="16">
-                      <UniCol :span="24">
-                        <label class="ko-basic-label">产品名称：</label>
-                        <text>{{ child.name }}</text>
-                      </UniCol>
-                      <UniCol :span="24">
-                        <label class="ko-basic-label">数量：</label>
-                        <text>{{ child.productQuantity }}</text>
-                      </UniCol>
-                    </UniRow>
+          <UniCol :span="24" v-if="isCheckStock">
+            <view class="ko-order-card__details">
+              <label class="ko-basic-label">产品详情：</label>
+              <view class="ko-order-card__details--wrap">
+                <BasicCard v-for="child of item.details">
+                  <view class="ko-order-card__details--cell">
+                    <UvAvatar
+                      v-if="GET_FUNC(child, 'images')"
+                      :size="64"
+                      :src="getImageUrl(GET_FUNC(child, 'images'))"
+                      shape="square"
+                      random-bg-color
+                    />
+                    <view style="margin-left: 10px; flex: 1;">
+                      <UniRow :gutter="16">
+                        <UniCol :span="24">
+                          <label class="ko-basic-label">产品名称：</label>
+                          <text>{{ child.name }}</text>
+                        </UniCol>
+                        <UniCol :span="24">
+                          <label class="ko-basic-label">数量：</label>
+                          <text>{{ child.productQuantity }}</text>
+                        </UniCol>
+                      </UniRow>
+                    </view>
                   </view>
-                </view>
-              </BasicCard>
+                </BasicCard>
+              </view>
             </view>
-          </view>
-        </UniCol>
+          </UniCol>
+        </block>
+
+        <block v-if="isLogistics">
+          <UniCol :span="24">
+            <view class="ko-basic-label__images-wrap">
+              <label class="ko-basic-label">物流商：</label>
+              <view style="margin-right: 10px;">
+                <UvAvatar
+                  :size="38"
+                  :text="GET_FUNC(item, 'logistics.name') || ''"
+                  :src="getImageUrl(GET_FUNC(item, 'logistics.logo'))"
+                  random-bg-color
+                />
+              </view>
+              <text>{{ GET_FUNC(item, "logistics.name") || "-" }}</text>
+            </view>
+          </UniCol>
+
+          <UniCol :span="24">
+            <label class="ko-basic-label">物流单号：</label>
+            <text>
+              {{ item.logisticsNo || "-" }}
+            </text>
+          </UniCol>
+          <UniCol :span="24">
+            <label class="ko-basic-label">联系电话：</label>
+            <text>
+              {{ item.orderPhone || "-" }}
+            </text>
+          </UniCol>
+          <UniCol :span="24">
+            <label class="ko-basic-label">配送地址：</label>
+            <text>
+              {{ item.orderAddress || "-" }}
+            </text>
+          </UniCol>
+        </block>
 
         <UniCol :span="24">
           <label class="ko-basic-label">时间：</label>
@@ -180,6 +229,7 @@ export default {
           {{ item.remark || "-" }}
         </UniCol>
       </UniRow>
+
       <view class="ko-order-card__operate" v-if="$slots.operate">
         <slot name="operate" :node="item" />
       </view>
@@ -258,6 +308,32 @@ export default {
       width: 100px;
       text-align: center;
       font-size: 12px;
+    }
+  }
+
+  &__order-type {
+    &.SALE {
+      color: #007BFF;
+    }
+
+    &.PURCHASE {
+      color: #28A745;
+    }
+
+    &.SALE_RETURN {
+      color: #FFA500;
+    }
+
+    &.PURCHASE_RETURN {
+      color: #DC3545;
+    }
+
+    &.PRODUCTION {
+      color: #FFC107;
+    }
+
+    &.CHECK_IN {
+      color: #800080;
     }
   }
 }

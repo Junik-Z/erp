@@ -42,41 +42,45 @@ export default {
 
 <style scoped lang="scss">
 .ko-print-footer {
-  border: 1px solid #8f939c;
+  //border: 1px solid #8f939c;
+  //border: 1px solid #000;
   border-top: none;
+  @include print-style();
 
   .out-of-stock {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 10%;
+    padding: 6px 10% 8px;
 
     &__item {
       display: flex;
       align-items: flex-end;
       justify-content: flex-start;
+      @include print-style();
 
       label {
-        color: #8f939c;
-        width: 80px;
+        width: 100px;
         text-align: right;
+        white-space: nowrap;
       }
 
       span {
         display: inline-block;
-        width: 200px;
-        color: #333;
-        border-bottom: 0.5px solid #8f939c;
+        width: 10em;
+        border-bottom: 0.5px solid #000;
         text-align: center;
+        white-space: nowrap;
       }
     }
   }
 
   .illustrate {
     margin-top: 2px;
-    font-size: 12px;
-    color: #8f939c;
+    //color: #8f939c;
     text-align: center;
+    @include print-style();
+
 
     &.not-footer {
       padding-bottom: 10px;
@@ -88,19 +92,20 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    @include print-style();
 
     &__bank {
       text-align: center;
+      @include print-style();
     }
 
     &__account {
-      font-size: 12px;
+      @include print-style();
     }
 
     &__ad {
-      font-size: 23px;
-      font-weight: bold;
       letter-spacing: 10px;
+      @include print-style();
     }
   }
 }

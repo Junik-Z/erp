@@ -17,10 +17,12 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
+import FeesList from "@/erp/components/FeesList/FeesList.vue";
 
 export default {
   name: "refund",
   components: {
+    FeesList,
     PickerUser,
     UniSegmentedControl,
     PickerProduct,
@@ -31,27 +33,30 @@ export default {
     UniFormsItem,
     UniEasyinput,
   },
-  data: () => ({
-    form: {
-      "orderCode": "",
-      "supplierId": "",
-      "purchaserId": "",
-      "otherSupplier": "",
-      "totalAmount": 0,
-      "remark": "",
-      "details": [],
-    },
-    supplierList: [],
-    visible: false,
-    loading: false,
+  data() {
+    return {
+      form: {
+        "orderCode": "",
+        "supplierId": "",
+        "purchaserId": "",
+        "otherSupplier": "",
+        "totalAmount": 0,
+        "remark": "",
+        "details": [],
+        fees: {},
+      },
+      supplierList: [],
+      visible: false,
+      loading: false,
 
-    current: 0,
-    tabs: ["供应商", "其它供应商"],
+      current: 0,
+      tabs: ["供应商", "其它供应商"],
 
-    isClient: false,
+      isClient: false,
 
-    orderId: "",
-  }),
+      orderId: "",
+    };
+  },
   mixins: [mixins],
   onLoad(option) {
     this.option = option;
@@ -99,7 +104,7 @@ export default {
             .finally(() => {
               this.loading = false;
             });
-        }else {
+        } else {
           uni.showToast({
             title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
             icon: "none",
@@ -130,6 +135,12 @@ export default {
         this.form.supplierId = "";
       }
 
+    },
+
+    onSupplierId(val) {
+      const node = this.$refs.UserRef.getUserInfo(val) || {};
+      this.form.orderAddress = node.address;
+      this.form.orderPhone = _get(node, "contacts.0.phone");
     },
   },
 };
@@ -163,7 +174,9 @@ export default {
                 title="选择供应商"
                 is-input
                 type="supplier"
-                disabled
+                :disabled="!!orderId"
+                ref="UserRef"
+                @input="onSupplierId"
               />
             </UniFormsItem>
           </template>
@@ -188,20 +201,40 @@ export default {
         </view>
       </UniSection>
 
+      <UniSection title="配送信息" type="line">
+        <view style="padding: 10px;">
+          <UniFormsItem label="电话：" name="orderPhone">
+            <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
+          </UniFormsItem>
+          <UniFormsItem label="地址：" name="orderAddress">
+            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+          </UniFormsItem>
+        </view>
+      </UniSection>
+
+
       <UniSection title="退货产品明细" type="line">
         <view style="padding: 10px;">
           <UniFormsItem
             name="details"
-            label-width="0">
+            label-width="0"
+          >
             <view style="width: 100%;">
               <PickerProduct
                 v-model="form.details"
                 :total.sync="form.totalAmount"
-                is-not-added
-                :is-edit-price="isPerm('Purchase_Write')"
+                :is-not-added="!!orderId"
+                type="purchase"
+                :is-client="isPerm('Purchase_Write')"
               />
             </view>
           </UniFormsItem>
+        </view>
+      </UniSection>
+
+      <UniSection title="其它费用" type="line">
+        <view style="padding: 10px;">
+          <FeesList v-model="form.fees" is-form />
         </view>
       </UniSection>
 

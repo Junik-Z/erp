@@ -43,7 +43,7 @@ export default {
         sale: {saleOff: false},
       }[this.type];
 
-      getProductClassApi(params)
+      getProductClassApi({...params, pageNum: 0, pageSize: 1000})
         .then(res => {
           this.classList = res.data;
           uni.$__product_class_list__ = res.data;

@@ -1,4 +1,4 @@
-import { _get, _isEmpty, _omit, _pick, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
+import { _get, _isEmpty, _omit, _pick, absYuan, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG } from "@/utils/config";
 import QS from "@/utils/qs.min";
@@ -84,9 +84,9 @@ export default {
     },
 
     // 跳转到打印页面
-    onJumpPrint(node, page_type) {
+    onJumpPrint(node, page_type, params = {}) {
       uni.navigateTo({
-        url: `/shop/print/print?${QS.stringify({page_type, ...(_pick(node, ["id"]))})}`,
+        url: `/shop/print/print?${QS.stringify({page_type, ...(_pick(node, ["id"])), ...params})}`,
       });
     },
 
@@ -114,8 +114,7 @@ export default {
 
               uni.clearStorageSync({});
 
-              console.log("params?.scene", params?.scene);
-
+              // #ifdef MP
               goLogin(params?.scene || "")
                 .finally(() => {
                   setTimeout(() => {
@@ -130,6 +129,17 @@ export default {
                     resolve();
                   }, 10);
                 });
+              // #endif
+
+              // #ifdef H5
+              setTimeout(() => {
+                uni.reLaunch({
+                  url: `${url}?${QS.stringify(query)}`,
+                });
+                uni.$__IS_LOGOUT_FLAG__ = false;
+                resolve();
+              }, 10);
+              // #endif
             }, 50);
           });
       });
@@ -162,6 +172,9 @@ export default {
   computed: {
     toYuan() {
       return transferYuan;
+    },
+    absYuan() {
+      return absYuan;
     },
     toFen() {
       return yuanToPoints;
@@ -229,6 +242,18 @@ export default {
       };
     },
 
+    // 财务订单状态
+    FINANCE_ORDER_STATUS_ENUMS() {
+      return (type) => {
+        return {
+          CREATED: "待清帐",
+          FINISHED: "已完成",
+          APPLY_MATERIAL: "申请物料",
+          CANCELLED: "已取消",
+        }[type] || "-";
+      };
+    },
+
     // 用户状态
     USER_SUS_ENUMS() {
       return (type) => {
@@ -266,6 +291,22 @@ export default {
           SALE_RETURN: "销售退货订单",
           PURCHASE: "采购订单",
           PURCHASE_RETURN: "采购退货订单",
+          CHECK_IN: "库存盘点",
+        };
+        return _get(obj, type) || "-";
+      };
+    },
+
+    // 其它费用类型
+    FEES_TYPE_ENUMS() {
+      return (type) => {
+        if (!type) return "-";
+        const obj = {
+          UpstairsFee: "上楼费",
+          HandlingFee: "搬运费",
+          InstallationFee: "安装费",
+          LogisticsFee: "物流费",
+          ClearAnAccount: "已付费用",
         };
         return _get(obj, type) || "-";
       };

@@ -10,12 +10,14 @@ import { cancelSaleApi, getSaleHistoryApi, getSaleListApi, removeSaleApi, submit
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _pick } from "@/utils";
+import { _deepCopy, _get, _pick } from "@/utils";
 import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 
 export default {
   name: "OrderList",
   components: {
+    UvActionSheet,
     OrderCard,
     HistoryBar,
     LoadMore,
@@ -57,6 +59,7 @@ export default {
       list: [],
 
       isHistory: false,
+      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -262,8 +265,45 @@ export default {
     onRowClick(row) {
       this.onJumpDetails(row, "sale");
     },
+
+    onActionClick(item) {
+      this.actionItem = item;
+      this.$refs.UASRef.open();
+    },
+    // 处理调用底部弹出的按钮
+    onSelect(item) {
+      this[item.func](_deepCopy(this.actionItem));
+    },
   },
-  computed: {},
+  computed: {
+    actionList() {
+      const node = this.actionItem;
+      return [
+        {
+          name: "申请退货",
+          func: "onReturn",
+          status: ["FINISHED"],
+        },
+        {
+          name: "取消订单",
+          func: "onCancel",
+          status: ["CREATED"],
+        },
+        {
+          name: "编辑",
+          func: "onJump",
+          status: ["CREATED", "CANCELLED"],
+        },
+        {
+          name: "删除",
+          color: "#e43d33",
+          func: "onRemove",
+          status: ["CANCELLED", "CREATED"],
+        },
+      ]
+        .filter(li => li.status.includes(node.status));
+    },
+  },
 };
 </script>
 
@@ -284,13 +324,6 @@ export default {
             <template #operate v-if="isPerm('Sales_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
-                  v-if="['FINISHED'].includes(item.status)"
-                  class="ko-basic-button__card"
-                  @click.stop="onReturn(item)"
-                >
-                  申请退货
-                </button>
-                <button
                   v-if="!['CANCELLED'].includes(item.status)"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item)"
@@ -306,29 +339,47 @@ export default {
                 >
                   提交订单
                 </button>
+
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onJump(item)"
-                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                  @click.stop="onActionClick(item)"
+                  style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
                 >
-                  修改
+                  <i class="iconfont icon-gengduocaozuo"></i>
                 </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onCancel(item)"
-                  v-if="['CREATED'].includes(item.status)"
-                >
-                  取消
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onRemove(item)"
-                  :loading="item.__r_loading__"
-                  :disabled="item.__r_loading__"
-                  v-if="['CANCELLED', 'CREATED'].includes(item.status)"
-                >
-                  删除
-                </button>
+
+                <template v-if="false">
+                  <button
+                    v-if="['FINISHED'].includes(item.status)"
+                    class="ko-basic-button__card"
+                    @click.stop="onReturn(item)"
+                  >
+                    申请退货
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onJump(item)"
+                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                  >
+                    修改
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onCancel(item)"
+                    v-if="['CREATED'].includes(item.status)"
+                  >
+                    取消
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onRemove(item)"
+                    :loading="item.__r_loading__"
+                    :disabled="item.__r_loading__"
+                    v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+                  >
+                    删除
+                  </button>
+                </template>
               </view>
             </template>
           </OrderCard>
@@ -424,6 +475,17 @@ export default {
       direction="vertical"
       @trigger="onTrigger"
     />
+
+    <!-- #ifdef MP -->
+    <UvActionSheet
+      ref="UASRef"
+      :actions="actionList"
+      safe-area-inset-bottom
+      round="10"
+      cancel-text="取消"
+      @select="onSelect"
+    />
+    <!-- #endif -->
   </view>
 </template>
 

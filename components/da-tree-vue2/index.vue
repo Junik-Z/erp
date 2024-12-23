@@ -64,6 +64,11 @@
             <text class="da-tree-item__label--append" v-if="item.append">{{ item.append }}</text>
           </view>
           <view class="ko-classify__button">
+            <!-- #ifdef H5 -->
+            <slot name="node" :node="item.originItem" :item="item"></slot>
+            <!-- #endif -->
+
+            <!-- #ifdef MP -->
             <slot v-if="$slots['operate-node']" name="operate-node" :node="item.originItem"></slot>
 
             <template v-if="isOperate">
@@ -78,6 +83,7 @@
               <button v-if="false" @click.stop="onEdit(item)">编辑</button>
               <button v-if="false" @click.stop="onRemove(item)">删除</button>
             </template>
+            <!-- #endif -->
           </view>
         </view>
       </view>
@@ -1029,7 +1035,14 @@ export default {
     line-height: 1;
     visibility: hidden;
     opacity: 0;
-    transition: opacity 0.2s linear;
+    transition: opacity 0.2s linear, background .3s;
+
+    /* #ifdef H5 */
+    &:hover {
+      background: #e9e9eb;
+    }
+
+    /* #endif */
 
     &.is-show {
       height: auto;

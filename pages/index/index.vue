@@ -1,34 +1,33 @@
 <script>
 import { _deepCopy, _get, _haveCommonElements } from "@/utils";
-import UniDataCheckbox from "@/uni_modules/uni-data-checkbox/components/uni-data-checkbox/uni-data-checkbox.vue";
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST } from "@/utils/config";
 import KoNotice from "@/components/Notice/Notice.vue";
-import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
-import BusinessAdvertising from "@/components/BusinessAdvertising/BusinessAdvertising.vue";
 
 export default {
   components: {
-    BusinessAdvertising,
     MerchantsHeader,
-    UvAvatar,
     UniCol,
     UniRow,
-    BasicCard,
-    BasicPopup,
     KoNotice,
-    UniDataCheckbox,
   },
   mixins: [mixins],
   data() {
+    let disabled = false;
+
+    // #ifdef H5
+    disabled = true;
+    // #endif
+
+
     return {
       gridList: MENU_LIST,
+      disabled,
+
       // #ifdef MP
       menuButton: uni.getMenuButtonBoundingClientRect(),
       // #endif
@@ -113,7 +112,7 @@ export default {
   <view class="ko-home" :style="[getMenuButtonStyle]">
     <KoNotice is-custom />
 
-    <MerchantsHeader ref="MHRef" />
+    <MerchantsHeader ref="MHRef" :disabled="disabled" />
 
     <button class="ko-home__store" @click="onJumpStore" v-if="isBusiness || isAdmin">
       <i class="iconfont icon-shezhi"></i>

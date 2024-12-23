@@ -164,6 +164,12 @@
           }
         },
         {
+          "path": "logistics/client",
+          "style": {
+            "navigationBarTitleText": "物流商"
+          }
+        },
+        {
           "path": "product/product",
           "style": {
             "navigationBarTitleText": "产品管理"
@@ -208,13 +214,6 @@
           "path": "user/user",
           "style": {
             "navigationBarTitleText": "个人中心"
-          }
-        },
-        {
-          "path": "dashboard/dashboard",
-          "style": {
-            "navigationBarTitleText": "数据看版",
-            "navigationStyle": "custom"
           }
         },
         {

@@ -1,6 +1,6 @@
 <script>
 import { getInboundDetailApi, getOutboundDetailApi } from "@/api/erp/stock";
-import { _get, _isEqual, _sum } from "@/utils";
+import { _get, _isEmpty, _isEqual, _sum } from "@/utils";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
@@ -12,6 +12,9 @@ import { getSaleDetailApi, getSaleReturnDetailApi } from "@/api/erp/sale";
 import { getPurchaseDetailApi, getPurchaseReturnDetailApi } from "@/api/erp/purchase";
 import { getProduceDetailApi } from "@/api/erp/produce";
 import { getPayableDetailApi, getReceivableDetailApi } from "@/api/erp/finance";
+import { getProductFieldApi } from "@/api/erp/product";
+import FeesList from "../components/FeesList/FeesList.vue";
+import { getDeliveryInfoApi } from "@/api/erp/logistics";
 
 const PageType = {
   inbound: "入库订单详情",
@@ -23,6 +26,7 @@ const PageType = {
   produce: "生产工单详情",
   receivable: "财务收款订单详情",
   payable: "财务收款订单详情",
+  logistics: "配送订单详情",
 };
 
 const Func = {
@@ -35,21 +39,37 @@ const Func = {
   produce: getProduceDetailApi,
   receivable: getReceivableDetailApi,
   payable: getPayableDetailApi,
+  logistics: getDeliveryInfoApi,
 };
 
 export default {
   name: "DetailsOrder",
   mixins: [mixins],
-  components: {UvAvatar, UniCol, UniRow, ProductCard, UniSection, UniForms},
+  components: {FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection, UniForms},
   onLoad(option) {
     this.option = option;
+
+    console.log('财务详情的页面参数', option);
+
     uni.setNavigationBarTitle({title: _get(PageType, option.page_type)});
+
+    this.isFinance = ["receivable", "payable"].includes(option.page_type);
+    this.isLogistics = ["logistics"].includes(option.page_type);
+
+    this.getFieldList();
+
     this.getList();
   },
   data() {
     return {
       option: {},
       node: {},
+      // 财务订单
+      isFinance: false,
+      // 配送订单
+      isLogistics: false,
+
+      FieldList: [],
     };
   },
   methods: {
@@ -63,6 +83,14 @@ export default {
         .finally(() => {
           this.loading = false;
         });
+    },
+
+    getFieldList() {
+      getProductFieldApi({pageSize: 1000000, pageNum: 0}).then(res => {
+        uni.$__FIELD_LIST__ = res.data;
+
+        this.FieldList = res.data;
+      });
     },
   },
   computed: {
@@ -88,12 +116,71 @@ export default {
     getTotal() {
       return _sum((this.node?.details || [])?.map(item => ((item.price || 0) * (item.productQuantity || 0))));
     },
+
+    ifFees() {
+      return !_isEmpty(this.node.fees);
+    },
+
+    // #ifdef H5
+    columnsList() {
+      const _this = this;
+      return (flag) => [
+        {
+          label: "序号",
+          type: "index",
+          width: 60,
+        },
+        {
+          label: "图片",
+          prop: "images",
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: _this.getImageUrl(_get(row, "images")),
+                  size: 64,
+                  text: _get(row, "name") || _this.GET_SHOP_NAME,
+                  shape: "square",
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "产品名称",
+          prop: "name",
+        },
+        ...(this.FieldList.map(item => ({
+          label: item.fieldName,
+          prop: `extend.${item.fieldCode}`,
+        }))),
+        {
+          label: "单价(元)",
+          prop: "price",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.price)}`);
+          },
+        },
+        {
+          label: "数量",
+          prop: "productQuantity",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, row.productQuantity);
+          },
+        },
+      ].filter(item => !(flag && _isEqual(item.prop, "price")));
+    },
+    // #endif
   },
 };
 </script>
 
 <template>
-  <view class="ko-details">
+  <view class="ko-details ko-basic-added-form">
     <UniSection title="基础信息" type="line">
       <view class="ko-details__item">
         <view class="ko-details__cell">
@@ -106,36 +193,62 @@ export default {
         </view>
         <view class="ko-details__cell">
           <label class="ko-basic-label">订单状态：</label>
-          <text class="ko-details__cell--text">{{ ORDER_STATUS_ENUMS(node.status) }}</text>
+          <text class="ko-details__cell--text" v-if="isFinance">{{ FINANCE_ORDER_STATUS_ENUMS(node.status) }}</text>
+          <text class="ko-details__cell--text" v-else>{{ ORDER_STATUS_ENUMS(node.status) }}</text>
         </view>
         <view class="ko-details__cell">
           <label class="ko-basic-label">下单时间：</label>
-          <text class="ko-details__cell--text">{{ node.createTime }}</text>
+          <text class="ko-details__cell--text">{{ node.createTime || "-" }}</text>
         </view>
 
         <view class="ko-details__cell" v-if="isProduce">
           <label class="ko-basic-label">计划完工日期：</label>
-          <text class="ko-details__cell--text">{{ node.planFinishDate }}</text>
+          <text class="ko-details__cell--text">{{ node.planFinishDate || "-" }}</text>
         </view>
       </view>
     </UniSection>
 
-    <UniSection title="配送信息" type="line">
+    <UniSection title="配送信息" type="line" v-if="!isProduce">
       <view class="ko-details__item">
-        <view class="ko-details__cell">
-          <label class="ko-basic-label">电话：</label>
-          <text class="ko-details__cell--text">{{ node.orderPhone }}</text>
-        </view>
-        <view class="ko-details__cell">
-          <label class="ko-basic-label">地址：</label>
-          <text class="ko-details__cell--text">{{ node.orderAddress }}</text>
-        </view>
+        <UniRow>
+          <UniCol :span="24" v-if="GET_FUNC(node, 'logistics.logo')">
+            <view style="display: flex;justify-content: center;align-items: center" class="ko-details__cell">
+              <UvAvatar :size="64" :src="getImageUrl(GET_FUNC(node, 'logistics.logo'))" />
+            </view>
+          </UniCol>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">物流商：</label>
+              <text class="ko-details__cell--text">{{ GET_FUNC(node, "logistics.name") || "-" }}</text>
+            </view>
+          </UniCol>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">物流单号：</label>
+              <text class="ko-details__cell--text">{{ node.logisticsNo || "-" }}</text>
+            </view>
+          </UniCol>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">电话：</label>
+              <text class="ko-details__cell--text">{{ node.orderPhone || "-" }}</text>
+            </view>
+          </UniCol>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">地址：</label>
+              <text class="ko-details__cell--text">{{ node.orderAddress || "-" }}</text>
+            </view>
+          </UniCol>
+        </UniRow>
       </view>
     </UniSection>
 
+    <!-- 生产订单 -->
     <template v-if="isProduce">
       <UniSection title="材料明细" type="line">
         <view class="ko-details__item">
+          <!-- #ifdef MP -->
           <view class="ko-details__cell" v-for="item of node.materialDetails" :key="item.id">
             <ProductCard
               style="width: 100%;"
@@ -144,6 +257,18 @@ export default {
               hide-prices
             />
           </view>
+          <!-- #endif -->
+
+          <!-- #ifdef H5 -->
+          <view style="padding: 10px;">
+            <KoTable
+              :columns="columnsList(true)"
+              :data="node.materialDetails"
+              empty-text="暂无数据"
+              stripe
+            />
+          </view>
+          <!-- #endif -->
 
           <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
             <label class="ko-basic-label">共计：</label>
@@ -154,6 +279,7 @@ export default {
 
       <UniSection title="产品明细" type="line">
         <view class="ko-details__item">
+          <!-- #ifdef MP -->
           <view class="ko-details__cell" v-for="item of node.productDetails" :key="item.id">
             <ProductCard
               style="width: 100%;"
@@ -162,6 +288,18 @@ export default {
               hide-prices
             />
           </view>
+          <!-- #endif -->
+
+          <!-- #ifdef H5 -->
+          <view style="padding: 10px;">
+            <KoTable
+              :columns="columnsList(true)"
+              :data="node.productDetails"
+              empty-text="暂无数据"
+              stripe
+            />
+          </view>
+          <!-- #endif -->
 
           <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
             <label class="ko-basic-label">共计：</label>
@@ -174,28 +312,51 @@ export default {
     <template v-if="!isProduce">
       <UniSection title="订单明细" type="line">
         <view class="ko-details__item">
+          <!-- #ifdef MP -->
           <view class="ko-details__cell" v-for="item of node.details" :key="item.id">
             <ProductCard
               style="width: 100%;"
               :node="item"
               readonly
+              :hide-prices="isLogistics"
               emphasis-on-quantity
             />
           </view>
+          <!-- #endif -->
 
-          <view class="ko-details__cell" style="margin-top: 20px;" v-if="getTotal">
-            <label class="ko-basic-label">共计：</label>
-            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getTotal) }}元</text>
+          <!-- #ifdef H5 -->
+          <view style="padding: 10px;">
+            <KoTable
+              :columns="columnsList(isLogistics)"
+              :data="node.details"
+              empty-text="暂无数据"
+              stripe
+            />
           </view>
+          <!-- #endif -->
 
-          <view class="ko-details__cell" style="margin-top: 10px;" v-if="node.totalAmount">
-            <label class="ko-basic-label">实付金额：</label>
-            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
-          </view>
+          <block v-if="!isLogistics">
+            <view class="ko-details__cell" style="margin-top: 20px;" v-if="getTotal">
+              <label class="ko-basic-label">共计：</label>
+              <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getTotal) }}元</text>
+            </view>
+
+            <view class="ko-details__cell" style="margin-top: 10px;" v-if="node.totalAmount">
+              <label class="ko-basic-label">实付金额：</label>
+              <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
+            </view>
+          </block>
         </view>
       </UniSection>
 
-      <UniSection v-if="isShowClient" :title="getClientLabel" type="line">
+      <UniSection title="其它费用" type="line" v-if="ifFees">
+        <view style="padding: 10px;">
+          <FeesList v-model="node.fees" />
+        </view>
+      </UniSection>
+
+      <!-- 客户信息 -->
+      <UniSection v-if="isShowClient && !isLogistics" :title="getClientLabel" type="line">
         <view class="ko-details__item">
           <UniRow>
             <UniCol :span="24" v-if="GET_FUNC(node, 'customer.logo')">
@@ -262,7 +423,7 @@ export default {
       </UniSection>
     </template>
 
-    <UniSection v-if="isShowPlaceOrder" :title="isProduce ? '提单用户' : '下单用户信息'" type="line">
+    <UniSection v-if="isShowPlaceOrder && !isLogistics" :title="isProduce ? '提单用户' : '下单用户信息'" type="line">
       <view class="ko-details__item">
         <UniRow>
           <UniCol :span="24" v-if="GET_FUNC(node, 'user.avatar')">

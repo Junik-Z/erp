@@ -3,28 +3,32 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import ViewVersion from "./components/ViewVersion.vue";
 import SendList from "./components/SendList.vue";
-import ReceiptList from "./components/ReceiptList.vue";
-import { _get, _isEqual } from "@/utils";
+import LogisticsList from "./components/ReceiptList.vue";
+import { _get, _haveCommonElements, _isEqual } from "@/utils";
 import OrderList from "@/erp/sale/components/OrderList.vue";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "finance",
-  components: {OrderList, ReceiptList, SendList, ViewVersion, UniSegmentedControl},
+  components: {OrderList, LogisticsList, SendList, ViewVersion, UniSegmentedControl},
+  mixins: [mixins],
   data: () => ({
-    tabs: ["物流看版", "发件", "收件"],
     tabList: [
-      /*  {
-         label: "物流看版",
-         ref: "VVRef",
-       }, */
+      {
+        label: "物流看版",
+        ref: "VVRef",
+        roles: ["Admin", "Business", "Delivery_Write", "Delivery_Read"],
+      },
       {
         label: "配送",
         ref: "SLRef",
+        roles: ["Admin", "Business", "Delivery_Write", "Delivery_Read"],
       },
-      /*  {
-         label: "收件",
-         ref: "RLRef",
-       }, */
+      {
+        label: "物流商",
+        ref: "RLRef",
+        roles: ["Admin", "Business", "Delivery_Write"],
+      },
     ],
     current: 0,
   }),
@@ -38,7 +42,6 @@ export default {
     },
     getList() {
       if (!this.getRefName) return false;
-
       this.$nextTick(() => {
         this.$refs[this.getRefName]?.getList?.();
       });
@@ -46,7 +49,15 @@ export default {
   },
   computed: {
     getTabList() {
-      return this.tabList;
+      return this.tabList
+        .flatMap(item => {
+          const role = this.GET_USER_ROLE;
+          if (_haveCommonElements(role, item.roles)) {
+            return [item];
+          } else {
+            return [];
+          }
+        });
     },
     getRefName() {
       return _get(this.getTabList, `${this.current}.ref`);
@@ -60,7 +71,7 @@ export default {
 
 <template>
   <view class="ko-purchase">
-    <view class="ko-purchase__tabs" v-if="getTabList.length < 1">
+    <view class="ko-purchase__tabs">
       <UniSegmentedControl :values="getTabList" label-key="label" :current="current" @clickItem="onTab" />
     </view>
 
@@ -68,7 +79,7 @@ export default {
 
     <SendList ref="SLRef" v-if="isEqual(getRefName, 'SLRef')" />
 
-    <ReceiptList ref="RLRef" v-if="isEqual(getRefName, 'RLRef')" />
+    <LogisticsList ref="RLRef" v-if="isEqual(getRefName, 'RLRef')" />
   </view>
 </template>
 

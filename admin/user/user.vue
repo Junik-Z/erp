@@ -9,10 +9,11 @@ import { _deepCopy } from "@/utils";
 import { updateMyInfoApi, uploadBase64Api } from "@/api/user";
 import { getImageBase64 } from "@/utils/processingFiles";
 import LongPressButton from "@/admin/components/LongPressButton/LongPressButton.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 export default {
   name: "user",
-  components: {LongPressButton, UniEasyinput, UniFormsItem, UniForms, BasicPopup, UvAvatar},
+  components: {FilePicker, LongPressButton, UniEasyinput, UniFormsItem, UniForms, BasicPopup, UvAvatar},
   mixins: [mixins],
   data() {
     return {
@@ -81,7 +82,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-user">
+  <view class="ko-user ko-basic-added-form">
     <view class="ko-user__info" @click="onUpdateInfo">
       <UvAvatar
         :key="GET_USER_INFO.avatar"
@@ -114,6 +115,7 @@ export default {
         <UniForms label-width="70px" label-align="right">
           <UniFormsItem label-width="0">
             <view class="ko-user__popup--avatar">
+              <!-- #ifdef MP -->
               <button
                 @chooseavatar="getAvatarUrl"
                 :disabled="loading"
@@ -122,6 +124,15 @@ export default {
               >
                 <UvAvatar :size="120" :src="getImageUrl(form.avatar)" />
               </button>
+              <!-- #endif -->
+
+              <!-- #ifdef H5 -->
+              <FilePicker
+                v-model="form.avatar"
+                :image-styles="{border: {radius: '6px'}, width: 180, height: 180}"
+              />
+              <!-- #endif -->
+
               <view style="width: 100%; text-align: center; font-size: 12px; color: #ccc;">点击可更换头像</view>
             </view>
           </UniFormsItem>
@@ -185,7 +196,12 @@ export default {
 
   &__popup {
     height: 70vh;
+    /* #ifdef MP */
     width: 98vw;
+    /* #endif */
+    /* #ifdef H5 */
+    width: 100%;
+    /* #endif */
     padding: 0 20px;
 
     &--avatar {
@@ -203,11 +219,25 @@ export default {
       width: 100%;
       border-radius: 6px;
 
+      /* #ifdef H5 */
+      height: 32px;
+      /* #endif */
+
     }
   }
 
   &__logout {
     padding: 20vh 50px 50px;
+    /* #ifdef H5 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ko-basic-button {
+      width: 260px;
+    }
+
+    /* #endif */
   }
 }
 </style>

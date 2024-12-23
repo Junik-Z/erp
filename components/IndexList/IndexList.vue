@@ -8,10 +8,12 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import mixins from "@/mixins/mixins";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
+import ProductCard from "@/components/ProductCard/ProductCard.vue";
 
 export default {
   name: "IndexList",
   components: {
+    ProductCard,
     UvLoadingIcon,
     UniSearchBar,
     UniCol,
@@ -38,6 +40,14 @@ export default {
     value: [String, Array],
     disabled: [Boolean, Array],
     buttonPerm: String,
+
+    safeAreaInsetBottom: {
+      type: Boolean,
+      default: true,
+    },
+
+    // 是否是供应商
+    isSupplier: Boolean,
 
     // 可选的数据列表
     checkedList: [Array],
@@ -68,6 +78,15 @@ export default {
         return {};
       },
     },
+
+    // 2024年12月16日的新功能
+    v20241216: Boolean,
+
+    // 库存盘点
+    isJudge: Boolean,
+
+    // 物流商列表
+    isReceiptList: Boolean
   },
   watch: {
     options: {
@@ -175,6 +194,10 @@ export default {
       this.touchEnd(e);
     },
 
+    onScroll(event) {
+      // console.log(event);
+    },
+
     // #ifdef H5
     IsPC() {
       const userAgentInfo = navigator.userAgent;
@@ -193,6 +216,14 @@ export default {
     onClick(item, event) {
       this.$emit("click", item, event);
     },
+
+    onItemNumberChange(...arg) {
+      this.$emit("number-change", ...arg);
+    },
+
+    onActionClick(...arg) {
+      this.$emit("action-click", ...arg);
+    },
   },
   computed: {
     getKeyList() {
@@ -207,7 +238,6 @@ export default {
         return checked.indexOf(node.value) > -1;
       };
     },
-
     getDisabled() {
       return (node) => {
         if (!_isEmpty(this.checkedList)) {
@@ -231,6 +261,8 @@ export default {
         :scroll-into-view="scrollViewId"
         class="ko-index-list__scroll"
         scroll-y
+        @scroll="onScroll"
+        :class="[{'safe-area-inset-bottom': safeAreaInsetBottom}]"
       >
         <view class="ko-index-list__scroll--wrap" :class="{'is-product': isProduct, 'is-selected': isSelected}">
 
@@ -241,90 +273,146 @@ export default {
           <view class="ko-index-list__not-list" v-if="!loading && !options.length">
             暂无数据数据
           </view>
+          <block v-if="v20241216">
+            <!-- 添加订单的时候显示的产品列表 -->
+            <block v-if="isSelected">
+              <block v-for="(key, idx) in getKeyList" :key="idx">
+                <view
+                  class="ko-index-list__item"
+                  :id="index === 0 ? 'ko-index-list-' + idx : ''"
+                  v-for="(item, index) in getGroupListByKey(key)"
+                  :key="item.id"
+                >
+                  <ProductCard
+                    :node="item"
+                    is-editor
+                    is-list
+                    :selected="selected"
+                    @number-change="onItemNumberChange"
+                    :hide-prices="hidePrices"
+                    :type="extra.type"
+                    :is-judge="isJudge"
+                  />
+                </view>
+              </block>
+            </block>
 
-          <!-- 产品显示 -->
-          <template v-if="isProduct || isSelected">
-            <template v-for="(key, idx) in getKeyList">
+            <!-- 产品列表 -->
+            <block v-else-if="isProduct">
+              <block v-for="(key, idx) in getKeyList" :key="idx">
+                <view
+                  class="ko-index-list__item"
+                  :id="index === 0 ? 'ko-index-list-' + idx : ''"
+                  v-for="(item, index) in getGroupListByKey(key)"
+                  :key="item.id"
+                >
+                  <ProductCard :node="item" is-list :span="24" perm="Product_Write">
+                    <template #footer>
+                      <view class="ko-product__item--footer">
+                        <button
+                          class="ko-basic-button__card action"
+                          @click="onActionClick(item)"
+                        >
+                          <i class="iconfont icon-gengduocaozuo"></i>
+                        </button>
+                      </view>
+                    </template>
+                  </ProductCard>
+                </view>
+              </block>
+            </block>
+
+          </block>
+
+          <block v-else>
+            <!-- 产品显示 -->
+            <block v-if="isProduct || isSelected">
+              <block v-for="(key, idx) in getKeyList" :key="idx">
+                <view
+                  class="ko-index-list__item"
+                  :id="index === 0 ? 'ko-index-list-' + idx : ''"
+                  v-for="(item, index) in getGroupListByKey(key)"
+                  :key="item.id"
+                >
+                  <slot
+                    v-if="$slots.cell"
+                    name="cell"
+                    :node="item"
+                    :selected="selected"
+                    :hide-prices="hidePrices"
+                    :extra="extra"
+                  ></slot>
+                </view>
+              </block>
+            </block>
+
+
+            <!-- 人员 -->
+            <template v-else>
               <view
-                class="ko-index-list__item"
-                :id="index === 0 ? 'ko-index-list-' + idx : ''"
-                v-for="(item, index) in getGroupListByKey(key)"
-                :key="index"
+                class="ko-index-list__wrap"
+                v-for="(key, idx) in getKeyList"
+                :key="idx"
+                :id="'ko-index-list-' + idx"
               >
-                <slot
-                  v-if="$slots.cell"
-                  name="cell"
-                  :node="item"
-                  :selected="selected"
-                  :hide-prices="hidePrices"
-                  :extra="extra"
-                ></slot>
+                <view
+                  class="ko-index-list__item"
+                  v-for="(item, index) in getGroupListByKey(key)"
+                  :key="index"
+                >
+                  <BasicCard no-shadow :spacing="0" style="width: 100%;" @click.stop="onClick(item)">
+                    <view class="ko-user">
+                      <view class="ko-user__wrap">
+                        <view style="margin-right: 10px;" v-if="isChecked">
+                          <checkbox :checked="isSelection(item)" :disabled="getDisabled(item)" />
+                        </view>
+
+                        <UvAvatar
+                          :size="64"
+                          :src="getImageUrl(item.logo)"
+                          mode="aspectFill"
+                          :text="item.label || GET_SHOP_NAME"
+                          random-bg-color
+                        />
+                        <view style="padding-left: 10px; flex: 1;">
+                          <UniRow :gutter="10">
+                            <UniCol :span="24">
+                              <view class="ko-user__name">{{ item.label || "-" }}</view>
+                            </UniCol>
+                            <UniCol :span="24" v-if="item.amount">
+                              <label v-if="isReceiptList" class="ko-basic-label" style="font-size: 14px;">
+                                {{ item.amount > 0 ? "待结账" : "多付" }}：
+                              </label>
+                              <label v-else class="ko-basic-label" style="font-size: 14px;">
+                                {{ item.amount > 0 ? "多付" : isSupplier ? "应付" : "欠款" }}：
+                              </label>
+                              <text class="ko-basic-money" style="font-weight: 500; font-size: 14px">
+                                {{ absYuan(item.amount) }}元
+                              </text>
+                            </UniCol>
+                          </UniRow>
+                          <i v-if="false" class="iconfont icon-shanghuguanli"></i>
+                        </view>
+                      </view>
+                      <view class="ko-user__buttons" v-if="buttonPerm ? isPerm(buttonPerm) : true">
+                        <button
+                          class="ko-basic-button__user"
+                          v-for="(button, dx) of events"
+                          @click.stop="$emit('click-item', button, item)"
+                          :key="dx"
+                        >
+                          {{ button.label }}
+                        </button>
+                        <slot :node="item"></slot>
+                      </view>
+                    </view>
+                  </BasicCard>
+                </view>
+                <!--<UniSection :title="key" type="line"></UniSection>-->
               </view>
             </template>
-          </template>
+          </block>
 
-
-          <!-- 人员 -->
-          <template v-else>
-            <view
-              class="ko-index-list__wrap"
-              v-for="(key, idx) in getKeyList"
-              :key="idx"
-              :id="'ko-index-list-' + idx"
-            >
-              <view
-                class="ko-index-list__item"
-                v-for="(item, index) in getGroupListByKey(key)"
-                :key="index"
-              >
-                <BasicCard no-shadow :spacing="0" style="width: 100%;" @click.stop="onClick(item)">
-                  <view class="ko-user">
-                    <view class="ko-user__wrap">
-                      <view style="margin-right: 10px;" v-if="isChecked">
-                        <checkbox :checked="isSelection(item)" :disabled="getDisabled(item)" />
-                      </view>
-
-                      <UvAvatar
-                        :size="64"
-                        :src="getImageUrl(item.logo)"
-                        mode="aspectFill"
-                        :text="item.label || GET_SHOP_NAME"
-                        random-bg-color
-                      />
-                      <view style="padding-left: 10px; flex: 1;">
-                        <UniRow :gutter="10">
-                          <UniCol :span="24">
-                            <view class="ko-user__name">{{ item.label || "-" }}</view>
-                          </UniCol>
-                          <UniCol :span="24" v-if="(item.amount && item.amount !== 0)">
-                            <label class="ko-basic-label" style="font-size: 14px;">
-                              {{ item.amount > 0 ? "多付" : "欠款" }}：
-                            </label>
-                            <text class="ko-basic-money" style="font-weight: 500; font-size: 14px">
-                              {{ toYuan(item.amount) }}元
-                            </text>
-                          </UniCol>
-                        </UniRow>
-                        <i v-if="false" class="iconfont icon-shanghuguanli"></i>
-                      </view>
-                    </view>
-                    <view class="ko-user__buttons" v-if="buttonPerm ? isPerm(buttonPerm) : true">
-                      <button
-                        class="ko-basic-button__user"
-                        v-for="(button, dx) of events"
-                        @click.stop="$emit('click-item', button, item)"
-                        :key="dx"
-                      >
-                        {{ button.label }}
-                      </button>
-                      <slot :node="item"></slot>
-                    </view>
-                  </view>
-                </BasicCard>
-              </view>
-              <!--<UniSection :title="key" type="line"></UniSection>-->
-            </view>
-          </template>
         </view>
       </scroll-view>
       <view class="ko-index-list__menu">
@@ -386,7 +474,10 @@ export default {
 
   &__scroll {
     flex: 1;
-    padding-bottom: env(safe-area-inset-bottom);
+
+    &.safe-area-inset-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
 
     &--wrap {
       padding-bottom: 100px;
@@ -394,7 +485,9 @@ export default {
       &.is-product, &.is-selected {
         display: flex;
         flex-wrap: wrap;
+        // #ifdef MP
         width: 100vw;
+        // #endif
         padding: 5px 5px 100px;
 
         .ko-index-list__item {
@@ -500,6 +593,22 @@ export default {
     align-items: center;
   }
 }
+
+
+.ko-product__item--footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  .action {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
 
 .ko-user {
   &__wrap {

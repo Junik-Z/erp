@@ -1,7 +1,7 @@
 <script>
 import Basic from "@/mixins/mixins";
 import { getBusinessesUserListApi, setBusinessUserRoleApi } from "@/api/admin";
-import { _deepCopy, _omit } from "@/utils";
+import { _deepCopy, _get, _omit } from "@/utils";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
@@ -28,17 +28,74 @@ export default {
     UniSearchBar, UniCol, UniRow, UniListItem, LoadMore, BasicCard, UniList,
   },
   mixins: [Basic],
-  data: () => ({
-    list: [],
-    option: {},
-    loading: false,
+  data() {
+    const _this = this;
+    return {
+      list: [],
+      option: {},
+      loading: false,
 
-    visible: false,
+      visible: false,
 
-    form: {},
-    rules: {},
-    sLoading: false,
-  }),
+      form: {},
+      rules: {},
+      sLoading: false,
+
+      // #ifdef H5
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 55,
+        },
+        {
+          label: "头像",
+          prop: "avatar",
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: _this.getImageUrl(_get(row, "avatar")),
+                  size: 64,
+                  text: _get(row, "nickName"),
+                  shape: "square",
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "名称",
+          prop: "nickName",
+        },
+        {
+          label: "用户状态",
+          prop: "userStatus",
+          render: (h, {row}) => {
+            return h("div", [_this.USER_SUS_ENUMS(row.userStatus)]);
+          },
+        },
+        {
+          label: "创建日期",
+          prop: "createTime",
+        },
+        {
+          label: "是否为商户",
+          prop: "role",
+          render: (h, {row}) => {
+            return h("div", [_this.isBusiness(row.role) ? "是" : "否"]);
+          },
+        },
+        {
+          label: "操作",
+          slot: "operate",
+        },
+      ],
+      // #endif
+    };
+  },
   onLoad(option) {
     this.option = {...this.option, ...option};
     this.getList();
@@ -91,8 +148,10 @@ export default {
       placeholder="请输入员工名称"
       v-model="option.nickName"
       @confirm="getList()"
+      @cancel="getList()"
     />
 
+    <!-- #ifdef MP -->
     <UniList>
       <UniListItem v-for="(item, index) of list" :key="index">
         <template #body>
@@ -123,7 +182,7 @@ export default {
                     <UniCol :span="24">
                       <view class="ko-member__item--info--name">
                         <label class="ko-basic-label">状态：</label>
-                        {{ USER_SUS_ENUMS(item.role) }}
+                        {{ USER_SUS_ENUMS(item.userStatus) }}
                       </view>
                     </UniCol>
                   </UniRow>
@@ -147,6 +206,32 @@ export default {
 
       <LoadMore :loading="loading" />
     </UniList>
+    <!-- #endif -->
+
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+      >
+        <template #operate="{item}">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="setUserRole(item)"
+              :loading="item.__loading__"
+              :disabled="item.__loading__"
+            >
+              设为商户
+            </button>
+          </view>
+        </template>
+      </KoTable>
+    </view>
+    <!-- #endif -->
 
     <BasicPopup :visible.sync="visible">
       <view class="ko-member__popup">
@@ -199,6 +284,10 @@ export default {
 
 <style scoped lang="scss">
 .ko-member {
+  // #ifdef MP
+  padding-bottom: 50px;
+  // #endif
+
   .iconfont.icon-shanghuguanli {
     position: absolute;
     top: 10px;
@@ -226,7 +315,9 @@ export default {
   }
 
   &__popup {
+    // #ifdef MP
     width: 90vw;
+    // #endif
     padding: 16px;
     background: #fff;
     border-radius: 8px;

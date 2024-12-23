@@ -59,7 +59,7 @@ export default {
 
 <template>
   <view class="ko-purchase">
-    <view style="padding: 10px;">
+    <view class="ko-purchase__tabs">
       <UniSegmentedControl :values="tabList" label-key="label" :current="current" @clickItem="onTab" />
     </view>
 
@@ -74,5 +74,13 @@ export default {
 <style scoped lang="scss">
 .ko-purchase {
   width: 100%;
+
+  &__tabs {
+    padding: 10px;
+
+    /* #ifdef H5 */
+    width: 300px;
+    /* #endif */
+  }
 }
 </style>

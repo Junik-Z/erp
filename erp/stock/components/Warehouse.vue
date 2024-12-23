@@ -230,6 +230,12 @@ export default {
           <template #operate="{item}" v-if="isPerm('Stock_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
+                class="ko-basic-button__card"
+                @click.stop="onJumpPrint(item, 'inbound')"
+              >
+                打印单据
+              </button>
+              <button
                 v-if="['CREATED'].includes(item.status)"
                 class="ko-basic-button__card"
                 @click.stop="onCancel(item)"

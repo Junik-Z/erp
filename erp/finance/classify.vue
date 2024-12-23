@@ -11,9 +11,9 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import { addedCategoryApi, getCategoryListApi, removeCategoryApi, updateCategoryApi } from "@/api/erp/finance";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-import { _deepCopy, _get, _isEqual } from "@/utils";
+import { _deepCopy, _get } from "@/utils";
+import { FINANCE_CLASSIFY_FIXED_ID } from "@/utils/config";
 
 export default {
   name: "classify",
@@ -34,6 +34,7 @@ export default {
   data() {
     const _this = this;
     return {
+      FINANCE_CLASSIFY_FIXED_ID,
       visible: false,
       loading: false,
       list: [],
@@ -64,52 +65,8 @@ export default {
           width: 80,
         },
         {
-          label: "客户Logo",
-          prop: "logo",
-          width: 100,
-          render: (h, {row}) => {
-            return h(
-              "div",
-              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-              [h(UvAvatar, {props: {src: _this.getImageUrl(row.logo), size: 64}})],
-            );
-          },
-        },
-        {
-          label: "昵称",
+          label: "类型名称",
           prop: "name",
-        },
-        {
-          label: "联系电话",
-          prop: "phone",
-        },
-        {
-          label: "地址",
-          prop: "address",
-        },
-        {
-          label: "发票抬头",
-          prop: "invoiceTitle",
-        },
-        {
-          label: "纳税人识别号",
-          prop: "taxNumber",
-        },
-        {
-          label: "开票类型",
-          prop: "invoiceType",
-        },
-        {
-          label: "税率",
-          prop: "taxRate",
-        },
-        {
-          label: "开户行",
-          prop: "bank",
-        },
-        {
-          label: "银行账号",
-          prop: "bankAccount",
         },
         {
           label: "备注",
@@ -118,29 +75,7 @@ export default {
         {
           label: "操作",
           width: 260,
-          render(h, {row}) {
-            return h("div", [
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onUnbind.bind(_this, row)},
-                },
-                "解绑微信",
-              ),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onJump.bind(_this, row)},
-                }
-                , "修改"),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onRemove.bind(_this, row)},
-                }
-                , "删除"),
-            ]);
-          },
+          slot: "operate",
         },
       ],
       // #endif
@@ -211,21 +146,17 @@ export default {
       const node = _deepCopy(row);
       this.isEdit = true;
       this.visible = true;
+
       this.$nextTick(() => {
-        this.$refs.FormRef.clearValidate();
+        this.$refs?.FormRef?.clearValidate?.();
+
         this.form = {...node};
+        console.log(node);
       });
 
     },
   },
-
-  computed: {
-    // #ifdef H5
-    getColumns() {
-      return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
-    },
-    // #endif
-  },
+  computed: {},
 };
 </script>
 
@@ -244,7 +175,10 @@ export default {
                   <text>{{ item.description }}</text>
                 </UniCol>
               </UniRow>
-              <view style="display: flex; align-items: center; justify-content: flex-end;">
+              <view
+                style="display: flex; align-items: center; justify-content: flex-end;"
+                v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
+              >
                 <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
                 <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
               </view>
@@ -259,11 +193,21 @@ export default {
       <view style="padding: 10px;">
         <KoTable
           :loading="loading"
-          :columns="getColumns"
+          :columns="columns"
           :data="list"
           empty-text="暂无数据"
           stripe
-        />
+        >
+          <template #operate="{item}">
+            <view
+              v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
+              style="display: flex; align-items: center; justify-content: center;"
+            >
+              <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
+              <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+            </view>
+          </template>
+        </KoTable>
       </view>
       <!-- #endif -->
     </UniList>
@@ -271,7 +215,7 @@ export default {
     <UniFab
       horizontal="right"
       direction="vertical"
-      @fabClick="onAdded()"
+      @fab-click="onAdded()"
     />
 
     <BasicPopup :visible.sync="visible">
@@ -289,7 +233,6 @@ export default {
         <button class="ko-basic-button" style="margin: 0 40px 10px;" @click.stop="onSubmit()">保存</button>
       </template>
     </BasicPopup>
-
   </view>
 </template>
 
@@ -322,12 +265,22 @@ export default {
     }
   }
 
+  /* #ifdef H5 */
   &__popup {
+    width: 100%;
+  }
+
+  /* #endif */
+
+  &__popup {
+    /* #ifdef MP */
     width: 90vw;
+    /* #endif */
     padding: 16px;
     background: #fff;
     border-radius: 8px;
   }
+
 
   .ko-basic-button__card {
     margin: 5px;

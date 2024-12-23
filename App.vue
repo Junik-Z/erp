@@ -20,7 +20,7 @@ export default {
     uni.setStorageSync("__APP_QUERY__", query);
 
     if (query?.scene) {
-      const arr = query.scene?.split("&") || [];
+      const arr = decodeURIComponent(query.scene)?.split("&") || [];
       uni.setStorageSync("__APP_SCENE__", arr[0]);
     }
 

@@ -1,5 +1,4 @@
 <script>
-import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -33,7 +32,6 @@ export default {
     UniCol,
     UniRow,
     UniList,
-    QiunDataCharts,
     UvCountTo,
   },
   mixins: [mixins],
@@ -101,17 +99,29 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "客户",
+          label: "时间",
+          prop: "createTime",
+          width: 180,
+        },
+        {
+          label: "客户/供应商",
           prop: "customer",
           children: [
             {
               label: "Logo",
               prop: "customer.logo",
+              width: 80,
               render: (h, {row}) => {
                 return h(
                   "div",
                   {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "customer.logo")), size: 64}})],
+                  [h(UvAvatar, {
+                    props: {
+                      src: _this.getImageUrl(_get(row, "customer.logo")),
+                      size: 64,
+                      text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
+                    },
+                  })],
                 );
               },
             },
@@ -122,10 +132,41 @@ export default {
           ],
         },
         {
-          label: "总金额(元)",
+          label: "下单用户",
+          prop: "customer",
+          children: [
+            {
+              label: "头像",
+              prop: "user.avatar",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 64}})],
+                );
+              },
+            },
+            {
+              label: "昵称",
+              prop: "user.nickName",
+            },
+          ],
+        },
+        {
+          label: "金额(元)",
           prop: "totalAmount",
           render: (h, {row}) => {
             return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
+          },
+        },
+
+        {
+          label: "状态",
+          width: 80,
+          prop: "status",
+          render: (h, {row}) => {
+            return h("div", [_this.FINANCE_ORDER_STATUS_ENUMS(row.status)]);
           },
         },
         {
@@ -135,23 +176,7 @@ export default {
         {
           label: "操作",
           width: 260,
-          render(h, {row}) {
-            return h("div", [
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onCancelOrder.bind(_this, row)},
-                },
-                "取消",
-              ),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onJump.bind(_this, row)},
-                }
-                , "修改"),
-            ]);
-          },
+          slot: "operate",
         },
       ],
       // #endif
@@ -248,11 +273,6 @@ export default {
         return item.unit === "元" ? this.toYuan(value) : value;
       };
     },
-    // #ifdef H5
-    getColumns() {
-      return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
-    },
-    // #endif
   },
 };
 </script>
@@ -289,11 +309,12 @@ export default {
             <OrderCard
               @click="onJumpDetails(item, 'receivable')"
               :item="item"
+              is-finance
             >
               <template #operate>
                 <view
                   v-if="isPerm('Finance_Write') && !isHistory"
-                  style="display: flex; align-items: center; justify-content: center; padding-top: 8px;"
+                  style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
                 >
                   <button
                     v-if="item.confirmable"
@@ -320,11 +341,33 @@ export default {
         <view style="padding: 10px;">
           <KoTable
             :loading="loading"
-            :columns="getColumns"
+            :columns="columns"
             :data="list"
             empty-text="暂无数据"
             stripe
-          />
+            @row-click="onJumpDetails($event, 'receivable')"
+          >
+            <template #operate="{item}">
+              <view
+                v-if="isPerm('Finance_Write') && !isHistory"
+                style="display: flex; align-items: center; justify-content: center;"
+              >
+                <button
+                  v-if="item.confirmable"
+                  class="ko-basic-button__card"
+                  @click.stop="onConfirm(item)"
+                >
+                  订单确认
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onAddedTicket(item)"
+                >
+                  添加单据
+                </button>
+              </view>
+            </template>
+          </KoTable>
         </view>
         <!-- #endif -->
       </UniList>

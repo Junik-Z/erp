@@ -16,17 +16,19 @@ import {
 } from "@/api/erp/produce";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
-import { _isEqual } from "@/utils";
+import { _deepCopy, _isEqual } from "@/utils";
+import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 
 export default {
   name: "ClientList",
-  components: {LoadMore, HistoryBar, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList},
+  components: {UvActionSheet, LoadMore, HistoryBar, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList},
   data() {
     const _this = this;
     return {
       isHistory: false,
       list: [],
       loading: false,
+      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -43,27 +45,6 @@ export default {
           label: "计划完成时间",
           prop: "planFinishDate",
         },
-        /*  {
-           label: "原材料价格(元)",
-           prop: "totalRawMaterialAmount",
-           render: (h, {row}) => {
-             return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalRawMaterialAmount)}`);
-           },
-         },
-         {
-           label: "产品总价(元)",
-           prop: "totalProductAmount",
-           render: (h, {row}) => {
-             return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalProductAmount)}`);
-           },
-         },
-         {
-           label: "创造价值(元)",
-           prop: "totalAmount",
-           render: (h, {row}) => {
-             return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
-           },
-         }, */
         {
           label: "状态",
           prop: "status",
@@ -77,53 +58,8 @@ export default {
         },
         {
           label: "操作",
-          width: 260,
-          render(h, {row}) {
-
-            const button = [];
-
-            if (["CREATED"].includes(row.status)) {
-              button.push(
-                h("button",
-                  {
-                    class: "ko-basic-button__card",
-                    attrs: {
-                      disabled: _this.isHistory,
-                    },
-                    on: {click: _this.onDischarging.bind(_this, row)},
-                  },
-                  "申请出料",
-                ),
-                h("button",
-                  {
-                    class: "ko-basic-button__card",
-                    attrs: {
-                      disabled: _this.isHistory,
-                    },
-                    on: {click: _this.onCancel.bind(_this, row)},
-                  }
-                  ,
-                  "取消工单",
-                ),
-              );
-            }
-
-            if (["APPLY_MATERIAL"].includes(row.status)) {
-              button.push(h("button",
-                {
-                  class: "ko-basic-button__card",
-                  attrs: {
-                    disabled: _this.isHistory,
-                  },
-                  on: {click: _this.onFinish.bind(_this, row)},
-                }
-                ,
-                "完成生产",
-              ));
-            }
-
-            return h("div", button);
-          },
+          slot: "operate",
+          width: 380,
         },
       ],
       // #endif
@@ -230,6 +166,15 @@ export default {
         },
       });
     },
+
+    onActionClick(item) {
+      this.actionItem = item;
+      this.$refs.UASRef.open();
+    },
+    // 处理调用底部弹出的按钮
+    onSelect(item) {
+      this[item.func](_deepCopy(this.actionItem));
+    },
   },
   computed: {
     // #ifdef H5
@@ -237,6 +182,29 @@ export default {
       return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
     },
     // #endif
+
+    actionList() {
+      const node = this.actionItem;
+      return [
+        {
+          name: "取消工单",
+          func: "onCancel",
+          status: ["CREATED"],
+        },
+        {
+          name: "编辑",
+          func: "onJump",
+          status: ["CREATED", "CANCELLED"],
+        },
+        {
+          name: "删除",
+          color: "#e43d33",
+          func: "onRemove",
+          status: ["CANCELLED", "CREATED"],
+        },
+      ]
+        .filter(li => li.status.includes(node.status));
+    },
   },
 };
 </script>
@@ -290,15 +258,7 @@ export default {
                 >
                   申请出料
                 </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['CREATED'].includes(item.status)"
-                  @click.stop="onCancel(item)"
-                  :loading="item.__cancel_loading__"
-                  :disabled="item.__cancel_loading__"
-                >
-                  取消工单
-                </button>
+
                 <button
                   class="ko-basic-button__card"
                   v-if="['APPLY_MATERIAL'].includes(item.status)"
@@ -308,22 +268,43 @@ export default {
                 >
                   完成生产
                 </button>
+
                 <button
                   class="ko-basic-button__card"
-                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                  @click.stop="onJump(item)"
+                  @click.stop="onActionClick(item)"
+                  style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
+                  v-if='["CREATED", "CANCELLED"].includes(item.status)'
                 >
-                  修改
+                  <i class="iconfont icon-gengduocaozuo"></i>
                 </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                  @click.stop="onRemove(item)"
-                  :loading="item.__r_loading__"
-                  :disabled="item.__r_loading__"
-                >
-                  删除
-                </button>
+
+                <template v-if="false">
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['CREATED'].includes(item.status)"
+                    @click.stop="onCancel(item)"
+                    :loading="item.__cancel_loading__"
+                    :disabled="item.__cancel_loading__"
+                  >
+                    取消工单
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                    @click.stop="onJump(item)"
+                  >
+                    修改
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                    @click.stop="onRemove(item)"
+                    :loading="item.__r_loading__"
+                    :disabled="item.__r_loading__"
+                  >
+                    删除
+                  </button>
+                </template>
               </view>
             </view>
           </BasicCard>
@@ -340,7 +321,56 @@ export default {
           :data="list"
           empty-text="暂无数据"
           stripe
-        />
+          @row-click="onJumpDetails($event, 'produce')"
+        >
+          <template #operate="{item}" v-if="isPerm('Produce_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED'].includes(item.status)"
+                @click.stop="onDischarging(item)"
+                :loading="item.__discharging_loading__"
+                :disabled="item.__discharging_loading__"
+              >
+                申请出料
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['APPLY_MATERIAL'].includes(item.status)"
+                @click.stop="onFinish(item)"
+                :loading="item.__finish_loading__"
+                :disabled="item.__finish_loading__"
+              >
+                完成生产
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED'].includes(item.status)"
+                @click.stop="onCancel(item)"
+                :loading="item.__cancel_loading__"
+                :disabled="item.__cancel_loading__"
+              >
+                取消工单
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                @click.stop="onJump(item)"
+              >
+                修改
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                @click.stop="onRemove(item)"
+                :loading="item.__r_loading__"
+                :disabled="item.__r_loading__"
+              >
+                删除
+              </button>
+            </view>
+          </template>
+        </KoTable>
       </view>
       <!-- #endif -->
     </UniList>
@@ -358,6 +388,17 @@ export default {
       direction="vertical"
       @fab-click="onJump()"
     />
+
+    <!-- #ifdef MP -->
+    <UvActionSheet
+      ref="UASRef"
+      :actions="actionList"
+      safe-area-inset-bottom
+      round="10"
+      cancel-text="取消"
+      @select="onSelect"
+    />
+    <!-- #endif -->
   </view>
 </template>
 

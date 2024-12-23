@@ -67,13 +67,18 @@ export function getAllRect(selector, VM = this) {
 // 分转元
 export function transferYuan(points = 0) {
   const p = points / 100;
-  return _round(Math.abs(isNaN(p) ? points : p), 2);
+  return _round(isNaN(p) ? points : p, 2);
+}
+
+// 分转元
+export function absYuan(points = 0) {
+  return Math.abs(transferYuan(isNaN(points) ? 0 : points));
 }
 
 // 元转分
 export function yuanToPoints(yuan = 0) {
   const y = yuan * 100;
-  return isNaN(y) ? yuan : y;
+  return isNaN(y) ? yuan : _round(y, 0);
 }
 
 // 分钟转秒钟

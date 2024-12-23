@@ -1,5 +1,7 @@
 <script>
 import { _get, _isEmpty, _set } from "@/utils";
+import { Col, Row } from "@/uni_modules/element-ui/element.min";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "PrintTable",
@@ -24,7 +26,9 @@ export default {
         return this.render(h, params);
       },
     },
+    Col, Row,
   },
+  mixins: [mixins],
   props: {
     columns: {
       type: Array,
@@ -45,6 +49,13 @@ export default {
       },
     },
     isSummary: Boolean,
+    isFees: Boolean,
+    feesList: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
   },
 
   methods: {
@@ -53,6 +64,7 @@ export default {
     getListSize() {
       const Table = this.$refs.TableRef;
       let list = {};
+
       Table.querySelectorAll("tr")
         .forEach(tr => {
           const obj = {
@@ -70,14 +82,14 @@ export default {
 </script>
 
 <template>
-  <table border class="ko-print-table" ref="TableRef">
+  <table class="ko-print-table" ref="TableRef">
     <colgroup>
       <col :width="column.width || 'auto'" v-for="(column, index) of columns" :key="index" />
     </colgroup>
 
     <thead>
-    <tr v-if="$slots.thead">
-      <th :colspan="columns.length">
+    <tr v-if="$slots.thead" data-type="slotThead">
+      <th :colspan="columns.length" style="position: relative;">
         <slot name="thead"></slot>
       </th>
     </tr>
@@ -90,8 +102,9 @@ export default {
     </tr>
     </thead>
 
+
     <tbody>
-    <tr v-for="(item, index) of data" :key="index" :data-type="item.id" :data-id="item.id">
+    <tr v-for="(item, index) of data" :key="`tr-td-${index}--${item.id}`" :data-type="item.id" :data-id="item.id">
       <td v-for="(column, cIndex) of columns" :key="cIndex">
         <div class="ko-print-table__cell">
           <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
@@ -103,14 +116,30 @@ export default {
     </tr>
 
     <tr v-if="isSummary && !_isEmpty(summary)" data-type="tfoot">
-      <td :style="item.style || {}" :colspan="item.colspan || 1" v-for="(item, index) of summary" :key="index">
+      <td
+        :style="item.style || {}"
+        :colspan="item.colspan || 1"
+        v-for="(item, index) of summary"
+        :key="'summary' + index"
+      >
         <div class="ko-print-table__cell">
           {{ item.label }}
         </div>
       </td>
     </tr>
 
-    <tr v-if="!(data || []).length">
+    <tr v-if="isFees" data-type="fees" class="ko-foot__tr">
+      <td :colspan="(columns || []).length">
+        <div class="ko-foot">
+          <div class="ko-foot__item" v-for="(item) of feesList" :key="item.label">
+            <label>{{ item.label }}:</label>
+            <span>{{ toYuan(item.value) }}元</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <tr v-if="!(data || []).length && false">
       <td :colspan="(columns || []).length">
         <div class="ko-print-table__cell not-data">
           暂无数据
@@ -120,7 +149,7 @@ export default {
     </tbody>
 
     <tfoot>
-    <tr v-if="$slots.tfoot">
+    <tr v-if="$slots.tfoot" data-type="slotTFoot">
       <td :colspan="columns.length">
         <slot name="tfoot"></slot>
       </td>
@@ -129,35 +158,94 @@ export default {
   </table>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
+/*@media print {
+  body {
+    //@include print-style();
+  }
+
+  tbody {
+    //page-break-before: always;
+    //@include print-style();
+  }
+
+  tr {
+    td, th {
+      //@include print-style();
+    }
+  }
+
+  @page {
+    color: #000;
+    //size: 126mm 140mm;
+    //margin: 10mm; !* 可以根据需要设置边距 *!
+  }
+}*/
+
 .ko-print-table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid #8f939c;
-  font-size: 12px;
+  @include print-style();
+  border-left: 1px solid #000;
+  border-top: 1px solid #000;
 
   &__cell {
     min-height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
+    @include print-style();
 
     &.not-data {
       color: #c7c9ce;
+      //color: #000;
     }
   }
 
   tr {
-    th {
-      font-size: 14px;
-    }
-
     th, td {
       text-align: center;
+      @include print-style();
+      border-bottom: 1px solid #000;
+      border-right: 1px solid #000;
     }
 
     td {
       min-height: 23px;
+    }
+  }
+
+  .ko-foot {
+    min-height: 23px;
+    display: flex;
+    align-items: center;
+    padding: 8px 10px 0;
+    justify-content: space-between;
+
+    &__tr {
+      border-bottom: none !important;
+
+      td {
+        border-bottom: none !important;
+      }
+    }
+
+    &__item {
+      flex: 1;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      @include print-style();
+
+      span {
+        white-space: nowrap;
+        text-align: center;
+        border-bottom: 1px solid #000;
+        max-width: 100px;
+        min-width: 80px;
+      }
     }
   }
 }

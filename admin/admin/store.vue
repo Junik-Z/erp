@@ -47,7 +47,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-store">
+  <view class="ko-store ko-basic-added-form">
     <UniForms label-width="100" label-align="right">
       <UniSection title="功能设置" type="line">
         <view style="padding-left: 20px;">
@@ -80,7 +80,7 @@ export default {
       </UniSection>
     </UniForms>
 
-    <view style="padding: 50px;">
+    <view class="ko-store__footer">
       <button
         class="ko-basic-button"
         @click="onSubmit"
@@ -95,7 +95,20 @@ export default {
 
 <style scoped lang="scss">
 .ko-store {
-  width: 100%;
   padding: 20px 10px;
+
+  &__footer {
+    padding: 50px;
+    /* #ifdef H5 */
+    display: flex;
+    justify-content: center;
+
+    .ko-basic-button {
+      width: 260px;
+    }
+
+    /* #endif */
+  }
+
 }
 </style>

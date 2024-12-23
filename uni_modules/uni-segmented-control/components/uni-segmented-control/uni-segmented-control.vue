@@ -1,27 +1,34 @@
 <template>
-  <view :class="[styleType === 'text'?'segmented-control--text' : 'segmented-control--button' ]"
-        :style="{ borderColor: styleType === 'text' ? '' : activeColor }" class="segmented-control">
-    <view
-      v-for="(item, index) in values"
-      :class="[styleType === 'text' ? '' : 'segmented-control__item--button',
+  <view
+    :class="[styleType === 'text'?'segmented-control--text' : 'segmented-control--button' ]"
+    :style="{ borderColor: styleType === 'text' ? '' : activeColor }"
+    class="segmented-control"
+  >
+    <scroll-view scroll-x style="width: 100%;">
+      <view class="segmented-control__wrap">
+        <view
+          v-for="(item, index) in values"
+          :class="[styleType === 'text' ? '' : 'segmented-control__item--button',
 					index === 0 && styleType === 'button' ? 'segmented-control__item--button--first' : '',
 					index === values.length - 1 && styleType === 'button' ? 'segmented-control__item--button--last':'']"
-      :key="index"
-      :style="{backgroundColor: index === currentIndex && styleType === 'button' ? activeColor : styleType === 'button' ?inActiveColor:'transparent', borderColor: index === currentIndex && styleType === 'text' || styleType === 'button' ? activeColor : inActiveColor}"
-      class="segmented-control__item"
-      @click="_onClick(index)"
-    >
-      <view>
-        <text
-          :style="{color:index === currentIndex? styleType === 'text'? activeColor: '#fff': styleType === 'text'? '#000': activeColor}"
-          class="segmented-control__text"
-          :class="styleType === 'text' && index === currentIndex ? 'segmented-control__item--text': ''"
+          :key="index"
+          :style="{backgroundColor: index === currentIndex && styleType === 'button' ? activeColor : styleType === 'button' ?inActiveColor:'transparent', borderColor: index === currentIndex && styleType === 'text' || styleType === 'button' ? activeColor : inActiveColor}"
+          class="segmented-control__item"
+          @click="_onClick(index)"
         >
-          {{ labelKey ? item[labelKey] : item }}
-        </text>
-      </view>
+          <view>
+            <text
+              :style="{color:index === currentIndex? styleType === 'text'? activeColor: '#fff': styleType === 'text'? '#000': activeColor}"
+              class="segmented-control__text"
+              :class="styleType === 'text' && index === currentIndex ? 'segmented-control__item--text': ''"
+            >
+              {{ labelKey ? item[labelKey] : item }}
+            </text>
+          </view>
 
-    </view>
+        </view>
+      </view>
+    </scroll-view>
   </view>
 </template>
 
@@ -103,15 +110,24 @@ export default {
 <style lang="scss" scoped>
 .segmented-control {
   /* #ifndef APP-NVUE */
-  display: flex;
+  //display: flex;
   box-sizing: border-box;
   /* #endif */
-  flex-direction: row;
+
+  //flex-direction: row;
   height: 36px;
   overflow: hidden;
+
   /* #ifdef H5 */
   cursor: pointer;
   /* #endif */
+
+  &__wrap {
+    min-width: 100%;
+    display: flex;
+    height: 36px;
+    flex-wrap: nowrap;
+  }
 }
 
 .segmented-control__item {
@@ -123,6 +139,8 @@ export default {
   flex: 1;
   justify-content: center;
   align-items: center;
+  flex-wrap: nowrap;
+  padding: 0 10px;
 }
 
 .segmented-control__item--button {
@@ -154,5 +172,6 @@ export default {
   font-size: 14px;
   line-height: 20px;
   text-align: center;
+  white-space: nowrap;
 }
 </style>

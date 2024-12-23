@@ -14,12 +14,13 @@ export default {
   },
   async onLoad(option) {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
-
-    uni.$__FIELD_LIST__ = []
+    uni.$__FIELD_LIST__ = [];
 
     if (this.option?.scene) {
+      const params = this.option;
+      params.scene = decodeURIComponent(params.scene).split("&")[0];
       // uni.setStorageSync("__APP_SCENE__", this.option?.scene);
-      await this.onLogout(this.option, false, true);
+      await this.onLogout(params, false, true);
     }
     console.log("home.vue", option, this.option);
 

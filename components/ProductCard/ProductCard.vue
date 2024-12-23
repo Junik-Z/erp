@@ -50,7 +50,10 @@ export default {
     isVerification: Boolean,
 
     // 选择类型 purchase: 采购；sale: 销售
-    type: String,
+    type: [String, Object, Array],
+
+    // 库存判断
+    isJudge: Boolean,
   },
   data() {
     return {
@@ -263,6 +266,40 @@ export default {
           </template>
         </template>
 
+        <template v-else-if="isJudge">
+          <UniCol :span="24" v-for="field of FieldList" :key="field.id" v-if="false">
+            <view class="ko-product-card__item">
+              <label class="ko-basic-label">{{ field.fieldName }}：</label>
+              <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
+            </view>
+          </UniCol>
+
+          <UniCol :span="24">
+            <view class="ko-product-card__item">
+              <label class="ko-basic-label">库存预警数量：</label>
+              <text class="ko-basic-money">{{ node.stockWarning || 0 }}</text>
+            </view>
+          </UniCol>
+
+
+          <UniCol :span="24">
+            <view class="ko-product-card__item" style="display: block;">
+              <label class="ko-basic-label">库存数量：</label>
+
+              <view style="padding-top: 8px;">
+                <UniNumberBox
+                  :max="9999999"
+                  width="60"
+                  :value="getSelectNumber(node)"
+                  type="digit"
+                  color="#e43d33"
+                  @change="onItemNumberChange(node, $event)"
+                />
+              </view>
+            </view>
+          </UniCol>
+        </template>
+
         <template v-else-if="isEditor">
           <UniCol :span="24" v-for="field of FieldList" :key="field.id">
             <view class="ko-product-card__item">
@@ -279,6 +316,7 @@ export default {
               :max="9999999"
               width="50"
               :value="getSelectNumber(node)"
+              type="digit"
               @change="onItemNumberChange(node, $event)"
             />
           </UniCol>

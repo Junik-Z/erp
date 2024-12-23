@@ -11,7 +11,7 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import Basic from "@/mixins/mixins";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy } from "@/utils";
+import { _deepCopy, _get } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -34,57 +34,101 @@ export default {
     UniListItem,
     UniList,
   },
-  data: () => ({
-    pattern: {
-      color: "#7A7E83",
-      backgroundColor: "#fff",
-      selectedColor: "#007AFF",
-      buttonColor: "#007AFF",
-      iconColor: "#fff",
-    },
-    loading: false,
-    list: [],
-
-    visible: false,
-    rules: {
-      name: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入商户名称",
-          },
-          {
-            required: true,
-            format: "string",
-            validateFunction(r, v, d, c) {
-              const regex = /^[a-z]{5,20}$/;
-              if (!regex.test(v)) {
-                return c("商户名称必须是全小英文字母，不得少于5个字符、大于20个字符");
-              }
-              return true;
-            },
-          },
-        ],
-        validateTrigger: "submit",
+  data() {
+    return {
+      pattern: {
+        color: "#7A7E83",
+        backgroundColor: "#fff",
+        selectedColor: "#007AFF",
+        buttonColor: "#007AFF",
+        iconColor: "#fff",
       },
-    },
-    form: {
-      name: "",
-      logo: "",
-      remark: "",
-    },
+      loading: false,
+      list: [],
 
-    sLoading: false,
+      visible: false,
+      rules: {
+        name: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入商户名称",
+            },
+            {
+              required: true,
+              format: "string",
+              validateFunction(r, v, d, c) {
+                const regex = /^[a-z]{5,20}$/;
+                if (!regex.test(v)) {
+                  return c("商户名称必须是全小英文字母，不得少于5个字符、大于20个字符");
+                }
+                return true;
+              },
+            },
+          ],
+          validateTrigger: "submit",
+        },
+      },
+      form: {
+        name: "",
+        logo: "",
+        remark: "",
+      },
 
-    showCode: false,
+      sLoading: false,
 
-    qrCode: "",
-  }),
+      showCode: false,
+
+      qrCode: "",
+
+      // #ifdef H5
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 55,
+        },
+        {
+          label: "商户Logo",
+          prop: "logo",
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: this.getImageUrl(_get(row, "logo")),
+                  size: 64,
+                  text: _get(row, "name"),
+                  shape: "square",
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "商户名称",
+          prop: "name",
+        },
+        {
+          label: "备注",
+          prop: "remark",
+        },
+        {
+          label: "操作",
+          slot: "operate",
+        },
+      ],
+      // #endif
+    };
+  },
   onShow() {
   },
   onLoad() {
     this.getList();
+    // #ifdef MP
     this.$refs.FormRef.setRules(this.rules);
+    // #endif
   },
   methods: {
     getList() {
@@ -148,6 +192,7 @@ export default {
 
 <template>
   <view class="ko-admin">
+    <!-- #ifdef MP -->
     <UniList>
       <UniListItem v-for="item of list" :key="item.id">
         <template #body>
@@ -173,7 +218,7 @@ export default {
                     <UniCol :span="24">
                       <view>
                         <label class="ko-basic-label">备注：</label>
-                        {{ item.remark || '-' }}
+                        {{ item.remark || "-" }}
                       </view>
                     </UniCol>
                   </UniRow>
@@ -197,6 +242,33 @@ export default {
 
       <LoadMore :loading="loading" />
     </UniList>
+    <!-- #endif -->
+
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onJump"
+      >
+        <template #operate="{item}">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="generateCode(item)"
+              :loading="item.__qrcode_loading__"
+              :disabled="item.__qrcode_loading__"
+            >
+              查看商户码
+            </button>
+          </view>
+        </template>
+      </KoTable>
+    </view>
+    <!-- #endif -->
 
     <UniFab
       ref="FabRef"
@@ -214,11 +286,11 @@ export default {
           :rules="rules"
           :model="form"
         >
-          <UniFormsItem name="logo" label-width="0">
+          <UniFormsItem name="logo" label="Logo：">
             <view style="width: 100%; display: flex; justify-content: center; align-items: center;">
               <FilePicker
                 v-model="form.logo"
-                :image-styles="{border: {radius: '50%'}, width: 180, height: 180}"
+                :image-styles="{border: {radius: '6px'}, width: 180, height: 180}"
               />
             </view>
           </UniFormsItem>
@@ -279,6 +351,10 @@ export default {
 
 <style scoped lang="scss">
 .ko-admin {
+  // #ifdef MP
+  padding-bottom: 80px;
+  // #endif
+
   &__item {
     &--info {
       display: flex;
@@ -299,14 +375,18 @@ export default {
   }
 
   &__popup {
+    // #ifdef MP
     width: 98vw;
+    // #endif
     padding: 16px;
     background: #fff;
     border-radius: 8px;
 
     &--qrcode {
+      // #ifdef MP
       width: calc(98vw - 16px * 2);
       height: calc(98vw - 16px * 2);
+      // #endif
       margin-bottom: 10px;
 
       &--image {
@@ -315,5 +395,18 @@ export default {
       }
     }
   }
+
+  // #ifdef H5
+  &__popup {
+    width: 600px;
+
+    &--qrcode {
+      width: calc(600px - 16px * 2);
+      height: calc(600px - 16px * 2);
+    }
+
+  }
+
+  // #endif
 }
 </style>

@@ -50,11 +50,12 @@ export default {
         {
           label: "序号",
           type: "index",
-          width: 80,
+          width: 55,
         },
         {
           label: "产品图片",
           prop: "images",
+          width: 80,
           render: (h, {row}) => {
             return h(
               "div",
@@ -70,6 +71,14 @@ export default {
             );
           },
         },
+        {
+          label: "产品名称",
+          prop: "name",
+        },
+        /* {
+          label: "产品分类",
+          prop: "className",
+        }, */
         {
           label: "单价(元)",
           prop: "price",
@@ -131,6 +140,7 @@ export default {
         {
           label: "操作",
           slot: "operate",
+          width: 80,
         },
       ],
       // #endif
@@ -283,7 +293,12 @@ export default {
             <UniCol :span="24">
               <view style="display: flex; align-items: center;">
                 <label class="ko-basic-label">数量：</label>
-                <UniNumberBox width="60" v-model="item.productQuantity" @change="onFocus" />
+                <UniNumberBox
+                  type="digit"
+                  width="60"
+                  v-model="item.productQuantity"
+                  @change="onFocus"
+                />
               </view>
             </UniCol>
             <UniCol :span="24" v-if="!isNotAdded">
@@ -365,13 +380,6 @@ export default {
       border-radius: 6px;
       overflow: hidden;
     }
-  }
-
-  &__popup {
-    width: 90vw;
-    padding: 16px;
-    background: #fff;
-    border-radius: 8px;
   }
 }
 </style>

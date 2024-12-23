@@ -1,4 +1,7 @@
 <script>
+// #ifdef H5
+import { Cascader } from "@/uni_modules/element-ui/element.min";
+// #endif
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
@@ -23,6 +26,9 @@ export default {
     UniFormsItem,
     UniForms,
     UniSection,
+    // #ifdef H5
+    Cascader,
+    // #endif
   },
   data: () => ({
     form: {
@@ -165,7 +171,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-order">
+  <view class="ko-order ko-basic-added-form">
     <UniForms
       :model-value="form"
       label-width="90px"
@@ -183,6 +189,19 @@ export default {
               v-model="form.classId"
               :map="{text: 'name',value: 'id',}"
             />
+            <!-- #ifdef H5 -->
+            <Cascader
+              :options="classList"
+              :props="{
+
+              }"
+            >
+              <template slot-scope="{ node, data }">
+                <span>{{ data.name }}</span>
+                <span v-if="!node.isLeaf"> ({{ data.children.length }}) </span>
+              </template>
+            </Cascader>
+            <!-- #endif -->
           </UniFormsItem>
           <UniFormsItem label="产品名称：" name="name" required>
             <UniEasyinput v-model.trim="form.name" style="width: 100%;" placeholder="请输入" />
@@ -276,6 +295,17 @@ export default {
 
   &__footer {
     padding: 10px 50px 50px;
+
+    /* #ifdef H5 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ko-basic-button {
+      width: 280px;
+    }
+
+    /* #endif */
   }
 
   &__popup {

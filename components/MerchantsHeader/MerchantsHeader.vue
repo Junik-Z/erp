@@ -9,6 +9,7 @@ export default {
   components: {BusinessAdvertising, UvAvatar},
   props: {
     isQrCode: Boolean,
+    disabled: Boolean,
   },
   mixins: [mixins],
   data() {
@@ -18,6 +19,8 @@ export default {
   },
   methods: {
     onOpen() {
+      if (this.disabled) return false;
+
       this.visible = true;
     },
   },

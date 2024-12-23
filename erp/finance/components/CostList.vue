@@ -1,6 +1,6 @@
 <script>
+import QiunDataCharts from "@/erp/components/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
-import QiunDataCharts from "@/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -24,10 +24,12 @@ import { deleteProductClassApi } from "@/api/erp/product";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 import dayjs from "@/utils/dayjs";
+import PickerUser from "@/components/PickerUser/PickerUser.vue";
 
 export default {
   name: "ViewVersion",
   components: {
+    PickerUser,
     FilePicker,
     UniEasyinput,
     BasicPopup,
@@ -49,6 +51,8 @@ export default {
   },
   mixins: [mixins],
   data() {
+    const _this = this;
+
     return {
       categoryList: [],
       current: 0,
@@ -64,20 +68,15 @@ export default {
         totalAmount: "",
         voucher: "",
         remark: "",
+        personId: "", // 人员ID
       },
       rules: {
         name: {
           rules: [
             {
               required: true,
-              errorMessage: "请填写分类名称",
+              errorMessage: "请填写款项名称",
             },
-            // {
-            //   required: true,
-            //   minLength: 1,
-            //   // maxLength: 30,
-            //   errorMessage: "分类名称不能小于1个字符",
-            // },
           ],
           validateTrigger: "submit",
         },
@@ -95,28 +94,26 @@ export default {
           width: 80,
         },
         {
-          label: "退货单号",
-          prop: "orderCode",
-        }, {
-          label: "客户",
-          prop: "customer",
-          children: [
-            {
-              label: "Logo",
-              prop: "customer.logo",
-              render: (h, {row}) => {
-                return h(
-                  "div",
-                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "customer.logo")), size: 64}})],
-                );
-              },
-            },
-            {
-              label: "名称",
-              prop: "customer.name",
-            },
-          ],
+          label: "凭证",
+          prop: "voucher",
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: _this.getImageUrl(_get(row, "customer.logo")),
+                  size: 64,
+                  shape: "square",
+                  text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "款项名称",
+          prop: "name",
         },
         {
           label: "总金额(元)",
@@ -132,23 +129,7 @@ export default {
         {
           label: "操作",
           width: 260,
-          render(h, {row}) {
-            return h("div", [
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onCancelOrder.bind(_this, row)},
-                },
-                "取消",
-              ),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onJump.bind(_this, row)},
-                }
-                , "修改"),
-            ]);
-          },
+          slot: "operate",
         },
       ],
       // #endif
@@ -165,8 +146,12 @@ export default {
     getCategoryList() {
       return getCategoryListApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
-          this.categoryList = res.data?.map(item => ({text: item.name, value: item.id}));
+          this.categoryList = [
+            ...res.data?.map(item => ({text: item.name, value: item.id})),
+          ];
+
           console.log(res.data);
+
           return res.data;
         });
     },
@@ -179,6 +164,7 @@ export default {
       this.getCost();
 
       this.loading = true;
+
       getCostListApi({...this.queryList, classId: this.getClassId})
         .then(res => {
           console.log(res.data);
@@ -231,7 +217,9 @@ export default {
       this.visible = true;
       this.isEdit = false;
       this.$nextTick(() => {
+        // #ifdef MP
         this.$refs.FormRef.clearValidate();
+        // #endif
         this.form = _deepCopy(this.$options.data().form);
       });
     },
@@ -257,7 +245,9 @@ export default {
       this.isEdit = true;
       this.visible = true;
       this.$nextTick(() => {
+        // #ifdef MP
         this.$refs.FormRef.clearValidate();
+        // #endif
         this.form = {...node};
       });
 
@@ -301,13 +291,6 @@ export default {
 
     <view class="ko-cost__class">
       <view class="ko-cost__class--wrap">
-        <UniDataSelect
-          :localdata="categoryList"
-          v-model="queryList.classId"
-          @change="getList"
-          v-if="false"
-        />
-
         <UniSegmentedControl
           style-type="text"
           :values="categoryList"
@@ -365,7 +348,15 @@ export default {
             :data="list"
             empty-text="暂无数据"
             stripe
-          />
+          >
+            <template #operate="{item}">
+              <view style="display: flex; align-items: center; justify-content: center;"
+                    v-if="isPerm('Finance_Write')">
+                <button class="ko-basic-button__card" @click.stop="onEdit(item)">修改</button>
+                <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+              </view>
+            </template>
+          </KoTable>
         </view>
         <!-- #endif -->
       </UniList>
@@ -399,8 +390,22 @@ export default {
             <UniEasyinput v-model="form.name" placeholder="请输入" />
           </UniFormsItem>
           <UniFormsItem label="金额：" required name="totalAmount">
-            <UniEasyinput type="number" v-model="form.totalAmount" placeholder="请输入" />
+            <UniEasyinput type="digit" v-model="form.totalAmount" placeholder="请输入" />
             <text style="margin-left: 10px;">元</text>
+          </UniFormsItem>
+          <UniFormsItem
+            v-if="getClassId === 'freight'" label="物流商："
+            required
+            name="personId"
+            :rules="[{required: true, errorMessage: '请选择物流商'}]"
+          >
+            <PickerUser
+              style="width: 100%;"
+              v-model="form.personId"
+              is-input
+              type="logistics"
+              placeholder="请选择物流商"
+            />
           </UniFormsItem>
           <UniFormsItem label="凭证：" name="voucher">
             <FilePicker v-model="form.voucher" />
@@ -430,8 +435,15 @@ export default {
     border-bottom: .5px solid $uni-border-3;
 
     &--wrap {
-      padding: 0 20px;
+      padding: 0 10px;
       flex: 1;
+      overflow: hidden;
+
+      /* #ifdef H5 */
+      width: 1366px;
+      margin: 0 auto;
+      flex: none;
+      /* #endif */
 
       /deep/ .uni-select__input-text {
         text-align: center !important;
@@ -488,7 +500,9 @@ export default {
   }
 
   &__popup {
+    // #ifdef MP
     width: 90vw;
+    // #endif
     padding: 16px;
     background: #fff;
     border-radius: 8px;

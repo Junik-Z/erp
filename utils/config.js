@@ -14,6 +14,14 @@ let type = "test";
 
 // type = "env";
 
+// #ifdef MP
+type = "env";
+// #endif
+
+// #ifdef H5
+// type = "env";
+// #endif
+
 export const CONFIG = {
   // 请求头的参数
   APP_ID: "wx525c19deacc41329",
@@ -191,6 +199,7 @@ export const HOME_PAGE_TYPE_ENUMS = {
   ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",
   BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
+  BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修"
 };
 
 /**
@@ -216,3 +225,8 @@ export const WEB_SOCKET_ENUMS = {
   ReceivableOrder: "应收单",
   DeliveryOrder: "物流单",
 };
+
+/**
+ * @description 财务看版其它费用固定 id 不可修改; wages: 工资; freight: 运费
+ */
+export const FINANCE_CLASSIFY_FIXED_ID = ['wages', 'freight']

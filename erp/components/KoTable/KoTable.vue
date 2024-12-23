@@ -74,9 +74,12 @@ export default {
       :key="index"
       v-bind="getColBind(item)"
     >
+      <template v-if="item.renderHeader" #header="{column, $index}">
+        <RenderDom v-if="item.renderHeader" :column="column" :index="$index" :render="item.renderHeader" />
+      </template>
+
       <template v-if="item.render || item.slot" #default="{row, column, $index}">
         <slot v-if="item.slot" :name="item.slot" :item="row" :column="column" :index="$index"></slot>
-
         <RenderDom v-if="item.render && !item.slot" :row="row" :column="column" :index="$index" :render="item.render" />
       </template>
 
@@ -86,6 +89,10 @@ export default {
           :key="index + '————' + jIndex"
           v-bind="getColBind(child)"
         >
+          <template v-if="child.renderHeader" #header="{column, $index}">
+            <RenderDom v-if="child.renderHeader" :column="column" :index="$index" :render="item.renderHeader" />
+          </template>
+
           <template v-if="child.render || child.slot" #default="{row, column, $index}">
             <slot v-if="child.slot" :name="child.slot" :item="row" :column="column" :index="$index"></slot>
             <RenderDom v-if="child.render" :row="row" :column="column" :index="$index" :render="child.render" />

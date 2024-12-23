@@ -4,7 +4,7 @@ import UniSegmentedControl
 import ViewVersion from "./components/ViewVersion.vue";
 import OrderList from "./components/OrderList.vue";
 import ClientList from "./components/ClientList.vue";
-import RefundList from "./components/RefundList.vue";
+import RefundList from "./components/LogisticsList.vue";
 import { _get, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 

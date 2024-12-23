@@ -20,6 +20,10 @@ $base-font-size: 136.6; // var(--ko-html-size);
   box-sizing: border-box;
 }
 
+.ko-basic-tabs-list {
+
+}
+
 // #endif
 
 $ko-basic-border: 0.5px solid #dcdcdc;
@@ -182,6 +186,8 @@ button::after {
 
 
 // #ifdef H5
+$--ko-print-font-size: 11pt;
+
 .uni-section-content .uni-forms-item {
   max-width: 800px;
 }
@@ -233,8 +239,24 @@ button::after {
 }
 
 .ko-basic-added-form {
-  width: 800px;
+  width: 1000px;
   margin: 0 auto;
+}
+
+// 打印模块的样式
+@mixin print-style() {
+  font-family: "华文楷体", "KaiTi", sans-serif;
+  //font-family: "Microsoft YaHei", Arial, sans-serif;
+  //font-weight: 500;
+  font-size: 11pt;
+}
+
+// 打印模块标题的样式
+@mixin print-header-style() {
+  //font-family: "华文楷体", "KaiTi", sans-serif;
+  font-family: "Microsoft YaHei", Arial, sans-serif;
+  font-weight: bold;
+  font-size: 18pt;
 }
 
 // #endif

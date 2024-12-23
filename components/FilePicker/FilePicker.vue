@@ -122,7 +122,7 @@ export default {
                   //保存文件
                   const uploadBase64 =
                     new Promise((resolve2, reject) => {
-                      that.uploadBase64(base).then(e => resolve2(e));
+                      that.onUploadBase64(base).then(e => resolve2(e));
                     });
                   resolve(uploadBase64);
                 };
@@ -160,7 +160,7 @@ export default {
                     //保存文件
                     const uploadBase64 =
                       new Promise((resolve2, reject) => {
-                        that.uploadBase64(base)
+                        that.onUploadBase64(base)
                           .then(e => resolve2(e));
                       });
                     resolve(uploadBase64);

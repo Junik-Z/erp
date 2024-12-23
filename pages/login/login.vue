@@ -1,11 +1,18 @@
 <script>
+// #ifdef H5
 import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
 import UniLoadMore from "@/uni_modules/uni-load-more/components/uni-load-more/uni-load-more.vue";
+// #endif
 import { CONFIG } from "@/utils/config";
 
 export default {
   name: "KoLogin",
-  components: {UniLoadMore, UniCard},
+  components: {
+    // #ifdef H5
+    UniLoadMore,
+    UniCard,
+    // #endif
+  },
   data() {
     return {
       qrimage: "",
@@ -27,19 +34,6 @@ export default {
   },
   methods: {
     getQrCode() {
-      /*  this.loading = true;
-       getWxQrCodeApi()
-         .then(res => {
-           this.qrimage = res.data.code;
-           this.id = res.data.id;
-
-           this.getScan();
-         })
-         .finally(() => {
-           this.loading = false;
-         }); */
-
-
       this.getScan();
     },
 
@@ -75,6 +69,7 @@ export default {
 
 <template>
   <div class="ko-login">
+    <!-- #ifdef H5 -->
     <div class="ko-login__wrap">
       <image
         class="ko-login__logo"
@@ -110,6 +105,7 @@ export default {
         </template>
       </UniCard>
     </div>
+    <!-- #endif -->
   </div>
 </template>
 

@@ -94,7 +94,7 @@ platform = uni.getSystemInfoSync().platform;
  */
 export default {
   name: "UniFab",
-  emits: ["fabClick", "trigger"],
+  emits: ["fabClick", "trigger", "fab-click"],
   props: {
     pattern: {
       type: Object,
@@ -219,8 +219,15 @@ export default {
     this.styles = Object.assign({}, this.styles, this.pattern);
   },
   methods: {
-    _onClick() {
+    _onClick(event) {
+      // #ifdef MP
       this.$emit("fabClick");
+      // #endif
+
+      // #ifdef H5
+      this.$emit("fab-click", event);
+      // #endif
+
       if (!this.popMenu) {
         return;
       }

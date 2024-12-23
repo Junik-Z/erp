@@ -11,6 +11,7 @@ import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, showToast } from "@/utils";
 import { validatePhone } from "@/utils/validate";
 import { addedSupplierApi, editSupplierApi, getDetailSupplierApi } from "@/api/erp/purchase";
+import { isNumber } from "@/components/da-tree-vue2/utils";
 
 export default {
   name: "client",
@@ -73,6 +74,7 @@ export default {
     option: {},
 
     isEdit: false,
+    ContactsIndex: null,
   }),
   onLoad(option) {
     this.option = option;
@@ -95,7 +97,8 @@ export default {
     },
 
     // 添加联系人
-    addContacts(row) {
+    addContacts(row, index) {
+      this.ContactsIndex = index;
       this.contacts = {..._deepCopy(this.$options.data().contacts), ...row};
       this.visible = true;
 
@@ -109,7 +112,11 @@ export default {
     addedFormContacts() {
       this.$refs.ContactFormRef.validate((valid) => {
         if (!valid) {
-          this.form.contacts.push(_deepCopy(this.contacts));
+          if (isNumber(this.ContactsIndex)) {
+            this.form.contacts[this.ContactsIndex] = _deepCopy(this.contacts);
+          } else {
+            this.form.contacts.push(_deepCopy(this.contacts));
+          }
           this.visible = false;
         }
       });
@@ -144,7 +151,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-client">
+  <view class="ko-client ko-basic-added-form">
     <UniForms
       :rules="rules"
       ref="FormRef"
@@ -168,7 +175,7 @@ export default {
 
       <UniSection title="联系人信息" type="line">
         <view style="padding: 10px;">
-          <BasicCard v-for="(item, index) of form.contacts" :key="index">
+          <BasicCard v-for="(item, index) of form.contacts" :key="index" :spacing="10">
             <UniRow class="ko-verify__item">
               <UniCol :span="12">
                 <label class="ko-basic-label">联系人：</label>
@@ -183,13 +190,13 @@ export default {
             <view
               style="display: flex; align-items: center; justify-content: flex-end; margin-top: 8px;"
             >
-              <button class="ko-basic-button__card" style="margin-right: 10px;" @click="addContacts(item)">修改</button>
+              <button class="ko-basic-button__card" style="margin-right: 10px;" @click="addContacts(item, index)">修改</button>
               <button class="ko-basic-button__card" @click="form.contacts.splice(index, 1)">移除</button>
             </view>
           </BasicCard>
 
           <view style="display: flex; align-items: center; margin-top: 8px;">
-            <button class="ko-basic-button__card" @click="addContacts({})">添加</button>
+            <button class="ko-basic-button__card" @click="addContacts({}, null)">添加</button>
           </view>
         </view>
       </UniSection>
@@ -253,12 +260,28 @@ export default {
 <style scoped lang="scss">
 .ko-client {
   padding-bottom: 80px;
+  // #ifdef H5
+  .ko-basic-button {
+    margin: 0 auto !important;
+  }
 
+  &__popup {
+    width: 100%;
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+  }
+
+  // #endif
+
+  // #ifdef MP
   &__popup {
     width: 90vw;
     padding: 16px;
     background: #fff;
     border-radius: 8px;
   }
+
+  // #endif
 }
 </style>

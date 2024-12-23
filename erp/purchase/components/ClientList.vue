@@ -6,18 +6,20 @@ import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import { bindSupplierApi, getSupplierListApi, removeSupplierApi, unbindSupplierApi } from "@/api/erp/purchase";
-import { _deepCopy, _isEmpty, _xor } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _xor } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
-import IndexUser from "@/components/IndexList/IndexList.vue";
+import IndexList from "@/components/IndexList/IndexList.vue";
+import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 
 export default {
   name: "ClientList",
   components: {
-    IndexUser,
+    UvActionSheet,
+    IndexList,
     UvAvatar, PickerUser, KoTable, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList,
   },
   mixins: [mixins],
@@ -51,6 +53,7 @@ export default {
       bindUserList: [],
       isBind: false,
       item: {},
+      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -67,7 +70,13 @@ export default {
             return h(
               "div",
               {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-              [h(UvAvatar, {props: {src: _this.getImageUrl(row.logo), size: 64}})],
+              [h(UvAvatar, {
+                props: {
+                  src: _this.getImageUrl(_get(row, "logo")),
+                  size: 64,
+                  text: _get(row, "name") || _this.GET_SHOP_NAME,
+                },
+              })],
             );
           },
         },
@@ -114,29 +123,7 @@ export default {
         {
           label: "操作",
           width: 260,
-          render(h, {row}) {
-            return h("div", [
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onUnbind.bind(_this, row)},
-                },
-                "解绑微信",
-              ),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onJump.bind(_this, row)},
-                }
-                , "修改"),
-              h("button",
-                {
-                  class: "ko-basic-button__card",
-                  on: {click: _this.onRemove.bind(_this, row)},
-                }
-                , "删除"),
-            ]);
-          },
+          slot: "operate",
         },
       ],
       // #endif
@@ -252,6 +239,14 @@ export default {
       });
     },
 
+    onActionClick(item) {
+      this.actionItem = item;
+      this.$refs.UASRef.open();
+    },
+    // 处理调用底部弹出的按钮
+    onSelect(item) {
+      this[item.func](_deepCopy(this.actionItem));
+    },
   },
   computed: {
     getBindingParams() {
@@ -266,6 +261,20 @@ export default {
         };
       };
     },
+
+    actionList() {
+      return [
+        {
+          name: "编辑",
+          func: "onJump",
+        },
+        {
+          name: "删除",
+          color: "#e43d33",
+          func: "onRemove",
+        },
+      ]
+    },
   },
 };
 </script>
@@ -275,7 +284,7 @@ export default {
     <UniList>
       <!-- #ifdef MP -->
       <view class="ko-client__wrap">
-        <IndexUser :options="list" @click="onJumpInfo" button-perm="Purchase_Write">
+        <IndexList :options="list" :loading="loading" is-supplier @click="onJumpInfo" button-perm="Purchase_Write">
           <template #default="{node}">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
               <!--<button
@@ -288,11 +297,22 @@ export default {
               </button>-->
               <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定客户</button>
               <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑客户</button>
-              <button class="ko-basic-button__user" @click.stop="onJump(node)">编辑</button>
-              <button class="ko-basic-button__user" @click.stop="onRemove(node)">删除</button>
+
+              <button
+                class="ko-basic-button__user"
+                @click.stop="onActionClick(node)"
+                style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
+              >
+                <i class="iconfont icon-gengduocaozuo"></i>
+              </button>
+
+              <template v-if="false">
+                <button class="ko-basic-button__user" @click.stop="onJump(node)">编辑</button>
+                <button class="ko-basic-button__user" @click.stop="onRemove(node)">删除</button>
+              </template>
             </view>
           </template>
-        </IndexUser>
+        </IndexList>
       </view>
       <!-- #endif -->
 
@@ -304,7 +324,26 @@ export default {
           :data="list"
           empty-text="暂无数据"
           stripe
-        />
+          @row-click="onJumpInfo"
+        >
+          <template #operate="{item}" v-if="isPerm('Purchase_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <!--<button
+                @click.stop="() => {}"
+                open-type="share"
+                :data-params="getBindingParams(node)"
+                class="ko-basic-button__card"
+              >
+                邀请绑定
+              </button>-->
+              <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__user">绑定客户</button>
+              <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__user">解绑客户</button>
+              <button class="ko-basic-button__user" @click.stop="onJump(item)">编辑</button>
+              <button class="ko-basic-button__user" @click.stop="onRemove(item)">删除</button>
+            </view>
+          </template>
+
+        </KoTable>
       </view>
       <!-- #endif -->
     </UniList>
@@ -336,6 +375,18 @@ export default {
       direction="vertical"
       @fab-click="onTrigger"
     />
+
+
+    <!-- #ifdef MP -->
+    <UvActionSheet
+      ref="UASRef"
+      :actions="actionList"
+      safe-area-inset-bottom
+      round="10"
+      cancel-text="取消"
+      @select="onSelect"
+    />
+    <!-- #endif -->
   </view>
 </template>
 

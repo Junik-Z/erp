@@ -13,12 +13,13 @@ import { getSupplierListApi } from "@/api/erp/purchase";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import { isBoolean } from "@/components/da-tree-vue2/utils";
-import IndexUser from "../IndexList/IndexList.vue";
+import IndexList from "../IndexList/IndexList.vue";
+import { getLogisticsListApi } from "@/api/erp/logistics";
 
 export default {
   name: "PickerUser",
   components: {
-    IndexUser,
+    IndexList,
     UniSearchBar,
     UniSection,
     UniEasyinput,
@@ -62,7 +63,7 @@ export default {
 
     type: {
       type: String,
-      default: "default", // client: 选择客户, supplier: 供应商
+      default: "default", // client: 选择客户, supplier: 供应商, logistics: 物流商
     },
     isInput: Boolean,
     placeholder: {
@@ -94,11 +95,13 @@ export default {
         client: getCustomerListApi,
         // 供应商
         supplier: getSupplierListApi,
+        // 物流商
+        logistics: getLogisticsListApi,
       }[this.type];
 
-      const vKey = {default: "userId", client: "id", supplier: "id"}[this.type];
-      const lKey = {default: "nickName", client: "name", supplier: "name"}[this.type];
-      const logoKey = {default: "avatar", client: "logo", supplier: "logo"}[this.type];
+      const vKey = {default: "userId", client: "id", supplier: "id", logistics: "id"}[this.type];
+      const lKey = {default: "nickName", client: "name", supplier: "name", logistics: "name"}[this.type];
+      const logoKey = {default: "avatar", client: "logo", supplier: "logo", logistics: "logo"}[this.type];
 
       Func({pageSize: 10000})
         .then(res => {
@@ -251,13 +254,14 @@ export default {
       :type="isInput ? 'bottom' : 'center'"
     >
       <view class="ko-picker-user__popup" :class="{'is-input': isInput}">
-        <IndexUser
+        <IndexList
           @click="onSelect"
           :checked-list="checkedList"
           :options="list"
           :value="checked"
           is-checked
           :disabled="disabled"
+          :is-receipt-list="type === 'logistics'"
         />
       </view>
 
