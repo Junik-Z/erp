@@ -4,7 +4,7 @@
     :style="{ borderColor: styleType === 'text' ? '' : activeColor }"
     class="segmented-control"
   >
-    <scroll-view scroll-x style="width: 100%;">
+    <scroll-view class="ko-segmented-control__scroll" scroll-x style="width: 100%;" :show-scrollbar="false">
       <view class="segmented-control__wrap">
         <view
           v-for="(item, index) in values"
@@ -57,7 +57,7 @@ export default {
     },
     labelKey: String,
     values: {
-      type: Array,
+      type: [Array, null],
       default() {
         return [];
       },
@@ -108,6 +108,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/deep/ .ko-segmented-control__scroll {
+  &::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
 .segmented-control {
   /* #ifndef APP-NVUE */
   //display: flex;
@@ -165,12 +171,12 @@ export default {
 .segmented-control__item--text {
   border-bottom-style: solid;
   border-bottom-width: 2px;
-  padding: 6px 0;
+  padding-bottom: 3px;
 }
 
 .segmented-control__text {
   font-size: 14px;
-  line-height: 20px;
+  line-height: 1.3;
   text-align: center;
   white-space: nowrap;
 }

@@ -13,30 +13,34 @@ import {
   getPayableHistoryListApi,
   getPayableListApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-import { _get, _isEqual, _pick } from "@/utils";
+import { _get, _isEmpty, _pick } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import { CONFIG, PageEnums } from "@/utils/config";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "PayList",
   mixins: [mixins],
   components: {
+    KoList,
     KoTable,
     HistoryBar,
-    LoadMore,
     OrderCard,
-    UniListItem, BasicCard, UniCol, UniRow, UniList, QiunDataCharts, UvCountTo,
+    UniCol,
+    UniRow,
+    UvCountTo,
   },
   data() {
     const _this = this;
 
     return {
       loading: false,
-      list: [{}],
+      list: [],
 
       isHistory: false,
       operate: [
@@ -85,6 +89,11 @@ export default {
         },
       ],
 
+      queryList: {
+        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageNum: 0,
+      },
+      noMore: false,
 
       // #ifdef H5
       columns: [
@@ -183,16 +192,29 @@ export default {
     };
   },
   mounted() {
+    this.getCount();
   },
   methods: {
-    getList() {
-      this.getCount();
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    getList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       this.loading = true;
       const Func = this.isHistory ? getPayableHistoryListApi : getPayableListApi;
 
-      Func({pageSize: 1000000, pageNum: 0})
+      Func(this.queryList)
         .then(res => {
-          this.list = res.data;
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -207,7 +229,7 @@ export default {
             cancelPayableApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -223,7 +245,7 @@ export default {
             finishPayableApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -245,7 +267,7 @@ export default {
       });
 
       uni.navigateTo({
-        url: `/erp/finance/ticket${q}`,
+        url: `${PageEnums.ticket}${q}`,
       });
     },
 
@@ -296,13 +318,13 @@ export default {
       </UniRow>
     </view>
 
-    <HistoryBar v-model="isHistory" text="应付款" @change="getList" />
+    <HistoryBar v-model="isHistory" text="应付款" @change="getList(true)" />
 
     <view class="ko-pay__row">
-      <UniList>
-        <!-- #ifdef MP -->
-        <UniListItem v-for="(item, index) of list" :key="index">
-          <template #body>
+      <!-- #ifdef MP -->
+      <view>
+        <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+          <view style="padding: 5px 10px;" v-for="(item, index) of list" :key="index">
             <OrderCard
               @click="onJumpDetails(item, 'payable')"
               :item="item"
@@ -318,7 +340,7 @@ export default {
                     class="ko-basic-button__card"
                     @click.stop="onConfirm(item)"
                   >
-                    订单确认
+                    确认清帐
                   </button>
                   <button
                     class="ko-basic-button__card"
@@ -329,45 +351,44 @@ export default {
                 </view>
               </template>
             </OrderCard>
-          </template>
-        </UniListItem>
-        <LoadMore :loading="loading" />
-        <!-- #endif -->
+          </view>
+        </KoList>
+      </view>
+      <!-- #endif -->
 
-        <!-- #ifdef H5 -->
-        <view style="padding: 10px;">
-          <KoTable
-            :loading="loading"
-            :columns="columns"
-            :data="list"
-            empty-text="暂无数据"
-            stripe
-            @row-click="onJumpDetails($event, 'payable')"
-          >
-            <template #operate="{item}">
-              <view
-                v-if="isPerm('Finance_Write') && !isHistory"
-                style="display: flex; align-items: center; justify-content: center; padding-top: 8px;"
+      <!-- #ifdef H5 -->
+      <view style="padding: 10px;">
+        <KoTable
+          :loading="loading"
+          :columns="columns"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+          @row-click="onJumpDetails($event, 'payable')"
+        >
+          <template #operate="{item}">
+            <view
+              v-if="isPerm('Finance_Write') && !isHistory"
+              style="display: flex; align-items: center; justify-content: center; padding-top: 8px;"
+            >
+              <button
+                v-if="item.confirmable"
+                class="ko-basic-button__card"
+                @click.stop="onConfirm(item)"
               >
-                <button
-                  v-if="item.confirmable"
-                  class="ko-basic-button__card"
-                  @click.stop="onConfirm(item)"
-                >
-                  订单确认
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onAddedTicket(item)"
-                >
-                  添加单据
-                </button>
-              </view>
-            </template>
-          </KoTable>
-        </view>
-        <!-- #endif -->
-      </UniList>
+                确认清帐
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onAddedTicket(item)"
+              >
+                添加单据
+              </button>
+            </view>
+          </template>
+        </KoTable>
+      </view>
+      <!-- #endif -->
     </view>
   </view>
 </template>

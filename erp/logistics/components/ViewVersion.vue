@@ -14,7 +14,7 @@ import {
 } from "@/api/erp/logistics";
 import { _deepCopy, _get } from "@/utils";
 import mixins from "@/mixins/mixins";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -27,8 +27,14 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 export default {
   name: "ViewVersion",
   components: {
-    UniFormsItem, BasicPopup, UniEasyinput, PickerUser, UniForms,
-    LoadMore, UvActionSheet, OrderCard,
+    UniFormsItem,
+    BasicPopup,
+    UniEasyinput,
+    PickerUser,
+    UniForms,
+    LoadMore,
+    UvActionSheet,
+    OrderCard,
     UvCountTo,
     UniListItem,
     BasicCard,
@@ -416,7 +422,6 @@ export default {
         </view>
         <!-- #endif -->
       </UniList>
-
     </view>
 
 

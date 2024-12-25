@@ -4,7 +4,8 @@ import UniSegmentedControl
 import Classify from "./components/Classify.vue";
 import ProductList from "./components/ProductList.vue";
 import FieldList from "@/erp/product/components/Field.vue";
-import { _get, _isEqual } from "@/utils";
+import { _deepCopy } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "product",
@@ -24,50 +25,48 @@ export default {
         ref: "FieldRef",
       },
     ],
-    current: 0,
+    // TAB: 0,
   }),
+  onLoad(option) {
+    this.TABS_LIST = _deepCopy(this.tabList);
+    if (option.PAGE_INDEX) {
+      this.TAB = +option.PAGE_INDEX;
+    }
+  },
+  mixins: [mixins],
   methods: {
-    onTab(event) {
-      this.current = event.currentIndex;
-      this.getList();
-    },
     getList() {
-      if (!this.getRefName) return false;
-
       this.$nextTick(() => {
-        this.$refs[this.getRefName]?.getList?.();
+        console.log(this.GET_TAB_LIST);
+        if (!this.GET_TABS_REF_NAME) return false;
+        this.$refs[this.GET_TABS_REF_NAME]?.getList?.(true);
       });
     },
   },
   onShow() {
-    this.getList();
-    console.log("触发两次");
-  },
-  computed: {
-    getTabList() {
-      return this.tabList;
-    },
-    getRefName() {
-      return _get(this.getTabList, `${this.current}.ref`);
-    },
-    isEqual() {
-      return _isEqual;
-    },
+    this.$nextTick(() => {
+      this.getList();
+    });
   },
 };
 </script>
 
 <template>
   <view class="ko-purchase">
-    <view class="ko-purchase__tabs">
-      <UniSegmentedControl :values="tabList" label-key="label" :current="current" @clickItem="onTab" />
+    <view class="ko-purchase__tabs" v-if="GET_TAB_LIST.length > 1">
+      <UniSegmentedControl
+        :values="GET_TAB_LIST"
+        label-key="label"
+        :current.sync="TAB"
+        @clickItem="getList"
+      />
     </view>
 
-    <ProductList ref="ListRef" v-if="isEqual(getRefName, 'ListRef')" />
+    <ProductList ref="ListRef" v-if="isEqual(GET_TABS_REF_NAME, 'ListRef')" />
 
-    <Classify ref="ClassRef" v-if="isEqual(getRefName, 'ClassRef')" />
+    <Classify ref="ClassRef" v-if="isEqual(GET_TABS_REF_NAME, 'ClassRef')" />
 
-    <FieldList ref="FieldRef" v-if="isEqual(getRefName, 'FieldRef')" />
+    <FieldList ref="FieldRef" v-if="isEqual(GET_TABS_REF_NAME, 'FieldRef')" />
   </view>
 </template>
 

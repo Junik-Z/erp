@@ -9,7 +9,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { getInboundDetailListApi, getOutboundDetailListApi } from "@/api/erp/stock";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _flattenDeep, _get } from "@/utils";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";

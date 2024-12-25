@@ -4,20 +4,12 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
+import KoMovable from "@/components/Movable/index.vue";
 
 export default {
   name: "List",
-  components: {UniFab, UniListItem, BasicCard, UniCol, UniRow, UniList},
+  components: {KoMovable, UniListItem, BasicCard, UniCol, UniRow, UniList},
   data: () => ({
-    pattern: {
-      color: "#7A7E83",
-      backgroundColor: "#fff",
-      selectedColor: "#007AFF",
-      buttonColor: "#007AFF",
-      iconColor: "#fff",
-    },
-
   }),
   methods: {
     onFabClick() {
@@ -65,12 +57,8 @@ export default {
       </UniListItem>
     </UniList>
 
-    <UniFab
-      ref="FabRef"
-      :pattern="pattern"
-      horizontal="right"
-      direction="vertical"
-      @fab-click="onFabClick"
+    <KoMovable
+      @click="onFabClick('')"
     />
   </view>
 </template>

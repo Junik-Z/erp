@@ -1,20 +1,28 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import { cancelOutboundApi, confirmOutboundApi, getOutboundHistoryListApi, getOutboundListApi } from "@/api/erp/stock";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import {
+  cancelOutboundApi,
+  confirmOutboundApi,
+  getOutboundHistoryListApi,
+  getOutboundListApi,
+  printA4OutboundApi,
+} from "@/api/erp/stock";
 import mixins from "@/mixins/mixins";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get } from "@/utils";
+import { _get, _isEmpty, showToast } from "@/utils";
+import PrintList from "@/components/PrintList/PrintList.vue";
+import { CONFIG } from "@/utils/config";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "OUT",
-  components: {OrderCard, HistoryBar, LoadMore, UniCol, UniRow, BasicCard, UniListItem, UniList},
+  components: {
+    KoList,
+    PrintList,
+    OrderCard,
+    HistoryBar,
+  },
   mixins: [mixins],
   data() {
     const _this = this;
@@ -23,6 +31,13 @@ export default {
       loading: false,
       list: [],
       isHistory: false,
+
+      queryList: {
+        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageNum: 0,
+      },
+
+      noMore: false,
 
       // #ifdef H5
       columns: [
@@ -120,12 +135,24 @@ export default {
     };
   },
   methods: {
-    getList() {
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    getList(reset = false) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
       this.loading = true;
       const Func = this.isHistory ? getOutboundHistoryListApi : getOutboundListApi;
-      Func({pageSize: 1000000, pageNum: 0})
+      Func(this.queryList)
         .then(res => {
-          this.list = res.data;
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           console.log(res.data);
         })
         .finally(() => {
@@ -146,7 +173,7 @@ export default {
             cancelOutboundApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -162,7 +189,7 @@ export default {
             confirmOutboundApi(item)
               .then(() => {
                 uni.showToast({title: "出库成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -172,22 +199,42 @@ export default {
     onRowClick(row) {
       this.onJumpDetails(row, "outbound");
     },
+
+    // 开启打印
+    onPrint(item) {
+      this.$refs.PLRef.open({orderId: item.id});
+    },
+    // 开始打印
+    startPrint(data) {
+      printA4OutboundApi(data)
+        .then(() => {
+          showToast({
+            title: "请求成功",
+          });
+        });
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-out">
+    <HistoryBar v-model="isHistory" :values="['待处理审批', '出库审批']" @change="getList(true)" />
 
-    <HistoryBar v-model="isHistory" text="出库审批" @change="getList" />
-
-    <UniList>
-      <!-- #ifdef MP -->
-      <UniListItem v-for="(item, index) of list" :key="index">
-        <template #body>
+    <!-- #ifdef MP -->
+    <view>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view style="padding: 10px;" v-for="(item, index) of list" :key="index">
           <OrderCard :item="item" @click="onJumpDetails(item, 'outbound')" :is-history="isHistory">
             <template #operate v-if="isPerm('Stock_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onPrint(item)"
+                >
+                  打印出库单(A4)
+                </button>
+
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
@@ -205,51 +252,54 @@ export default {
               </view>
             </template>
           </OrderCard>
-        </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
-      <!-- #endif -->
-
-      <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
-        <view style="padding: 10px;">
-          <KoTable
-            :loading="loading"
-            :columns="columns"
-            :data="list"
-            empty-text="暂无数据"
-            stripe
-            @row-click="onRowClick"
-          >
-            <template #operate="{item}" v-if="isPerm('Stock_Write')">
-              <view style="display: flex; align-items: center; justify-content: center;">
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onJumpPrint(item, 'outbound')"
-                >
-                  打印单据
-                </button>
-                <button
-                  v-if="['CREATED'].includes(item.status)"
-                  class="ko-basic-button__card"
-                  @click.stop="onCancel(item)"
-                >
-                  取消出库
-                </button>
-                <button
-                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                  class="ko-basic-button__card"
-                  @click.stop="onConfirm(item)"
-                >
-                  确认出库
-                </button>
-              </view>
-            </template>
-          </KoTable>
         </view>
+      </KoList>
+    </view>
+    <!-- #endif -->
+
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <view style="padding: 10px;">
+        <KoTable
+          :loading="loading"
+          :columns="columns"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+          @row-click="onRowClick"
+        >
+          <template #operate="{item}" v-if="isPerm('Stock_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onJumpPrint(item, 'outbound')"
+              >
+                打印出库单(A4)
+              </button>
+              <button
+                v-if="['CREATED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onCancel(item)"
+              >
+                取消出库
+              </button>
+              <button
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onConfirm(item)"
+              >
+                确认出库
+              </button>
+            </view>
+          </template>
+        </KoTable>
       </view>
-      <!-- #endif -->
-    </UniList>
+    </view>
+    <!-- #endif -->
+
+    <!-- #ifdef MP -->
+    <PrintList ref="PLRef" @submit="startPrint" />
+    <!-- #endif -->
   </view>
 </template>
 

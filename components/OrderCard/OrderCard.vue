@@ -4,6 +4,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import node from "@/uni_modules/uview-ui/components/u-parse/node/node.vue";
 
 export default {
   name: "OrderCard",
@@ -37,6 +38,8 @@ export default {
     isFinance: Boolean,
     // 是否是配送模块
     isLogistics: Boolean,
+
+    spacing: Number
   },
   methods: {
     onClickOperate(child, item) {
@@ -45,6 +48,9 @@ export default {
   },
 
   computed: {
+    node() {
+      return node;
+    },
     getCustomerName() {
       return (item) => {
 
@@ -74,7 +80,7 @@ export default {
 </script>
 
 <template>
-  <BasicCard custom-class="ko-order-card" @click="$emit('click')">
+  <BasicCard :spacing="spacing" custom-class="ko-order-card" @click="$emit('click')">
     <view class="ko-order-card__wrap">
       <view class="ko-order-card__finished">
         <view class="ko-order-card__finished--text" v-if="!isFinance">
@@ -103,12 +109,6 @@ export default {
             {{ ORDER_TYPE_ENUMS(item.orderType) }}
           </text>
         </UniCol>
-
-
-        <!-- <UniCol :span="24">
-           <label class="ko-basic-label">订单状态：</label>
-           {{ ORDER_STATUS_ENUMS(item.status) }}
-         </UniCol>-->
 
         <UniCol :span="24" v-if="false">
           <label class="ko-basic-label">总金额大写：</label>
@@ -228,6 +228,24 @@ export default {
           <label class="ko-basic-label">备注：</label>
           {{ item.remark || "-" }}
         </UniCol>
+
+        <!-- 财务核销 -->
+        <block v-if="isCheckFinance && item.proofs && item.proofs.length && false">
+          <UniCol :span="24">
+            <view style="display: flex; align-items: flex-start;">
+              <view style="flex: 1; padding-left: 4px;">
+                <UniRow :gutter="4">
+                  <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
+                    <text class="ko-basic-money">
+                      {{ toYuan(child.totalAmount) }}元
+                    </text>
+                    <text style="padding-left: 10px;">{{ child.updateTime || "-" }}</text>
+                  </UniCol>
+                </UniRow>
+              </view>
+            </view>
+          </UniCol>
+        </block>
       </UniRow>
 
       <view class="ko-order-card__operate" v-if="$slots.operate">

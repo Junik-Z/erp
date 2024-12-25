@@ -3,9 +3,10 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import { advertisingBusinessesApi } from "@/api/admin";
-import { _deepCopy, showToast } from "@/utils";
+import { showToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import { getConfigApi } from "@/api/user";
 
 export default {
   name: "Store",
@@ -22,14 +23,21 @@ export default {
     };
   },
   methods: {
+    getList() {
+      getConfigApi()
+        .then((res) => {
+          this.form = res.data;
+        });
+    },
+
     onSubmit() {
       this.loading = true;
       advertisingBusinessesApi(this.form)
         .then(() => {
-          uni.$emit("$__update_config_info__");
           showToast({
             title: "更新成功",
           });
+          uni.$emit("$__update_config_info__");
         })
         .finally(() => {
           this.loading = false;
@@ -40,8 +48,8 @@ export default {
       this.form[key] = event.detail.value;
     },
   },
-  onShow() {
-    this.form = _deepCopy(this.GET_CONFIG_INFO);
+  onLoad() {
+    this.getList();
   },
 };
 </script>
@@ -72,7 +80,7 @@ export default {
           <UniFormsItem label="票据尾部内容：">
             <UniEasyinput
               type="textarea"
-              v-model="form.ticketTailContent"
+              v-model.trim="form.ticketTailContent"
               placeholder="请输入"
             />
           </UniFormsItem>

@@ -2,7 +2,6 @@
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _xor } from "@/utils";
@@ -13,10 +12,12 @@ import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import { bindLogisticsApi, getLogisticsListApi, removeLogisticsApi, unbindLogisticsApi } from "@/api/erp/logistics";
+import KoMovable from "@/components/Movable/index.vue";
 
 export default {
   name: "ClientList",
   components: {
+    KoMovable,
     UvActionSheet,
     IndexList,
     PickerUser,
@@ -24,7 +25,6 @@ export default {
     LoadMore,
     UniCol,
     UniRow,
-    UniFab,
     BasicCard,
     UniListItem,
     UniList,
@@ -217,7 +217,6 @@ export default {
       }
 
       const {path} = event.item || {};
-      this.$refs.FabRef.close();
       if (path) {
         uni.navigateTo({url: path});
       }
@@ -395,19 +394,9 @@ export default {
       @confirm="onConfirm"
     />
 
-    <UniFab
+    <KoMovable
       v-if="isPerm('Delivery_Write')"
-      ref="FabRef"
-      :pattern='{
-        color: "#7A7E83",
-        backgroundColor: "#fff",
-        selectedColor: "#007AFF",
-        buttonColor: "#007AFF",
-        iconColor: "#fff",
-      }'
-      horizontal="right"
-      direction="vertical"
-      @fab-click="onTrigger"
+      @click="onTrigger('')"
     />
 
     <!-- #ifdef MP -->

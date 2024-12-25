@@ -3,49 +3,47 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import ViewVersion from "./components/ViewVersion.vue";
 import WorkList from "./components/WorkList.vue";
-import { _get, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEqual } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "sale",
   components: {WorkList, ViewVersion, UniSegmentedControl},
-  data: () => ({
-    tabList: [
-      {
-        label: "生产看版",
-        ref: "VVRef",
-      },
-      {
-        label: "生产工单",
-        ref: "WLRef",
-      },
-    ],
-    current: 0,
-  }),
+  mixins: [mixins],
+  data() {
+    return {
+      tabList: [
+        {
+          label: "生产看版",
+          ref: "VVRef",
+        },
+        {
+          label: "生产工单",
+          ref: "WLRef",
+        },
+      ],
+      current: 0,
+    }
+  },
   onShow() {
-    this.getList();
+    this.$nextTick(() => {
+      this.getList();
+    })
+  },
+  onLoad(option) {
+    this.TABS_LIST = _deepCopy(this.tabList);
+
+    if (option.PAGE_INDEX) {
+      this.TAB = +option.PAGE_INDEX;
+    }
   },
   methods: {
-    onTab(event) {
-      this.current = event.currentIndex;
-      this.getList();
-    },
     getList() {
-      if (!this.getRefName) return false;
-
       this.$nextTick(() => {
-        this.$refs[this.getRefName]?.getList?.();
+        console.log(this.GET_TAB_LIST);
+        if (!this.GET_TABS_REF_NAME) return false;
+        this.$refs[this.GET_TABS_REF_NAME]?.getList?.(true);
       });
-    },
-  },
-  computed: {
-    getTabList() {
-      return this.tabList;
-    },
-    getRefName() {
-      return _get(this.getTabList, `${this.current}.ref`);
-    },
-    isEqual() {
-      return _isEqual;
     },
   },
 };
@@ -54,12 +52,17 @@ export default {
 <template>
   <view class="ko-purchase">
     <view class="ko-purchase__tabs">
-      <UniSegmentedControl :values="getTabList" label-key="label" :current="current" @clickItem="onTab" />
+      <UniSegmentedControl
+      :values="GET_TAB_LIST"
+      label-key="label"
+      :current.sync="TAB"
+      @clickItem="getList"
+    />
     </view>
 
-    <ViewVersion ref="VVRef" v-if="isEqual(getRefName, 'VVRef')" />
+    <ViewVersion ref="VVRef" v-if="isEqual(GET_TABS_REF_NAME, 'VVRef')" />
 
-    <WorkList ref="WLRef" v-if="isEqual(getRefName, 'WLRef')" />
+    <WorkList ref="WLRef" v-if="isEqual(GET_TABS_REF_NAME, 'WLRef')" />
   </view>
 </template>
 

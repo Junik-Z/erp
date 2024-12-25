@@ -32,6 +32,9 @@ export default {
   methods: {
     onChange(event) {
       this.$emit("update:visible", event.show);
+      if (!event.show) {
+        this.$emit("close", false);
+      }
     },
     onClose() {
       this.$refs.PopupRef.close();

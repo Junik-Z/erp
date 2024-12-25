@@ -2,9 +2,13 @@
 let BASE_URL = "http://192.168.0.7:8093/api";
 let BASE_WS_URL = "ws://192.168.0.7:8093/api/ws/app";
 
+let DEFAULT_PAGE_SIZE = 5;
+
 // #ifdef H5
 BASE_URL = "/api";
 BASE_WS_URL = "/api/ws/app";
+
+DEFAULT_PAGE_SIZE = 10;
 
 // BASE_URL: "https://erp.kuaouyun.cn/api",
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
@@ -15,12 +19,13 @@ let type = "test";
 // type = "env";
 
 // #ifdef MP
-type = "env";
+// type = "env";
 // #endif
 
 // #ifdef H5
 // type = "env";
 // #endif
+
 
 export const CONFIG = {
   // 请求头的参数
@@ -50,6 +55,8 @@ export const CONFIG = {
 
   // WEB rem 的转换率
   H5_REM_SIZE: 136.6,
+
+  DEFAULT_PAGE_SIZE,
 };
 
 /**
@@ -73,6 +80,11 @@ export const ROLE_LIST_ENUMS = {
   Purchase_Write: "采购管理",
   Delivery_Read: "配送查看",
   Delivery_Write: "配送管理",
+  Monitor: "监控",
+  Sales_Member: "销售会员",
+  Produce_Member: "生产会员",
+  Purchase_Member: "采购会员",
+  Delivery_Member: "送货会员",
 };
 
 /**
@@ -93,18 +105,6 @@ export const ROLE_LIST_ENUMS = {
  * @description 系统菜单列表
  */
 export const MENU_LIST = [
-  // #ifdef H5
-  /* {
-    label: "大屏数据看版",
-    icon: "icon-dashboard",
-    value: "/admin/dashboard/dashboard",
-    modelKey: "stock",
-    role: ["Admin", "Business"],
-    // 是否可以被分配角色
-    isUpRole: false,
-  }, */
-  // #endif
-
   {
     label: "库存",
     icon: "icon-kucuntongjifenxi",
@@ -113,22 +113,30 @@ export const MENU_LIST = [
     role: ["Admin", "Business", "Stock_Read", "Stock_Write"],
     // 是否可以被分配角色
     isUpRole: true,
+    // 是否有会员系统
+    isMember: false,
   },
   {
     label: "销售",
     icon: "icon-xiaoshoubi",
     value: "/erp/sale/sale",
     modelKey: "sale",
-    role: ["Admin", "Business", "Sales_Read", "Sales_Write"],
+    role: ["Admin", "Business", "Sales_Read", "Sales_Write", "Sales_Member"],
     isUpRole: true,
+    // 是否有会员系统
+    isMember: true,
+    memberLabel: "客户",
   },
   {
     label: "采购",
     icon: "icon-icon_B_caigoujihuatibao",
     value: "/erp/purchase/purchase",
     modelKey: "purchase",
-    role: ["Admin", "Business", "Purchase_Read", "Purchase_Write"],
+    role: ["Admin", "Business", "Purchase_Read", "Purchase_Write", "Purchase_Member"],
     isUpRole: true,
+    // 是否有会员系统
+    isMember: true,
+    memberLabel: "供应商",
   },
   {
     label: "生产",
@@ -136,7 +144,7 @@ export const MENU_LIST = [
     value: "/erp/produce/produce",
     checkField: "produceEnable",
     modelKey: "produce",
-    role: ["Admin", "Business", "Produce_Read", "Produce_Write"],
+    role: ["Admin", "Business", "Produce_Read", "Produce_Write", "Produce_Member"],
     isUpRole: true,
   },
   {
@@ -153,8 +161,11 @@ export const MENU_LIST = [
     value: "/erp/logistics/logistics",
     checkField: "deliveryEnable",
     modelKey: "logistics",
-    role: ["Admin", "Business", "Delivery_Read", "Delivery_Write"],
+    role: ["Admin", "Business", "Delivery_Read", "Delivery_Write", "Delivery_Member"],
     isUpRole: true,
+    // 是否有会员系统
+    isMember: true,
+    memberLabel: "物流商",
   },
   {
     label: "产品管理",
@@ -188,6 +199,31 @@ export const MENU_LIST = [
 ];
 
 /**
+ * @description 页面枚举
+ */
+export const PageEnums = {
+  // 添加付款单据
+  ticket: "/erp/finance/ticket",
+  // 新增修改销售订单
+  editSale: "/form/sale-order",
+  // 添加销售退货单
+  saleRefund: "/form/sale-refund-order",
+
+  // 新增修改采购订单
+  editPurchase: "/form/purchase-order",
+  // 添加采购退货单
+  refundPurchase: "/form/purchase-refund-order",
+
+  // 销售客户
+  saleClient: "/erp/sale/sale?PAGE_INDEX=2",
+  // 采购供应商
+  purchaseClient: "/erp/purchase/purchase?PAGE_INDEX=2",
+
+  // 物流商
+  logisticsClient: "/erp/logistics/logistics?PAGE_INDEX=1",
+};
+
+/**
  * @description 首页页面类型
  * @type {{logout: string}}
  */
@@ -196,19 +232,20 @@ export const HOME_PAGE_TYPE_ENUMS = {
   reselect: "重新选择商户",
   ADDED_SALE: "分享出去添加销售单",
   ADDED_PURCHASE: "分享出去添加采购单",
+  ADDED_REFUND_PURCHASE: "分享出去添加采购退货单",
   ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",
   BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
-  BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修"
+  BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修",
 };
 
 /**
  * @description 页面类型对呀的页面地址
  */
 export const PAGE_TYPE_CORRESPOND_PATH = {
-  ADDED_SALE: "/erp/sale/order",
+  ADDED_SALE: PageEnums.editSale,
   BINDING_CLIENT_BY_SALE: "/client/binding/binding",
-  ADDED_PURCHASE: "/erp/purchase/order",
+  ADDED_PURCHASE: PageEnums.editPurchase,
   BINDING_CLIENT_BY_PURCHASE: "/client/binding/binding",
 };
 
@@ -229,4 +266,5 @@ export const WEB_SOCKET_ENUMS = {
 /**
  * @description 财务看版其它费用固定 id 不可修改; wages: 工资; freight: 运费
  */
-export const FINANCE_CLASSIFY_FIXED_ID = ['wages', 'freight']
+export const FINANCE_CLASSIFY_FIXED_ID = ["wages", "freight"];
+

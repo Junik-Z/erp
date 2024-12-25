@@ -1,34 +1,30 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import BasicMixins from "@/mixins/mixins";
-import { cancelSaleApi, getSaleHistoryApi, getSaleListApi, removeSaleApi, submitSaleApi } from "@/api/erp/sale";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
+import { getSaleHistoryApi, getSaleListApi, printSaleApi } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _pick } from "@/utils";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import { _deepCopy, _get, _isEmpty, _pick, showToast } from "@/utils";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
+import PrintList from "@/components/PrintList/PrintList.vue";
+import KoMovable from "@/components/Movable/index.vue";
+import { CONFIG, PageEnums } from "@/utils/config";
+import SaleMixins from "../SaleMixins";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "OrderList",
   components: {
+    KoList,
+    KoMovable,
+    PrintList,
     UvActionSheet,
     OrderCard,
     HistoryBar,
-    LoadMore,
-    UniFab,
-    UniCol,
-    UniRow,
     BasicCard,
-    UniListItem,
-    UniList,
   },
-  mixins: [BasicMixins],
+  mixins: [BasicMixins, SaleMixins],
   data() {
     const _this = this;
     return {
@@ -41,7 +37,7 @@ export default {
           openType: "share",
           params: {
             title: `${_this.GET_USER_INFO?.nickName || ""}邀请您来下单啦！`,
-            path: "/erp/sale/order",
+            path: PageEnums.editSale,
             query: {
               PAGE_TYPE: "ADDED_SALE",
             },
@@ -51,12 +47,18 @@ export default {
         {
           text: "新增",
           iconPath: "/static/images/icons/added.png",
-          path: "/erp/sale/order",
+          path: PageEnums.editSale,
         },
       ],
 
       loading: false,
       list: [],
+
+      queryList: {
+        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageNum: 0,
+      },
+      noMore: false,
 
       isHistory: false,
       actionItem: {},
@@ -166,79 +168,38 @@ export default {
     };
   },
   methods: {
-    getList() {
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    getList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       this.loading = true;
       const Func = this.isHistory ? getSaleHistoryApi : getSaleListApi;
-      Func({pageSize: 1000000, pageNum: 0})
+      Func(this.queryList)
         .then(res => {
-          this.list = res.data;
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+          console.log(res);
         })
         .finally(() => {
           this.loading = false;
         });
     },
-    onCancel(item) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `您确定要取消 ${item.orderCode} 订单吗？`,
-        success: (res) => {
-          if (res.confirm) {
-            cancelSaleApi(item)
-              .then(() => {
-                uni.showToast({title: "取消成功"});
-                this.getList();
-              });
-          }
-        },
-      });
-    },
+
     onJump(item) {
-      uni.navigateTo({
-        url: `/erp/sale/order?id=${item.id}`,
-      });
+      this.jumpAddedSale({id: item.id});
     },
-    // 提交销售订单
-    onSubmit(item) {
-      uni.showModal({
-        title: "温馨提示",
-        content: "您确定要提交该销售订单吗？请注意，一旦提交，订单内容将无法再进行修改。",
-        success: (res) => {
-          if (res.confirm) {
-            this.$set(item, "__s_loading__", true);
-            submitSaleApi(item)
-              .then(() => {
-                uni.showToast({title: "提交成功"});
-                this.getList();
-              })
-              .finally(() => {
-                this.$set(item, "__s_loading__", false);
-              });
-          }
-        },
-      });
-    },
-    onRemove(item) {
-      uni.showModal({
-        title: "温馨提示",
-        content: "您确定要删除此销售订单吗？",
-        success: (res) => {
-          if (res.confirm) {
-            this.$set(item, "__r_loading__", true);
-            removeSaleApi(item)
-              .then(() => {
-                uni.showToast({title: "删除成功"});
-                this.getList();
-              })
-              .finally(() => {
-                this.$set(item, "__r_loading__", false);
-              });
-          }
-        },
-      });
-    },
+
     onTrigger(event) {
       const {path} = event.item || {};
-      this.$refs.FabRef.close();
       if (path) {
         uni.navigateTo({url: path});
       }
@@ -246,20 +207,15 @@ export default {
 
     // 添加单据
     onAddedDocuments(item) {
-      const q = this.getQueryString({
+      this.jumpSaleAddedDocuments({
         ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId"]),
         orderType: "SALE",
         noUnable: true,
       });
-      uni.navigateTo({
-        url: `/erp/finance/ticket${q}`,
-      });
     },
     // 申请退货
     onReturn(item) {
-      uni.navigateTo({
-        url: "/erp/sale/refund?order_id=" + item.id,
-      });
+      this.jumpSaleReturn({order_id: item.id});
     },
 
     onRowClick(row) {
@@ -274,6 +230,20 @@ export default {
     onSelect(item) {
       this[item.func](_deepCopy(this.actionItem));
     },
+
+    // 开启打印
+    onPrint(item) {
+      this.$refs.PLRef.open({orderId: item.id});
+    },
+    // 开始打印
+    startPrint(data) {
+      printSaleApi(data)
+        .then(() => {
+          showToast({
+            title: "请求成功",
+          });
+        });
+    },
   },
   computed: {
     actionList() {
@@ -286,7 +256,7 @@ export default {
         },
         {
           name: "取消订单",
-          func: "onCancel",
+          func: "cancelSale",
           status: ["CREATED"],
         },
         {
@@ -297,7 +267,7 @@ export default {
         {
           name: "删除",
           color: "#e43d33",
-          func: "onRemove",
+          func: "removeSale",
           status: ["CANCELLED", "CREATED"],
         },
       ]
@@ -309,12 +279,12 @@ export default {
 
 <template>
   <view class="ko-order">
-    <HistoryBar v-model="isHistory" text="销售订单" @change="getList" />
+    <HistoryBar v-model="isHistory" :values="['待处理订单', '销售订单']" @change="getList(true)" />
 
-    <UniList>
-      <!-- #ifdef MP -->
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
+    <!-- #ifdef MP -->
+    <view>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view style="padding: 5px 10px" v-for="item of list" :key="item.id">
           <OrderCard
             :is-history="isHistory"
             :item="item"
@@ -324,7 +294,14 @@ export default {
             <template #operate v-if="isPerm('Sales_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
-                  v-if="!['CANCELLED'].includes(item.status)"
+                  v-if="['FINISHED'].includes(item.status)"
+                  class="ko-basic-button__card"
+                  @click.stop="onPrint(item)"
+                >
+                  打印单据
+                </button>
+                <button
+                  v-if="['FINISHED'].includes(item.status) && !item.confirmable"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item)"
                 >
@@ -333,12 +310,13 @@ export default {
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="onSubmit(item)"
+                  @click.stop="submitSale(item)"
                   :disabled="item.__s_loading__"
                   :loading="item.__s_loading__"
                 >
                   提交订单
                 </button>
+
 
                 <button
                   class="ko-basic-button__card"
@@ -365,14 +343,14 @@ export default {
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="onCancel(item)"
+                    @click.stop="cancelSale(item)"
                     v-if="['CREATED'].includes(item.status)"
                   >
                     取消
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="onRemove(item)"
+                    @click.stop="removeSale(item)"
                     :loading="item.__r_loading__"
                     :disabled="item.__r_loading__"
                     v-if="['CANCELLED', 'CREATED'].includes(item.status)"
@@ -383,100 +361,90 @@ export default {
               </view>
             </template>
           </OrderCard>
+        </view>
+      </KoList>
+    </view>
+    <!-- #endif -->
+
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onRowClick"
+      >
+        <template #operate="{item}" v-if="isPerm('Sales_Write')">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              v-if="!['CANCELLED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onAddedDocuments(item)"
+            >
+              付款
+            </button>
+            <button
+              v-if="['FINISHED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onReturn(item)"
+            >
+              申请退货
+            </button>
+            <button
+              v-if="['FINISHED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onJumpPrint(item, 'sale')"
+            >
+              打印单据
+            </button>
+            <button
+              v-if="['CREATED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="submitSale(item)"
+              :disabled="item.__s_loading__"
+              :loading="item.__s_loading__"
+            >
+              提交订单
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onJump(item)"
+              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+            >
+              修改
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="cancelSale(item)"
+              v-if="['CREATED'].includes(item.status)"
+            >
+              取消
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="removeSale(item)"
+              :loading="item.__r_loading__"
+              :disabled="item.__r_loading__"
+              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+            >
+              删除
+            </button>
+          </view>
         </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
-      <!-- #endif -->
+      </KoTable>
+    </view>
+    <!-- #endif -->
 
-      <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
-        <KoTable
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-          @row-click="onRowClick"
-        >
-          <template #operate="{item}" v-if="isPerm('Sales_Write')">
-            <view style="display: flex; align-items: center; justify-content: center;">
-              <button
-                v-if="!['CANCELLED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onAddedDocuments(item)"
-              >
-                付款
-              </button>
-              <button
-                v-if="['FINISHED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onReturn(item)"
-              >
-                申请退货
-              </button>
-              <button
-                v-if="['FINISHED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onJumpPrint(item, 'sale')"
-              >
-                打印单据
-              </button>
-              <button
-                v-if="['CREATED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onSubmit(item)"
-                :disabled="item.__s_loading__"
-                :loading="item.__s_loading__"
-              >
-                提交订单
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onJump(item)"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-              >
-                修改
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onCancel(item)"
-                v-if="['CREATED'].includes(item.status)"
-              >
-                取消
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onRemove(item)"
-                :loading="item.__r_loading__"
-                :disabled="item.__r_loading__"
-                v-if="['CANCELLED', 'CREATED'].includes(item.status)"
-              >
-                删除
-              </button>
-            </view>
-          </template>
-        </KoTable>
-      </view>
-      <!-- #endif -->
-    </UniList>
-
-    <UniFab
+    <KoMovable
       v-if="isPerm('Sales_Write')"
-      ref="FabRef"
-      :pattern='{
-        color: "#7A7E83",
-        backgroundColor: "#fff",
-        selectedColor: "#007AFF",
-        buttonColor: "#007AFF",
-        iconColor: "#fff",
-      }'
-      horizontal="right"
       :content="content"
-      direction="vertical"
-      @trigger="onTrigger"
+      @click="onTrigger"
     />
 
     <!-- #ifdef MP -->
+    <PrintList ref="PLRef" @submit="startPrint" />
     <UvActionSheet
       ref="UASRef"
       :actions="actionList"
@@ -486,6 +454,7 @@ export default {
       @select="onSelect"
     />
     <!-- #endif -->
+
   </view>
 </template>
 

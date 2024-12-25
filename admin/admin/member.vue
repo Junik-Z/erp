@@ -1,11 +1,8 @@
 <script>
 import Basic from "@/mixins/mixins";
 import { getBusinessesUserListApi, setBusinessUserRoleApi } from "@/api/admin";
-import { _deepCopy, _get, _omit } from "@/utils";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
+import { _deepCopy, _get, _isEmpty, _omit } from "@/utils";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
@@ -15,17 +12,22 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "member",
   components: {
+    KoList,
     UvAvatar,
     UniForms,
     BasicPopup,
     UniFormsItem,
     FilePicker,
     UniEasyinput,
-    UniSearchBar, UniCol, UniRow, UniListItem, LoadMore, BasicCard, UniList,
+    UniSearchBar,
+    UniCol,
+    UniRow,
+    BasicCard,
   },
   mixins: [Basic],
   data() {
@@ -36,6 +38,12 @@ export default {
       loading: false,
 
       visible: false,
+
+      queryList: {
+        pageSize: 10,
+        pageNum: 0,
+      },
+      noMore: false,
 
       form: {},
       rules: {},
@@ -101,14 +109,19 @@ export default {
     this.getList();
   },
   methods: {
-    getList() {
+    getList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       this.loading = false;
       const params = _omit(_deepCopy(this.option), ["id"]);
 
-      getBusinessesUserListApi(params)
+      getBusinessesUserListApi({...params, ...this.queryList})
         .then((res) => {
-          this.list = res.data;
-          console.log(res.data);
+          this.list = this.onMergeArrays(this.list, res.data, "userId");
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -120,7 +133,7 @@ export default {
       setBusinessUserRoleApi({userId: item.userId, businessName: this.option.businessName})
         .then(() => {
           uni.showToast({title: "设置成功"});
-          this.getList();
+          this.getList(true);
         })
         .finally(() => {
           this.$set(item, "__loading__", false);
@@ -152,9 +165,9 @@ export default {
     />
 
     <!-- #ifdef MP -->
-    <UniList>
-      <UniListItem v-for="(item, index) of list" :key="index">
-        <template #body>
+    <view>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view style="padding: 10px;" v-for="(item, index) of list" :key="index">
           <BasicCard>
             <i
               v-if="isBusiness(item.role)"
@@ -201,11 +214,9 @@ export default {
               </view>
             </view>
           </BasicCard>
-        </template>
-      </UniListItem>
-
-      <LoadMore :loading="loading" />
-    </UniList>
+        </view>
+      </KoList>
+    </view>
     <!-- #endif -->
 
     <!-- #ifdef H5 -->

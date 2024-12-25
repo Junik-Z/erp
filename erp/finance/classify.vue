@@ -1,4 +1,7 @@
 <script>
+// #ifdef H5
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
+// #endif
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -11,14 +14,15 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import { addedCategoryApi, getCategoryListApi, removeCategoryApi, updateCategoryApi } from "@/api/erp/finance";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import { _deepCopy, _get } from "@/utils";
 import { FINANCE_CLASSIFY_FIXED_ID } from "@/utils/config";
 
 export default {
   name: "classify",
   components: {
+    // #ifdef H5
     KoTable,
+    // #endif
     LoadMore,
     UniForms,
     BasicPopup,
@@ -33,6 +37,7 @@ export default {
   },
   data() {
     const _this = this;
+
     return {
       FINANCE_CLASSIFY_FIXED_ID,
       visible: false,
@@ -66,22 +71,24 @@ export default {
         },
         {
           label: "类型名称",
+          minWidth: 180,
           prop: "name",
         },
         {
           label: "备注",
+          minWidth: 180,
           prop: "remark",
         },
         {
           label: "操作",
-          width: 260,
+          width: 180,
           slot: "operate",
         },
       ],
       // #endif
     };
   },
-  onLoad() {
+  created() {
     this.getList();
   },
   methods: {
@@ -148,8 +155,9 @@ export default {
       this.visible = true;
 
       this.$nextTick(() => {
+        // #ifdef MP
         this.$refs?.FormRef?.clearValidate?.();
-
+        // #endif
         this.form = {...node};
         console.log(node);
       });
@@ -212,10 +220,15 @@ export default {
       <!-- #endif -->
     </UniList>
 
+    <view class="ko-classify__added-btn">
+      <button class="ko-basic-button" @click="onAdded()">添加分类</button>
+    </view>
+
     <UniFab
       horizontal="right"
       direction="vertical"
       @fab-click="onAdded()"
+      v-if="false"
     />
 
     <BasicPopup :visible.sync="visible">
@@ -239,6 +252,18 @@ export default {
 <style scoped lang="scss">
 .ko-classify {
   width: 100%;
+
+  &__added-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 20px 0 0;
+
+    .ko-basic-button {
+      height: 40px;
+      line-height: 40px;
+    }
+  }
 
   &__info {
     display: flex;
@@ -279,11 +304,6 @@ export default {
     padding: 16px;
     background: #fff;
     border-radius: 8px;
-  }
-
-
-  .ko-basic-button__card {
-    margin: 5px;
   }
 }
 </style>

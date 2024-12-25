@@ -1,3 +1,15 @@
+.icon-bianzu:before {
+  content: "\e677";
+}
+
+.icon-close:before {
+  content: "\e65a";
+}
+
+.icon-Close:before {
+  content: "\e61a";
+}
+
 .icon-gengduocaozuo:before {
   content: "\e683";
 }

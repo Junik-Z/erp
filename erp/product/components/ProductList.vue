@@ -1,16 +1,4 @@
 <script>
-import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
-import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
-import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import {
   deleteProductApi,
   getProductFieldApi,
@@ -18,39 +6,23 @@ import {
   upDownPurchaseApi,
   upDownSaleApi,
 } from "@/api/erp/product";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
 import { _deepCopy, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
-import UniDataPicker from "@/uni_modules/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
+import KoMovable from "@/components/Movable/index.vue";
 
 export default {
   name: "ProductList",
   mixins: [mixins],
   components: {
+    KoMovable,
     ProductCard,
     IndexList,
     UvActionSheet,
     PickerClass,
-    UniDataPicker,
-    UniCard,
-    LoadMore,
-    UniFab,
-    UniForms,
-    BasicPopup,
-    UniFormsItem,
-    UniEasyinput,
-    UniListItem,
-    BasicCard,
-    UniCol,
-    UniRow,
-    UniList,
-    UniGridItem,
-    UniGrid,
   },
   data() {
     return {
@@ -260,24 +232,13 @@ export default {
       </view>
       <view class="ko-product__list">
         <!-- #ifdef MP -->
-        <IndexList :options="list" v20241216 is-product :loading="loading" @action-click="onActionClick">
-          <!--  <template #cell="{node}">
-              <view class="ko-product__wrap&#45;&#45;item">
-                <ProductCard :node="node" is-list :span="24" perm="Product_Write">
-                  <template #footer="{item}">
-                    <view class="ko-product__item&#45;&#45;footer">
-                      <button
-                        class="ko-basic-button__card action"
-                        @click="onActionClick(item)"
-                      >
-                        <i class="iconfont icon-gengduocaozuo"></i>
-                      </button>
-                    </view>
-                  </template>
-                </ProductCard>
-              </view>
-            </template>-->
-        </IndexList>
+        <IndexList
+          :options="list"
+          v20241216
+          is-product
+          :loading="loading"
+          @action-click="onActionClick"
+        />
         <!-- #endif -->
 
         <!-- #ifdef H5 -->
@@ -323,20 +284,9 @@ export default {
       </view>
     </view>
 
-    <UniFab
+    <KoMovable
       v-if="isPerm('Product_Write')"
-      ref="FabRef"
-      :pattern='{
-        color: "#7A7E83",
-        backgroundColor: "#fff",
-        selectedColor: "#007AFF",
-        buttonColor: "#007AFF",
-        iconColor: "#fff"
-      }'
-      horizontal="right"
-      direction="vertical"
-      :offset-button="10"
-      @fab-click="onFabClick()"
+      @click="onFabClick('')"
     />
 
     <!-- #ifdef MP -->

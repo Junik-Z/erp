@@ -21,6 +21,7 @@ export function getCountSupplierApi(data) {
     data,
   });
 }
+
 /**
  * @description 获取供应商详情
  */
@@ -231,6 +232,39 @@ export function addedPurchaseReturnApi(data) {
 }
 
 /**
+ * @description 打印采购订单
+ */
+export function printPurchaseApi(data) {
+  return request({
+    url: "/purchase/print",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 打印采购订单
+ */
+export function printA4PurchaseApi(data) {
+  return request({
+    url: "/purchase/printA4",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 打印采购退货订单
+ */
+export function returnPrintPurchaseApi(data) {
+  return request({
+    url: "/purchase/return/print",
+    method: "post",
+    data,
+  });
+}
+
+/**
  * @description 修改退货采购订单
  */
 export function updatePurchaseReturnApi(data) {
@@ -270,6 +304,61 @@ export function removePurchaseReturnApi(data) {
   return request({
     url: "/purchase/return/delete",
     method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取本人采购订单
+ */
+export function getPurchaseListFormMyApi(data) {
+  return request({
+    url: "/purchase/my",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取供应商绑定信息
+ */
+export function getBindInfoApi(data) {
+  return request({
+    url: "/supplier/getBindInfo",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的采购统计
+ */
+export function getMyStatisticsPurchaseApi(data) {
+  return request({
+    url: "/purchase/myStatistics",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的采购列表
+ */
+export function getMyPurchaseListApi(data) {
+  return request({
+    url: "/purchase/my",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的采购退货列表
+ */
+export function getReturnMyPurchaseListApi(data) {
+  return request({
+    url: "/purchase/return/my",
+    method: "get",
     data,
   });
 }

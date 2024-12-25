@@ -3,7 +3,7 @@ export default {
 	props: {
 		// 头像图片路径(不能为相对路径)
 		src: {
-			type: String,
+			type: [String, null],
 			default: ''
 		},
 		// 头像形状，circle-圆形，square-方形
@@ -23,7 +23,7 @@ export default {
 		},
 		// 显示的文字
 		text: {
-			type: String,
+			type: [String, null],
 			default: ''
 		},
 		// 背景色

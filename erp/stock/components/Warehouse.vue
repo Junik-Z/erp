@@ -2,19 +2,30 @@
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import { cancelInboundApi, confirmInboundApi, getInboundHistoryListApi, getInboundListApi } from "@/api/erp/stock";
+import {
+  cancelInboundApi,
+  confirmInboundApi,
+  getInboundHistoryListApi,
+  getInboundListApi,
+  printA4InboundApi,
+} from "@/api/erp/stock";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get } from "@/utils";
+import { _get, _isEmpty, showToast } from "@/utils";
+import PrintList from "@/components/PrintList/PrintList.vue";
+import KoList from "@/components/List/List.vue";
+import { CONFIG } from "@/utils/config";
 
 export default {
   name: "Warehouse",
   components: {
+    KoList,
+    PrintList,
     OrderCard,
     HistoryBar,
     LoadMore,
@@ -31,6 +42,13 @@ export default {
       loading: false,
       list: [],
       isHistory: false,
+
+      queryList: {
+        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageNum: 0,
+      },
+
+      noMore: false,
 
       // #ifdef H5
       columns: [
@@ -120,6 +138,7 @@ export default {
         },
         {
           label: "操作",
+          width: 300,
           slot: "operate",
         },
 
@@ -128,13 +147,27 @@ export default {
     };
   },
   methods: {
-    getList() {
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    getList(reset = false) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       this.loading = true;
       const Func = this.isHistory ? getInboundHistoryListApi : getInboundListApi;
-      Func({pageSize: 1000000, pageNum: 0})
+
+      Func(this.queryList)
         .then(res => {
-          this.list = res.data;
-          console.log(res.data);
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+          console.log(res);
         })
         .finally(() => {
           this.loading = false;
@@ -154,7 +187,7 @@ export default {
             cancelInboundApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -170,15 +203,28 @@ export default {
             confirmInboundApi(item)
               .then(() => {
                 uni.showToast({title: "入库成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
       });
     },
-
     onRowClick(row) {
       this.onJumpDetails(row, "inbound");
+    },
+
+    // 开启打印
+    onPrint(item) {
+      this.$refs.PLRef.open({orderId: item.id});
+    },
+    // 开始打印
+    startPrint(data) {
+      printA4InboundApi(data)
+        .then(() => {
+          showToast({
+            title: "请求成功",
+          });
+        });
     },
   },
 };
@@ -186,15 +232,26 @@ export default {
 
 <template>
   <view class="ko-warehouse">
-    <HistoryBar v-model="isHistory" text="入库审批" @change="getList" />
+    <HistoryBar v-model="isHistory" :values="['待处理审批', '入库审批']" @change="getList(true)" />
 
-    <UniList>
-      <!-- #ifdef MP -->
-      <UniListItem v-for="(item, index) of list" :key="index">
-        <template #body>
-          <OrderCard :item="item" @click="onJumpDetails(item, 'inbound')" :is-history="isHistory">
+    <!-- #ifdef MP -->
+    <view>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view style="padding: 10px;" v-for="(item, index) of list" :key="index">
+          <OrderCard
+            :item="item"
+            @click="onJumpDetails(item, 'inbound')"
+            :is-history="isHistory"
+          >
             <template #operate v-if="isPerm('Stock_Write')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onPrint(item)"
+                >
+                  打印入库单(A4)
+                </button>
+
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
@@ -212,49 +269,52 @@ export default {
               </view>
             </template>
           </OrderCard>
-        </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
-      <!-- #endif -->
+        </view>
+      </KoList>
+    </view>
+    <!-- #endif -->
 
-      <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
-        <KoTable
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-          @row-click="onRowClick"
-        >
-          <template #operate="{item}" v-if="isPerm('Stock_Write')">
-            <view style="display: flex; align-items: center; justify-content: center;">
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onJumpPrint(item, 'inbound')"
-              >
-                打印单据
-              </button>
-              <button
-                v-if="['CREATED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onCancel(item)"
-              >
-                取消入库
-              </button>
-              <button
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onConfirm(item)"
-              >
-                确认入库
-              </button>
-            </view>
-          </template>
-        </KoTable>
-      </view>
-      <!-- #endif -->
-    </UniList>
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onRowClick"
+      >
+        <template #operate="{item}" v-if="isPerm('Stock_Write')">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onJumpPrint(item, 'inbound')"
+            >
+              打印入库单(A4)
+            </button>
+            <button
+              v-if="['CREATED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onCancel(item)"
+            >
+              取消入库
+            </button>
+            <button
+              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onConfirm(item)"
+            >
+              确认入库
+            </button>
+          </view>
+        </template>
+      </KoTable>
+    </view>
+    <!-- #endif -->
+
+    <!-- #ifdef MP -->
+    <PrintList ref="PLRef" @submit="startPrint" />
+    <!-- #endif -->
   </view>
 </template>
 
@@ -289,10 +349,6 @@ export default {
         flex: 1;
       }
     }
-  }
-
-  .ko-basic-button__card {
-    margin: 0 5px;
   }
 }
 

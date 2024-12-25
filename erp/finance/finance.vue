@@ -5,11 +5,13 @@ import Receivable from "./components/Receivable.vue";
 import PayList from "./components/PayList.vue";
 import CostList from "./components/CostList.vue";
 import Verification from "./components/Verification.vue";
-import { _get, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEqual } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "finance",
   components: {Verification, CostList, PayList, Receivable, UniSegmentedControl},
+  mixins: [mixins],
   data: () => ({
     tabList: [
       {
@@ -29,33 +31,27 @@ export default {
         ref: "VRef",
       },
     ],
-    current: 0,
+    // TAB: 0,
   }),
+  onLoad(option) {
+    this.TABS_LIST = _deepCopy(this.tabList);
+
+    if (option.PAGE_INDEX) {
+      this.TAB = +option.PAGE_INDEX;
+    }
+  },
   onShow() {
-    this.getList();
+    this.$nextTick(() => {
+      this.getList();
+    })
   },
   methods: {
-    onTab(event) {
-      this.current = event.currentIndex;
-      this.getList();
-    },
     getList() {
-      if (!this.getRefName) return false;
-
       this.$nextTick(() => {
-        this.$refs[this.getRefName]?.getList?.();
+        console.log(this.GET_TAB_LIST);
+        if (!this.GET_TABS_REF_NAME) return false;
+        this.$refs[this.GET_TABS_REF_NAME]?.getList?.(true);
       });
-    },
-  },
-  computed: {
-    getTabList() {
-      return this.tabList;
-    },
-    getRefName() {
-      return _get(this.getTabList, `${this.current}.ref`);
-    },
-    isEqual() {
-      return _isEqual;
     },
   },
 };
@@ -63,17 +59,22 @@ export default {
 
 <template>
   <view class="ko-purchase">
-    <view class="ko-purchase__tabs">
-      <UniSegmentedControl :values="getTabList" label-key="label" :current="current" @clickItem="onTab" />
+    <view class="ko-purchase__tabs" v-if="GET_TAB_LIST.length > 1">
+      <UniSegmentedControl
+        :values="GET_TAB_LIST"
+        label-key="label"
+        :current.sync="TAB"
+        @clickItem="getList"
+      />
     </view>
 
-    <Receivable ref="VVRef" v-if="isEqual(getRefName,'VVRef')" />
+    <Receivable ref="VVRef" v-if="isEqual(GET_TABS_REF_NAME,'VVRef')" />
 
-    <PayList ref="PLRef" v-if="isEqual(getRefName,'PLRef')" />
+    <PayList ref="PLRef" v-if="isEqual(GET_TABS_REF_NAME,'PLRef')" />
 
-    <CostList ref="CLRef" v-if="isEqual(getRefName,'CLRef')" />
+    <CostList ref="CLRef" v-if="isEqual(GET_TABS_REF_NAME,'CLRef')" />
 
-    <Verification ref="VRef" v-if="isEqual(getRefName,'VRef')" />
+    <Verification ref="VRef" v-if="isEqual(GET_TABS_REF_NAME,'VRef')" />
   </view>
 </template>
 

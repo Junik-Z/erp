@@ -189,3 +189,25 @@ export function checkInOutOrderApi(data) {
     data,
   });
 }
+
+
+/**
+ * @description 打印出库单
+ */
+export function printA4OutboundApi(data) {
+  return request({
+    url: "/stock/outbound/printA4",
+    method: "post",
+    data,
+  });
+}
+/**
+ * @description 打印入库单
+ */
+export function printA4InboundApi(data) {
+  return request({
+    url: "/stock/inbound/printA4",
+    method: "post",
+    data,
+  });
+}

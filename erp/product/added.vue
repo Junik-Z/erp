@@ -247,7 +247,7 @@ export default {
           </UniFormsItem>
         </view>
       </UniSection>
-      <UniSection title="其它信息" type="line">
+      <UniSection title="其它信息" type="line" v-if="false">
         <view style="padding: 10px;">
           <UniFormsItem label="产品描述：" name="description">
             <UniEasyinput

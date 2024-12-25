@@ -3,19 +3,24 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { addedPurchaseApi, getPurchaseDetailApi, updatePurchaseApi } from "@/api/erp/purchase";
-import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
+import {
+  addedPurchaseApi,
+  getBindInfoApi,
+  getPurchaseDetailApi,
+  getPurchaseListFormMyApi,
+  updatePurchaseApi,
+} from "@/api/erp/purchase";
+import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, _get, _isEqual, _keys, _pick, showToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import { getBindInfoApi, getSaleMyListApi } from "@/api/erp/sale";
-import FeesList from "@/erp/components/FeesList/FeesList.vue";
+import FeesList from "@/components/FeesList/FeesList.vue";
 import mixins from "@/mixins/mixins";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -64,6 +69,8 @@ export default {
       clientCurrent: 0,
       orderList: [],
 
+      isEdit: false,
+
       // 客户绑定用户列表
       bindList: [],
 
@@ -101,9 +108,9 @@ export default {
       this.onLogInAgain(this.option)
         .finally(() => {
           setTimeout(() => {
+            this.form.otherSupplier = this.GET_USER_INFO.nickName;
             this.getBindInfo();
-            this.getMyList();
-          }, 100);
+          }, 10);
         });
     } else {
       this.current = 0;
@@ -119,6 +126,9 @@ export default {
         .then(res => {
           const params = res.data;
           params.totalAmount = transferYuan(params.totalAmount);
+
+          params.otherSupplier = this.GET_FUNC(params, 'customer.name')
+
           this.form = params;
         });
     },
@@ -179,13 +189,6 @@ export default {
       this.form.orderPhone = _get(node, "contacts.0.phone");
     },
 
-    getMyList() {
-      console.log(this.GET_USER_INFO, "用户信息");
-      getSaleMyListApi({pageSize: 1000000, pageNum: 0})
-        .then(res => {
-          this.orderList = res.data;
-        });
-    },
     getBindInfo() {
       getBindInfoApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
@@ -207,156 +210,111 @@ export default {
           }
         });
     },
-
-    onReOrder(node) {
-      const form = _pick(node, _keys(this.form));
-      form.purchaserId = UserInfo.userId;
-      this.form = _deepCopy(form);
-    },
   },
 };
 </script>
 
 <template>
   <view class="ko-order ko-basic-added-form">
-    <view class="ko-order__client" v-if="isClient">
-      <UniSegmentedControl
-        :current.sync="clientCurrent"
-        :values="clientTabs"
-        style-type="text"
-      />
-    </view>
+    <UniForms
+      :model="form"
+      label-width="120px"
+      label-align="right"
+      ref="FormRef"
+      :rules="rules"
+    >
+      <UniSection title="基础信息" type="line">
+        <view style="padding: 10px;">
+          <view style="margin: 0 30px 20px;" v-if="!isClient">
+            <UniSegmentedControl
+              :current.sync="current"
+              :values="tabs"
+              style-type="text"
+              @click-item="onTabItem"
+            />
+          </view>
 
-    <template v-if="clientCurrent === 0">
-      <UniForms
-        :model="form"
-        label-width="120px"
-        label-align="right"
-        ref="FormRef"
-        :rules="rules"
-      >
-        <UniSection title="基础信息" type="line">
-          <view style="padding: 10px;">
-            <view style="margin: 0 30px 20px;" v-if="!isClient">
-              <UniSegmentedControl
-                :current.sync="current"
-                :values="tabs"
-                style-type="text"
-                @click-item="onTabItem"
+          <template v-if="current === 0">
+            <UniFormsItem label="供应商：" name="supplierId">
+              <PickerUser
+                style="width: 100%;"
+                v-model="form.supplierId"
+                placeholder="请选择"
+                title="选择供应商"
+                is-input
+                type="supplier"
+                ref="UserRef"
+                :is-long-list="isClient"
+                :options="bindList"
+                @input="onSupplierId"
+              />
+            </UniFormsItem>
+          </template>
+
+          <template v-if="current === 1">
+            <UniFormsItem :label="`${isClient ? '姓名' : '名称'}：`" name="otherSupplier">
+              <UniEasyinput
+                v-model="form.otherSupplier"
+                style="width: 100%;"
+                placeholder="请输入"
+              />
+            </UniFormsItem>
+          </template>
+        </view>
+      </UniSection>
+
+      <UniSection title="配送信息" type="line">
+        <view style="padding: 10px;">
+          <UniFormsItem label="电话：" name="orderPhone">
+            <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
+          </UniFormsItem>
+          <UniFormsItem label="地址：" name="orderAddress">
+            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+          </UniFormsItem>
+        </view>
+      </UniSection>
+
+      <UniSection title="产品明细" type="line">
+        <view style="padding: 10px;">
+          <UniFormsItem name="details" label-width="0">
+            <view style="width: 100%;">
+              <PickerProduct
+                v-model="form.details"
+                :total.sync="form.totalAmount"
+                type="purchase"
+                :is-client="isClient"
+                is-actual
+                ref="PPRef"
               />
             </view>
+          </UniFormsItem>
+        </view>
+      </UniSection>
 
-            <template v-if="current === 0">
-              <UniFormsItem label="供应商：" name="supplierId">
-                <PickerUser
-                  style="width: 100%;"
-                  v-model="form.supplierId"
-                  placeholder="请选择"
-                  title="选择供应商"
-                  is-input
-                  type="supplier"
-                  ref="UserRef"
-                  :is-long-list="isClient"
-                  :options="bindList"
-                  @input="onSupplierId"
-                />
-              </UniFormsItem>
-            </template>
+      <UniSection title="其它费用" type="line">
+        <view style="padding: 10px;">
+          <FeesList v-model="form.fees" is-form />
+        </view>
+      </UniSection>
 
-            <template v-if="current === 1">
-              <UniFormsItem :label="`${isClient ? '姓名' : '名称'}：`" name="otherSupplier">
-                <UniEasyinput
-                  v-model="form.otherSupplier"
-                  style="width: 100%;"
-                  placeholder="请输入"
-                />
-              </UniFormsItem>
-              <!--<UniFormsItem :label="`${isClient ? '联系电话' : '供应商电话'}：`" name="otherSupplierPhone">
-                <UniEasyinput
-                  v-model="form.otherSupplierPhone"
-                  style="width: 100%;"
-                  type="tel"
-                  placeholder="请输入"
-                />
-              </UniFormsItem>-->
-            </template>
-          </view>
-        </UniSection>
-
-        <UniSection title="配送信息" type="line">
-          <view style="padding: 10px;">
-            <UniFormsItem label="电话：" name="orderPhone">
-              <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
-            </UniFormsItem>
-            <UniFormsItem label="地址：" name="orderAddress">
-              <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
-            </UniFormsItem>
-          </view>
-        </UniSection>
-
-        <UniSection title="产品明细" type="line">
-          <view style="padding: 10px;">
-            <UniFormsItem name="details" label-width="0">
-              <view style="width: 100%;">
-                <PickerProduct
-                  v-model="form.details"
-                  :total.sync="form.totalAmount"
-                  type="purchase"
-                  :is-client="isClient"
-                  is-actual
-                  ref="PPRef"
-                />
-              </view>
-            </UniFormsItem>
-          </view>
-        </UniSection>
-
-        <UniSection title="其它费用" type="line">
-          <view style="padding: 10px;">
-            <FeesList v-model="form.fees" is-form />
-          </view>
-        </UniSection>
-
-        <UniSection title="其它信息" type="line">
-          <view style="padding: 10px;">
-            <UniFormsItem label="备注：" name="remark">
-              <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
-            </UniFormsItem>
-          </view>
-        </UniSection>
-      </UniForms>
-      <view class="ko-order__footer">
-        <button
-          class="ko-basic-button"
-          @click="onSubmit"
-          :loading="loading"
-          :disabled="loading"
-        >
-          保存
-        </button>
-      </view>
-    </template>
-
-    <template v-else>
-      <UniList>
-        <UniListItem v-for="node of orderList" :key="node.id">
-          <template #body>
-            <OrderCard @click="onJumpDetails(node, 'purchase')" :item="node" is-sales>
-              <template #operate="{node}">
-                <view
-                  v-if="false"
-                  style="margin-top: 8px; display: flex; align-items: center; justify-content: flex-end;"
-                >
-                  <button class="ko-basic-button__card" @click.stop="onReOrder(node)">重新下单</button>
-                </view>
-              </template>
-            </OrderCard>
-          </template>
-        </UniListItem>
-        <LoadMore :loading="false" />
-      </UniList>
-    </template>
-
+      <UniSection title="其它信息" type="line">
+        <view style="padding: 10px;">
+          <UniFormsItem label="备注：" name="remark">
+            <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
+          </UniFormsItem>
+        </view>
+      </UniSection>
+    </UniForms>
+    <view class="ko-order__footer">
+      <button
+        class="ko-basic-button"
+        @click="onSubmit"
+        :loading="loading"
+        :disabled="loading"
+      >
+        保存
+      </button>
+    </view>
   </view>
 </template>
 

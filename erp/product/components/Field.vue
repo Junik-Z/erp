@@ -1,10 +1,8 @@
 <script>
-import DaTreeVue2 from "@/components/da-tree-vue2/index.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import {
   addedProductFieldApi,
   deleteProductFieldApi,
@@ -12,106 +10,101 @@ import {
   getProductFieldApi,
 } from "@/api/erp/product";
 import { _deepCopy, _get, _isEmpty } from "@/utils";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import mixins from "@/mixins/mixins";
+import KoMovable from "@/components/Movable/index.vue";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "Field",
   components: {
+    KoList,
+    KoMovable,
     UniRow,
     UniCol,
     BasicCard,
-    LoadMore,
-    UniFab,
     UniForms,
     BasicPopup,
     UniFormsItem,
     UniEasyinput,
-    DaTreeVue2,
   },
   mixins: [mixins],
-  data: () => ({
-    roomTreeData: [],
-    visible: false,
-    pattern: {
-      color: "#7A7E83",
-      backgroundColor: "#fff",
-      selectedColor: "#007AFF",
-      buttonColor: "#007AFF",
-      iconColor: "#fff",
-    },
-    loading: false,
+  data() {
+    return {
+      list: [],
+      visible: false,
+      loading: false,
 
-    form: {
-      fieldName: "",
-      fieldCode: "",
-    },
-
-    rules: {
-      fieldName: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请填写字段名称",
-          },
-          // {
-          //   required: true,
-          //   minLength: 1,
-          //   // maxLength: 30,
-          //   errorMessage: "分类名称不能小于1个字符",
-          // },
-        ],
-        validateTrigger: "submit",
+      queryList: {
+        pageSize: 20,
+        pageNum: 0,
       },
-      fieldCode: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入字段编码",
-          },
-          {
-            validateFunction(r, v, d, c) {
-              return new Promise((resolve, reject) => {
-                if (!(/^[a-zA-Z_][a-zA-Z_0-9]*$/.test(v))) {
-                  reject(new Error("字段编码必须是字母、_、数字任意组合，不能以数字开头"));
-                  return false;
-                }
-                resolve();
-              });
+      noMore: false,
+
+      form: {
+        fieldName: "",
+        fieldCode: "",
+      },
+
+      rules: {
+        fieldName: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请填写字段名称",
             },
-          },
-        ],
-        validateTrigger: "submit",
+          ],
+          validateTrigger: "submit",
+        },
+        fieldCode: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入字段编码",
+            },
+            {
+              validateFunction(r, v, d, c) {
+                return new Promise((resolve, reject) => {
+                  if (!(/^[a-zA-Z_][a-zA-Z_0-9]*$/.test(v))) {
+                    reject(new Error("字段编码必须是字母、_、数字任意组合，不能以数字开头"));
+                    return false;
+                  }
+                  resolve();
+                });
+              },
+            },
+          ],
+          validateTrigger: "submit",
+        },
       },
-    },
 
-    isEdit: false,
+      isEdit: false,
 
-    // #ifdef H5
-    columns: [
-      {
-        label: "序号",
-        type: "index",
-        width: 80,
-      },
-      {
-        label: "字段名称",
-        prop: "fieldName",
-      },
-      {
-        label: "字段编码",
-        prop: "fieldCode",
-      },
-      {
-        label: "操作",
-        slot: "operate",
-      },
-    ],
-    // #endif
-  }),
+      // #ifdef H5
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 80,
+        },
+        {
+          label: "字段名称",
+          prop: "fieldName",
+        },
+        {
+          label: "字段编码",
+          prop: "fieldCode",
+        },
+        {
+          label: "操作",
+          slot: "operate",
+        },
+      ],
+      // #endif
+    };
+  },
   created() {
     // this.getList();
     // #ifdef MP
@@ -121,11 +114,25 @@ export default {
     // #endif
   },
   methods: {
-    getList() {
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    getList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       this.loading = true;
-      getProductFieldApi({pageSize: 1000000, pageNum: 0})
+      getProductFieldApi(this.queryList)
         .then(res => {
-          this.roomTreeData = res.data;
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+
         })
         .finally(() => {
           this.loading = false;
@@ -158,7 +165,9 @@ export default {
       this.visible = true;
       this.isEdit = false;
       this.$nextTick(() => {
+        // #ifdef MP
         this.$refs.FormRef.clearValidate();
+        // #endif
         this.form = _deepCopy(this.$options.data().form);
 
         if (!_isEmpty(row)) {
@@ -200,35 +209,37 @@ export default {
   <view class="ko-field">
     <view class="ko-field__row">
       <!-- #ifdef MP -->
-      <BasicCard v-for="(item, index) in roomTreeData" :key="index" :spacing="10">
-        <view class="ko-field__info">
-          <UniRow>
-            <UniCol :span="12">
-              <label class="ko-basic-label">字段名称：</label>
-              {{ item.fieldName }}
-            </UniCol>
-            <UniCol :span="12">
-              <label class="ko-basic-label">字段编码：</label>
-              {{ item.fieldCode }}
-            </UniCol>
-          </UniRow>
-
-          <view
-            v-if="isPerm('Product_Write')"
-            style="display: flex; align-items: center; justify-content: flex-end; padding-top: 10px;"
-          >
-            <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
-            <button
-              class="ko-basic-button__card"
-              @click="onRemove(item)"
-              :loading="item.__remove_loading__"
-            >
-              删除
-            </button>
-          </view>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view style="padding: 5px;" v-for="(item, index) in list" :key="index">
+          <BasicCard>
+            <view class="ko-field__info">
+              <UniRow>
+                <UniCol :span="12">
+                  <label class="ko-basic-label">字段名称：</label>
+                  {{ item.fieldName }}
+                </UniCol>
+                <UniCol :span="12">
+                  <label class="ko-basic-label">字段编码：</label>
+                  {{ item.fieldCode }}
+                </UniCol>
+              </UniRow>
+              <view
+                v-if="isPerm('Product_Write')"
+                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 10px;"
+              >
+                <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
+                <button
+                  class="ko-basic-button__card"
+                  @click="onRemove(item)"
+                  :loading="item.__remove_loading__"
+                >
+                  删除
+                </button>
+              </view>
+            </view>
+          </BasicCard>
         </view>
-      </BasicCard>
-      <LoadMore :loading="loading" />
+      </KoList>
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
@@ -271,14 +282,9 @@ export default {
         <button class="ko-basic-button" style="margin: 30px 40px 10px;" @click="onSubmit">保存</button>
       </view>
     </BasicPopup>
-
-    <UniFab
+    <KoMovable
       v-if="isPerm('Product_Write')"
-      ref="FabRef"
-      :pattern="pattern"
-      horizontal="right"
-      direction="vertical"
-      @fab-click="onAdded()"
+      @click="onAdded('')"
     />
   </view>
 </template>

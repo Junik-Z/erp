@@ -62,7 +62,6 @@ export default function request(config, isLoading = false, whole = false) {
         if (res.statusCode === 200 && code === 200) {
           resolve(res.data);
         } else if (code === 401) {
-
           if (uni.$__IS_LOGOUT_FLAG__) return false
 
           if (!isFlag) {
@@ -115,6 +114,7 @@ export default function request(config, isLoading = false, whole = false) {
                   }
                 },
               });
+              reject(res);
             }
           } else {
             if (!_isEqual(config["url"], "/index/wx/login")) {
@@ -131,6 +131,7 @@ export default function request(config, isLoading = false, whole = false) {
             title: msg,
             icon: "none",
           });
+          reject(res);
         } else {
           uni.showToast({
             title: msg,

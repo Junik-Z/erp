@@ -129,6 +129,7 @@ export default {
       const list = _deepCopy(this.options);
       const obj = _groupBy(list, (v) => _get(v, this.groupKey));
       this.touchmoveIndex = -1;
+
       this.getKeyList.forEach((key, index) => {
         this.groupObj[key] = obj[key] || [];
         if (this.touchmoveIndex === -1 && !_isEmpty(obj[key])) this.touchmoveIndex = index;
@@ -265,7 +266,6 @@ export default {
         :class="[{'safe-area-inset-bottom': safeAreaInsetBottom}]"
       >
         <view class="ko-index-list__scroll--wrap" :class="{'is-product': isProduct, 'is-selected': isSelected}">
-
           <view class="ko-index-list__loading" v-if="loading">
             <UvLoadingIcon size="40" />
           </view>
@@ -273,6 +273,7 @@ export default {
           <view class="ko-index-list__not-list" v-if="!loading && !options.length">
             暂无数据数据
           </view>
+
           <block v-if="v20241216">
             <!-- 添加订单的时候显示的产品列表 -->
             <block v-if="isSelected">

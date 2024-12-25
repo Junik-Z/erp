@@ -23,7 +23,6 @@ export default {
     disabled = true;
     // #endif
 
-
     return {
       gridList: MENU_LIST,
       disabled,
@@ -50,9 +49,6 @@ export default {
     // #endif
   },
   computed: {
-    CONFIG() {
-      return CONFIG;
-    },
     getMenuButtonStyle() {
       const {top, height} = this.menuButton || {};
       return {
@@ -98,7 +94,6 @@ export default {
       }
       uni.navigateTo({url: item.value});
     },
-
     onJumpStore() {
       uni.navigateTo({
         url: "/admin/admin/store",

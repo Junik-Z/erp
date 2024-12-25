@@ -26,7 +26,9 @@ export default {
     if (this.isJudge) {
       this.type = "purchase";
       this.getList();
+      // #ifdef H5
       this.getClassList();
+      // #endif
     }
 
     const EC = this.getOpenerEventChannel();

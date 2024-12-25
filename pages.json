@@ -52,7 +52,7 @@
         {
           "path": "stock/stock",
           "style": {
-            "navigationBarTitleText": "库存看版"
+            "navigationBarTitleText": "库存"
           }
         },
         {
@@ -70,13 +70,7 @@
         {
           "path": "sale/sale",
           "style": {
-            "navigationBarTitleText": "销售看版"
-          }
-        },
-        {
-          "path": "sale/order",
-          "style": {
-            "navigationBarTitleText": "销售订单"
+            "navigationBarTitleText": "销售"
           }
         },
         {
@@ -86,21 +80,9 @@
           }
         },
         {
-          "path": "sale/refund",
-          "style": {
-            "navigationBarTitleText": "新增退货单"
-          }
-        },
-        {
           "path": "purchase/purchase",
           "style": {
-            "navigationBarTitleText": "采购看版"
-          }
-        },
-        {
-          "path": "purchase/order",
-          "style": {
-            "navigationBarTitleText": "采购订单"
+            "navigationBarTitleText": "采购"
           }
         },
         {
@@ -110,15 +92,9 @@
           }
         },
         {
-          "path": "purchase/refund",
-          "style": {
-            "navigationBarTitleText": "退货处理"
-          }
-        },
-        {
           "path": "produce/produce",
           "style": {
-            "navigationBarTitleText": "生产看版"
+            "navigationBarTitleText": "生产"
           }
         },
         {
@@ -130,13 +106,7 @@
         {
           "path": "finance/finance",
           "style": {
-            "navigationBarTitleText": "财务看版"
-          }
-        },
-        {
-          "path": "finance/classify",
-          "style": {
-            "navigationBarTitleText": "分类管理"
+            "navigationBarTitleText": "财务"
           }
         },
         {
@@ -207,7 +177,7 @@
         {
           "path": "merchants/merchants",
           "style": {
-            "navigationBarTitleText": "商铺配置"
+            "navigationBarTitleText": "员工管理"
           }
         },
         {
@@ -244,6 +214,35 @@
           "style": {
             "navigationBarTitleText": "订单打印",
             "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "form",
+      "pages": [
+        {
+          "path": "sale-order",
+          "style": {
+            "navigationBarTitleText": "销售订单"
+          }
+        },
+        {
+          "path": "sale-refund-order",
+          "style": {
+            "navigationBarTitleText": "销售退货订单"
+          }
+        },
+        {
+          "path": "purchase-order",
+          "style": {
+            "navigationBarTitleText": "采购订单"
+          }
+        },
+        {
+          "path": "purchase-refund-order",
+          "style": {
+            "navigationBarTitleText": "采购退货订单"
           }
         }
       ]

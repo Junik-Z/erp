@@ -8,24 +8,30 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import {
   cancelDeliveryApi,
   confirmDeliveryApi,
+  getCountApi,
   getDeliveryHistoryListApi,
   getDeliveryListApi,
   putBindApi,
 } from "@/api/erp/logistics";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get } from "@/utils";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import { _deepCopy, _get, _isEmpty } from "@/utils";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
+import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import { CONFIG } from "@/utils/config";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "SendList",
   components: {
+    KoList,
+    UvCountTo,
     PickerUser,
     UniEasyinput,
     UniFormsItem,
@@ -47,6 +53,13 @@ export default {
       loading: false,
       list: [],
 
+      queryList: {
+        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageNum: 0,
+      },
+
+      noMore: false,
+
       isHistory: false,
 
       actionItem: {},
@@ -67,6 +80,32 @@ export default {
             },
           ],
         },
+      },
+
+      CountList: [
+        {
+          label: "总订单数",
+          key: "totalOrderCount",
+          color: "#2979ff",
+          span: 12,
+          unit: "单",
+        },
+        {
+          label: "总物流商数",
+          key: "totalLogisticsCount",
+          color: "#2979ff",
+          unit: "位",
+        },
+        {
+          label: "待处理订单数",
+          key: "waitDealOrderCount",
+          color: "#2979ff",
+        },
+      ],
+      data: {
+        "waitDealOrderCount": 0,
+        "totalLogisticsCount": 0,
+        "totalOrderCount": 0,
       },
 
       // #ifdef H5
@@ -155,17 +194,51 @@ export default {
   mounted() {
   },
   methods: {
-    getList() {
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    getList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       this.loading = true;
-      const Func = this.isHistory ? getDeliveryHistoryListApi : getDeliveryListApi;
-      Func({pageSize: 1000000, pageNum: 0})
+      getCountApi()
         .then(res => {
-          this.list = res.data;
           console.log(res.data);
+          this.data = res.data;
+        })
+        .finally(() => {
+          this.loading = false;
+          this.getMyList(reset);
+        });
+    },
+    getMyList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+      this.loading = true;
+
+      const Func = this.isHistory ? getDeliveryHistoryListApi : getDeliveryListApi;
+
+      Func(this.queryList)
+        .then(res => {
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+          console.log(res);
         })
         .finally(() => {
           this.loading = false;
         });
+    },
+
+    onFunc() {
     },
 
     // 取消配送
@@ -178,7 +251,7 @@ export default {
             cancelDeliveryApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -194,7 +267,7 @@ export default {
             confirmDeliveryApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -226,7 +299,7 @@ export default {
           putBindApi({...params, id: this.actionItem.id})
             .then(() => {
               uni.showToast({title: "指定成功"});
-              this.getList();
+              this.getList(true);
             })
             .finally(() => {
               this.visible = false;
@@ -236,6 +309,13 @@ export default {
     },
   },
   computed: {
+    getCountValue() {
+      return (item) => {
+        const value = _get(this.data, item.key);
+        return item.unit === "元" ? this.toYuan(value) : value;
+      };
+    },
+
     actionList() {
       const node = this.actionItem || {};
       return [
@@ -259,12 +339,32 @@ export default {
 
 <template>
   <view class="ko-send">
-    <HistoryBar v-model="isHistory" text="配送订单" @change="getList" />
+    <view class="ko-basic-count__wrap">
+      <UniRow :gutter="10">
+        <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
+          <view class="ko-basic-count" @click.stop="onFunc(item)">
+            <view class="ko-basic-count__label">{{ item.label }}</view>
+            <view class="ko-basic-count__info">
+              <UvCountTo
+                :separator="item.unit === '元' ? ',' : ''"
+                :start-val="0"
+                bold
+                :end-val="getCountValue(item)"
+                :color="item.color ? item.color : '#2979ff'"
+              />
+              <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
+            </view>
+          </view>
+        </UniCol>
+      </UniRow>
+    </view>
 
-    <UniList>
-      <!-- #ifdef MP -->
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
+    <HistoryBar v-model="isHistory" text="配送订单" @change="getList(true)" />
+
+    <!-- #ifdef MP -->
+    <view>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view style="padding: 5px 10px" v-for="item of list" :key="item.id">
           <OrderCard :item="item" is-logistics @click="onJumpDetails(item, 'logistics')">
             <template #operate v-if="isPerm('Delivery_Write') || (isBusiness || isAdmin)">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
@@ -286,56 +386,55 @@ export default {
               </view>
             </template>
           </OrderCard>
-        </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
-      <!-- #endif -->
+        </view>
+      </KoList>
+    </view>
+    <!-- #endif -->
 
-      <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
-        <KoTable
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-          @row-click="onJumpDetails($event, 'logistics')"
-        >
-          <!--
-          @row-click="onJumpDetails($event, 'receivable')"
-          -->
-          <template #operate="{item}">
-            <view
-              v-if="isPerm('Delivery_Write')"
-              style="display: flex; align-items: center; justify-content: center;"
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onJumpDetails($event, 'logistics')"
+      >
+        <!--
+        @row-click="onJumpDetails($event, 'receivable')"
+        -->
+        <template #operate="{item}">
+          <view
+            v-if="isPerm('Delivery_Write')"
+            style="display: flex; align-items: center; justify-content: center;"
+          >
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onBind(item)"
+              v-if="['CREATED'].includes(item.status)"
             >
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onBind(item)"
-                v-if="['CREATED'].includes(item.status)"
-              >
-                指定物流商
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onConfirm(item)"
-                v-if="['CREATED'].includes(item.status)"
-              >
-                完成配送
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onCancel(item)"
-                v-if="['CREATED'].includes(item.status)"
-              >
-                取消配送
-              </button>
-            </view>
-          </template>
-        </KoTable>
-      </view>
-      <!-- #endif -->
-    </UniList>
+              指定物流商
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onConfirm(item)"
+              v-if="['CREATED'].includes(item.status)"
+            >
+              完成配送
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onCancel(item)"
+              v-if="['CREATED'].includes(item.status)"
+            >
+              取消配送
+            </button>
+          </view>
+        </template>
+      </KoTable>
+    </view>
+    <!-- #endif -->
 
     <!-- #ifdef MP -->
     <UvActionSheet

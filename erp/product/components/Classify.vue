@@ -4,7 +4,6 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import {
   addedProductClassApi,
   deleteProductClassApi,
@@ -14,24 +13,25 @@ import {
   upDownSaleClassApi,
 } from "@/api/erp/product";
 import { _deepCopy, _get, _isEmpty } from "@/utils";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
+import KoMovable from "@/components/Movable/index.vue";
 
 export default {
   name: "Classify",
-  components: {UvActionSheet, LoadMore, UniFab, UniForms, BasicPopup, UniFormsItem, UniEasyinput, DaTreeVue2},
+  components: {
+    KoMovable,
+    UvActionSheet,
+    UniForms,
+    BasicPopup,
+    UniFormsItem,
+    UniEasyinput,
+    DaTreeVue2,
+  },
   mixins: [mixins],
   data: () => ({
     roomTreeData: [],
     visible: false,
-    pattern: {
-      color: "#7A7E83",
-      backgroundColor: "#fff",
-      selectedColor: "#007AFF",
-      buttonColor: "#007AFF",
-      iconColor: "#fff",
-    },
     loading: false,
 
     form: {
@@ -101,7 +101,9 @@ export default {
       this.visible = true;
       this.isEdit = false;
       this.$nextTick(() => {
+        // #ifdef MP
         this.$refs.FormRef.clearValidate();
+        // #endif
         this.form = _deepCopy(this.$options.data().form);
 
         if (!_isEmpty(row)) {
@@ -261,7 +263,6 @@ export default {
         </template>
         <!-- #endif -->
       </DaTreeVue2>
-      <LoadMore :loading="loading" />
     </view>
 
     <BasicPopup :visible.sync="visible">
@@ -280,13 +281,9 @@ export default {
       </template>
     </BasicPopup>
 
-    <UniFab
+    <KoMovable
       v-if="isPerm('Product_Write')"
-      ref="FabRef"
-      :pattern="pattern"
-      horizontal="right"
-      direction="vertical"
-      @fab-click="onAdded()"
+      @click="onAdded('')"
     />
 
     <!-- #ifdef MP -->

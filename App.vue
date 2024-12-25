@@ -2,6 +2,7 @@
 import { getConfigApi, getMyInfoApi, getScanQrCodeApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
 import { _deepCopy, _get, _isEnv, _isEqual, _omit } from "@/utils";
 import dayjs from "@/utils/dayjs";
+import { PageEnums } from "@/utils/config";
 
 export default {
   async onLaunch(option) {
@@ -38,7 +39,7 @@ export default {
 
     // #ifdef MP
     // 当进入的不是 [首页, 自助绑定] 时需要先获取用户信息
-    if (!["pages/home/home", "client/binding/binding", "/erp/sale/order", "/erp/purchase/order"].includes(option.path)) {
+    if (!["pages/home/home", "client/binding/binding", PageEnums.editSale, PageEnums.editPurchase].includes(option.path)) {
       await this.getInfo();
     }
     // #endif
@@ -223,6 +224,7 @@ export default {
 
         // #ifndef MP-TOUTIAO
         uni.onSocketMessage(this.onMessage);
+
         // 监听WebSocket错误
         uni.onSocketError((res) => {
           uni.showToast({
@@ -246,7 +248,6 @@ export default {
         });
         // #endif
       } catch (e) {
-
       }
     },
 
@@ -257,7 +258,7 @@ export default {
         const data = JSON.parse(res.data);
         uni.$emit("$__web_socket_message__", data);
       } catch (e) {
-        uni.$emit("$__web_socket_message__", res);
+        // uni.$emit("$__web_socket_message__", res);
       }
     },
   },

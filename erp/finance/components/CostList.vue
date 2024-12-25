@@ -1,5 +1,7 @@
 <script>
-import QiunDataCharts from "@/erp/components/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
+// #ifdef H5
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
+// #endif
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -10,12 +12,9 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
-import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { addedCostApi, getCategoryListApi, getCostListApi, statisticsCostApi, updateCostApi } from "@/api/erp/finance";
-import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import mixins from "@/mixins/mixins";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
@@ -26,19 +25,26 @@ import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import dayjs from "@/utils/dayjs";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 
+import ClassifyList from "../classify.vue";
+import KoMovable from "@/components/Movable/index.vue";
+import { CONFIG } from "@/utils/config";
+import KoList from "@/components/List/List.vue";
+
 export default {
   name: "ViewVersion",
   components: {
+    KoList,
+    KoMovable,
+    // #ifdef H5
+    KoTable,
+    // #endif
     PickerUser,
     FilePicker,
     UniEasyinput,
     BasicPopup,
     UniFormsItem,
     UniForms,
-    UniFab,
     UvAvatar,
-    UniDataSelect,
-    KoTable,
     LoadMore,
     UniSegmentedControl,
     UniListItem,
@@ -46,8 +52,8 @@ export default {
     UniCol,
     UniRow,
     UniList,
-    QiunDataCharts,
     UvCountTo,
+    ClassifyList,
   },
   mixins: [mixins],
   data() {
@@ -59,7 +65,10 @@ export default {
       loading: false,
       list: [],
 
-      queryList: {},
+      queryList: {
+        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageNum: 0,
+      },
 
       visible: false,
 
@@ -83,7 +92,11 @@ export default {
       },
       isEdit: false,
 
+      noMore: false,
+
       costList: [],
+
+      visibleClassify: false,
 
 
       // #ifdef H5
@@ -136,7 +149,20 @@ export default {
     };
   },
   methods: {
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
     onJump() {
+      if (this) {
+        this.visibleClassify = true;
+
+        return false;
+      }
+
       uni.navigateTo({
         url: "/erp/finance/classify",
       });
@@ -156,7 +182,12 @@ export default {
         });
     },
 
-    async getList() {
+    async getList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       if (_isEmpty(this.categoryList)) {
         await this.getCategoryList();
       }
@@ -167,8 +198,8 @@ export default {
 
       getCostListApi({...this.queryList, classId: this.getClassId})
         .then(res => {
-          console.log(res.data);
-          this.list = res.data;
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -176,7 +207,7 @@ export default {
     },
 
     getCost() {
-      statisticsCostApi({
+      return statisticsCostApi({
         startTime: dayjs().subtract(1, "M").format("YYYY-MM-DD HH:mm:ss"),
         endTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       })
@@ -202,7 +233,7 @@ export default {
               });
               this.visible = false;
 
-              this.getList();
+              this.getList(true);
             });
         } else {
           uni.showToast({
@@ -233,7 +264,7 @@ export default {
             deleteProductClassApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -251,6 +282,11 @@ export default {
         this.form = {...node};
       });
 
+    },
+
+    async onClose() {
+      await this.getCategoryList();
+      await this.getList(true);
     },
   },
   computed: {
@@ -305,10 +341,10 @@ export default {
     </view>
 
     <view class="ko-cost__row">
-      <UniList>
-        <!-- #ifdef MP -->
-        <UniListItem v-for="item of list" :key="item.id">
-          <template #body>
+      <!-- #ifdef MP -->
+      <view>
+        <KoList :loading="loading" :no-data="!list.length" :no-more="noMore">
+          <view style="padding: 5px 10px;" v-for="item of list" :key="item.id">
             <BasicCard>
               <view class="ko-cost__info">
                 <UniRow :gutter="10">
@@ -335,47 +371,42 @@ export default {
                 </view>
               </view>
             </BasicCard>
-          </template>
-        </UniListItem>
-        <LoadMore :loading="loading" />
-        <!-- #endif -->
+          </view>
+        </KoList>
+      </view>
+      <!-- #endif -->
 
-        <!-- #ifdef H5 -->
-        <view style="padding: 10px;">
-          <KoTable
-            :loading="loading"
-            :columns="getColumns"
-            :data="list"
-            empty-text="暂无数据"
-            stripe
-          >
-            <template #operate="{item}">
-              <view style="display: flex; align-items: center; justify-content: center;"
-                    v-if="isPerm('Finance_Write')">
-                <button class="ko-basic-button__card" @click.stop="onEdit(item)">修改</button>
-                <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
-              </view>
-            </template>
-          </KoTable>
-        </view>
-        <!-- #endif -->
-      </UniList>
+      <!-- #ifdef H5 -->
+      <view style="padding: 10px;">
+        <KoTable
+          :loading="loading"
+          :columns="getColumns"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+        >
+          <template #operate="{item}">
+            <view style="display: flex; align-items: center; justify-content: center;"
+                  v-if="isPerm('Finance_Write')">
+              <button class="ko-basic-button__card" @click.stop="onEdit(item)">修改</button>
+              <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+            </view>
+          </template>
+        </KoTable>
+      </view>
+      <!-- #endif -->
     </view>
 
-    <UniFab
+    <KoMovable
       v-if="isPerm('Finance_Write')"
-      ref="FabRef"
-      :pattern='{
-        color: "#7A7E83",
-        backgroundColor: "#fff",
-        selectedColor: "#007AFF",
-        buttonColor: "#007AFF",
-        iconColor: "#fff",
-      }'
-      horizontal="right"
-      direction="vertical"
-      @fab-click="onAdded()"
+      @click="onAdded('')"
     />
+
+    <BasicPopup :visible.sync="visibleClassify" @close="onClose">
+      <view class="ko-cost__class-props">
+        <ClassifyList />
+      </view>
+    </BasicPopup>
 
     <BasicPopup :visible.sync="visible">
       <view class="ko-cost__popup">
@@ -502,6 +533,16 @@ export default {
   &__popup {
     // #ifdef MP
     width: 90vw;
+    // #endif
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+  }
+
+  &__class-props {
+    // #ifdef MP
+    width: 98vw;
+    height: 80vh;
     // #endif
     padding: 16px;
     background: #fff;

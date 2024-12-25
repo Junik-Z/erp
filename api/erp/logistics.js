@@ -197,3 +197,14 @@ export function checkListApi(data) {
     data,
   });
 }
+
+/**
+ * @description 获取我的配送单统计
+ */
+export function getMyStatisticsApi(data) {
+  return request({
+    url: "/delivery/myStatistics",
+    method: "get",
+    data,
+  });
+}

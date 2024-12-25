@@ -1,4 +1,16 @@
-import { _get, _isEmpty, _omit, _pick, absYuan, dealBigMoney, transferYuan, yuanToPoints } from "@/utils";
+import {
+  _deepCopy,
+  _get,
+  _haveCommonElements,
+  _isEmpty,
+  _isEqual,
+  _omit,
+  _pick,
+  absYuan,
+  dealBigMoney,
+  transferYuan,
+  yuanToPoints,
+} from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG } from "@/utils/config";
 import QS from "@/utils/qs.min";
@@ -18,6 +30,9 @@ export default {
         USER: User || {},
         SYS: Sys || {},
       },
+      TABS_LIST: [],
+      TAB: 0,
+
     };
   },
   onShow() {
@@ -163,12 +178,34 @@ export default {
         }
       });
     },
+
+    // 请求下一页数据
+    RequestNextPage() {
+      this?.$refs?.[this.GET_TABS_REF_NAME]?.onRequestNextPage?.();
+    },
+
+    // 合并数据
+    onMergeArrays(list = [], data = [], key = "id") {
+      const L = _deepCopy(list);
+      data.forEach((item) => {
+        if (!L.some(v => _isEqual(_get(v, key), _get(item, key)))) {
+          L.push(item);
+        }
+      });
+      return L;
+    },
   },
   components: {
     // #ifdef H5
     KoTable,
     // #endif
   },
+  // #ifdef MP
+  // 页面滚动到最底部时触发
+  onReachBottom() {
+    this.RequestNextPage();
+  },
+  // #endif
   computed: {
     toYuan() {
       return transferYuan;
@@ -184,6 +221,10 @@ export default {
     },
     getImageUrl() {
       return getCacheFile;
+    },
+
+    isEqual() {
+      return _isEqual;
     },
 
     // 判断用户是否可以刷新库存
@@ -235,7 +276,7 @@ export default {
       return (type) => {
         return {
           CREATED: "待处理",
-          FINISHED: "已完成",
+          FINISHED: "已处理",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
         }[type] || "-";
@@ -370,6 +411,26 @@ export default {
     // 获取店铺名称
     GET_SHOP_NAME() {
       return _get(this.GET_CONFIG_INFO, "remark") || "";
+    },
+
+    // 通用 tab 列表
+    GET_TAB_LIST() {
+      return this.TABS_LIST?.flatMap(item => {
+        if (item.roles) {
+          const role = this.GET_USER_ROLE;
+          if (_haveCommonElements(role, item.roles) || this.isBusiness || this.isAdmin) {
+            return [item];
+          } else {
+            return [];
+          }
+        }
+        return [item];
+      });
+    },
+
+    // 获取当前选中的模块
+    GET_TABS_REF_NAME() {
+      return _get(this.GET_TAB_LIST, `${this.TAB}.ref`);
     },
   },
 };

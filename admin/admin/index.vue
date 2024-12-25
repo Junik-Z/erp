@@ -11,15 +11,19 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import Basic from "@/mixins/mixins";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy, _get } from "@/utils";
+import { _deepCopy, _get, _isEmpty } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import KoMovable from "@/components/Movable/index.vue";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "Admin",
   mixins: [Basic],
   components: {
+    KoList,
+    KoMovable,
     UniCol,
     UniRow,
     UvAvatar,
@@ -36,15 +40,14 @@ export default {
   },
   data() {
     return {
-      pattern: {
-        color: "#7A7E83",
-        backgroundColor: "#fff",
-        selectedColor: "#007AFF",
-        buttonColor: "#007AFF",
-        iconColor: "#fff",
-      },
       loading: false,
       list: [],
+
+      queryList: {
+        pageSize: 10,
+        pageNum: 0,
+      },
+      noMore: false,
 
       visible: false,
       rules: {
@@ -131,11 +134,16 @@ export default {
     // #endif
   },
   methods: {
-    getList() {
+    getList(reset) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
       this.loading = true;
-      getBusinessesListApi()
+      getBusinessesListApi(this.queryList)
         .then((res) => {
-          this.list = res.data;
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -145,7 +153,9 @@ export default {
     onTrigger() {
       this.visible = true;
       this.form = _deepCopy(this.$options.data().form);
+      // #ifdef MP
       this.$refs.FormRef.clearValidate();
+      // #endif
     },
 
     onSubmit() {
@@ -155,12 +165,12 @@ export default {
 
           this.sLoading = true;
 
-          addedBusinessesApi(params)
+          addedBusinessesApi({...params})
             .then(() => {
               uni.showToast({
                 title: "开户成功",
               });
-              this.getList();
+              this.getList(true);
               this.visible = false;
             })
             .finally(() => {
@@ -193,9 +203,9 @@ export default {
 <template>
   <view class="ko-admin">
     <!-- #ifdef MP -->
-    <UniList>
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
+    <view>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view style="padding: 5px 10px;" v-for="item of list" :key="item.id">
           <BasicCard @click="onJump(item)">
             <view class="ko-admin__item">
               <view class="ko-admin__item--info">
@@ -237,11 +247,9 @@ export default {
               </view>
             </view>
           </BasicCard>
-        </template>
-      </UniListItem>
-
-      <LoadMore :loading="loading" />
-    </UniList>
+        </view>
+      </KoList>
+    </view>
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
@@ -270,12 +278,8 @@ export default {
     </view>
     <!-- #endif -->
 
-    <UniFab
-      ref="FabRef"
-      :pattern="pattern"
-      horizontal="right"
-      direction="vertical"
-      @fab-click="onTrigger"
+    <KoMovable
+      @click="onTrigger('')"
     />
 
     <BasicPopup :visible.sync="visible">

@@ -4,18 +4,24 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
-import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
+import UniDataSelect from "./components/uni-data-select/components/uni-data-select/uni-data-select.vue";
+import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
-import { addedSaleReturnApi, getSaleDetailApi, getSaleReturnDetailApi, updateSaleReturnApi } from "@/api/erp/sale";
+import {
+  addedSaleReturnApi,
+  getBindInfoApi,
+  getSaleDetailApi,
+  getSaleReturnDetailApi,
+  updateSaleReturnApi,
+} from "@/api/erp/sale";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import mixins from "@/mixins/mixins";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import FeesList from "@/erp/components/FeesList/FeesList.vue";
+import FeesList from "@/components/FeesList/FeesList.vue";
 
 export default {
-  name: "refund",
+  name: "SaleRefundOrder",
   components: {
     FeesList,
     PickerUser,
@@ -47,30 +53,31 @@ export default {
       options: {},
       isEdit: false,
 
-      current: 0,
-      tabs: ["客户", "其它客户"],
-
-      isClient: false,
+      isClient: true,
 
       orderId: false,
+
+      // 客户绑定用户列表
+      bindList: [],
     };
   },
   created() {
   },
   onLoad(option) {
+    // 是否是客户下单
+    this.isClient = _isEqual("ADDED_REFUND_SALE", option.PAGE_TYPE);
     this.options = option;
     this.isEdit = !!option.id;
     this.orderId = option.order_id || "";
 
     if (this.isEdit || this.orderId) this.getInfo();
 
-    // 是否是客户下单
-    this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
-
     if (this.isClient) {
-      this.current = 1;
-    }
+      this.form.supplierId = this.GET_USER_INFO.userId;
+      this.form.otherSupplier = this.GET_USER_INFO.nickName;
 
+      this.getBindInfo();
+    }
   },
   methods: {
     getInfo() {
@@ -80,6 +87,9 @@ export default {
         .then(res => {
           const params = res.data;
           params.totalAmount = transferYuan(params.totalAmount);
+
+          params.otherSupplier = this.GET_FUNC(params, 'customer.name')
+
           this.form = params;
           console.log(res);
         });
@@ -105,13 +115,7 @@ export default {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
-                  if (this.orderId) {
-                    uni.redirectTo({
-                      url: "/erp/sale/sale?PAGE_INDEX=3",
-                    });
-                  } else {
-                    uni.navigateBack();
-                  }
+                  uni.navigateBack();
                 },
               });
             })
@@ -127,15 +131,24 @@ export default {
       });
     },
 
-    onTabItem() {
-      if (this.current === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
+    // 获取绑定的客户列表
+    getBindInfo() {
+      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+        .then(res => {
+          this.bindList = res.data?.map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
 
-      if (this.current === 1) {
-        this.form.supplierId = "";
-      }
+          if (this.bindList.length) {
+            const one = _get(res.data, "0") || {};
+            this.form.supplierId = one.id;
+            this.form.orderPhone = _get(one, "contacts.0.phone");
+            this.form.orderAddress = _get(one, "address");
+          }
+        });
     },
 
     onSupplierId(val) {
@@ -157,47 +170,27 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="margin: 0 30px 20px;" v-if="!isClient && false">
-            <UniSegmentedControl
-              :current.sync="current"
-              :values="tabs"
-              style-type="text"
-              @click-item="onTabItem"
+          <UniFormsItem label="客户：" name="supplierId">
+            <PickerUser
+              style="width: 100%;"
+              is-input
+              title="选择客户"
+              v-model="form.supplierId"
+              type="client"
+              :disabled="!!orderId"
+              ref="UserRef"
+              :is-long-list="isClient"
+              :options="bindList"
+              @input="onSupplierId"
+              v-if="bindList.length"
             />
-          </view>
-
-          <template v-if="current === 0">
-            <UniFormsItem label="客户：" name="supplierId">
-              <PickerUser
-                style="width: 100%;"
-                is-input
-                title="选择客户"
-                v-model="form.supplierId"
-                type="client"
-                :disabled="!!orderId"
-                ref="UserRef"
-                @input="onSupplierId"
-              />
-            </UniFormsItem>
-          </template>
-
-          <template v-if="current === 1 && false">
-            <UniFormsItem :label="`${isClient ? '姓名' : '其它客户'}：`" name="otherSupplier">
-              <UniEasyinput
-                v-model="form.otherSupplier"
-                style="width: 100%;"
-                placeholder="请输入"
-              />
-            </UniFormsItem>
-            <UniFormsItem :label="`${isClient ? '联系电话' : '客户电话'}：`" name="otherSupplierPhone">
-              <UniEasyinput
-                v-model="form.otherSupplierPhone"
-                style="width: 100%;"
-                type="tel"
-                placeholder="请输入"
-              />
-            </UniFormsItem>
-          </template>
+            <UniEasyinput
+              v-else
+              v-model="form.otherSupplier"
+              style="width: 100%;"
+              placeholder="请输入"
+            />
+          </UniFormsItem>
         </view>
       </UniSection>
 

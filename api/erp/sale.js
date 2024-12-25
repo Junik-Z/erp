@@ -277,6 +277,28 @@ export function confirmSaleReturnApi(data) {
   });
 }
 
+/**
+ * @description 打印单据
+ */
+export function printSaleApi(data) {
+  return request({
+    url: "/sale/print",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 打印退货单据
+ */
+export function returnPrintSaleApi(data) {
+  return request({
+    url: "/sale/return/print",
+    method: "post",
+    data,
+  });
+}
+
 
 /**
  * @description 获取绑定用户信息
@@ -306,6 +328,39 @@ export function getSaleMyListApi(data) {
 export function getOtherCostListApi(data) {
   return request({
     url: "/sale/otherCostList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的销售统计
+ */
+export function getMyStatisticsApi(data) {
+  return request({
+    url: "/sale/myStatistics",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的销售订单
+ */
+export function getMySaleListApi(data) {
+  return request({
+    url: "/sale/my",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的销售退货订单
+ */
+export function getMyReturnSaleListApi(data) {
+  return request({
+    url: "/sale/return/my",
     method: "get",
     data,
   });

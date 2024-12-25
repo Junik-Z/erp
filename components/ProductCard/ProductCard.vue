@@ -148,21 +148,21 @@ export default {
           <template v-if="isWarning">
             <UniCol :span="24">
               <view class="ko-product-card__item">
-                <label class="ko-basic-label">产品分类：</label>
+                <label class="ko-basic-label">分类：</label>
                 <text>{{ node.className || 0 }}</text>
               </view>
             </UniCol>
 
             <UniCol :span="12">
               <view class="ko-product-card__item">
-                <label class="ko-basic-label">库存数量：</label>
+                <label class="ko-basic-label">库存：</label>
                 <text class="ko-basic-money">{{ node.quantity || 0 }}</text>
               </view>
             </UniCol>
 
             <UniCol :span="12">
               <view class="ko-product-card__item">
-                <label class="ko-basic-label">库存数量预警：</label>
+                <label class="ko-basic-label">预警：</label>
                 <text class="ko-basic-money">{{ node.stockWarning || 0 }}</text>
               </view>
             </UniCol>
@@ -172,26 +172,33 @@ export default {
           <template v-else-if="isVerification">
             <UniCol :span="24">
               <view class="ko-product-card__item">
-                <label class="ko-basic-label">产品分类：</label>
+                <label class="ko-basic-label">分类：</label>
                 <text>{{ node.className || 0 }}</text>
               </view>
             </UniCol>
 
             <UniCol :span="24">
               <view class="ko-product-card__item">
-                <label class="ko-basic-label">库存数量：</label>
+                <label class="ko-basic-label">库存：</label>
                 <text class="ko-basic-money">{{ node.quantity || 0 }}</text>
               </view>
             </UniCol>
 
             <UniCol :span="24">
               <view class="ko-product-card__item">
-                <label class="ko-basic-label">库存预警数量：</label>
+                <label class="ko-basic-label">预警：</label>
                 <text class="ko-basic-money">{{ node.stockWarning || 0 }}</text>
               </view>
             </UniCol>
 
-            <UniCol :span="24">
+            <UniCol :span="24" v-for="field of FieldList" :key="field.id">
+              <view class="ko-product-card__item">
+                <label class="ko-basic-label">{{ field.fieldName }}：</label>
+                <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
+              </view>
+            </UniCol>
+
+            <UniCol :span="24" v-if="false">
               <label class="ko-basic-label">备注：</label>
               {{ node.remark || "-" }}
             </UniCol>
@@ -267,7 +274,7 @@ export default {
         </template>
 
         <template v-else-if="isJudge">
-          <UniCol :span="24" v-for="field of FieldList" :key="field.id" v-if="false">
+          <UniCol :span="24" v-for="field of FieldList" :key="field.id">
             <view class="ko-product-card__item">
               <label class="ko-basic-label">{{ field.fieldName }}：</label>
               <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
@@ -276,7 +283,7 @@ export default {
 
           <UniCol :span="24">
             <view class="ko-product-card__item">
-              <label class="ko-basic-label">库存预警数量：</label>
+              <label class="ko-basic-label">预警：</label>
               <text class="ko-basic-money">{{ node.stockWarning || 0 }}</text>
             </view>
           </UniCol>
@@ -284,7 +291,7 @@ export default {
 
           <UniCol :span="24">
             <view class="ko-product-card__item" style="display: block;">
-              <label class="ko-basic-label">库存数量：</label>
+              <label class="ko-basic-label">库存：</label>
 
               <view style="padding-top: 8px;">
                 <UniNumberBox
@@ -325,20 +332,20 @@ export default {
         <template v-else>
           <UniCol :span="span">
             <view class="ko-product-card__item">
-              <label class="ko-basic-label">产品分类：</label>
+              <label class="ko-basic-label">分类：</label>
               <text>{{ node.className || 0 }}</text>
             </view>
           </UniCol>
           <UniCol :span="span">
-            <label class="ko-basic-label">入库价格：</label>
+            <label class="ko-basic-label">入库：</label>
             <text class="ko-basic-money"> {{ toYuan(node.purchasePrice) }}元</text>
           </UniCol>
           <UniCol :span="span">
-            <label class="ko-basic-label">销售价格：</label>
+            <label class="ko-basic-label">销售：</label>
             <text class="ko-basic-money"> {{ toYuan(node.salePrice) }}元</text>
           </UniCol>
           <UniCol :span="span">
-            <label class="ko-basic-label">预警库存：</label>
+            <label class="ko-basic-label">预警：</label>
             {{ node.stockWarning }}
           </UniCol>
           <UniCol :span="span" v-for="field of FieldList" :key="field.id">
@@ -347,14 +354,14 @@ export default {
               <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
             </view>
           </UniCol>
-          <UniCol :span="span">
+         <!-- <UniCol :span="span">
             <label class="ko-basic-label">产品介绍：</label>
             {{ node.description || "-" }}
           </UniCol>
           <UniCol :span="span">
             <label class="ko-basic-label">备注：</label>
             {{ node.remark || "-" }}
-          </UniCol>
+          </UniCol>-->
           <UniCol :span="24">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 6px;">
               <view class="xiao" :class="{'is-active': node.saleOff}">

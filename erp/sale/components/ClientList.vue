@@ -1,24 +1,23 @@
 <script>
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _xor } from "@/utils";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
 import { bindCustomerApi, getCustomerListApi, removeCustomerApi, unbindCustomerApi } from "@/api/erp/sale";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
+import KoMovable from "@/components/Movable/index.vue";
 
 export default {
   name: "ClientList",
   components: {
+    KoMovable,
     UvActionSheet,
-    IndexList, PickerUser, UvAvatar, LoadMore, UniCol, UniRow, UniFab, BasicCard, UniListItem, UniList,
+    IndexList,
+    PickerUser,
+    UvAvatar,
+    UniList,
   },
   mixins: [BasicMixins],
   data() {
@@ -229,9 +228,7 @@ export default {
         uni.navigateTo({url: "/erp/sale/client"});
         return false;
       }
-
       const {path} = event.item || {};
-      this.$refs.FabRef.close();
       if (path) {
         uni.navigateTo({url: path});
       }
@@ -406,20 +403,9 @@ export default {
       @confirm="onConfirm"
     />
 
-    <UniFab
+    <KoMovable
       v-if="isPerm('Sales_Write')"
-      ref="FabRef"
-      :pattern='{
-        color: "#7A7E83",
-        backgroundColor: "#fff",
-        selectedColor: "#007AFF",
-        buttonColor: "#007AFF",
-        iconColor: "#fff",
-      }'
-      horizontal="right"
-      :content="[] || content"
-      direction="vertical"
-      @fab-click="onTrigger"
+      @click="onTrigger('')"
     />
 
     <!-- #ifdef MP -->

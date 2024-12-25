@@ -109,3 +109,14 @@ export function getPermissionsApi(data) {
     data,
   });
 }
+
+/**
+ * @description 获取在线打印机
+ */
+export function getPrintListApi(data) {
+  return request({
+    url: "/print/printers",
+    method: "get",
+    data,
+  });
+}

@@ -4,10 +4,11 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import UniDataSelect from "@/erp/components/uni-data-select/components/uni-data-select/uni-data-select.vue";
-import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
+import UniDataSelect from "./components/uni-data-select/components/uni-data-select/uni-data-select.vue";
+import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import {
   addedPurchaseReturnApi,
+  getBindInfoApi,
   getPurchaseDetailApi,
   getPurchaseReturnDetailApi,
   updatePurchaseReturnApi,
@@ -17,7 +18,7 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
-import FeesList from "@/erp/components/FeesList/FeesList.vue";
+import FeesList from "@/components/FeesList/FeesList.vue";
 
 export default {
   name: "refund",
@@ -55,6 +56,10 @@ export default {
       isClient: false,
 
       orderId: "",
+
+      bindList: [],
+
+      isEdit: false
     };
   },
   mixins: [mixins],
@@ -64,10 +69,15 @@ export default {
     this.orderId = option.order_id || "";
 
     if (this.isEdit || this.orderId) this.getInfo();
+
     // 是否是客户下单
-    this.isClient = _isEqual("ADDED_PURCHASE", option.PAGE_TYPE);
+    this.isClient = _isEqual("ADDED_REFUND_PURCHASE", option.PAGE_TYPE);
+
     if (this.isClient) {
       this.current = 1;
+
+      this.form.otherSupplier = this.GET_USER_INFO.nickName;
+      this.getBindInfo();
     }
   },
   methods: {
@@ -90,14 +100,7 @@ export default {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
-                  if (this.orderId) {
-                    uni.redirectTo({
-                      url: "/erp/purchase/purchase?PAGE_INDEX=3",
-                    });
-                  } else {
-                    uni.navigateBack();
-                  }
-
+                  uni.navigateBack();
                 },
               });
             })
@@ -120,7 +123,7 @@ export default {
           const params = _deepCopy(res.data);
           console.log(params);
           params.totalAmount = transferYuan(params.totalAmount);
-
+          params.otherSupplier = this.GET_FUNC(params, 'customer.name')
           this.form = params;
         });
     },
@@ -142,6 +145,29 @@ export default {
       this.form.orderAddress = node.address;
       this.form.orderPhone = _get(node, "contacts.0.phone");
     },
+
+
+    getBindInfo() {
+      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+        .then(res => {
+          this.bindList = res.data?.map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
+
+          if (this.bindList.length) {
+            this.current = 0;
+            const one = _get(res.data, "0") || {};
+            this.form.supplierId = one.id;
+            this.form.orderPhone = _get(one, "contacts.0.phone");
+            this.form.orderAddress = _get(one, "address");
+          } else {
+            this.current = 1;
+          }
+        });
+    },
   },
 };
 </script>
@@ -156,16 +182,6 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="margin: 0 30px 20px;" v-if="!isClient && false">
-            <UniSegmentedControl
-              :current.sync="current"
-              :values="tabs"
-              style-type="text"
-              @click-item="onTabItem"
-            />
-          </view>
-
-          <template v-if="current === 0">
             <UniFormsItem label="供应商：" name="supplierId">
               <PickerUser
                 style="width: 100%;"
@@ -177,27 +193,15 @@ export default {
                 :disabled="!!orderId"
                 ref="UserRef"
                 @input="onSupplierId"
+                v-if="bindList.length"
               />
-            </UniFormsItem>
-          </template>
-
-          <template v-if="current === 1 && false">
-            <UniFormsItem :label="`${isClient ? '姓名' : '其它供应商'}：`" name="otherSupplier">
               <UniEasyinput
+                v-else
                 v-model="form.otherSupplier"
                 style="width: 100%;"
                 placeholder="请输入"
               />
             </UniFormsItem>
-            <UniFormsItem :label="`${isClient ? '联系电话' : '供应商电话'}：`" name="otherSupplierPhone">
-              <UniEasyinput
-                v-model="form.otherSupplierPhone"
-                style="width: 100%;"
-                type="tel"
-                placeholder="请输入"
-              />
-            </UniFormsItem>
-          </template>
         </view>
       </UniSection>
 
