@@ -65,7 +65,6 @@ export default {
       queryList: {
         classId: "",
         name: "",
-        ...{pageSize: 1000000, pageNum: 0},
       },
       className: [],
       // 获取商品列表
@@ -141,7 +140,7 @@ export default {
     },
 
     // 获取商品列表
-    getList() {
+    getList(nameIndex) {
       this.loading = true;
       const params = {
         purchase: {purchaseOff: false},
