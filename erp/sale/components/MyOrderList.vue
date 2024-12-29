@@ -25,14 +25,14 @@ export default {
     return {
       CountList: [
         {
-          label: "签单总额",
+          label: "未结金额",
           key: "totalSignAmount",
           color: "#2979ff",
           unit: "元",
           span: 12,
         },
         {
-          label: "签单总数",
+          label: "未结订单",
           key: "totalSignCount",
           color: "#2979ff",
         },

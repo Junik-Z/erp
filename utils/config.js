@@ -215,12 +215,17 @@ export const PageEnums = {
   refundPurchase: "/form/purchase-refund-order",
 
   // 销售客户
-  saleClient: "/erp/sale/sale?PAGE_INDEX=2",
+  saleClient: "/erp/sale/sale?TO_REF=CLRef",
   // 采购供应商
-  purchaseClient: "/erp/purchase/purchase?PAGE_INDEX=2",
+  purchaseClient: "/erp/purchase/purchase?TO_REF=CLRef",
+
+  // 销售客户下单返回地址
+  saleClientAddedBack: "/erp/sale/sale?TO_REF=MOLRef",
+  // 采购供应商下单返回地址
+  purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
 
   // 物流商
-  logisticsClient: "/erp/logistics/logistics?PAGE_INDEX=1",
+  logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
 };
 
 /**

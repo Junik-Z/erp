@@ -1,3 +1,6 @@
+// #ifdef H5
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
+// #endif
 import {
   _deepCopy,
   _get,
@@ -16,9 +19,8 @@ import { CONFIG } from "@/utils/config";
 import QS from "@/utils/qs.min";
 import { goLogin, logoutApi } from "@/api/user";
 
-// #ifdef H5
-import KoTable from "@/erp/components/KoTable/KoTable.vue";
-// #endif
+import { getSaleShareIdApi } from "@/api/erp/sale";
+import { getPurchaseShareIdApi } from "@/api/erp/purchase";
 
 const User = uni.getStorageSync("__USER_INFO__");
 const Sys = uni.getStorageSync("__CONFIG_INFO__");
@@ -70,7 +72,7 @@ export default {
     },
 
     // 获取通用的分享 query 参数
-    _GET_SHARE_APP_PARAMS_(obj) {
+    async _GET_SHARE_APP_PARAMS_(obj) {
       const scene = uni.getStorageSync("__APP_SCENE__") || "";
       // 添加默认的参数数据
       const query = {
@@ -79,9 +81,18 @@ export default {
         // 分享用户的ID
         SHARE_USER_ID: this.GET_USER_INFO?.userId,
       };
+
+      if (["ADDED_SALE", "ADDED_PURCHASE"].includes(query.PAGE_TYPE)) {
+        try {
+          const Func = {ADDED_SALE: getSaleShareIdApi, ADDED_PURCHASE: getPurchaseShareIdApi}[query.PAGE_TYPE];
+          const res = await Func?.();
+          query.SHARE_ID = res.data;
+        } catch (e) {
+        }
+      }
+
       const path = `${obj.path}?${QS.stringify(query)}`;
       const obQuery = {...obj, path, type: CONFIG.SHARE_TYPE};
-
       return _omit(obQuery, ["query"]);
     },
 

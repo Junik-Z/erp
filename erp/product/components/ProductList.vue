@@ -39,6 +39,8 @@ export default {
       actionItem: {},
 
       FieldList: [],
+
+      isHideStockPrice: true,
     };
   },
   created() {
@@ -229,7 +231,14 @@ export default {
     <view class="ko-product__wrap">
       <view class="ko-product__class">
         <PickerClass v-model="queryList.classId" @change="getList" />
+        <button
+          class="ko-basic-button__card"
+          @click="isHideStockPrice = !isHideStockPrice"
+        >
+          <i class="iconfont" :class="[isHideStockPrice ? 'icon-xianshi' : 'icon-mimaxianshiyincang-']"></i>
+        </button>
       </view>
+
       <view class="ko-product__list">
         <!-- #ifdef MP -->
         <IndexList
@@ -238,6 +247,7 @@ export default {
           is-product
           :loading="loading"
           @action-click="onActionClick"
+          :is-hide-stock-price="isHideStockPrice"
         />
         <!-- #endif -->
 
@@ -305,11 +315,32 @@ export default {
 <style scoped lang="scss">
 .ko-product {
   &__class {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     padding: 0 10px 15px;
     // #ifdef H5
     width: 1000px;
     margin: 0 auto;
     // #endif
+
+    .ko-basic-button__card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 50%;
+      height: 30px;
+      width: 30px;
+      padding: 0;
+      margin-left: 10px;
+
+      .iconfont {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
   }
 
   &__wrap {

@@ -86,7 +86,10 @@ export default {
     isJudge: Boolean,
 
     // 物流商列表
-    isReceiptList: Boolean
+    isReceiptList: Boolean,
+
+    // 隐藏入库价格
+    isHideStockPrice: Boolean,
   },
   watch: {
     options: {
@@ -307,7 +310,8 @@ export default {
                   v-for="(item, index) in getGroupListByKey(key)"
                   :key="item.id"
                 >
-                  <ProductCard :node="item" is-list :span="24" perm="Product_Write">
+                  <ProductCard :is-hide-stock-price="isHideStockPrice" :node="item" is-list :span="24"
+                               perm="Product_Write">
                     <template #footer>
                       <view class="ko-product__item--footer">
                         <button

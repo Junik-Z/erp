@@ -362,3 +362,26 @@ export function getReturnMyPurchaseListApi(data) {
     data,
   });
 }
+
+/**
+ * @description 分享出去的订单id
+ */
+export function getPurchaseShareIdApi(data) {
+  return request({
+    url: "/purchase/share",
+    method: "get",
+    data,
+  });
+}
+
+
+/**
+ * @description 校验分享出去的订单id
+ */
+export function getPurchaseCheckShareIdApi(data) {
+  return request({
+    url: "/purchase/shareCheck",
+    method: "get",
+    data,
+  });
+}

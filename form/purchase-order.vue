@@ -6,12 +6,12 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import {
   addedPurchaseApi,
   getBindInfoApi,
+  getPurchaseCheckShareIdApi,
   getPurchaseDetailApi,
-  getPurchaseListFormMyApi,
   updatePurchaseApi,
 } from "@/api/erp/purchase";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _get, _isEqual, _keys, _pick, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -21,6 +21,7 @@ import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-lis
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import { PageEnums } from "@/utils/config";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -103,6 +104,23 @@ export default {
     this.isClient = _isEqual("ADDED_PURCHASE", option.PAGE_TYPE);
 
     if (this.isClient) {
+
+      if (this.option.SHARE_ID) {
+        getPurchaseCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+          .then(res => {
+            this.form.id = decodeURIComponent(this.option.SHARE_ID);
+            console.log(res);
+            if (res.data) {
+              uni.redirectTo({
+                url: PageEnums.purchaseClientAddedBack,
+                fail() {
+                  uni.navigateBack();
+                },
+              });
+            }
+          });
+      }
+
       this.current = 1;
 
       this.onLogInAgain(this.option)
@@ -127,7 +145,7 @@ export default {
           const params = res.data;
           params.totalAmount = transferYuan(params.totalAmount);
 
-          params.otherSupplier = this.GET_FUNC(params, 'customer.name')
+          params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
           this.form = params;
         });
@@ -136,22 +154,22 @@ export default {
       this.$refs.FormRef.validate(valid => {
         if (!valid) {
           const params = _deepCopy(this.form);
-
           params.totalAmount = yuanToPoints(params.totalAmount);
           // params.details = this.$refs.PPRef.getDiscountedPrices();
 
           this.loading = true;
-
           const Func = this.isEdit ? updatePurchaseApi : addedPurchaseApi;
-
           Func(params)
             .then(() => {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success() {
                   if (this.isClient) {
-                    uni.reLaunch({
-                      url: "/pages/index/index",
+                    uni.redirectTo({
+                      url: PageEnums.purchaseClientAddedBack,
+                      fail() {
+                        uni.navigateBack();
+                      },
                     });
                   } else {
                     uni.navigateBack();

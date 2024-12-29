@@ -6,7 +6,7 @@ import OrderList from "./components/OrderList.vue";
 import ClientList from "./components/ClientList.vue";
 import RefundList from "./components/RefundList.vue";
 import MyOrderList from "./components/MyOrderList.vue";
-import { _deepCopy } from "@/utils";
+import { _deepCopy, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -66,7 +66,24 @@ export default {
     this.TABS_LIST = _deepCopy(this.tabList);
 
     if (option.PAGE_INDEX) {
-      this.TAB = +option.PAGE_INDEX;
+      this.$nextTick(() => {
+        this.TAB = +option.PAGE_INDEX;
+
+        setTimeout(() => {
+          this.getList();
+        }, 100);
+      });
+    }
+
+    if (option.TO_REF) {
+      this.$nextTick(() => {
+        setTimeout(() => {
+          const key = this.GET_TAB_LIST.findIndex(v => _isEqual(v.ref, option.TO_REF));
+          this.TAB = key > -1 ? key : 0;
+          console.log("要显示的索引", key);
+          this.getList();
+        }, 300);
+      });
     }
   },
   methods: {
@@ -82,8 +99,11 @@ export default {
   // 分享相关
   onShareAppMessage(res) {
     const obj = res.target.dataset.params;
-    const query = this._GET_SHARE_APP_PARAMS_(obj);
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
+      const query = await this._GET_SHARE_APP_PARAMS_(obj);
+
+      if (query.title) query.title = `${this.GET_SHOP_NAME || ""} ${query.title}`;
+
       console.log(query);
       resolve(query);
     });

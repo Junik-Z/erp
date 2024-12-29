@@ -365,3 +365,25 @@ export function getMyReturnSaleListApi(data) {
     data,
   });
 }
+
+/**
+ * @description 获取销售分享出去的ID
+ */
+export function getSaleShareIdApi(data) {
+  return request({
+    url: "/sale/share",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 校验销售分享出去的ID
+ */
+export function getSaleCheckShareIdApi(data) {
+  return request({
+    url: "/sale/shareCheck",
+    method: "get",
+    data,
+  });
+}

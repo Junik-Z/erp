@@ -54,6 +54,9 @@ export default {
 
     // 库存判断
     isJudge: Boolean,
+
+    // 隐藏入库价格
+    isHideStockPrice: Boolean
   },
   data() {
     return {
@@ -168,7 +171,6 @@ export default {
             </UniCol>
           </template>
 
-
           <template v-else-if="isVerification">
             <UniCol :span="24">
               <view class="ko-product-card__item">
@@ -209,7 +211,6 @@ export default {
               </view>
             </UniCol>
           </template>
-
 
           <template v-else>
             <template v-if="readonly">
@@ -336,7 +337,7 @@ export default {
               <text>{{ node.className || 0 }}</text>
             </view>
           </UniCol>
-          <UniCol :span="span">
+          <UniCol :span="span" v-if="!isHideStockPrice">
             <label class="ko-basic-label">入库：</label>
             <text class="ko-basic-money"> {{ toYuan(node.purchasePrice) }}元</text>
           </UniCol>

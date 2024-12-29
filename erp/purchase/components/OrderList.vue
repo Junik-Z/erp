@@ -46,7 +46,7 @@ export default {
           path: "share",
           openType: "share",
           params: {
-            title: `${_this.GET_USER_INFO?.nickName || ""}邀请您来下单啦！`,
+            title: `邀请您来下单啦！`,
             path: PageEnums.editPurchase,
             query: {
               PAGE_TYPE: "ADDED_PURCHASE",

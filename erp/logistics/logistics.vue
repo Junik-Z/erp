@@ -5,7 +5,7 @@ import ViewVersion from "./components/ViewVersion.vue";
 import SendList from "./components/SendList.vue";
 import LogisticsList from "./components/ReceiptList.vue";
 import MyLogistics from "./components/MyLogistics.vue";
-import { _deepCopy } from "@/utils";
+import { _deepCopy, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -42,6 +42,10 @@ export default {
 
     if (option.PAGE_INDEX) {
       this.TAB = +option.PAGE_INDEX;
+    }
+
+    if (option.TO_REF) {
+      this.TAB = this.GET_TAB_LIST.findIndex(v => _isEqual(v.ref, option.TO_REF)) || 0;
     }
   },
   onShow() {

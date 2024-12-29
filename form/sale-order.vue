@@ -4,7 +4,7 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
-import { addedSaleApi, getBindInfoApi, getSaleDetailApi, updateSaleApi } from "@/api/erp/sale";
+import { addedSaleApi, getBindInfoApi, getSaleCheckShareIdApi, getSaleDetailApi, updateSaleApi } from "@/api/erp/sale";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -16,6 +16,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import FeesList from "@/components/FeesList/FeesList.vue";
 
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
+import { PageEnums } from "@/utils/config";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -94,6 +95,23 @@ export default {
     this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
 
     if (this.isClient) {
+
+      if (this.option.SHARE_ID) {
+        getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+          .then(res => {
+            console.log(res);
+            this.form.id = decodeURIComponent(this.option.SHARE_ID);
+            if (res.data) {
+              uni.redirectTo({
+                url: PageEnums.saleClientAddedBack,
+                fail() {
+                  uni.navigateBack();
+                },
+              });
+            }
+          });
+      }
+
       this.current = 1;
       this.onLogInAgain(this.option)
         .finally(() => {
@@ -118,7 +136,7 @@ export default {
         .then(res => {
           const params = res.data;
           params.totalAmount = transferYuan(params.totalAmount);
-          params.otherSupplier = this.GET_FUNC(params, 'customer.name')
+          params.otherSupplier = this.GET_FUNC(params, "customer.name");
           this.form = params;
         });
     },
@@ -139,7 +157,16 @@ export default {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
-                  uni.navigateBack();
+                  if (this.isClient) {
+                    uni.redirectTo({
+                      url: PageEnums.saleClientAddedBack,
+                      fail() {
+                        uni.navigateBack();
+                      },
+                    });
+                  } else {
+                    uni.navigateBack();
+                  }
                 },
               });
             })
