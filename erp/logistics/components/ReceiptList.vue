@@ -323,9 +323,8 @@ export default {
               <button
                 class="ko-basic-button__user"
                 @click.stop="onActionClick(node)"
-                style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
               >
-                <i class="iconfont icon-gengduocaozuo"></i>
+                更多
               </button>
 
               <template v-if="false">

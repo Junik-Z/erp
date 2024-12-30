@@ -97,6 +97,9 @@ export default {
         purchase: "供应商",
       },
 
+      // 款项描述枚举
+      descPaymentEnum: {},
+
       isShowCheck: false,
       checked: [],
 
@@ -393,7 +396,7 @@ export default {
       console.log(item);
       const q = this.getQueryString({
         ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "orderType"]),
-        isDetails: true
+        isDetails: true,
       });
       uni.navigateTo({
         url: `${PageEnums.ticket}${q}`,
@@ -414,6 +417,10 @@ export default {
     },
     totalAmount() {
       return _sum(this.checked?.map(v => (v.totalAmount - _sum((v.proofs || []).map(v => v.totalAmount || 0))) || 0) || []);
+    },
+    // 计算已结的金额
+    calculationCompleted() {
+      return (list) => _sum(list.map((v) => v.totalAmount || 0));
     },
   },
 };
@@ -476,6 +483,7 @@ export default {
                   <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
                     <view style="font-size: 13px; padding-left: 30px;">
                       <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
+                      <text style="padding-right: 10px; font-size: 12px">{{ GET_PAYMENT_ENUMS(item.orderType) }}:</text>
                       <text class="ko-basic-money">
                         {{ toYuan(child.totalAmount) }}元
                       </text>
@@ -483,6 +491,41 @@ export default {
                   </UniCol>
                 </UniRow>
               </BasicCard>
+
+              <block v-if="item.proofs && item.proofs.length">
+                <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
+
+                <BasicCard not-padding>
+                  <UniRow :gutter="4">
+
+                    <UniCol :span="12">
+                      <view
+                        v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) && (item.totalAmount || 0) - calculationCompleted(item.proofs) > 0"
+                        style="font-size: 12px; padding: 5px 10px 5px 30px;"
+                      >
+                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                          {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
+                        </text>
+                        <text class="ko-basic-money">
+                          {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
+                        </text>
+                      </view>
+                    </UniCol>
+                    <UniCol :span="12">
+                      <view
+                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;">
+                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                          共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
+                        </text>
+                        <text class="ko-basic-money">
+                          {{ toYuan(calculationCompleted(item.proofs)) }}元
+                        </text>
+                      </view>
+                    </UniCol>
+                  </UniRow>
+                </BasicCard>
+              </block>
+
 
               <button
                 v-if="!['FINISHED'].includes(item.status) && isShowCheck && !item.confirmable"
@@ -561,7 +604,10 @@ export default {
     </UniList>
 
     <KoMovable v-if="!isShowCheck" @click="onBatchClearing('')">
-      <i class="iconfont icon-bianzu" style="font-size: 28px;"></i>
+      <view style="line-height: 1.2; font-size: 12px;">
+        <view>批量</view>
+        清帐
+      </view>
     </KoMovable>
 
     <view class="ko-check__footer ko-basic-box-shadow" v-if="isShowFooter && isShowCheck">

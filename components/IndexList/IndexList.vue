@@ -318,7 +318,7 @@ export default {
                           class="ko-basic-button__card action"
                           @click="onActionClick(item)"
                         >
-                          <i class="iconfont icon-gengduocaozuo"></i>
+                          更多
                         </button>
                       </view>
                     </template>

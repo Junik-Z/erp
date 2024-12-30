@@ -1,7 +1,7 @@
 <script>
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import BasicMixins from "@/mixins/mixins";
-import { getSaleHistoryApi, getSaleListApi, printSaleApi } from "@/api/erp/sale";
+import { getSaleHistoryApi, getSaleListApi, getSaleWaitPaymentListApi, printSaleApi } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _isEmpty, _pick, showToast } from "@/utils";
@@ -12,10 +12,12 @@ import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
 export default {
   name: "OrderList",
   components: {
+    UniEasyinput,
     KoList,
     KoMovable,
     PrintList,
@@ -60,7 +62,7 @@ export default {
       },
       noMore: false,
 
-      isHistory: false,
+      tab: 0,
       actionItem: {},
 
       // #ifdef H5
@@ -182,7 +184,7 @@ export default {
       }
 
       this.loading = true;
-      const Func = this.isHistory ? getSaleHistoryApi : getSaleListApi;
+      const Func = [getSaleListApi, getSaleWaitPaymentListApi, getSaleHistoryApi][this.tab];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -279,14 +281,21 @@ export default {
 
 <template>
   <view class="ko-order">
-    <HistoryBar v-model="isHistory" :values="['待处理订单', '销售订单']" @change="getList(true)" />
+    <HistoryBar
+      v-model="tab" :values="['待处理', '待付款', '历史']"
+      @change="getList(true)"
+      is-show-search
+    >
+      <view class="ko-order__search">
+        <UniEasyinput placeholder="订单号" />
+      </view>
+    </HistoryBar>
 
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px" v-for="item of list" :key="item.id">
           <OrderCard
-            :is-history="isHistory"
             :item="item"
             @click="onJumpDetails(item, 'sale')"
             is-sales
@@ -317,13 +326,11 @@ export default {
                   提交订单
                 </button>
 
-
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item)"
-                  style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
                 >
-                  <i class="iconfont icon-gengduocaozuo"></i>
+                  更多
                 </button>
 
                 <template v-if="false">

@@ -443,5 +443,25 @@ export default {
     GET_TABS_REF_NAME() {
       return _get(this.GET_TAB_LIST, `${this.TAB}.ref`);
     },
+
+    // 获取订单状态款项描述
+    GET_PAYMENT_ENUMS() {
+      return (name) => _get({
+        SALE: "已收",
+        SALE_RETURN: "已付",
+        PURCHASE: "已付",
+        PURCHASE_RETURN: "已收",
+      }, name);
+    },
+
+    // 获取订单状态剩余款项描述
+    GET_PAYMENT_REMAINING_ENUMS() {
+      return (name) => _get({
+        SALE: "剩余未收",
+        SALE_RETURN: "剩余未付",
+        PURCHASE: "剩余未付",
+        PURCHASE_RETURN: "剩余未收",
+      }, name);
+    },
   },
 };

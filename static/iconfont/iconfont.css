@@ -1,3 +1,7 @@
+.icon-jiantou:before {
+  content: "\e601";
+}
+
 .icon-mimaxianshiyincang-:before {
   content: "\e725";
 }

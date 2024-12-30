@@ -76,7 +76,7 @@
                 class="ko-basic-button__card action"
                 @click.stop="onActionClick(item)"
               >
-                <i class="iconfont icon-gengduocaozuo"></i>
+                更多
               </button>
 
               <button v-if="hideChildren(item) && false" @click.stop="onAdded(item)">添加子级</button>

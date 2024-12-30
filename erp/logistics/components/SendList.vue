@@ -379,9 +379,8 @@ export default {
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item)"
                   v-if="['CREATED'].includes(item.status)"
-                  style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
                 >
-                  <i class="iconfont icon-gengduocaozuo"></i>
+                  更多
                 </button>
               </view>
             </template>

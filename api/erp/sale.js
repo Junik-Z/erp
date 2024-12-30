@@ -110,6 +110,16 @@ export function getSaleListApi(data) {
     data,
   });
 }
+/**
+ * @description 获取销售待付款订单
+ */
+export function getSaleWaitPaymentListApi(data) {
+  return request({
+    url: "/sale/waitPayment",
+    method: "get",
+    data,
+  });
+}
 
 /**
  * @description 获取销售历史订单

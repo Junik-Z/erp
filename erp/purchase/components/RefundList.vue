@@ -309,10 +309,9 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item)"
-                  style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;"
                   v-if='["CREATED", "CANCELLED"].includes(item.status)'
                 >
-                  <i class="iconfont icon-gengduocaozuo"></i>
+                  更多
                 </button>
 
                 <template v-if="false">

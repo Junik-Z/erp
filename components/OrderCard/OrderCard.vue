@@ -23,7 +23,6 @@ export default {
         return [];
       },
     },
-    isHistory: Boolean,
     // 是否是销售
     isSales: Boolean,
     // 是否是采购单
