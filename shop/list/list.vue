@@ -115,7 +115,7 @@ export default {
   methods: {
     // 外部传入的商品列表
     setShopList(data) {
-      const list = data.list || [];
+      const list = _deepCopy(data.list || []);
       this.type = data.type;
       this.isClient = data.isClient;
       this.hidePrices = data.hidePrices;
@@ -215,10 +215,9 @@ export default {
 
     // 点击选好了
     onSubmit() {
-      const list = _deepCopy(this.getSelectedList);
+      const list = _deepCopy(Object.values(this.selected));
 
       if (this.isJudge) {
-
         const details = (list || []).filter(item => !!this.productList.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
 
         if (details.length <= 0) {
