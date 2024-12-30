@@ -154,7 +154,7 @@ export default {
             <view class="ko-order-card__details">
               <label class="ko-basic-label">产品详情：</label>
               <view class="ko-order-card__details--wrap">
-                <BasicCard v-for="child of item.details">
+                <BasicCard v-for="child of item.details" :key="child.id">
                   <view class="ko-order-card__details--cell">
                     <UvAvatar
                       v-if="GET_FUNC(child, 'images')"

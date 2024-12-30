@@ -142,7 +142,7 @@ export default {
       this.loading = true;
       const Fn = [getSupplierListApi, getTempSupplierListApi][+this.tab];
 
-      Fn({pageSize: 1000000, pageNum: 0})
+      Fn({pageSize: 1000000, pageNum: 0, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
         .then((res) => {
           this.list = (res.data || []).map(item => ({
             ...item,

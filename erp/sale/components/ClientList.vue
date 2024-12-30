@@ -144,7 +144,7 @@ export default {
       this.loading = true;
       const Fn = [getCustomerListApi, getTempCustomerListApi][+this.tab];
 
-      Fn({pageSize: 1000000, pageNum: 0})
+      Fn({pageSize: 1000000, pageNum: 0, ...(+this.tab === 0 ? {type: 'OFFICIAL'} : {})})
         .then((res) => {
           console.log("客户列表", res.data);
           this.list = (res.data || []).map(item => ({

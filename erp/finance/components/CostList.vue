@@ -456,6 +456,7 @@ export default {
 <style scoped lang="scss">
 .ko-cost {
   margin-top: 10px;
+  padding-bottom: 30px;
 
   &__class {
     display: flex;

@@ -81,7 +81,6 @@ export default {
 <style scoped lang="scss">
 .ko-purchase {
   width: 100%;
-  padding-bottom: 80px;
 
   &__tabs {
     padding: 10px;

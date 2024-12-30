@@ -193,7 +193,7 @@ export default {
                 :disabled="!!orderId"
                 ref="UserRef"
                 @input="onSupplierId"
-                v-if="bindList.length"
+                v-if="isClient ? bindList.length : true"
               />
               <UniEasyinput
                 v-else

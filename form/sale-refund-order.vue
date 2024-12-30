@@ -88,7 +88,7 @@ export default {
           const params = res.data;
           params.totalAmount = transferYuan(params.totalAmount);
 
-          params.otherSupplier = this.GET_FUNC(params, 'customer.name')
+          params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
           this.form = params;
           console.log(res);
@@ -182,7 +182,7 @@ export default {
               :is-long-list="isClient"
               :options="bindList"
               @input="onSupplierId"
-              v-if="bindList.length"
+              v-if="isClient ? bindList.length : true"
             />
             <UniEasyinput
               v-else

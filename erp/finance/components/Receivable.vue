@@ -338,7 +338,7 @@ export default {
             <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
           </UniCol>
           <UniCol :span="24">
-            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户/供应商名称" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
@@ -446,6 +446,7 @@ export default {
 .ko-receivable {
   //padding: 10px;
   margin-top: 10px;
+  padding-bottom: 30px;
 
   &__item {
     display: flex;

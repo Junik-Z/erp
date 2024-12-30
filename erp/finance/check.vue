@@ -498,22 +498,29 @@ export default {
                 <BasicCard not-padding>
                   <UniRow :gutter="4">
 
-                    <UniCol :span="12">
+                    <UniCol :span="24">
                       <view
-                        v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) && (item.totalAmount || 0) - calculationCompleted(item.proofs) > 0"
-                        style="font-size: 12px; padding: 5px 10px 5px 30px;"
+                        v-if="item.totalAmount || 0"
+                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
                       >
-                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
-                          {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
-                        </text>
-                        <text class="ko-basic-money">
-                          {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
+                        <block v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) > 0">
+                          <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                            {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
+                          </text>
+                          <text class="ko-basic-money">
+                            {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
+                          </text>
+                        </block>
+                        <text style="color: #008000;" v-else>
+                          已结清
                         </text>
                       </view>
                     </UniCol>
-                    <UniCol :span="12">
+
+                    <UniCol :span="12" v-if="false">
                       <view
-                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;">
+                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                      >
                         <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
                           共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
                         </text>
@@ -525,7 +532,6 @@ export default {
                   </UniRow>
                 </BasicCard>
               </block>
-
 
               <button
                 v-if="!['FINISHED'].includes(item.status) && isShowCheck && !item.confirmable"

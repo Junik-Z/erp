@@ -13,10 +13,12 @@ import { getSupplierListApi, refreshSupplierApi } from "@/api/erp/purchase";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
+import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 
 export default {
   name: "Verification",
   components: {
+    HistoryBar,
     IndexList,
     UvAvatar,
     UniSegmentedControl,
@@ -41,7 +43,7 @@ export default {
   methods: {
     getList() {
       this.loading = true;
-      const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[this.current];
+      const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.current];
 
       Func({pageSize: 1000000, pageNum: 0})
         .then((res) => {
@@ -59,7 +61,7 @@ export default {
 
     onRefresh(item) {
       this.$set(item, "__r_loading__", true);
-      ;[refreshCustomerApi, refreshSupplierApi][this.current]({id: item.id})
+      ;[refreshCustomerApi, refreshSupplierApi][+this.current]({id: item.id})
         .then(() => {
           uni.showToast({title: "刷新成功"});
           this.getList();
@@ -71,7 +73,7 @@ export default {
 
     onJump(item) {
       uni.navigateTo({
-        url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][this.current]}`,
+        url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.current]}`,
       });
     },
 
@@ -93,9 +95,11 @@ export default {
 
 <template>
   <view class="ko-verification">
-    <view class="ko-verification__tabs">
-      <UniSegmentedControl :values="getTabsList" style-type="text" :current.sync="current" @clickItem="getList" />
-    </view>
+    <HistoryBar
+      :values="getTabsList"
+      v-model="current"
+      @change="getList()"
+    />
 
     <view class="ko-verification__content">
       <IndexList
@@ -116,7 +120,7 @@ export default {
 .ko-verification {
   display: flex;
   flex-direction: column;
-  height: calc(88vh - 20px);
+  height: calc(100vh - 56px);
 
   &__tabs {
     padding: 10px;
