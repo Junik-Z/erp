@@ -16,14 +16,16 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _isEmpty, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, showToast } from "@/utils";
 import PrintList from "@/components/PrintList/PrintList.vue";
 import KoList from "@/components/List/List.vue";
 import { CONFIG } from "@/utils/config";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
 export default {
   name: "Warehouse",
   components: {
+    UniEasyinput,
     KoList,
     PrintList,
     OrderCard,
@@ -46,6 +48,9 @@ export default {
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
         pageNum: 0,
+        orderCode: "",
+        "customer.name": "",
+        "user.nickName": "",
       },
 
       noMore: false,
@@ -226,13 +231,46 @@ export default {
           });
         });
     },
+
+    onResetList(flag) {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      flag && this.$refs.SearchRef.onShowSearch();
+      this.getList(true);
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-warehouse">
-    <HistoryBar v-model="isHistory" :values="['待处理审批', '入库审批']" @change="getList(true)" />
+    <HistoryBar
+      v-model="isHistory"
+      :values="['待处理', '历史']"
+      @change="onResetList(false)"
+      is-show-search
+      ref="SearchRef"
+    >
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </HistoryBar>
+
 
     <!-- #ifdef MP -->
     <view>
@@ -253,7 +291,7 @@ export default {
                 </button>
 
                 <button
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && false"
                   class="ko-basic-button__card"
                   @click.stop="onCancel(item)"
                 >
@@ -293,7 +331,7 @@ export default {
               打印入库单(A4)
             </button>
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && false"
               class="ko-basic-button__card"
               @click.stop="onCancel(item)"
             >

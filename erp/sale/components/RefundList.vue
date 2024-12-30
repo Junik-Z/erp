@@ -4,7 +4,12 @@ import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-lis
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import { getSaleReturnHistoryApi, getSaleReturnListApi, returnPrintSaleApi } from "@/api/erp/sale";
+import {
+  getSaleReturnHistoryApi,
+  getSaleReturnListApi,
+  getSaleReturnWaitPaymentApi,
+  returnPrintSaleApi,
+} from "@/api/erp/sale";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
@@ -17,10 +22,12 @@ import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
 export default {
   name: "RefundList",
   components: {
+    UniEasyinput,
     KoList,
     KoMovable,
     PrintList,
@@ -62,13 +69,17 @@ export default {
       loading: false,
       list: [],
 
+      tab: 0,
+
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
         pageNum: 0,
+        orderCode: "",
+        "customer.name": "",
+        "user.nickName": "",
       },
       noMore: false,
 
-      isHistory: false,
       actionItem: {},
 
       // #ifdef H5
@@ -180,7 +191,7 @@ export default {
       }
 
       this.loading = true;
-      const Func = this.isHistory ? getSaleReturnHistoryApi : getSaleReturnListApi;
+      const Func = [getSaleReturnListApi, getSaleReturnWaitPaymentApi, getSaleReturnHistoryApi][this.tab];
 
       Func(this.queryList)
         .then(res => {
@@ -194,6 +205,12 @@ export default {
     },
     onJump(item) {
       this.jumpSaleReturn({id: item.id});
+    },
+
+    onResetList(flag) {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      flag && this.$refs.SearchRef.onShowSearch();
+      this.getList(true);
     },
 
     // 添加单据
@@ -257,13 +274,39 @@ export default {
 
 <template>
   <view class="ko-client">
-    <HistoryBar v-model="isHistory" :values="['待处理退货订单', '销售退货订单']" @change="getList(true)" />
+    <HistoryBar
+      v-model="tab"
+      :values="['待处理', '待付款', '历史']"
+      @change="onResetList(false)"
+      is-show-search
+      ref="SearchRef"
+    >
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </HistoryBar>
 
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 10px;" v-for="item of list" :key="item.id">
-          <OrderCard is-sales :is-history="isHistory" :item="item"
+          <OrderCard is-sales :item="item"
                      @click="onJumpDetails(item, 'saleReturn')">
             <template #operate v-if="isPerm('Sales_Write')">
               <view

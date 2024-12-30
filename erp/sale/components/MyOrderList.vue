@@ -302,7 +302,7 @@ export default {
       </UniRow>
     </view>
 
-    <HistoryBar v-model="isHistory" :values="['销售订单', '销售退货订单']" @change="getList(true)" />
+    <HistoryBar v-model="isHistory" :values="['销售', '销售退货']" @change="getList(true)" />
 
     <view class="ko-my-order-list__wrap">
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">

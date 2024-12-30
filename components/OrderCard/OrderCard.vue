@@ -38,7 +38,7 @@ export default {
     // 是否是配送模块
     isLogistics: Boolean,
 
-    spacing: Number
+    spacing: Number,
   },
   methods: {
     onClickOperate(child, item) {
@@ -119,7 +119,7 @@ export default {
         <block v-if="!isLogistics">
           <UniCol
             :span="24"
-            v-if="isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType)"
+            v-if="item.customer && (isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType))"
           >
             <view class="ko-basic-label__images-wrap">
               <label class="ko-basic-label">{{ getCustomerName(item) }}：</label>

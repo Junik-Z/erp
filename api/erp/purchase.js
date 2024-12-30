@@ -12,6 +12,28 @@ export function getSupplierListApi(data) {
 }
 
 /**
+ * @description 获取临时供应商列表
+ */
+export function getTempSupplierListApi(data) {
+  return request({
+    url: "/supplier/temp",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 转换供应商列表
+ */
+export function convertSupplierListApi(data) {
+  return request({
+    url: "/supplier/convert",
+    method: "post",
+    data,
+  });
+}
+
+/**
  * @description 获取供应商统计
  */
 export function getCountSupplierApi(data) {
@@ -111,6 +133,17 @@ export function getPurchaseListApi(data) {
 }
 
 /**
+ * @description 获取采购订单待付款列表
+ */
+export function getPurchaseWaitPaymentListApi(data) {
+  return request({
+    url: "/purchase/waitPayment",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取采购历史订单列表
  */
 export function getPurchaseHistoryListApi(data) {
@@ -193,6 +226,17 @@ export function cancelPurchaseApi(data) {
 export function getPurchaseReturnListApi(data) {
   return request({
     url: "/purchase/return/list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取退货采购待付款订单列表
+ */
+export function getPurchaseReturnWaitPaymentListApi(data) {
+  return request({
+    url: "/purchase/return/waitPayment",
     method: "get",
     data,
   });

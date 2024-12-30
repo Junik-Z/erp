@@ -1,9 +1,6 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import {
   cancelReceivableApi,
   finishReceivableApi,
@@ -12,19 +9,20 @@ import {
   getReceivableListApi,
 } from "@/api/erp/finance";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _isEmpty, _pick } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _pick } from "@/utils";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import mixins from "@/mixins/mixins";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
 export default {
   name: "Receivable",
   components: {
+    UniEasyinput,
     KoList,
     KoTable,
     HistoryBar,
@@ -44,6 +42,9 @@ export default {
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
         pageNum: 0,
+        orderCode: "",
+        "customer.name": "",
+        "user.nickName": "",
       },
       noMore: false,
 
@@ -204,7 +205,6 @@ export default {
         this.list = [];
       }
 
-
       this.loading = true;
       const Func = this.isHistory ? getReceivableHistoryListApi : getReceivableListApi;
 
@@ -242,6 +242,7 @@ export default {
         },
       });
     },
+
     onConfirm(item) {
       uni.showModal({
         title: "温馨提示",
@@ -282,6 +283,14 @@ export default {
         this[item.func](item);
       }
     },
+
+
+    onResetList(flag) {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      flag && this.$refs.SearchRef.onShowSearch();
+      this.getList(true);
+    },
+
   },
   computed: {
     getCountValue() {
@@ -316,7 +325,33 @@ export default {
       </UniRow>
     </view>
 
-    <HistoryBar v-model="isHistory" text="应收款" @change="getList(true)" />
+    <HistoryBar
+      v-model="isHistory"
+      :values="['待清帐', '历史']"
+      @change="onResetList(false)"
+      is-show-search
+      ref="SearchRef"
+    >
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </HistoryBar>
 
     <view class="ko-receivable__row">
       <!-- #ifdef MP -->
@@ -345,6 +380,14 @@ export default {
                     @click.stop="onAddedTicket(item)"
                   >
                     添加单据
+                  </button>
+
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onCancel(item)"
+                    v-if="['CREATED'].includes(item.status)"
+                  >
+                    取消订单
                   </button>
                 </view>
               </template>
@@ -381,6 +424,14 @@ export default {
                 @click.stop="onAddedTicket(item)"
               >
                 添加单据
+              </button>
+
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onCancel(item)"
+                v-if="['CREATED'].includes(item.status)"
+              >
+                取消订单
               </button>
             </view>
           </template>
@@ -433,10 +484,6 @@ export default {
         flex: 1;
       }
     }
-  }
-
-  .ko-basic-button__card {
-    margin: 5px;
   }
 }
 </style>

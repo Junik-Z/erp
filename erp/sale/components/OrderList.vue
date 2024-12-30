@@ -13,10 +13,14 @@ import { CONFIG, PageEnums } from "@/utils/config";
 import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 
 export default {
   name: "OrderList",
   components: {
+    UniCol,
+    UniRow,
     UniEasyinput,
     KoList,
     KoMovable,
@@ -59,6 +63,9 @@ export default {
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
         pageNum: 0,
+        orderCode: "",
+        "customer.name": "",
+        "user.nickName": "",
       },
       noMore: false,
 
@@ -196,6 +203,12 @@ export default {
         });
     },
 
+    onResetList(flag) {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      flag && this.$refs.SearchRef.onShowSearch();
+      this.getList(true);
+    },
+
     onJump(item) {
       this.jumpAddedSale({id: item.id});
     },
@@ -283,11 +296,28 @@ export default {
   <view class="ko-order">
     <HistoryBar
       v-model="tab" :values="['待处理', '待付款', '历史']"
-      @change="getList(true)"
+      @change="onResetList(false)"
       is-show-search
+      ref="SearchRef"
     >
-      <view class="ko-order__search">
-        <UniEasyinput placeholder="订单号" />
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+            </view>
+          </UniCol>
+        </UniRow>
       </view>
     </HistoryBar>
 

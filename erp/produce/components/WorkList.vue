@@ -237,7 +237,7 @@ export default {
 
 <template>
   <view class="ko-client">
-    <HistoryBar v-model="isHistory" text="生产工单" @change="getList(true)" />
+    <HistoryBar v-model="isHistory" text="生产" @change="getList(true)" />
 
     <!-- #ifdef MP -->
     <view>

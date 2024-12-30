@@ -1,6 +1,13 @@
 <script>
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import { bindSupplierApi, getSupplierListApi, removeSupplierApi, unbindSupplierApi } from "@/api/erp/purchase";
+import {
+  bindSupplierApi,
+  convertSupplierListApi,
+  getSupplierListApi,
+  getTempSupplierListApi,
+  removeSupplierApi,
+  unbindSupplierApi,
+} from "@/api/erp/purchase";
 import { _deepCopy, _get, _isEmpty, _xor } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -8,10 +15,12 @@ import mixins from "@/mixins/mixins";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
+import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 
 export default {
   name: "ClientList",
   components: {
+    HistoryBar,
     KoMovable,
     UvActionSheet,
     IndexList,
@@ -51,6 +60,8 @@ export default {
       isBind: false,
       item: {},
       actionItem: {},
+
+      tab: 0,
 
       // #ifdef H5
       columns: [
@@ -129,7 +140,9 @@ export default {
   methods: {
     getList() {
       this.loading = true;
-      getSupplierListApi({pageSize: 1000000, pageNum: 0})
+      const Fn = [getSupplierListApi, getTempSupplierListApi][+this.tab];
+
+      Fn({pageSize: 1000000, pageNum: 0})
         .then((res) => {
           this.list = (res.data || []).map(item => ({
             ...item,
@@ -242,6 +255,25 @@ export default {
     onSelect(item) {
       this[item.func](_deepCopy(this.actionItem));
     },
+
+    // 供应商转换
+    onConvert(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: `您确定要将 ${item.name} 转为 ${["临时", "正式"][+this.tab]}供应商吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            convertSupplierListApi(item)
+              .then(() => {
+                uni.showToast({
+                  title: "转换成功",
+                });
+                this.getList();
+              });
+          }
+        },
+      });
+    },
   },
   computed: {
     getBindingParams() {
@@ -260,6 +292,10 @@ export default {
     actionList() {
       return [
         {
+          name: ["转为临时供应商", "转为正式供应商"][+this.tab],
+          func: "onConvert",
+        },
+        {
           name: "编辑",
           func: "onJump",
         },
@@ -276,7 +312,13 @@ export default {
 
 <template>
   <view class="ko-client">
-    <UniList>
+    <view class="ko-client__content">
+      <HistoryBar
+        :values="['供应商', '临时供应商']"
+        v-model="tab"
+        @change="getList()"
+      />
+
       <!-- #ifdef MP -->
       <view class="ko-client__wrap">
         <IndexList :options="list" :loading="loading" is-supplier @click="onJumpInfo" button-perm="Purchase_Write">
@@ -332,6 +374,9 @@ export default {
               </button>-->
               <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__user">绑定客户</button>
               <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__user">解绑客户</button>
+              <button class="ko-basic-button__user" @click.stop="onConvert(item)">
+                {{ ["转为临时客户", "转为正式客户"][+tab] }}
+              </button>
               <button class="ko-basic-button__user" @click.stop="onJump(item)">编辑</button>
               <button class="ko-basic-button__user" @click.stop="onRemove(item)">删除</button>
             </view>
@@ -340,7 +385,7 @@ export default {
         </KoTable>
       </view>
       <!-- #endif -->
-    </UniList>
+    </view>
 
     <PickerUser
       v-if="isPerm('Purchase_Write')"
@@ -359,7 +404,6 @@ export default {
       @click="onTrigger('')"
     />
 
-
     <!-- #ifdef MP -->
     <UvActionSheet
       ref="UASRef"
@@ -376,13 +420,19 @@ export default {
 <style scoped lang="scss">
 .ko-client {
   width: 100%;
+  height: calc(100vh - 56px);
 
   &__wrap {
-    height: calc(100vh - 66px);
+    flex: 1;
+    position: relative;
   }
 
-  :deep(.uni-list-item__container ) {
-    display: block;
+  &__content {
+    position: relative;
+    box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   &__info {

@@ -67,12 +67,14 @@ export default {
   },
 
   mounted() {
-    this.$nextTick(() => {
-      getRect(".ko-history__wrap", this)
-        .then(res => {
-          this.wrapHeight = res.height;
-        });
-    });
+    if (this.isShowSearch) {
+      this.$nextTick(() => {
+        getRect(".ko-history__wrap", this)
+          .then(res => {
+            this.wrapHeight = res.height;
+          });
+      });
+    }
   },
 };
 </script>

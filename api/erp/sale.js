@@ -12,6 +12,28 @@ export function getCustomerListApi(data) {
 }
 
 /**
+ * @description 获取临时客户列表
+ */
+export function getTempCustomerListApi(data) {
+  return request({
+    url: "/customer/temp",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 转换客户
+ */
+export function convertTempCustomerApi(data) {
+  return request({
+    url: "/customer/convert",
+    method: "post",
+    data,
+  });
+}
+
+/**
  * @description 新增客户
  */
 export function addedCustomerApi(data) {
@@ -110,6 +132,7 @@ export function getSaleListApi(data) {
     data,
   });
 }
+
 /**
  * @description 获取销售待付款订单
  */
@@ -205,6 +228,17 @@ export function cancelSaleApi(data) {
 export function getSaleReturnListApi(data) {
   return request({
     url: "/sale/return/list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取退货销售待付款订单
+ */
+export function getSaleReturnWaitPaymentApi(data) {
+  return request({
+    url: "/sale/return/waitPayment",
     method: "get",
     data,
   });

@@ -3,7 +3,7 @@ import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import {
   getPurchaseHistoryListApi,
-  getPurchaseListApi,
+  getPurchaseListApi, getPurchaseWaitPaymentListApi,
   printA4PurchaseApi,
   printPurchaseApi,
 } from "@/api/erp/purchase";
@@ -19,10 +19,16 @@ import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import PurchaseMixins from "../PurchaseMixins";
 import KoList from "@/components/List/List.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 
 export default {
   name: "OrderList",
   components: {
+    UniCol,
+    UniEasyinput,
+    UniRow,
     KoList,
     KoMovable,
     PrintList,
@@ -65,12 +71,16 @@ export default {
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
         pageNum: 0,
+        orderCode: "",
+        "customer.name": "",
+        "user.nickName": "",
       },
       loading: false,
       noMore: false,
 
-      isHistory: false,
       actionItem: {},
+
+      tab: 0,
 
       // #ifdef H5
       columns: [
@@ -191,7 +201,7 @@ export default {
       }
 
       this.loading = true;
-      const Func = this.isHistory ? getPurchaseHistoryListApi : getPurchaseListApi;
+      const Func = [getPurchaseListApi, getPurchaseWaitPaymentListApi, getPurchaseHistoryListApi][this.tab];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -263,6 +273,12 @@ export default {
       }
 
     },
+
+    onResetList(flag) {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      flag && this.$refs.SearchRef.onShowSearch();
+      this.getList(true);
+    },
   },
   computed: {
     actionList() {
@@ -302,15 +318,38 @@ export default {
 
 <template>
   <view class="ko-order">
-    <HistoryBar v-model="isHistory" :values="['待处理订单', '采购订单']" @change="getList(true)" />
-
+    <HistoryBar
+      v-model="tab" :values="['待处理', '待付款', '历史']"
+      @change="onResetList(false)"
+      is-show-search
+      ref="SearchRef"
+    >
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </HistoryBar>
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 10px;" v-for="item of list" :key="item.id">
           <OrderCard
             is-purchase :item="item"
-            :is-history="isHistory"
             @click="onJumpDetails(item, 'purchase')"
           >
             <template #operate v-if="isPerm('Purchase_Write')">
