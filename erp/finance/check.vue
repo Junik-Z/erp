@@ -495,7 +495,7 @@ export default {
               <block v-if="item.proofs && item.proofs.length">
                 <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
 
-                <BasicCard not-padding>
+                <BasicCard not-padding no-shadow>
                   <UniRow :gutter="4">
 
                     <UniCol :span="24">

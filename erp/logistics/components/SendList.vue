@@ -359,7 +359,7 @@ export default {
       </UniRow>
     </view>
 
-    <HistoryBar v-model="isHistory" text="配送订单" @change="getList(true)" />
+    <HistoryBar v-model="isHistory" text="配送" @change="getList(true)" />
 
     <!-- #ifdef MP -->
     <view>

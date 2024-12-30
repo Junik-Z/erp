@@ -223,7 +223,7 @@ export default {
     onCancel(item) {
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要取消 ${item.orderCode} 订单吗？`,
+        content: `如果销售订单未出库或仓库计划取消订单，库存将保持原状。若商品已经出库，系统会自动将其退回仓库。请仓库工作人员在商品退回后进行仔细盘点。`,
         success: (res) => {
           if (res.confirm) {
             cancelPayableApi(item)
