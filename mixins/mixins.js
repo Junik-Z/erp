@@ -381,6 +381,7 @@ export default {
         return {
           color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
           padding,
+          fontSize: 12,
           // #ifdef H5
           height: 360,
           // #endif

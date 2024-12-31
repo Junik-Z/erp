@@ -16,7 +16,7 @@ DEFAULT_PAGE_SIZE = 10;
 
 let type = "test";
 
-// type = "env";
+type = "env";
 
 // #ifdef MP
 // type = "env";

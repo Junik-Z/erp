@@ -159,6 +159,38 @@ export default {
         return item.unit === "元" ? this.toYuan(value) : value;
       };
     },
+
+    getOptions() {
+      return {
+        ...this.getBasicChartsOptions(this.warningTrend),
+        height: 500,
+        padding: [10, 30, 10, 0],
+        xAxis: {
+          boundaryGap: "justify",
+          disableGrid: false,
+          min: 0,
+          axisLine: false,
+          fontsize: 10,
+        },
+        yAxis: {
+          boundaryGap: "justify",
+          disableGrid: false,
+          axisLine: false,
+        },
+        extra: {
+          bar: {
+            // type: "stack",
+            width: 20,
+            meterBorde: 1,
+            activeBgOpacity: 0.08,
+            linearType: "none",
+            barBorderCircle: true,
+            seriesGap: 0,
+            categoryGap: 2,
+          },
+        },
+      };
+    },
   },
 };
 </script>
@@ -198,8 +230,8 @@ export default {
 
       <UniSection title="库存预警趋势" type="line">
         <QiunDataCharts
-          type="column"
-          :opts="getBasicChartsOptions(warningTrend)"
+          type="bar"
+          :opts="getOptions"
           :chart-data="warningTrend"
         />
       </UniSection>
