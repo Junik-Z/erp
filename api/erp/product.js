@@ -187,3 +187,14 @@ export function upDownPurchaseClassApi(data) {
     data,
   });
 }
+
+/**
+ * @description 检查重复产品
+ */
+export function checkDuplicateApi(data) {
+  return request({
+    url: "/product/checkDuplicate",
+    method: "post",
+    data,
+  });
+}

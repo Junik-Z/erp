@@ -154,7 +154,12 @@ export default {
   <view class="ko-verification">
     <view class="ko-verification__class">
       <PickerClass v-model="queryList.classId" @change="getList" />
-      <button class="ko-basic-button__card" v-if="isBusiness || isAdmin" @click.stop="onJudge" style="margin-left: 8px">
+      <button
+        class="ko-basic-button__card"
+        v-if="isBusiness || isAdmin || isPerm('Stock_Taking')"
+        @click.stop="onJudge"
+        style="margin-left: 8px"
+      >
         库存盘点
       </button>
     </view>

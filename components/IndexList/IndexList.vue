@@ -606,8 +606,7 @@ export default {
   justify-content: flex-end;
 
   .action {
-    width: 30px;
-    height: 30px;
+    padding: 5px 10px;
     display: flex;
     justify-content: center;
     align-items: center;

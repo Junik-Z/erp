@@ -9,6 +9,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import UniDataPicker from "@/uni_modules/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
 import {
   addedProductApi,
+  checkDuplicateApi,
   editProductApi,
   getDetailApi,
   getProductClassApi,
@@ -16,10 +17,20 @@ import {
 } from "@/api/erp/product";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, _get, _isEmpty, showToast, transferYuan, yuanToPoints } from "@/utils";
+import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "Added",
   components: {
+    KoList,
+    UniCol,
+    UniRow,
+    BasicCard,
+    BasicPopup,
     FilePicker,
     UniDataPicker,
     UniEasyinput,
@@ -87,6 +98,19 @@ export default {
       },
     },
     fieldList: [],
+
+    // 重复产品列表
+    DuplicateProducts: [],
+    queryList: {
+      pageSize: 1000,
+      pageNum: 0,
+    },
+
+    submitQuery: {},
+    visible: false,
+
+    noMore: false,
+    sLoading: false,
   }),
   onLoad(option) {
     this.getClassList();
@@ -133,34 +157,59 @@ export default {
     },
 
     onSubmit() {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      this.loading = true;
+      const Func = this.isEdit ? editProductApi : addedProductApi;
+
+      Func(this.submitQuery)
+        .then(res => {
+          console.log(res);
+          showToast({
+            title: `${this.isEdit ? "修改" : "新增"}成功`,
+            success() {
+              uni.navigateBack();
+            },
+          });
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+
+    // 检查是否有同名
+    getCheckDuplicate() {
+      this.sLoading = true;
+      checkDuplicateApi({...this.submitQuery, ...this.queryList})
+        .then(res => {
+          this.DuplicateProducts = [...this.DuplicateProducts, ...res.data];
+          this.noMore = res.data?.length < this.queryList.pageSize;
+
+          this.queryList.pageNum += 1;
+
+          if (_isEmpty(this.DuplicateProducts)) {
+            this.onSubmit();
+          } else {
+            this.visible = true;
+          }
+        })
+        .finally(() => {
+          this.sLoading = false;
+        });
+    },
+
+    onPreprocessing() {
       this.$refs.FormRef.validate(verify => {
         if (!verify) {
           const params = _deepCopy(this.form);
-
           params.purchasePrice = yuanToPoints(params.purchasePrice);
           params.salePrice = yuanToPoints(params.salePrice);
 
-          this.loading = true;
+          this.submitQuery = params;
 
-          const Func = this.isEdit ? editProductApi : addedProductApi;
-
-          Func(params)
-            .then(res => {
-              console.log(res);
-              showToast({
-                title: `${this.isEdit ? "修改" : "新增"}成功`,
-                success() {
-                  uni.navigateBack();
-                },
-              });
-            })
-            .finally(() => {
-              this.loading = false;
-            });
-
+          this.getCheckDuplicate();
         } else {
           uni.showToast({
-            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            title: _get(verify, "0.errorMessage") || "请检查表单项是否正确",
             icon: "none",
           });
         }
@@ -272,13 +321,40 @@ export default {
     <view class="ko-order__footer">
       <button
         class="ko-basic-button"
-        @click="onSubmit"
+        @click="onPreprocessing"
         :loading="loading"
         :disabled="loading"
       >
         保存
       </button>
     </view>
+
+    <BasicPopup :visible.sync="visible" title="产品名称重复">
+      <view class="ko-order__popup">
+        <KoList @lower="getCheckDuplicate" :loading="sLoading" :no-more="noMore" :no-data="!DuplicateProducts.length">
+          <view>
+            <BasicCard :spacing="10" v-for="item of DuplicateProducts" :key="item.id">
+              <UniRow :gutter="10">
+                <UniCol :span="12">
+                  <label class="ko-basic-label">名称：</label>
+                  <text>{{ item.name }}</text>
+                </UniCol>
+                <UniCol :span="12">
+                  <label class="ko-basic-label">分类：</label>
+                  <text>{{ item.className }}</text>
+                </UniCol>
+              </UniRow>
+            </BasicCard>
+          </view>
+        </KoList>
+      </view>
+      <template #footer>
+        <view class="ko-order__popup--button">
+          <button class="ko-basic-button__card" @click="visible = false">修改</button>
+          <button class="ko-basic-button__card" @click="onSubmit()">继续保存</button>
+        </view>
+      </template>
+    </BasicPopup>
   </view>
 </template>
 
@@ -309,10 +385,23 @@ export default {
   }
 
   &__popup {
+    // #ifdef MP
     width: 90vw;
+    // #endif
     padding: 16px;
     background: #fff;
     border-radius: 8px;
+    font-size: 12px;
+
+    height: 70vh;
+
+    &--button {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: 10px;
+      padding-top: 10px;
+    }
   }
 }
 </style>

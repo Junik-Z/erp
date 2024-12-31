@@ -16,7 +16,7 @@ DEFAULT_PAGE_SIZE = 10;
 
 let type = "test";
 
-type = "env";
+// type = "env";
 
 // #ifdef MP
 // type = "env";
@@ -110,7 +110,7 @@ export const MENU_LIST = [
     icon: "icon-kucuntongjifenxi",
     value: "/erp/stock/stock",
     modelKey: "stock",
-    role: ["Admin", "Business", "Stock_Read", "Stock_Write"],
+    role: ["Admin", "Business", "Stock_Read", "Stock_Write", "Stock_Taking"],
     // 是否可以被分配角色
     isUpRole: true,
     // 是否有会员系统

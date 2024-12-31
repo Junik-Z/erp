@@ -137,7 +137,7 @@ export default {
 
               <view class="ko-role__item--user">
                 <view class="ko-role__item--read" v-if="item.isMember">
-                  <label class="ko-basic-label">{{ item.memberLabel || '会员' }}：</label>
+                  <label class="ko-basic-label">{{ item.memberLabel || "会员" }}：</label>
                   <UvAvatarGroup
                     size="52"
                     gap="0.4"
@@ -148,6 +148,22 @@ export default {
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onJumpMember('Member', item)"
+                  >
+                    +
+                  </button>
+                </view>
+                <view class="ko-role__item--read" v-if="item.role.includes('Stock_Taking')">
+                  <label class="ko-basic-label">盘点：</label>
+                  <UvAvatarGroup
+                    size="52"
+                    gap="0.4"
+                    :max-count="8"
+                    :urls="getAvatarList('Taking', item)"
+                    :names="getNameList('Taking', item)"
+                  />
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onSetRole('Taking', item)"
                   >
                     +
                   </button>

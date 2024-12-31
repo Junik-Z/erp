@@ -12,7 +12,9 @@ export default {
   methods: {
     // 滚动到底部了
     onToLower() {
-      this.$emit("lower");
+      if (!this.loading && !this.noMore && !this.noData) {
+        this.$emit("lower");
+      }
     },
   },
 };
