@@ -65,6 +65,8 @@ export default {
       queryList: {
         classId: "",
         name: "",
+        pageSize: 10000,
+        pageNum: 0,
       },
       className: [],
       // 获取商品列表
