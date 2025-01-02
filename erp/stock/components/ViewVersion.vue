@@ -21,6 +21,7 @@ export default {
       data: {
         "totalStock": 0,
         "totalValue": 0,
+        "productStockWarning": 0,
         "warningTrend": {},
         "stockRank": {},
       },
@@ -56,7 +57,7 @@ export default {
       getCountApi()
         .then(res => {
           const data = res.data;
-          this.data = _pick(data, ["totalStock", "totalValue"]);
+          this.data = _pick(data, ["totalStock", "totalValue", "productStockWarning"]);
 
           // 预警趋势 [预警库存, 现有库存]
           const warningTrend = {
