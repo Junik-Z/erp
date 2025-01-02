@@ -89,6 +89,14 @@ export default {
     onItemNumberChange(value, event) {
       this.$emit("number-change", value, event);
     },
+
+    onImgPreview(url) {
+      if (url) {
+        uni.previewImage({
+          urls: [url]
+        });
+      }
+    },
   },
   mounted() {
     _isEmpty(uni.$__FIELD_LIST__) && this.getExtendList();
@@ -137,6 +145,7 @@ export default {
               :src="getImageUrl(node.images)"
               mode="scaleToFill"
               style="width: 100%"
+              @click.stop="onImgPreview(getImageUrl(node.images))"
             />
           </view>
         </UniCol>
