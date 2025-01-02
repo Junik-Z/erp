@@ -3,7 +3,8 @@ import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import {
   getPurchaseHistoryListApi,
-  getPurchaseListApi, getPurchaseWaitPaymentListApi,
+  getPurchaseListApi,
+  getPurchaseWaitPaymentListApi,
   printA4PurchaseApi,
   printPurchaseApi,
 } from "@/api/erp/purchase";
@@ -363,7 +364,7 @@ export default {
                 </button>
 
                 <button
-                  v-if="['FINISHED'].includes(item.status)"
+                  v-if="['FINISHED'].includes(item.status) && !item.confirmable"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item)"
                 >
@@ -386,39 +387,6 @@ export default {
                 >
                   更多
                 </button>
-
-                <template v-if="false">
-                  <button
-                    v-if="['FINISHED'].includes(item.status)"
-                    class="ko-basic-button__card"
-                    @click.stop="onReturn(item)"
-                  >
-                    申请退货
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onJump(item)"
-                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                  >
-                    修改
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="cancelPurchase(item)"
-                    v-if="['CREATED'].includes(item.status)"
-                  >
-                    取消
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="removePurchase(item)"
-                    :loading="item.__r_loading__"
-                    :disabled="item.__r_loading__"
-                    v-if="['CANCELLED', 'CREATED'].includes(item.status)"
-                  >
-                    删除
-                  </button>
-                </template>
               </view>
             </template>
           </OrderCard>
@@ -438,33 +406,20 @@ export default {
         @row-click="onRowClick"
       >
         <template #operate="{item}" v-if="isPerm('Purchase_Write')">
-          <view style="display: flex; align-items: center; justify-content: center;">
-            <button
-              v-if="['FINISHED'].includes(item.status)"
-              class="ko-basic-button__card"
-              @click.stop="onReturn(item)"
-            >
-              申请退货
-            </button>
-            <button
-              v-if="['FINISHED'].includes(item.status)"
-              class="ko-basic-button__card"
-              @click.stop="onAddedDocuments(item)"
-            >
-              付款
-            </button>
-            <button
-              class="ko-basic-button__card"
-              @click.stop="onJumpPrint(item, 'purchase', {isA4: 'true'})"
-            >
-              打印采购单(A4)
-            </button>
+          <view style="display: flex; align-items: center; justify-content: center;">‘
             <button
               v-if="['FINISHED'].includes(item.status)"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchase')"
             >
               打印单据
+            </button>
+            <button
+              v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+              class="ko-basic-button__card"
+              @click.stop="onAddedDocuments(item)"
+            >
+              付款
             </button>
             <button
               v-if="['CREATED'].includes(item.status)"
@@ -477,18 +432,34 @@ export default {
             </button>
             <button
               class="ko-basic-button__card"
+              @click.stop="onJumpPrint(item, 'purchase', {isA4: 'true'})"
+            >
+              打印采购单(A4)
+            </button>
+
+            <button
+              v-if="['FINISHED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onReturn(item)"
+            >
+              申请退货
+            </button>
+            <button
+              v-if="['CREATED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="cancelPurchase(item)"
+            >
+              取消订单
+            </button>
+
+            <button
+              class="ko-basic-button__card"
               @click.stop="onJump(item)"
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
             >
-              修改
+              编辑
             </button>
-            <button
-              class="ko-basic-button__card"
-              @click.stop="cancelPurchase(item)"
-              v-if="['CREATED'].includes(item.status)"
-            >
-              取消
-            </button>
+
             <button
               class="ko-basic-button__card"
               @click.stop="removePurchase(item)"

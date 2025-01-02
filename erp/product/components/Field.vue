@@ -17,6 +17,12 @@ import mixins from "@/mixins/mixins";
 import KoMovable from "@/components/Movable/index.vue";
 import KoList from "@/components/List/List.vue";
 
+let pageSize = 20;
+
+// #ifdef H5
+pageSize = 50;
+// #endif
+
 export default {
   name: "Field",
   components: {
@@ -38,7 +44,7 @@ export default {
       loading: false,
 
       queryList: {
-        pageSize: 20,
+        pageSize: pageSize,
         pageNum: 0,
       },
       noMore: false,
@@ -247,7 +253,7 @@ export default {
         <KoTable
           :loading="loading"
           :columns="columns"
-          :data="roomTreeData"
+          :data="list"
           empty-text="暂无数据"
           stripe
         >

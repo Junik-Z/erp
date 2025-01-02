@@ -6,23 +6,28 @@ import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get } from "@/utils";
+import { _get, _groupBy } from "@/utils";
 import mixins from "@/mixins/mixins";
+import { getProductFieldApi } from "@/api/erp/product";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
 
 export default {
   name: "warning",
   mixins: [mixins],
-  components: {KoTable, ProductCard, UniList, UniListItem, LoadMore},
+  components: {UvAvatar, BasicCard, UniSection, KoTable, ProductCard, UniList, UniListItem, LoadMore},
   data() {
     return {
       list: [],
       loading: false,
-
       FieldList: [],
+
+      groupList: {},
     };
   },
-  onLoad() {
-    this.getList();
+  async onLoad() {
+    await this.getExtendList();
+    await this.getList();
   },
   methods: {
     getList() {
@@ -30,15 +35,23 @@ export default {
       getWarningListApi({pageSize: 10000, pageNum: 0})
         .then(res => {
           this.list = res.data;
-          console.log(res.data);
+          this.groupList = _groupBy(res.data, (item) => item.className);
+
+          console.log(this.groupList);
         })
         .finally(() => {
           this.loading = false;
         });
     },
+
+    getExtendList() {
+      return getProductFieldApi({pageSize: 1000, pageNum: 0})
+        .then(res => {
+          uni.$__FIELD_LIST__ = res.data;
+        });
+    },
   },
   computed: {
-
     // #ifdef H5
     columnsList() {
       return [
@@ -101,14 +114,39 @@ export default {
 <template>
   <view class="ko-warning">
     <!-- #ifdef MP -->
-    <UniList>
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
-          <ProductCard :node="item" is-warning readonly />
-        </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
-    </UniList>
+    <view class="ko-warning__wrap">
+      <view v-for="(item, key) of groupList" :key="key">
+        <UniSection :title="key" type="line">
+          <BasicCard>
+            <view
+              v-for="child of item" :key="child.id"
+              style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
+            >
+              <view style="flex: 1;">
+                <label class="ko-basic-label">名称：</label>
+                <text>{{ child.name }}</text>
+              </view>
+              <view style="padding: 0 10px">
+                <label class="ko-basic-label">库存：</label>
+                <text class="ko-basic-money">{{ child.quantity }}</text>
+              </view>
+              <view style="padding: 0 10px">
+                <label class="ko-basic-label">预警：</label>
+                <text class="ko-basic-money">{{ child.stockWarning }}</text>
+              </view>
+              <view style="width: 40px;">
+                <UvAvatar
+                  v-if="child.images"
+                  :src="getImageUrl(child.images)"
+                  shape="square"
+                />
+              </view>
+            </view>
+          </BasicCard>
+        </UniSection>
+        <!--<ProductCard :node="item" is-warning readonly />-->
+      </view>
+    </view>
     <!-- #endif -->
 
 
@@ -124,13 +162,15 @@ export default {
       </KoTable>
     </view>
     <!-- #endif -->
-
-
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-warning {
   padding-bottom: 50px;
+
+  &__wrap {
+    padding: 10px;
+  }
 }
 </style>

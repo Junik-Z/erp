@@ -116,7 +116,23 @@ export default {
     </tr>
 
     <tr v-if="isSummary && !_isEmpty(summary)" data-type="tfoot">
-      <td
+      <td :colspan="(columns || []).length">
+        <div class="ko-print-table__tfoot">
+          <div
+            :style="item.style || {}"
+            v-for="(item, index) of summary"
+            :key="'summary' + index"
+            class="ko-print-table__tfoot--item"
+            :class="{'label': index % 2 === 0}"
+          >
+            <div class="ko-print-table__cell">
+              {{ item.label }}
+              {{ index % 2 === 0 ? ":" : ""}}
+            </div>
+          </div>
+        </div>
+      </td>
+      <!--<td
         :style="item.style || {}"
         :colspan="item.colspan || 1"
         v-for="(item, index) of summary"
@@ -125,7 +141,7 @@ export default {
         <div class="ko-print-table__cell">
           {{ item.label }}
         </div>
-      </td>
+      </td>-->
     </tr>
 
     <tr v-if="isFees" data-type="fees" class="ko-foot__tr">
@@ -199,6 +215,20 @@ export default {
     &.not-data {
       color: #c7c9ce;
       //color: #000;
+    }
+  }
+
+  &__tfoot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 20px;
+
+    &--item {
+      &.label {
+        margin-left: 10%;
+        margin-right: 10px;
+      }
     }
   }
 

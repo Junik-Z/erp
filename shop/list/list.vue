@@ -116,12 +116,12 @@ export default {
   },
   methods: {
     // 外部传入的商品列表
-    setShopList(data) {
-      const list = _deepCopy(data.list || []);
-      this.type = data.type;
-      this.isClient = data.isClient;
-      this.hidePrices = data.hidePrices;
-      this.takeOverName = data.takeOverName;
+    setShopList(data = {}) {
+      const list = _deepCopy(data?.list || []);
+      this.type = data?.type;
+      this.isClient = data?.isClient;
+      this.hidePrices = data?.hidePrices;
+      this.takeOverName = data?.takeOverName;
       this.EXList = list;
       list.forEach(item => {
         this.$set(this.selected, item.productId, item);
@@ -142,7 +142,7 @@ export default {
     },
 
     // 获取商品列表
-    getList(nameIndex) {
+    getList() {
       this.loading = true;
       const params = {
         purchase: {purchaseOff: false},
@@ -575,7 +575,7 @@ export default {
       <div style="display: flex;align-items: center; justify-content: center;">
         <p style="width: 100%; white-space: nowrap; margin-right: 40px" class="ko-basic-label" v-if="!isJudge">
           已选：{{ getSelectedList.length }}</p>
-        <p style="width: 100%; white-space: nowrap;" class="ko-basic-money" v-if="!hidePrices">
+        <p style="width: 100%; white-space: nowrap;" class="ko-basic-money" v-if="!hidePrices && !isJudge">
           共计：{{ toYuan(getTotalMoney) }}元</p>
       </div>
       <button class="ko-basic-button" @click="onSubmit()" :lodaing="sLoading" :disabled="sLoading">

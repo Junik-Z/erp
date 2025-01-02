@@ -35,6 +35,7 @@
 					width: $uv.addUnit(size),
 					height: $uv.addUnit(size)
 				}]"
+        @click.stop="onImgPreview(src)"
       ></image>
       <text
         v-if="!(src) && getText"
@@ -140,7 +141,16 @@ export default {
     clickHandler() {
       this.$emit("click", this.name);
     },
+
+    onImgPreview(url) {
+      if (url) {
+        uni.previewImage({
+          urls: [url]
+        });
+      }
+    },
   },
+
 
 };
 </script>

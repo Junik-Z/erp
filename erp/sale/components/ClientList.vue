@@ -132,7 +132,7 @@ export default {
         },
         {
           label: "操作",
-          width: 260,
+          width: 360,
           slot: "operate",
         },
       ],
@@ -144,7 +144,7 @@ export default {
       this.loading = true;
       const Fn = [getCustomerListApi, getTempCustomerListApi][+this.tab];
 
-      Fn({pageSize: 1000000, pageNum: 0, ...(+this.tab === 0 ? {type: 'OFFICIAL'} : {})})
+      Fn({pageSize: 1000000, pageNum: 0, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
         .then((res) => {
           console.log("客户列表", res.data);
           this.list = (res.data || []).map(item => ({
@@ -341,12 +341,13 @@ export default {
 <template>
   <view class="ko-client">
     <view class="ko-client__content">
-
       <HistoryBar
         :values="['客户', '临时客户']"
         v-model="tab"
         @change="getList()"
+        custom-class="ko-client__tabs"
       />
+
       <!-- #ifdef MP -->
       <view class="ko-client__wrap">
         <IndexList :options="list" :loading="loading" @click="onJumpInfo" button-perm="Sales_Write">
@@ -451,6 +452,13 @@ export default {
     flex: 1;
     position: relative;
   }
+
+  // #ifdef H5
+  /deep/ .ko-history {
+    width: 100%;
+  }
+
+  // #endif
 
   &__content {
     position: relative;

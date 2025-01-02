@@ -130,7 +130,7 @@ export default {
         },
         {
           label: "操作",
-          width: 260,
+          width: 360,
           slot: "operate",
         },
       ],
@@ -317,6 +317,7 @@ export default {
         :values="['供应商', '临时供应商']"
         v-model="tab"
         @change="getList()"
+        custom-class="ko-client__tabs"
       />
 
       <!-- #ifdef MP -->
@@ -426,6 +427,13 @@ export default {
     flex: 1;
     position: relative;
   }
+
+  // #ifdef H5
+  /deep/ .ko-history {
+    width: 100%;
+  }
+
+  // #endif
 
   &__content {
     position: relative;

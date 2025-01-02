@@ -7,7 +7,7 @@ export default {
   name: "HistoryBar",
   components: {UniSegmentedControl},
   props: {
-    value: Boolean,
+    value: [Boolean, Number, String],
     text: {
       type: String,
       default: "列表",
@@ -113,6 +113,11 @@ export default {
 .ko-history {
   margin-bottom: 10px;
 
+  // #ifdef H5
+  max-width: 1024px;
+  margin: 0 auto 10px;
+  // #endif
+
   &__wrap {
     display: flex;
     align-items: center;
@@ -127,11 +132,6 @@ export default {
     font-weight: bold;
     border-radius: 20px;
     margin: 0 20px;
-
-    // #ifdef H5
-    width: 1024px;
-    margin: 0 auto;
-    // #endif
   }
 
   &__search {

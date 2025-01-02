@@ -20,6 +20,7 @@ export default {
   components: {KoMovable, UvActionSheet, UniListItem, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo},
   mixins: [mixins, PurchaseMixins],
   data() {
+    const _this = this;
     return {
       CountList: [
         {
@@ -83,7 +84,7 @@ export default {
           },
         },
         {
-          label: "客户",
+          label: "供应商",
           prop: "customer",
           children: [
             {
@@ -147,7 +148,7 @@ export default {
         {
           label: "操作",
           slot: "operate",
-          width: 380,
+          width: 420,
         },
       ],
       // #endif
@@ -306,6 +307,7 @@ export default {
     <HistoryBar v-model="isHistory" :values="['采购订单', '采购退货订单']" @change="getList(true)" />
 
     <view class="ko-my-order-list__wrap">
+      <!-- #ifdef MP -->
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view>
           <OrderCard
@@ -340,6 +342,54 @@ export default {
           </OrderCard>
         </view>
       </KoList>
+      <!-- #endif -->
+
+      <!-- #ifdef H5 -->
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onJumpDetails(item, isHistory ? 'purchaseReturn' : 'purchase')"
+      >
+        <template #operate="{item}" v-if="isPerm('Purchase_Write')">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              v-if="['FINISHED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onReturn(item)"
+            >
+              申请退货
+            </button>
+
+            <button
+              v-if="['CREATED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onCancel(item)"
+            >
+              取消订单
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onAdded(item)"
+              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+            >
+              编辑
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onRemove(item)"
+              :loading="item.__r_loading__"
+              :disabled="item.__r_loading__"
+              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+            >
+              删除
+            </button>
+          </view>
+        </template>
+      </KoTable>
+      <!-- #endif -->
     </view>
 
     <KoMovable @click="onAdded('')" v-if="!isHistory" />

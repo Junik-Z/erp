@@ -10,12 +10,15 @@ import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import { confirmDeliveryApi, getDeliveryMyListApi, getMyStatisticsApi } from "@/api/erp/logistics";
 import { CONFIG } from "@/utils/config";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
   name: "MyOrderList",
   components: {UniListItem, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo},
   mixins: [mixins],
   data() {
+    const _this = this;
+
     return {
       CountList: [
         {
@@ -42,6 +45,88 @@ export default {
       noMore: false,
 
       isHistory: false,
+
+      // #ifdef H5
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 55,
+        },
+        {
+          label: "订单类型",
+          prop: "orderType",
+          render: (h, {row}) => {
+            return h("div", [_this.ORDER_TYPE_ENUMS(row.orderType)]);
+          },
+        },
+        {
+          label: "订单状态",
+          prop: "status",
+          render: (h, {row}) => {
+            return h("div", [_this.ORDER_STATUS_ENUMS(row.status)]);
+          },
+        },
+        {
+          label: "订单编号",
+          prop: "orderCode",
+        },
+        {
+          label: "时间",
+          prop: "createTime",
+          width: 180,
+        },
+        {
+          label: "物流商",
+          prop: "logistics",
+          children: [
+            {
+              label: "Logo",
+              prop: "logistics.logo",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {
+                    props: {
+                      src: _this.getImageUrl(_get(row, "logistics.logo")),
+                      size: 64,
+                      text: _get(row, "logistics.name") || _this.GET_SHOP_NAME,
+                    },
+                  })],
+                );
+              },
+            },
+            {
+              label: "名称",
+              prop: "logistics.name",
+            },
+          ],
+        },
+        {
+          label: "物流单号",
+          prop: "logisticsNo",
+        },
+        {
+          label: "联系电话",
+          prop: "orderPhone",
+        },
+        {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
+          label: "备注",
+          prop: "remark",
+        },
+        {
+          label: "操作",
+          slot: "operate",
+          width: 300,
+        },
+      ],
+      // #endif
     };
   },
   created() {
@@ -133,6 +218,7 @@ export default {
     </view>
 
     <view class="ko-my-order-list__wrap">
+      <!-- #ifdef MP -->
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px" v-for="item of list" :key="item.id">
           <OrderCard :item="item" is-logistics @click="onJumpDetails(item, 'logistics')">
@@ -156,8 +242,35 @@ export default {
           </OrderCard>
         </view>
       </KoList>
-    </view>
+      <!-- #endif -->
 
+      <!-- #ifdef H5 -->
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onJumpDetails($event, 'logistics')"
+      >
+        <!--
+        @row-click="onJumpDetails($event, 'receivable')"
+        -->
+        <template #operate="{item}">
+          <view
+            style="display: flex; align-items: center; justify-content: center;"
+          >
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onConfirm(item)"
+            >
+              完成配送
+            </button>
+          </view>
+        </template>
+      </KoTable>
+      <!-- #endif -->
+    </view>
   </view>
 </template>
 
@@ -170,6 +283,8 @@ export default {
   &__wrap {
     //flex: 1;
     //overflow: hidden;
+
+    padding: 10px;
   }
 }
 </style>

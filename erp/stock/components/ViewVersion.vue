@@ -27,15 +27,23 @@ export default {
 
       CountList: [
         {
+          label: "库存总价值",
+          key: "totalValue",
+          color: "#2979ff",
+          unit: "元",
+          span: 24,
+        },
+        {
           label: "库存总量",
           key: "totalStock",
           color: "#2979ff",
         },
         {
-          label: "库存总价值",
-          key: "totalValue",
-          color: "#2979ff",
-          unit: "元",
+          label: "库存预警",
+          key: "productStockWarning",
+          color: "#e43d33",
+          unit: "",
+          func: "onJumpWarning",
         },
       ],
     };
@@ -99,6 +107,21 @@ export default {
           this.loading = false;
         });
     },
+
+    // 跳转到库存预警页面
+    onJumpWarning() {
+      uni.navigateTo({
+        url: "/erp/stock/warning",
+      });
+    },
+
+    onFunc(item) {
+      console.log(item);
+
+      if (item.func) {
+        this[item.func](item);
+      }
+    },
   },
   computed: {
     getCountValue() {
@@ -148,7 +171,7 @@ export default {
     <view class="ko-basic-count__wrap">
       <UniRow :gutter="10">
         <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
-          <view class="ko-basic-count">
+          <view class="ko-basic-count" @click.stop="onFunc(item)">
             <view class="ko-basic-count__label">{{ item.label }}</view>
             <view class="ko-basic-count__info">
               <UvCountTo

@@ -63,6 +63,7 @@ export default {
 <template>
   <view class="ko-stock">
     <KoNotice />
+
     <view class="ko-stock__tabs" style="padding: 10px;">
       <UniSegmentedControl
         :values="GET_TAB_LIST"
@@ -88,7 +89,7 @@ export default {
 
   // #ifdef H5
   &__tabs {
-    width: 400px;
+    width: 500px;
   }
 
   // #endif

@@ -51,7 +51,7 @@ export default {
           width: 80,
         },
         {
-          label: "客户Logo",
+          label: "物流商Logo",
           prop: "logo",
           width: 100,
           render: (h, {row}) => {
@@ -110,7 +110,7 @@ export default {
         },
         {
           label: "操作",
-          width: 260,
+          width: 360,
           slot: "operate",
         },
       ],
@@ -269,12 +269,12 @@ export default {
           name: "邀请绑定",
         }, */
         /* {
-          name: "绑定客户",
+          name: "绑定物流商",
           func: "onBindPopup",
           arg: [true],
         },
         {
-          name: "解绑客户",
+          name: "解绑物流商",
           func: "onBindPopup",
           arg: [false],
         }, */
@@ -317,8 +317,8 @@ export default {
                     邀请绑定
                   </button>
                   -->
-              <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑客户</button>
+              <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定物流商</button>
+              <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑物流商</button>
 
               <button
                 class="ko-basic-button__user"
@@ -326,14 +326,6 @@ export default {
               >
                 更多
               </button>
-
-              <template v-if="false">
-                <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定客户</button>
-                <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑客户</button>
-
-                <button class="ko-basic-button__user" @click.stop="onJump(node)">编辑</button>
-                <button class="ko-basic-button__user" @click.stop="onRemove(node)">删除</button>
-              </template>
             </view>
           </template>
         </IndexList>
@@ -370,8 +362,8 @@ export default {
               >
                 邀请绑定
               </button>-->
-              <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__user">解绑客户</button>
+              <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__user">绑定物流商</button>
+              <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__user">解绑物流商</button>
               <button class="ko-basic-button__user" @click.stop="onJump(item)">编辑</button>
               <button class="ko-basic-button__user" @click.stop="onRemove(item)">删除</button>
             </view>

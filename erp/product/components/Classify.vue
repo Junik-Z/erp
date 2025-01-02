@@ -317,7 +317,7 @@ export default {
   &__off {
     display: flex;
     align-items: center;
-    margin-right: 16px;
+    margin-right: 10px;
 
     .xiao, .cai {
       background: #18bc37;

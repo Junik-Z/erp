@@ -10,17 +10,23 @@ import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, showToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, showToast } from "@/utils";
 import PrintList from "@/components/PrintList/PrintList.vue";
 import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 
 export default {
   name: "OUT",
   components: {
+    UvAvatar,
+    UniSection, BasicCard,
+    BasicPopup,
     UniRow, UniCol, UniEasyinput,
     KoList,
     PrintList,
@@ -45,6 +51,10 @@ export default {
       },
 
       noMore: false,
+
+      inadequate: [],
+
+      visible: false,
 
       // #ifdef H5
       columns: [
@@ -134,6 +144,7 @@ export default {
         },
         {
           label: "操作",
+          width: 300,
           slot: "operate",
         },
 
@@ -194,9 +205,17 @@ export default {
         success: (res) => {
           if (res.confirm) {
             confirmOutboundApi(item)
-              .then(() => {
-                uni.showToast({title: "出库成功"});
-                this.getList(true);
+              .then((resp) => {
+                this.inadequate = _groupBy(resp.data, (item) => item.className);
+
+                if (_isEmpty(resp.data)) {
+                  uni.showToast({title: "出库成功"});
+                  this.getList(true);
+                } else {
+                  this.visible = true;
+                }
+
+
               });
           }
         },
@@ -274,7 +293,6 @@ export default {
                 >
                   打印出库单(A4)
                 </button>
-
                 <button
                   v-if="['CREATED'].includes(item.status) && false"
                   class="ko-basic-button__card"
@@ -340,6 +358,47 @@ export default {
     <!-- #ifdef MP -->
     <PrintList ref="PLRef" @submit="startPrint" />
     <!-- #endif -->
+
+    <BasicPopup :visible.sync="visible" title="库存不足">
+      <view class="ko-out__popup">
+        <view v-for="(item, key) of inadequate" :key="key">
+          <UniSection :title="key" type="line">
+            <BasicCard>
+              <view
+                v-for="child of item" :key="child.id"
+                style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
+              >
+                <view style="flex: 1;">
+                  <label class="ko-basic-label">名称：</label>
+                  <text>{{ child.name }}</text>
+                </view>
+               <!-- <view style="padding: 0 10px">
+                  <label class="ko-basic-label">库存：</label>
+                  <text class="ko-basic-money">{{ child.sequence }}</text>
+                </view>-->
+                <view style="padding: 0 10px">
+                  <label class="ko-basic-label">数量：</label>
+                  <text class="ko-basic-money">{{ child.productQuantity }}</text>
+                </view>
+                <view style="width: 40px;">
+                  <UvAvatar
+                    v-if="child.images"
+                    :src="getImageUrl(child.images)"
+                    shape="square"
+                  />
+                </view>
+              </view>
+            </BasicCard>
+          </UniSection>
+          <!--<ProductCard :node="item" is-warning readonly />-->
+        </view>
+      </view>
+      <template #footer>
+        <view style="padding: 0 10% 10px;">
+          <button class="ko-basic-button" @click="visible = false">确认</button>
+        </view>
+      </template>
+    </BasicPopup>
   </view>
 </template>
 
@@ -378,6 +437,13 @@ export default {
 
   .ko-basic-button__card {
     margin: 0 5px;
+  }
+
+  &__popup {
+    // #ifdef MP
+    width: 94vw;
+    // #endif
+    padding: 16px;
   }
 }
 

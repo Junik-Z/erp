@@ -109,7 +109,14 @@ export default {
       <button class="ko-basic-button__card" @click="onAdded">添加</button>
     </view>
 
-    <UvActionSheet cancel-text="取消" round="10" @select="onSelect" :actions="getFeesActions" ref="UASRef" />
+    <UvActionSheet
+      custom-class="ko-fees-list__popup"
+      cancel-text="取消"
+      round="10"
+      @select="onSelect"
+      :actions="getFeesActions"
+      ref="UASRef"
+    />
   </view>
 
   <view v-else class="ko-fees-list">
@@ -147,6 +154,19 @@ export default {
     &--text {
       @include basic-text-ellipsis(2);
     }
+  }
+
+  &__popup {
+    width: 1024px;
+  }
+
+  /deep/ .uv-popup__content.bottom {
+    max-width: 1024px;
+    margin: 0 auto;
+
+   /* .uv-action-sheet {
+      max-width: 1024px !important;
+    }*/
   }
 }
 </style>

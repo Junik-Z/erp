@@ -143,6 +143,14 @@ export default {
   flex-direction: column;
   height: 88vh;
 
+  // #ifdef H5
+  /deep/ .ko-history {
+    width: 100%;
+  }
+
+  // #endif
+
+
   &__tabs {
     padding: 10px;
   }

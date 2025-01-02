@@ -44,7 +44,7 @@ export default {
       list: [],
 
       queryList: {
-        pageSize: 10,
+        pageSize: 30,
         pageNum: 0,
       },
       noMore: false,
@@ -134,6 +134,11 @@ export default {
     // #endif
   },
   methods: {
+    RequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
     getList(reset) {
       if (reset) {
         this.queryList.pageNum = 0;

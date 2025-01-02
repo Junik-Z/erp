@@ -211,7 +211,7 @@ export default {
     KoTable,
     // #endif
   },
-  // #ifdef MP
+  // #ifdef MP | H5
   // 页面滚动到最底部时触发
   onReachBottom() {
     this.RequestNextPage();

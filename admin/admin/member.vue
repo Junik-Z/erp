@@ -40,7 +40,7 @@ export default {
       visible: false,
 
       queryList: {
-        pageSize: 10,
+        pageSize: 30,
         pageNum: 0,
       },
       noMore: false,
@@ -109,6 +109,12 @@ export default {
     this.getList();
   },
   methods: {
+    RequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
     getList(reset) {
       if (reset) {
         this.queryList.pageNum = 0;
@@ -324,6 +330,14 @@ export default {
       margin: 0 5px;
     }
   }
+
+  // #ifdef H5
+  /deep/ .uni-searchbar {
+    width: 1024px;
+    margin: 0 auto;
+  }
+
+  // #endif
 
   &__popup {
     // #ifdef MP

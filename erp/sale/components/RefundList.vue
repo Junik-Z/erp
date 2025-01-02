@@ -306,8 +306,11 @@ export default {
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 10px;" v-for="item of list" :key="item.id">
-          <OrderCard is-sales :item="item"
-                     @click="onJumpDetails(item, 'saleReturn')">
+          <OrderCard
+            is-sales
+            :item="item"
+            @click="onJumpDetails(item, 'saleReturn')"
+          >
             <template #operate v-if="isPerm('Sales_Write')">
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
@@ -319,7 +322,6 @@ export default {
                 >
                   打印单据
                 </button>
-
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
@@ -329,8 +331,9 @@ export default {
                 >
                   提交订单
                 </button>
+
                 <button
-                  v-if="['FINISHED'].includes(item.status)"
+                  v-if="['FINISHED'].includes(item.status) && !item.confirmable"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item)"
                 >
@@ -344,32 +347,6 @@ export default {
                 >
                   更多
                 </button>
-
-                <template v-if="false">
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onJump(item)"
-                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                  >
-                    修改
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="cancelRefundSale(item)"
-                    v-if="['CREATED'].includes(item.status)"
-                  >
-                    取消
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="removeRefundSale(item)"
-                    :loading="item.__r_loading__"
-                    :disabled="item.__r_loading__"
-                    v-if="['CANCELLED', 'CREATED'].includes(item.status)"
-                  >
-                    删除
-                  </button>
-                </template>
               </view>
             </template>
           </OrderCard>
@@ -401,8 +378,9 @@ export default {
             >
               提交订单
             </button>
+
             <button
-              v-if="!['CANCELLED'].includes(item.status)"
+              v-if="['FINISHED'].includes(item.status) && !item.confirmable"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item)"
             >

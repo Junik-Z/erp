@@ -380,7 +380,6 @@ export default {
                   >
                     添加单据
                   </button>
-
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onCancel(item)"
@@ -424,7 +423,6 @@ export default {
               >
                 添加单据
               </button>
-
               <button
                 class="ko-basic-button__card"
                 @click.stop="onCancel(item)"

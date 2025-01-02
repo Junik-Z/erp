@@ -22,6 +22,7 @@ export default {
   },
   mixins: [mixins, SaleMixins],
   data() {
+    const _this = this;
     return {
       CountList: [
         {
@@ -305,6 +306,7 @@ export default {
     <HistoryBar v-model="isHistory" :values="['销售', '销售退货']" @change="getList(true)" />
 
     <view class="ko-my-order-list__wrap">
+      <!-- #ifdef MP -->
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px">
           <OrderCard
@@ -339,6 +341,54 @@ export default {
           </OrderCard>
         </view>
       </KoList>
+      <!-- #endif -->
+
+      <!-- #ifdef H5 -->
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onJumpDetails($event, isHistory ? 'saleReturn' : 'sale')"
+      >
+        <template #operate="{item}">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              v-if="['FINISHED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onReturn(item)"
+            >
+              申请退货
+            </button>
+
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onAdded(item)"
+              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+            >
+              修改
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onCancel(item)"
+              v-if="['CREATED'].includes(item.status)"
+            >
+              取消订单
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onRemove(item)"
+              :loading="item.__r_loading__"
+              :disabled="item.__r_loading__"
+              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+            >
+              删除
+            </button>
+          </view>
+        </template>
+      </KoTable>
+      <!-- #endif -->
     </view>
 
     <KoMovable @click="onAdded('')" v-if="!isHistory" />

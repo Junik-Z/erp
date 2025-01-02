@@ -136,6 +136,7 @@ export default {
           this.getColumnList();
         });
     },
+
     // 获取表头数据
     getColumnList() {
       const extend = this.FieldList.map(item => {
@@ -330,19 +331,17 @@ export default {
     getSummary() {
       const count = _sum((this.node?.details || []).map(item => item.total));
       const numIndex = this.filterColumnList.findIndex(item => _isEqual(item.label, "数量"));
+
       return [
-        {label: "大写合计", colspan: 2},
+        {label: "大写实收", colspan: 1},
         {
-          label: this.toBigMoney(this.toYuan(count)),
+          label: this.toBigMoney(this.toYuan(this.node.totalAmount)),
           colspan: numIndex - 2,
-          // style: {color: "#000" /* "#e43d33" *//* , fontWeight: "bold" */},
         },
         {label: "合计", colspan: 1},
-        {
-          label: this.toYuan(count),
-          colspan: this.filterColumnList.length - 1 - numIndex,
-          // style: {color: "#000"/* , fontWeight: "bold" */},
-        },
+        {label: this.toYuan(count), colspan: 1},
+        {label: "实收", colspan: 1},
+        {label: this.toYuan(this.node.totalAmount), colspan: 1},
       ];
     },
     rootStyle() {

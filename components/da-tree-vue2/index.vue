@@ -1213,7 +1213,6 @@ export default {
   //}
 
   .action {
-    width: 26px;
     height: 26px;
     display: flex;
     justify-content: center;

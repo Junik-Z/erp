@@ -59,7 +59,7 @@ export default {
 
       bindList: [],
 
-      isEdit: false
+      isEdit: false,
     };
   },
   mixins: [mixins],
@@ -123,7 +123,7 @@ export default {
           const params = _deepCopy(res.data);
           console.log(params);
           params.totalAmount = transferYuan(params.totalAmount);
-          params.otherSupplier = this.GET_FUNC(params, 'customer.name')
+          params.otherSupplier = this.GET_FUNC(params, "customer.name");
           this.form = params;
         });
     },
@@ -173,7 +173,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-refund">
+  <view class="ko-refund ko-basic-added-form">
     <UniForms
       :model="form"
       label-width="120px"
@@ -182,26 +182,26 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-            <UniFormsItem label="供应商：" name="supplierId">
-              <PickerUser
-                style="width: 100%;"
-                v-model="form.supplierId"
-                placeholder="请选择"
-                title="选择供应商"
-                is-input
-                type="supplier"
-                :disabled="!!orderId"
-                ref="UserRef"
-                @input="onSupplierId"
-                v-if="isClient ? bindList.length : true"
-              />
-              <UniEasyinput
-                v-else
-                v-model="form.otherSupplier"
-                style="width: 100%;"
-                placeholder="请输入"
-              />
-            </UniFormsItem>
+          <UniFormsItem label="供应商：" name="supplierId">
+            <PickerUser
+              style="width: 100%;"
+              v-model="form.supplierId"
+              placeholder="请选择"
+              title="选择供应商"
+              is-input
+              type="supplier"
+              :disabled="!!orderId"
+              ref="UserRef"
+              @input="onSupplierId"
+              v-if="isClient ? bindList.length : true"
+            />
+            <UniEasyinput
+              v-else
+              v-model="form.otherSupplier"
+              style="width: 100%;"
+              placeholder="请输入"
+            />
+          </UniFormsItem>
         </view>
       </UniSection>
 
@@ -271,6 +271,15 @@ export default {
 
   &__footer {
     padding: 10px 50px 50px;
+    // #ifdef H5
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ko-basic-button {
+      width: 200px;
+    }
+    // #endif
   }
 }
 </style>

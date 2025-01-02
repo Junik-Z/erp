@@ -362,39 +362,6 @@ export default {
                 >
                   更多
                 </button>
-
-                <template v-if="false">
-                  <button
-                    v-if="['FINISHED'].includes(item.status)"
-                    class="ko-basic-button__card"
-                    @click.stop="onReturn(item)"
-                  >
-                    申请退货
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onJump(item)"
-                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                  >
-                    修改
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="cancelSale(item)"
-                    v-if="['CREATED'].includes(item.status)"
-                  >
-                    取消
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="removeSale(item)"
-                    :loading="item.__r_loading__"
-                    :disabled="item.__r_loading__"
-                    v-if="['CANCELLED', 'CREATED'].includes(item.status)"
-                  >
-                    删除
-                  </button>
-                </template>
               </view>
             </template>
           </OrderCard>
@@ -416,7 +383,7 @@ export default {
         <template #operate="{item}" v-if="isPerm('Sales_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
-              v-if="!['CANCELLED'].includes(item.status)"
+              v-if="['FINISHED'].includes(item.status) && !item.confirmable"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item)"
             >

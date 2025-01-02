@@ -271,7 +271,6 @@ export default {
       </view>
     </HistoryBar>
 
-
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
