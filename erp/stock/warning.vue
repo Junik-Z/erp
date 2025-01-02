@@ -6,16 +6,17 @@ import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _groupBy } from "@/utils";
+import { _get, _groupBy, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { getProductFieldApi } from "@/api/erp/product";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import KoList from "@/components/List/List.vue";
 
 export default {
   name: "warning",
   mixins: [mixins],
-  components: {UvAvatar, BasicCard, UniSection, KoTable, ProductCard, UniList, UniListItem, LoadMore},
+  components: {KoList, UvAvatar, BasicCard, UniSection, KoTable, ProductCard, UniList, UniListItem, LoadMore},
   data() {
     return {
       list: [],
@@ -23,19 +24,41 @@ export default {
       FieldList: [],
 
       groupList: {},
+
+      queryList: {
+        pageSize: 34,
+        pageNum: 0,
+      },
+
+      noMore: false,
+
     };
   },
   async onLoad() {
     await this.getExtendList();
-    await this.getList();
+    await this.getList(true);
   },
   methods: {
-    getList() {
+    RequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    getList(reset = false) {
+      if (reset) {
+        this.queryList.pageNum = 0;
+        this.list = [];
+      }
+
       this.loading = false;
-      getWarningListApi({pageSize: 10000, pageNum: 0})
+
+      getWarningListApi(this.queryList)
         .then(res => {
-          this.list = res.data;
-          this.groupList = _groupBy(res.data, (item) => item.className);
+          this.list = [...this.list, ...res.data];
+
+          this.noMore = res.data.length < this.groupList.pageSize || _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+          this.groupList = _groupBy(this.list, (item) => item.className);
 
           console.log(this.groupList);
         })
@@ -115,37 +138,38 @@ export default {
   <view class="ko-warning">
     <!-- #ifdef MP -->
     <view class="ko-warning__wrap">
-      <view v-for="(item, key) of groupList" :key="key">
-        <UniSection :title="key" type="line">
-          <BasicCard>
-            <view
-              v-for="child of item" :key="child.id"
-              style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
-            >
-              <view style="flex: 1;">
-                <label class="ko-basic-label">名称：</label>
-                <text>{{ child.name }}</text>
+      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+        <view v-for="(item, key) of groupList" :key="key">
+          <UniSection :title="key" type="line">
+            <BasicCard>
+              <view
+                v-for="child of item" :key="child.id"
+                style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
+              >
+                <view style="flex: 1;">
+                  <label class="ko-basic-label">名称：</label>
+                  <text>{{ child.name }}</text>
+                </view>
+                <view style="padding: 0 10px">
+                  <label class="ko-basic-label">库存：</label>
+                  <text class="ko-basic-money">{{ child.quantity }}</text>
+                </view>
+                <view style="padding: 0 10px">
+                  <label class="ko-basic-label">预警：</label>
+                  <text class="ko-basic-money">{{ child.stockWarning }}</text>
+                </view>
+                <view style="width: 40px;">
+                  <UvAvatar
+                    v-if="child.images"
+                    :src="getImageUrl(child.images)"
+                    shape="square"
+                  />
+                </view>
               </view>
-              <view style="padding: 0 10px">
-                <label class="ko-basic-label">库存：</label>
-                <text class="ko-basic-money">{{ child.quantity }}</text>
-              </view>
-              <view style="padding: 0 10px">
-                <label class="ko-basic-label">预警：</label>
-                <text class="ko-basic-money">{{ child.stockWarning }}</text>
-              </view>
-              <view style="width: 40px;">
-                <UvAvatar
-                  v-if="child.images"
-                  :src="getImageUrl(child.images)"
-                  shape="square"
-                />
-              </view>
-            </view>
-          </BasicCard>
-        </UniSection>
-        <!--<ProductCard :node="item" is-warning readonly />-->
-      </view>
+            </BasicCard>
+          </UniSection>
+        </view>
+      </KoList>
     </view>
     <!-- #endif -->
 
