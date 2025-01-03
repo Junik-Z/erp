@@ -10,7 +10,7 @@ import { _deepCopy, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import IndexList from "@/components/IndexList/IndexList2.vue";
+import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoMovable from "@/components/Movable/index.vue";
 
