@@ -45,6 +45,7 @@ export default {
         {
           label: "名称",
           key: "name",
+          isField: true,
           span: 12,
         },
         {
@@ -96,6 +97,7 @@ export default {
       return getProductFieldApi({pageSize: 1000, pageNum: 0})
         .then(res => {
           uni.$__FIELD_LIST__ = res.data;
+          this.FieldList = res.data;
         });
     },
   },
@@ -169,6 +171,7 @@ export default {
         :no-data="!list.length"
         :columns="columnTable"
         @lower="onRequestNextPage"
+        :field-list="FieldList"
       />
     </view>
     <!-- #endif -->

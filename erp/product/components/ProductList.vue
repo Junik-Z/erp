@@ -51,7 +51,14 @@ export default {
     this.getSelectList();
   },
   methods: {
-    getList() {
+    // 获取商品列表
+    getList(reset = false) {
+
+      if (reset) {
+        this.list = [];
+        this.queryList.pageNum = 0;
+      }
+
       this.loading = true;
       getProductListApi(this.queryList)
         .then(res => {
@@ -152,10 +159,8 @@ export default {
 
     // 根据索引搜索
     onSearchToNameIndex(key) {
-      this.list = [];
-      this.queryList.pageNum = 0;
       this.queryList.nameIndex = key;
-      this.getList();
+      this.getList(true);
     },
   },
   computed: {
@@ -248,7 +253,7 @@ export default {
   <view class="ko-product">
     <view class="ko-product__wrap">
       <view class="ko-product__class">
-        <PickerClass v-model="queryList.classId" @change="getList" />
+        <PickerClass v-model="queryList.classId" @change="getList(true)" />
         <button
           class="ko-basic-button__card"
           @click="isHideStockPrice = !isHideStockPrice"

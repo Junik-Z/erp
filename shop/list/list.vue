@@ -295,7 +295,7 @@ export default {
     onCancel() {
       setTimeout(() => {
         this.$nextTick(() => {
-          this.getList();
+          this.getList(true);
         });
       });
     },
@@ -519,16 +519,18 @@ export default {
     <div class="ko-shop-list__title">
       <!-- #endif -->
       <view class="ko-shop-list__header">
-        <UniSearchBar
-          @confirm="getList()"
-          @cancel="onCancel"
-          v-model="queryList.name"
-          placeholder="请输入产品名称"
-        />
-
+        <view style="flex: 1;">
+          <UniSearchBar
+            @confirm="getList(true)"
+            @cancel="onCancel"
+            v-model="queryList.name"
+            placeholder="产品名称"
+            :clear-button="false"
+          />
+        </view>
         <!-- #ifdef MP -->
         <view class="ko-shop-list__class">
-          <PickerClass watch-type :type="type" v-model="queryList.classId" @change="getList()" />
+          <PickerClass watch-type :type="type" v-model="queryList.classId" @change="getList(true)" />
         </view>
         <!-- #endif -->
       </view>
@@ -666,8 +668,6 @@ export default {
 <style scoped lang="scss">
 .ko-shop-list {
   // #ifdef MP
-  padding-top: 100px;
-  padding-bottom: 100px;
   height: 100vh;
   // #endif
 
@@ -680,20 +680,17 @@ export default {
   flex-direction: column;
 
   &__header {
+    padding-right: 10px;
+
     // #ifdef MP
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 9;
-    height: 100px;
+    display: flex;
+    align-items: center;
     // #endif
 
     // #ifdef H5
     width: 800px;
     height: 56px;
     // #endif
-
     background: #FFFFFF;
   }
 
@@ -704,7 +701,7 @@ export default {
   }
 
   &__class {
-    padding: 0 10px 15px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: flex-end;
