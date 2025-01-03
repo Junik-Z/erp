@@ -316,7 +316,7 @@ export function _isEqual(value, other) {
   return false;
 }
 
-export function hasOverlap(arr1, arr2) {
+export function _hasOverlap(arr1, arr2) {
   const set1 = new Set(arr1);
   const set2 = new Set(arr2);
   return arr2.some(item => set1.has(item));
@@ -432,7 +432,6 @@ export function _sortBy(array, ...iteratees) {
   });
 }
 
-
 export function _omit(obj, keys) {
   // 确保输入是一个对象
   if (typeof obj !== "object" || obj === null) {
@@ -522,6 +521,22 @@ export function _round(number, precision = 0) {
   return Math.round(number * factor) / factor;
 }
 
+export function _uniqWith(array, comparator) {
+  const result = [];
+  const seen = new WeakMap();
+
+  array.forEach((item) => {
+    // 如果没有提供比较器函数，则使用严格相等性检查
+    const key = comparator ? comparator(item) : item;
+
+    if (!seen.has(key)) {
+      seen.set(key, true);
+      result.push(item);
+    }
+  });
+
+  return result;
+}
 
 /**
  财通

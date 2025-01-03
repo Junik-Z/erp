@@ -10,7 +10,7 @@ import { _deepCopy, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import IndexList from "@/components/IndexList/IndexList.vue";
+import IndexList from "@/components/IndexList/IndexList2.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoMovable from "@/components/Movable/index.vue";
 
@@ -28,14 +28,18 @@ export default {
     return {
       list: [],
       loading: true,
+      noMore: false,
 
       className: [],
       classList: [],
 
       queryList: {
         classId: "",
-        ...{pageSize: 1000000, pageNum: 0},
+        pageSize: 10,
+        pageNum: 0,
       },
+
+
       actionItem: {},
 
       FieldList: [],
@@ -51,8 +55,8 @@ export default {
       this.loading = true;
       getProductListApi(this.queryList)
         .then(res => {
-          this.list = res.data;
-          console.log(res.data);
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -138,6 +142,20 @@ export default {
 
     onSelect(item) {
       this[item.func](_deepCopy(this.actionItem));
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    // 根据索引搜索
+    onSearchToNameIndex(key) {
+      this.list = [];
+      this.queryList.pageNum = 0;
+      this.queryList.nameIndex = key;
+      this.getList();
     },
   },
   computed: {
@@ -242,7 +260,12 @@ export default {
       <view class="ko-product__list">
         <!-- #ifdef MP -->
         <IndexList
-          :options="list"
+          :data="list"
+          @lower="onLower"
+          :no-more="noMore"
+          @search="onSearchToNameIndex"
+          is-double-row
+
           v20241216
           is-product
           :loading="loading"
