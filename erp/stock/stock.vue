@@ -14,31 +14,33 @@ export default {
   name: "stock",
   components: {Verification, KoNotice, Out, Warehouse, ViewVersion, UniSegmentedControl},
   mixins: [mixins],
-  data: () => ({
-    tabList: [
-      {
-        label: "库存看版",
-        ref: "VVRef",
-        roles: ["Stock_Read", "Stock_Write"],
-      },
-      {
-        label: "入库审批",
-        ref: "WRef",
-        roles: ["Stock_Read", "Stock_Write"],
-      },
-      {
-        label: "出库审批",
-        ref: "ORef",
-        roles: ["Stock_Read", "Stock_Write"],
-      },
-      {
-        label: "核对库存",
-        ref: "VRef",
-        roles: ["Stock_Write"],
-      },
-    ],
-    // TAB: 0,
-  }),
+  data() {
+    return {
+      tabList: [
+        {
+          label: "库存看版",
+          ref: "VVRef",
+          roles: ["Stock_Read", "Stock_Write"],
+        },
+        {
+          label: "入库审批",
+          ref: "WRef",
+          roles: ["Stock_Read", "Stock_Write"],
+        },
+        {
+          label: "出库审批",
+          ref: "ORef",
+          roles: ["Stock_Read", "Stock_Write"],
+        },
+        {
+          label: "核对库存",
+          ref: "VRef",
+          roles: ["Stock_Write"],
+        },
+      ],
+      // TAB: 3,
+    };
+  },
   onShow() {
     this.getList();
   },

@@ -1,31 +1,31 @@
 <script>
 import { getCheckListApi, refreshStockApi } from "@/api/erp/stock";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import mixins from "@/mixins/mixins";
-import IndexList from "@/components/IndexList/IndexList.vue";
-import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import { getProductFieldApi } from "@/api/erp/product";
+import { _isEmpty } from "@/utils";
+import InventoryList from "@/erp/components/InventoryList/InventoryList.vue";
+import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
+import PickerClass from "@/components/PickerClass/PickerClass.vue";
 
 export default {
   name: "Verification",
-  components: {ProductCard, IndexList, UniList, UniCol, BasicCard, UniRow, LoadMore, PickerClass},
+  components: {PickerClass, UniSearchBar, InventoryList},
   mixins: [mixins],
   data() {
     return {
       list: [],
       queryList: {
         classId: "",
-        ...{pageSize: 1000000, pageNum: 0},
+        pageSize: 20,
+        pageNum: 0,
+        name: "",
       },
+      noMore: false,
       loading: false,
 
-      /* #ifdef H5 */
       FieldList: [],
+
+      /* #ifdef H5 */
       columns: [
         {
           label: "序号",
@@ -57,11 +57,17 @@ export default {
     this.getFieldList();
   },
   methods: {
-    getList() {
+    getList(reset = false) {
+      if (reset) {
+        this.list = [];
+        this.queryList.pageNum = 0;
+      }
+
       this.loading = true;
       getCheckListApi(this.queryList)
         .then((res) => {
-          this.list = res.data;
+          this.list = this.onMergeArrays(this.list, res.data, "id");
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -69,7 +75,7 @@ export default {
     },
 
     getFieldList() {
-      getProductFieldApi({pageSize: 1000000, pageNum: 0})
+      getProductFieldApi({pageSize: 10000, pageNum: 0})
         .then(res => {
           uni.$__FIELD_LIST__ = res.data;
           this.FieldList = res.data;
@@ -96,6 +102,20 @@ export default {
     onJudge() {
       uni.navigateTo({
         url: "/shop/list/list?judge=true",
+      });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
+    onCancel() {
+      setTimeout(() => {
+        this.$nextTick(() => {
+          this.getList(true);
+        });
       });
     },
   },
@@ -146,6 +166,33 @@ export default {
       ];
     },
     // #endif
+
+    columnTable() {
+      return [
+        {
+          label: "名称",
+          key: "name",
+          span: 24 - 9,
+          isField: true,
+        },
+        {
+          label: "入库",
+          key: "inQuantity",
+          span: 3,
+        },
+        {
+          label: "出库",
+          key: "outQuantity",
+          span: 3,
+        },
+        {
+          label: "库存",
+          key: "quantity",
+          span: 3,
+          isClass: true,
+        },
+      ];
+    },
   },
 };
 </script>
@@ -153,7 +200,18 @@ export default {
 <template>
   <view class="ko-verification">
     <view class="ko-verification__class">
-      <PickerClass v-model="queryList.classId" @change="getList" />
+      <view style="flex: 1;">
+        <UniSearchBar
+          @confirm="getList(true)"
+          @cancel="onCancel"
+          v-model="queryList.name"
+          placeholder="产品名称"
+          :clear-button="false"
+        />
+      </view>
+
+      <PickerClass v-model="queryList.classId" @change="getList(true)" />
+
       <button
         class="ko-basic-button__card"
         v-if="isBusiness || isAdmin || isPerm('Stock_Taking')"
@@ -166,24 +224,15 @@ export default {
 
     <view class="ko-verification__wrap">
       <!-- #ifdef MP -->
-      <IndexList :options="list" is-product :loading="loading">
-        <template #cell="{node}">
-          <ProductCard @click="onJump(node)" :node="node" is-verification :span="24" perm="Stock_Write">
-            <template #footer="{item}">
-              <view class="ko-verification__item">
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onRefresh(item)"
-                  :loading="item.__r_loading__"
-                  :disabled="item.__r_loading__"
-                >
-                  刷新库存
-                </button>
-              </view>
-            </template>
-          </ProductCard>
-        </template>
-      </IndexList>
+      <InventoryList
+        :list="list"
+        :no-more="noMore"
+        :loading="loading"
+        :no-data="!list.length"
+        :columns="columnTable"
+        @lower="onLower"
+        :field-list="FieldList"
+      />
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
@@ -218,13 +267,15 @@ export default {
 
 <style scoped lang="scss">
 .ko-verification {
+  // #ifdef MP
   height: calc(100vh - 60px);
+  // #endif
 
   display: flex;
   flex-direction: column;
 
   &__class {
-    padding: 10px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -243,6 +294,7 @@ export default {
   &__wrap {
     flex: 1;
     position: relative;
+    overflow: hidden;
   }
 
   &__item {

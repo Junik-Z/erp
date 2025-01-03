@@ -35,6 +35,13 @@ export default {
       checked: [],
       modelVisible: false,
       checkNode: {},
+
+      queryList: {
+        pageSize: 20,
+        pageNum: 0,
+      },
+
+      noMore: false,
     };
   },
   mixins: [mixins],
@@ -103,14 +110,17 @@ export default {
       const lKey = {default: "nickName", client: "name", supplier: "name", logistics: "name"}[this.type];
       const logoKey = {default: "avatar", client: "logo", supplier: "logo", logistics: "logo"}[this.type];
 
-      Func({pageSize: 10000})
+      Func(this.queryList)
         .then(res => {
-          this.list = (res.data).map(item => ({
+          const list = (res.data).map(item => ({
             ...item,
             value: _get(item, vKey),
             label: _get(item, lKey),
             logo: _get(item, logoKey),
           }));
+
+          this.list = this.onMergeArrays(this.list, list, vKey);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -159,6 +169,20 @@ export default {
     onClick() {
       if (isBoolean(this.disabled) && this.disabled) return false;
       this.modelVisible = true;
+    },
+
+
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+    // 根据索引搜索
+    onSearchToNameIndex(key) {
+      this.list = [];
+      this.queryList.pageNum = 0;
+      this.queryList.nameIndex = key;
+      this.getList();
     },
   },
   watch: {
@@ -246,6 +270,10 @@ export default {
       :styles="{disableColor: 'transparent'}"
       :value="checkNode.label"
       is-readonly
+
+      @lower="onLower"
+      :no-more="noMore"
+      @search="onSearchToNameIndex"
     />
 
     <BasicPopup
@@ -257,11 +285,12 @@ export default {
         <IndexList
           @click="onSelect"
           :checked-list="checkedList"
-          :options="list"
+          :data="list"
           :value="checked"
           is-checked
           :disabled="disabled"
           :is-receipt-list="type === 'logistics'"
+          :safe-area-inset-bottom="false"
         />
       </view>
 
@@ -281,7 +310,7 @@ export default {
 <style scoped lang="scss">
 .ko-picker-user {
   &__popup {
-    height: 70vh;
+    height: 74vh;
     // #ifdef MP
     width: 100vw;
     // #endif

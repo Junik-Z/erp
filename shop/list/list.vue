@@ -65,12 +65,13 @@ export default {
       queryList: {
         classId: "",
         name: "",
-        pageSize: 10000,
+        pageSize: 20,
         pageNum: 0,
+        nameIndex: "",
       },
       className: [],
       // 获取商品列表
-      productList: [],
+      list: [],
 
       // 已经选好的产品
       selected: {},
@@ -98,6 +99,7 @@ export default {
       // 是否是盘点库存
       isJudge: false,
 
+      noMore: false,
       sLoading: false,
     };
   },
@@ -142,7 +144,13 @@ export default {
     },
 
     // 获取商品列表
-    getList() {
+    getList(reset = false) {
+
+      if (reset) {
+        this.list = [];
+        this.queryList.pageNum = 0;
+      }
+
       this.loading = true;
       const params = {
         purchase: {purchaseOff: false},
@@ -154,7 +162,7 @@ export default {
       // 盘点的不需要区分上下架
       Func({...this.queryList, ...(this.isJudge ? {} : params)})
         .then(res => {
-          this.productList = res.data
+          const list = res.data
             .map(item => {
               const obj = {
                 ...item,
@@ -165,6 +173,9 @@ export default {
               }
               return obj;
             });
+
+          this.list = this.onMergeArrays(this.list, list, "id");
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -220,7 +231,7 @@ export default {
       const list = _deepCopy(Object.values(this.selected));
 
       if (this.isJudge) {
-        const details = (list || []).filter(item => !!this.productList.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
+        const details = (list || []).filter(item => !!this.list.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
 
         if (details.length <= 0) {
           showToast({title: "您还未盘点选任何产品"});
@@ -287,6 +298,17 @@ export default {
           this.getList();
         });
       });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+    // 根据索引搜索
+    onSearchToNameIndex(key) {
+      this.queryList.nameIndex = key;
+      this.getList(true);
     },
 
     // #ifdef H5
@@ -517,7 +539,7 @@ export default {
     <view class="ko-shop-list__wrap">
       <!-- #ifdef MP -->
       <IndexList
-        :options="productList"
+        :data="list"
         :selected="selected"
         is-selected
         :hide-prices="hidePrices"
@@ -527,6 +549,10 @@ export default {
         @number-change="onItemNumberChange"
         :is-judge="isJudge"
         v20241216
+
+        @lower="onLower"
+        :no-more="noMore"
+        @search="onSearchToNameIndex"
       >
         <!-- <template #cell="{node, selected, hidePrices, extra}">
            <view class="ko-shop-list__card">
@@ -563,7 +589,7 @@ export default {
           <KoTable
             :columns="getTableColumns"
             :loading="loading"
-            :data="productList"
+            :data="list"
           />
         </div>
       </div>

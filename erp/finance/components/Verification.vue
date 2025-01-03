@@ -14,6 +14,8 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
+import { _deepCopy, _isEmpty } from "@/utils";
+import * as uni from "@/utils";
 
 export default {
   name: "Verification",
@@ -38,21 +40,33 @@ export default {
       list: [],
       loading: false,
       current: 0,
+
+      noMore: false,
+      queryList: {
+        pageSize: 20, pageNum: 0,
+      },
     };
   },
   methods: {
-    getList() {
+    getList(reset = false) {
+      if (reset) {
+        this.list = [];
+        this.queryList.pageNum = 0;
+      }
       this.loading = true;
       const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.current];
 
-      Func({pageSize: 1000000, pageNum: 0})
+      Func(this.queryList)
         .then((res) => {
-          this.list = (res.data || []).map(item => ({
+          const list = (res.data || []).map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
+
+          this.list = this.onMergeArrays(this.list, list, "id");
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -80,6 +94,18 @@ export default {
     onClickItem(it, node) {
       this.onRefresh(node);
     },
+
+
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+    // 根据索引搜索
+    onSearchToNameIndex(key) {
+      this.queryList.nameIndex = key;
+      this.getList(true);
+    },
   },
   computed: {
     getTabsList() {
@@ -98,18 +124,22 @@ export default {
     <HistoryBar
       :values="getTabsList"
       v-model="current"
-      @change="getList()"
+      @change="getList(true)"
     />
 
     <view class="ko-verification__content">
       <IndexList
         @click="onJump"
-        :options="list"
+        :data="list"
         :events="getEvents"
         @click-item="onClickItem"
         show-amount
         :is-supplier="!!current"
         :loading="loading"
+
+        @lower="onLower"
+        :no-more="noMore"
+        @search="onSearchToNameIndex"
       />
     </view>
   </view>

@@ -1,34 +1,43 @@
 <script>
-import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import { _deepCopy, _get, _groupBy, _isEmpty, getRect } from "@/utils";
-import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import { _isEmpty, getRect } from "@/utils";
 import mixins from "@/mixins/mixins";
-import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
+
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+
+import UniSkeletons from "@/uni_modules/uv-skeletons/components/uv-skeletons/uv-skeletons.vue";
+
+// 索引列表
+const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 export default {
   name: "IndexList",
   components: {
-    ProductCard,
+    UniRow, UniCol, BasicCard, UvAvatar,
     UvLoadingIcon,
-    UniSearchBar,
-    UniCol,
-    UniRow,
-    UvAvatar,
-    BasicCard,
-    UniSection,
+    ProductCard,
+    UniSkeletons,
   },
   props: {
-    options: {
+    data: {
       type: Array,
       default() {
         return [];
       },
     },
+    noMore: Boolean,
+    loading: Boolean,
+    // 是否使用双列布局
+    isDoubleRow: Boolean,
+    safeAreaInsetBottom: {
+      type: Boolean,
+      default: true,
+    },
+
     events: {
       type: Array,
       default() {
@@ -40,11 +49,6 @@ export default {
     value: [String, Array],
     disabled: [Boolean, Array],
     buttonPerm: String,
-
-    safeAreaInsetBottom: {
-      type: Boolean,
-      default: true,
-    },
 
     // 是否是供应商
     isSupplier: Boolean,
@@ -70,8 +74,6 @@ export default {
     // 是否是在下单页面进来的
     isSelected: Boolean,
 
-    loading: Boolean,
-
     extra: {
       type: Object,
       default() {
@@ -92,64 +94,89 @@ export default {
     isHideStockPrice: Boolean,
   },
   watch: {
-    options: {
-      handler() {
-        this.setList();
+    data: {
+      handler(val) {
+        // this.setList();
       },
-      deep: true,
+      immediate: true,
     },
   },
   mixins: [mixins],
   data() {
     return {
       scrollViewId: "",
-      lists: [],
       winHeight: 0,
       itemHeight: 0,
       winOffsetY: 0,
       touchmove: false,
       touchmoveIndex: -1,
       touchmovable: false,
-      loaded: false,
 
-      groupObj: {},
-      fText: "",
+      // 骨架屏
+      skeleton: [
+        {
+          type: "flex",
+          num: 1,
+          style: "width: 100%; justify-content: space-between;",
+          children: [
+            {
+              type: "line",
+              num: 30,
+              gap: "10px",
+              style: "height: 20px;",
+            },
+            {
+              type: "custom",
+              style: "width: 10px;",
+            },
+            {
+              type: "line",
+              num: 30,
+              gap: "10px",
+              style: "height: 20px;",
+            },
+          ],
+        },
+      ],
+
     };
   },
   mounted() {
     // #ifdef H5
     this.isPC = this.IsPC();
     // #endif
+
     setTimeout(() => {
       this.setList();
     }, 50);
-    setTimeout(() => {
-      this.loaded = true;
-    }, 300);
   },
   methods: {
     async setList() {
-      const list = _deepCopy(this.options);
-      const obj = _groupBy(list, (v) => _get(v, this.groupKey));
-      this.touchmoveIndex = -1;
-
-      this.getKeyList.forEach((key, index) => {
-        this.groupObj[key] = obj[key] || [];
-        if (this.touchmoveIndex === -1 && !_isEmpty(obj[key])) this.touchmoveIndex = index;
-      });
-
       getRect(".ko-index-list__menu--wrap", this).then(res => {
         this.winOffsetY = res?.top || 0;
         this.winHeight = res?.height || 0;
-        this.itemHeight = this.winHeight / this.getKeyList?.length;
+        this.itemHeight = this.winHeight / this.IndexMenus?.length;
       });
     },
+
 
     touchStart(e) {
       this.touchmove = true;
       let pageY = this.isPC ? e.pageY : e.touches[0].pageY;
       let index = Math.floor((pageY - this.winOffsetY) / this.itemHeight);
-      const key = this.getKeyList[index];
+      let key = this.IndexMenus[index];
+
+      if (this.touchmoveIndex === index) {
+        key = "";
+        this.touchmoveIndex = -1;
+      } else {
+        this.touchmoveIndex = index;
+      }
+
+      this.$emit("search", key);
+
+      if (e) return false;
+
       let item = this.getGroupListByKey(key);
       if (item?.length > 0) {
         this.scrollViewId = "ko-index-list-" + index;
@@ -157,13 +184,15 @@ export default {
       }
     },
     touchMove(e) {
+      if (e) return false;
+
       // #ifndef APP-PLUS
       let pageY = this.isPC ? e.pageY : e.touches[0].pageY;
       let index = Math.floor((pageY - this.winOffsetY) / this.itemHeight);
       if (this.touchmoveIndex === index) {
         return false;
       }
-      const key = this.getKeyList[index];
+      const key = this.IndexMenus[index];
       let item = this.getGroupListByKey(key);
 
       if (item?.length > 0) {
@@ -178,7 +207,6 @@ export default {
     },
     touchEnd() {
       this.touchmove = false;
-      // this.touchmoveIndex = -1
     },
 
     /**
@@ -198,8 +226,14 @@ export default {
       this.touchEnd(e);
     },
 
-    onScroll(event) {
-      // console.log(event);
+    // 到底部了
+    onToLower(event) {
+      this.$emit("lower", event);
+    },
+
+    // 到顶部了
+    onToUpper(event) {
+      this.$emit("upper", event);
     },
 
     // #ifdef H5
@@ -230,12 +264,8 @@ export default {
     },
   },
   computed: {
-    getKeyList() {
-      return "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
-    },
-    getGroupListByKey() {
-      return (key) => _get(this?.groupObj || {}, key) || [];
-    },
+    IndexMenus,
+
     isSelection() {
       return (node) => {
         const checked = Array.isArray(this.value) ? this.value : (this.value ? [this.value] : []);
@@ -254,6 +284,65 @@ export default {
         }
       };
     },
+
+    getSkeleton() {
+      return (this.v20241216 || this.isProduct || this.isSelected) ? this.skeleton : [
+        {
+          type: "flex",
+          num: 1,
+          style: "padding: 20px;",
+          children: [
+            {
+              type: "avatar",
+              num: 1,
+              style: "marginRight: 10px; height: 64px; width: 64px; border-radius: 50%;",
+            },
+            {
+              type: "line",
+              num: 2,
+              gap: "30px",
+              style: ["width: 200px; height: 20px;", null],
+            },
+          ],
+        },
+        {
+          type: "flex",
+          num: 1,
+          style: "padding: 20px;",
+          children: [
+            {
+              type: "avatar",
+              num: 1,
+              style: "marginRight: 10px; height: 64px; width: 64px; border-radius: 50%;",
+            },
+            {
+              type: "line",
+              num: 2,
+              gap: "30px",
+              style: ["width: 200px; height: 20px;", null],
+            },
+          ],
+        },
+        {
+          type: "flex",
+          num: 1,
+          style: "padding: 20px;",
+          children: [
+            {
+              type: "avatar",
+              num: 1,
+              style: "marginRight: 10px; height: 64px; width: 64px; border-radius: 50%;",
+            },
+            {
+              type: "line",
+              num: 2,
+              gap: "30px",
+              style: ["width: 200px; height: 20px;", null],
+            },
+          ],
+        },
+      ];
+    },
   },
 };
 </script>
@@ -265,26 +354,23 @@ export default {
         :scroll-into-view="scrollViewId"
         class="ko-index-list__scroll"
         scroll-y
-        @scroll="onScroll"
         :class="[{'safe-area-inset-bottom': safeAreaInsetBottom}]"
+        @scrolltolower="onToLower"
+        @scrolltoupper="onToUpper"
+        :lower-threshold="400"
+        :upper-threshold="400"
       >
-        <view class="ko-index-list__scroll--wrap" :class="{'is-product': isProduct, 'is-selected': isSelected}">
-          <view class="ko-index-list__loading" v-if="loading">
-            <UvLoadingIcon size="40" />
-          </view>
-
-          <view class="ko-index-list__not-list" v-if="!loading && !options.length">
-            暂无数据数据
-          </view>
-
-          <block v-if="v20241216">
-            <!-- 添加订单的时候显示的产品列表 -->
-            <block v-if="isSelected">
-              <block v-for="(key, idx) in getKeyList" :key="idx">
+        <view class="ko-index-list__content">
+          <view
+            class="ko-index-list__scroll--wrap"
+            :class="{'is-double-row': isProduct || isSelected}"
+          >
+            <block v-if="v20241216">
+              <!-- 添加订单的时候显示的产品列表 -->
+              <block v-if="isSelected">
                 <view
                   class="ko-index-list__item"
-                  :id="index === 0 ? 'ko-index-list-' + idx : ''"
-                  v-for="(item, index) in getGroupListByKey(key)"
+                  v-for="(item) in data"
                   :key="item.id"
                 >
                   <ProductCard
@@ -299,19 +385,21 @@ export default {
                   />
                 </view>
               </block>
-            </block>
 
-            <!-- 产品列表 -->
-            <block v-else-if="isProduct">
-              <block v-for="(key, idx) in getKeyList" :key="idx">
+              <!-- 产品列表 -->
+              <block v-else-if="isProduct">
                 <view
                   class="ko-index-list__item"
-                  :id="index === 0 ? 'ko-index-list-' + idx : ''"
-                  v-for="(item, index) in getGroupListByKey(key)"
+                  v-for="(item) in data"
                   :key="item.id"
                 >
-                  <ProductCard :is-hide-stock-price="isHideStockPrice" :node="item" is-list :span="24"
-                               perm="Product_Write">
+                  <ProductCard
+                    :is-hide-stock-price="isHideStockPrice"
+                    :node="item"
+                    is-list
+                    :span="24"
+                    perm="Product_Write"
+                  >
                     <template #footer>
                       <view class="ko-product__item--footer">
                         <button
@@ -325,18 +413,15 @@ export default {
                   </ProductCard>
                 </view>
               </block>
+
             </block>
 
-          </block>
-
-          <block v-else>
-            <!-- 产品显示 -->
-            <block v-if="isProduct || isSelected">
-              <block v-for="(key, idx) in getKeyList" :key="idx">
+            <block v-else>
+              <!-- 产品显示 -->
+              <block v-if="isProduct || isSelected">
                 <view
                   class="ko-index-list__item"
-                  :id="index === 0 ? 'ko-index-list-' + idx : ''"
-                  v-for="(item, index) in getGroupListByKey(key)"
+                  v-for="(item) in data"
                   :key="item.id"
                 >
                   <slot
@@ -349,20 +434,12 @@ export default {
                   ></slot>
                 </view>
               </block>
-            </block>
 
-
-            <!-- 人员 -->
-            <template v-else>
-              <view
-                class="ko-index-list__wrap"
-                v-for="(key, idx) in getKeyList"
-                :key="idx"
-                :id="'ko-index-list-' + idx"
-              >
+              <!-- 人员 -->
+              <template v-else>
                 <view
                   class="ko-index-list__item"
-                  v-for="(item, index) in getGroupListByKey(key)"
+                  v-for="(item, index) in data"
                   :key="index"
                 >
                   <BasicCard no-shadow :spacing="0" style="width: 100%;" @click.stop="onClick(item)">
@@ -413,13 +490,26 @@ export default {
                     </view>
                   </BasicCard>
                 </view>
-                <!--<UniSection :title="key" type="line"></UniSection>-->
-              </view>
-            </template>
-          </block>
+              </template>
+            </block>
+          </view>
 
+          <view class="ko-index-list__loading" v-if="loading">
+            <UniSkeletons
+              loading
+              :skeleton="getSkeleton"
+              animate
+            />
+          </view>
+          <view class="ko-index-list__not-list" v-if="!loading && !data.length && !noMore">
+            暂无数据
+          </view>
+          <view class="ko-index-list__not-list" v-if="!loading && noMore">
+            没有更多数据了
+          </view>
         </view>
       </scroll-view>
+
       <view class="ko-index-list__menu">
         <view
           class="ko-index-list__menu--wrap"
@@ -431,22 +521,22 @@ export default {
           @mouseleave.stop="mouseleave"
         >
           <view
-            v-for="(key, index) in getKeyList"
+            v-for="(key, index) in IndexMenus"
             :key="index"
-            class="ko-index-list__menu-item"
-            :class="{'ko-index-list__menu--active': touchmoveIndex === index, disabled: getGroupListByKey(key).length <= 0}"
+            class="ko-index-list__menu--item"
+            :class="{'is-active': touchmoveIndex === index}"
           >
             <text
-              class="ko-index-list__menu-text"
-              :class="touchmoveIndex === index ? 'ko-index-list__menu-text--active' : ''"
+              class="ko-index-list__menu--text"
+              :class="{'is-active': touchmoveIndex === index}"
             >
               {{ key }}
             </text>
           </view>
         </view>
       </view>
-      <view v-if="touchmove" class="ko-index-list__alert-wrapper">
-        <text class="ko-index-list__alert">{{ getKeyList[touchmoveIndex] }}</text>
+      <view v-if="touchmove" class="ko-index-list__alert--wrapper">
+        <text class="ko-index-list__alert">{{ IndexMenus[touchmoveIndex] }}</text>
       </view>
     </view>
   </view>
@@ -464,12 +554,28 @@ export default {
   /* #endif */
   flex-direction: row;
 
+  &__content {
+    padding-bottom: 100px;
+  }
+
+
   &__loading, &__not-list {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -200%);
-    z-index: 88;
+    /* position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -200%);
+     z-index: 88;*/
+
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__loading {
+    height: 300px;
+    display: block;
+    overflow: hidden;
   }
 
   &__not-list {
@@ -485,15 +591,13 @@ export default {
     }
 
     &--wrap {
-      padding-bottom: 100px;
-
-      &.is-product, &.is-selected {
+      &.is-double-row {
         display: flex;
         flex-wrap: wrap;
         // #ifdef MP
         width: 100vw;
         // #endif
-        padding: 5px 5px 100px;
+        padding: 5px 5px;
 
         .ko-index-list__item {
           border-bottom: none;
@@ -507,7 +611,6 @@ export default {
     }
   }
 
-
   &__menu {
     width: 30px;
     position: absolute;
@@ -515,62 +618,43 @@ export default {
     top: 0;
     bottom: 0;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding-bottom: 10%;
 
     &--wrap {
       display: flex;
       align-items: center;
       flex-direction: column;
     }
-  }
 
-  &__menu-item {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    /* #ifdef H5 */
-    cursor: pointer;
-    /* #endif */
+    &--item {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      /* #ifdef H5 */
+      cursor: pointer;
+      /* #endif */
 
-    &.disabled .ko-index-list__menu-text {
-      color: #ccc;
+      &.disabled .ko-index-list__menu-text {
+        color: #ccc;
+      }
     }
-  }
 
-  &__menu-text {
-    font-size: 12px;
-    text-align: center;
-    color: #333;
-  }
+    &--text {
+      font-size: 14px;
+      text-align: center;
+      color: #333;
 
-  &__menu--active {
-    // background-color: rgb(200, 200, 200);
-  }
-
-  &__menu-text--active {
-    border-radius: 16px;
-    width: 16px;
-    height: 16px;
-    line-height: 16px;
-    background-color: #007aff;
-    color: #fff;
-  }
-
-  &__alert-wrapper {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    /* #ifndef APP-NVUE */
-    display: flex;
-    /* #endif */
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
+      &.is-active {
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        line-height: 26px;
+        background-color: #007aff;
+        color: #fff;
+      }
+    }
   }
 
   &__alert {
@@ -582,6 +666,20 @@ export default {
     font-size: 35px;
     color: #fff;
     background-color: rgba(0, 0, 0, 0.5);
+
+    &--wrapper {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      /* #ifndef APP-NVUE */
+      display: flex;
+      /* #endif */
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
   &__item {
@@ -599,7 +697,6 @@ export default {
   }
 }
 
-
 .ko-product__item--footer {
   display: flex;
   align-items: center;
@@ -612,7 +709,6 @@ export default {
     align-items: center;
   }
 }
-
 
 .ko-user {
   &__wrap {

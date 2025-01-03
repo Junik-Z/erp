@@ -91,7 +91,7 @@ export default {
           <i class="iconfont icon-guanbi"></i>
         </button>
       </view>
-      <button class="ko-basic-button__card" @click="onOpen">分类</button>
+      <button  v-if="!checkedItem.label" class="ko-basic-button__card" @click="onOpen">分类</button>
     </view>
 
     <BasicPopup
@@ -133,7 +133,6 @@ export default {
 
     &--wrap {
       flex: 1;
-      padding-left: 50px;
     }
 
     .ko-basic-button__card {

@@ -15,10 +15,12 @@ import IndexList from "@/components/IndexList/IndexList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
 export default {
   name: "ClientList",
   components: {
+    UniEasyinput,
     HistoryBar,
     KoMovable,
     UvActionSheet,
@@ -60,6 +62,11 @@ export default {
       bindUserList: [],
       isBind: false,
       item: {},
+
+      noMore: false,
+      queryList: {
+        pageSize: 20, pageNum: 0,
+      },
 
       actionItem: {},
 
@@ -144,15 +151,18 @@ export default {
       this.loading = true;
       const Fn = [getCustomerListApi, getTempCustomerListApi][+this.tab];
 
-      Fn({pageSize: 1000000, pageNum: 0, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
+      Fn({...this.queryList, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
         .then((res) => {
           console.log("客户列表", res.data);
-          this.list = (res.data || []).map(item => ({
+          const list = (res.data || []).map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
+
+          this.list = this.onMergeArrays(this.list, list, "id");
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -280,6 +290,19 @@ export default {
         },
       });
     },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+    // 根据索引搜索
+    onSearchToNameIndex(key) {
+      this.list = [];
+      this.queryList.pageNum = 0;
+      this.queryList.nameIndex = key;
+      this.getList();
+    },
   },
   computed: {
     // #ifdef H5
@@ -344,13 +367,22 @@ export default {
       <HistoryBar
         :values="['客户', '临时客户']"
         v-model="tab"
-        @change="getList()"
+        @change="onSearchToNameIndex('')"
         custom-class="ko-client__tabs"
       />
 
       <!-- #ifdef MP -->
       <view class="ko-client__wrap">
-        <IndexList :options="list" :loading="loading" @click="onJumpInfo" button-perm="Sales_Write">
+        <IndexList
+          :data="list"
+          :loading="loading"
+          @click="onJumpInfo"
+          button-perm="Sales_Write"
+
+          @lower="onLower"
+          :no-more="noMore"
+          @search="onSearchToNameIndex"
+        >
           <template #default="{node}">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
               <!--<button

@@ -61,6 +61,11 @@ export default {
       item: {},
       actionItem: {},
 
+      noMore: false,
+      queryList: {
+        pageSize: 20, pageNum: 0,
+      },
+
       tab: 0,
 
       // #ifdef H5
@@ -142,14 +147,19 @@ export default {
       this.loading = true;
       const Fn = [getSupplierListApi, getTempSupplierListApi][+this.tab];
 
-      Fn({pageSize: 1000000, pageNum: 0, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
+      Fn({...this.queryList, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
         .then((res) => {
-          this.list = (res.data || []).map(item => ({
+          const list = (res.data || []).map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
+
+          this.list = this.onMergeArrays(this.list, list, "id");
+
+          console.log("客户列表", this.list);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
           this.loading = false;
@@ -274,6 +284,19 @@ export default {
         },
       });
     },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+    // 根据索引搜索
+    onSearchToNameIndex(key) {
+      this.list = [];
+      this.queryList.pageNum = 0;
+      this.queryList.nameIndex = key;
+      this.getList();
+    },
   },
   computed: {
     getBindingParams() {
@@ -316,13 +339,23 @@ export default {
       <HistoryBar
         :values="['供应商', '临时供应商']"
         v-model="tab"
-        @change="getList()"
+        @change="onSearchToNameIndex('')"
         custom-class="ko-client__tabs"
       />
 
       <!-- #ifdef MP -->
       <view class="ko-client__wrap">
-        <IndexList :options="list" :loading="loading" is-supplier @click="onJumpInfo" button-perm="Purchase_Write">
+        <IndexList
+          :data="list"
+          :loading="loading"
+          is-supplier
+          @click="onJumpInfo"
+          button-perm="Purchase_Write"
+
+          @lower="onLower"
+          :no-more="noMore"
+          @search="onSearchToNameIndex"
+        >
           <template #default="{node}">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
               <!--<button

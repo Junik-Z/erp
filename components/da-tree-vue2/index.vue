@@ -1179,6 +1179,7 @@ export default {
       display: flex;
       align-items: center;
       overflow: hidden;
+      height: 32px;
 
       &--2 {
         color: var(--theme-color, #007aff);
