@@ -16,7 +16,7 @@ DEFAULT_PAGE_SIZE = 30;
 
 let type = "test";
 
-// type = "env";
+type = "env";
 
 // #ifdef MP
 // type = "env";
@@ -202,6 +202,8 @@ export const MENU_LIST = [
  * @description 页面枚举
  */
 export const PageEnums = {
+  home: "/pages/home/home",
+
   // 添加付款单据
   ticket: "/erp/finance/ticket",
   // 新增修改销售订单
@@ -226,6 +228,15 @@ export const PageEnums = {
 
   // 物流商
   logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
+
+  // 添加产品
+  addedProduct: "/erp/product/added",
+
+  // 分享出去进来
+  shareAddedProduct: "/shop/binding/binding",
+
+  // 批量分享
+  shareProduct: "/shop/binding/share",
 };
 
 /**
@@ -242,6 +253,7 @@ export const HOME_PAGE_TYPE_ENUMS = {
   BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
   BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修",
+  BINDING_PRODUCT: "分享出去批量绑定产品",
 };
 
 /**

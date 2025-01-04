@@ -393,12 +393,19 @@ export default {
                   v-for="(item) in data"
                   :key="item.id"
                 >
+                  <view v-if="isChecked" class="ko-index-list__item--checked" @click.stop="onClick(item)">
+                    <view class="ko-index-list__item--checked--box">
+                      <checkbox :checked="isSelection(item)" :disabled="getDisabled(item)" />
+                    </view>
+                  </view>
                   <ProductCard
                     :is-hide-stock-price="isHideStockPrice"
                     :node="item"
                     is-list
                     :span="24"
                     perm="Product_Write"
+                    custom-style="height: 100%;"
+                    style="height: 100%;"
                   >
                     <template #footer>
                       <view class="ko-product__item--footer">
@@ -694,6 +701,27 @@ export default {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+
+    position: relative;
+
+    &--checked {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      z-index: 9;
+
+      &:before {
+        content: " ";
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+      }
+    }
   }
 }
 

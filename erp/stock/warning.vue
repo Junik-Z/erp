@@ -68,7 +68,7 @@ export default {
     await this.getList(true);
   },
   methods: {
-    onRequestNextPage() {
+    RequestNextPage() {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
@@ -84,9 +84,9 @@ export default {
 
       getWarningListApi(this.queryList)
         .then(res => {
-          this.list = this.onMergeArrays(this.list, res.data);
-          this.noMore = res.data.length < this.groupList.pageSize || _isEmpty(res.data);
-          console.log(this.groupList);
+          this.list = this.onMergeArrays(this.list, res.data, 'id');
+          this.noMore = res.data.length < this.queryList.pageSize || _isEmpty(res.data);
+          console.log(this.list);
         })
         .finally(() => {
           this.loading = false;
@@ -141,17 +141,17 @@ export default {
           prop: `extend.${item.fieldCode}`,
         }))),
         {
-          label: "库存数量",
-          prop: "quantity",
-          render: (h, {row}) => {
-            return h("label", {class: "ko-basic-money"}, [row.quantity]);
-          },
-        },
-        {
           label: "预警库存",
           prop: "stockWarning",
           render: (h, {row}) => {
             return h("label", {class: "ko-basic-money"}, [row.stockWarning]);
+          },
+        },
+        {
+          label: "库存数量",
+          prop: "quantity",
+          render: (h, {row}) => {
+            return h("label", {class: "ko-basic-money"}, [row.quantity]);
           },
         },
       ];
@@ -170,7 +170,7 @@ export default {
         :no-more="noMore"
         :no-data="!list.length"
         :columns="columnTable"
-        @lower="onRequestNextPage"
+        @lower="RequestNextPage"
         :field-list="FieldList"
       />
     </view>

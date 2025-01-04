@@ -55,6 +55,8 @@ export default {
         :src="getImageUrl(GET_CONFIG_INFO.logo)"
         random-bg-color
         :text="GET_SHOP_NAME"
+        not-view
+        @click.stop="onOpen()"
       />
     </view>
 

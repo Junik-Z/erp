@@ -7,7 +7,7 @@
 			width: $uv.addUnit(size),
 			height: $uv.addUnit(size),
 		}, $uv.addStyle(customStyle)]"
-    @tap="clickHandler"
+    @click="clickHandler"
   >
     <slot>
       <!-- #ifdef MP-WEIXIN || MP-QQ || MP-BAIDU  -->
@@ -83,6 +83,9 @@ export default {
   name: "uv-avatar",
   emits: ["click"],
   mixins: [mpMixin, mixin, props],
+  props: {
+    notView: Boolean,
+  },
   data() {
     return {
       // 如果配置randomBgColor参数为true，在图标或者文字的模式下，会随机从中取出一个颜色值当做背景色
@@ -139,14 +142,19 @@ export default {
       this.avatarUrl = this.defaultUrl || base64Avatar;
     },
     clickHandler() {
-      this.$emit("click", this.name);
+      console.log("点击了");
+      this.$emit("click", this.name, ...arguments);
     },
 
     onImgPreview(url) {
-      if (url) {
+      if (url && !this.notView) {
         uni.previewImage({
-          urls: [url]
+          urls: [url],
         });
+      }
+
+      if (this.notView) {
+        this.clickHandler(...arguments);
       }
     },
   },

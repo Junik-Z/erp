@@ -16,7 +16,12 @@ export default {
       list: [],
       queryList: {
         classId: "",
+        // #ifdef H5
+        pageSize: 30,
+        // #endif
+        // #ifdef MP
         pageSize: 20,
+        // #endif
         pageNum: 0,
         name: "",
       },
@@ -24,33 +29,6 @@ export default {
       loading: false,
 
       FieldList: [],
-
-      /* #ifdef H5 */
-      columns: [
-        {
-          label: "序号",
-          type: "index",
-          width: 80,
-        },
-        {
-          label: "产品名称",
-          prop: "name",
-        },
-        {
-          label: "分类",
-          prop: "className",
-        },
-        {
-          label: "备注",
-          prop: "remark",
-          minWidth: 120,
-        },
-        {
-          label: "操作",
-          slot: "operate",
-        },
-      ],
-      // #endif
     };
   },
   created() {
@@ -110,7 +88,6 @@ export default {
       this.queryList.pageNum += 1;
       this.getList();
     },
-
     onCancel() {
       setTimeout(() => {
         this.$nextTick(() => {
@@ -118,16 +95,18 @@ export default {
         });
       });
     },
+
+    // #ifdef H5
+    onRequestNextPage() {
+      console.log("到底了");
+      this.onLower();
+    },
+    // #endif
   },
   computed: {
     // #ifdef H5
     columnsList() {
       return [
-        {
-          label: "序号",
-          type: "index",
-          width: 80,
-        },
         {
           label: "产品名称",
           prop: "name",
@@ -136,28 +115,29 @@ export default {
           label: "分类",
           prop: "className",
         },
-        {
-          label: "数量",
-          prop: "quantity",
-          render: (h, {row}) => {
-            return h("label", {class: "ko-basic-money"}, [row.quantity]);
-          },
-        },
-        {
-          label: "预警数量",
-          prop: "stockWarning",
-          render: (h, {row}) => {
-            return h("label", {class: "ko-basic-money"}, [row.stockWarning]);
-          },
-        },
         ...(this.FieldList.map(item => ({
           label: item.fieldName,
           prop: `extend.${item.fieldCode}`,
         }))),
-        {
+        /* {
           label: "备注",
           prop: "remark",
           minWidth: 120,
+        }, */
+        {
+          label: "入库数量",
+          prop: "inQuantity",
+        },
+        {
+          label: "出库数量",
+          prop: "outQuantity",
+        },
+        {
+          label: "库存数量",
+          prop: "quantity",
+          render: (h, {row}) => {
+            return h("label", {class: row.quantity <= row.stockWarning ? "ko-basic-money" : ""}, [row.quantity]);
+          },
         },
         {
           label: "操作",
@@ -167,6 +147,7 @@ export default {
     },
     // #endif
 
+    // #ifdef MP
     columnTable() {
       return [
         {
@@ -193,6 +174,7 @@ export default {
         },
       ];
     },
+    // #endif
   },
 };
 </script>
@@ -206,7 +188,7 @@ export default {
           @cancel="onCancel"
           v-model="queryList.name"
           placeholder="产品名称"
-          :clear-button="false"
+          clear-button="none"
         />
       </view>
 
@@ -267,12 +249,13 @@ export default {
 
 <style scoped lang="scss">
 .ko-verification {
+
   // #ifdef MP
   height: calc(100vh - 60px);
-  // #endif
-
   display: flex;
   flex-direction: column;
+  // #endif
+
 
   &__class {
     padding: 0 10px;
@@ -292,9 +275,10 @@ export default {
   }
 
   &__wrap {
+    // #ifdef MP
     flex: 1;
-    position: relative;
     overflow: hidden;
+    // #endif
   }
 
   &__item {

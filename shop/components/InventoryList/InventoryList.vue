@@ -2,7 +2,7 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import KoList from "@/components/List/List.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
-import { _deepCopy, _get, _groupBy } from "@/utils";
+import { _get, _groupBy } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -18,6 +18,7 @@ export default {
     columns: [Array],
     fieldList: Array,
     isStock: Boolean,
+    value: Array,
   },
 
   data() {
@@ -35,10 +36,13 @@ export default {
         });
       }
     },
+    onChecked(node) {
+      this.$emit("check", node, ...arguments);
+    },
   },
   computed: {
     groupList() {
-      return _groupBy(_deepCopy(this.list) || [], (item) => item.className);
+      return _groupBy(this.list || [], (item) => item.className);
     },
 
     getFieldListText() {
@@ -54,6 +58,13 @@ export default {
     getCellClass() {
       return (col, item) => {
         return col.isClass && item.quantity <= item.stockWarning ? "ko-basic-money" : "";
+      };
+    },
+
+    isSelection() {
+      return (node) => {
+        const checked = Array.isArray(this.value) ? this.value : (this.value ? [this.value] : []);
+        return checked.indexOf(node.id) > -1;
       };
     },
   },
@@ -93,14 +104,21 @@ export default {
                         class="ko-inventory-list__cell"
                         :class="[col.class || '', getCellClass(col, child)]"
                       >
-                        <view>{{ GET_FUNC(child, col.key) }}</view>
-
-                        <view
-                          style="width: 100%; font-size: 10px; color: #8f939c; padding: 2px 4px 0"
-                          v-if="fieldList && fieldList.length && col.isField"
-                        >
-                          {{ getFieldListText(child) }}
-                        </view>
+                        <block v-if="col.isCheck">
+                          <view class="ko-inventory-list__cell--checked" @click.stop="onChecked(child)">
+                            <checkbox :checked="isSelection(child)" />
+                          </view>
+                        </block>
+                        <block v-else>
+                          <view v-if="col.isPrice">{{ toYuan(GET_FUNC(child, col.key)) }}</view>
+                          <view v-else>{{ GET_FUNC(child, col.key) }}</view>
+                          <view
+                            style="width: 100%; font-size: 10px; color: #8f939c; padding: 2px 4px 0"
+                            v-if="fieldList && fieldList.length && col.isField"
+                          >
+                            {{ getFieldListText(child) }}
+                          </view>
+                        </block>
                       </view>
                     </UniCol>
                   </UniRow>
@@ -153,6 +171,25 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    height: 100%;
+
+    &--checked {
+      position: relative;
+
+      &:before {
+        content: " ";
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 99;
+      }
+    }
+  }
+
+  /deep/ .uni-col {
+    height: 100% !important;
   }
 }
 </style>

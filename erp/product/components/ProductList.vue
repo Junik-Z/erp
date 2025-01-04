@@ -6,13 +6,14 @@ import {
   upDownPurchaseApi,
   upDownSaleApi,
 } from "@/api/erp/product";
-import { _deepCopy, _isEmpty } from "@/utils";
+import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoMovable from "@/components/Movable/index.vue";
+import { PageEnums } from "@/utils/config";
 
 export default {
   name: "ProductList",
@@ -26,6 +27,30 @@ export default {
   },
   data() {
     return {
+      content: [
+        // #ifdef MP
+        {
+          text: "分享",
+          iconPath: "/static/images/icons/share.png",
+          path: PageEnums.shareProduct,
+          /* openType: "share",
+          params: {
+            title: `邀请您绑定产品！`,
+            path: PageEnums.shareAddedProduct,
+            query: {
+              PAGE_TYPE: "BINDING_PRODUCT",
+            },
+          }, */
+        },
+        // #endif
+        {
+          text: "新增",
+          iconPath: "/static/images/icons/added.png",
+          path: PageEnums.addedProduct,
+        },
+      ],
+
+
       list: [],
       loading: true,
       noMore: false,
@@ -39,12 +64,15 @@ export default {
         pageNum: 0,
       },
 
-
       actionItem: {},
 
       FieldList: [],
 
       isHideStockPrice: true,
+
+      isChecked: false,
+
+      checked: [],
     };
   },
   created() {
@@ -62,7 +90,7 @@ export default {
       this.loading = true;
       getProductListApi(this.queryList)
         .then(res => {
-          this.list = this.onMergeArrays(this.list, res.data);
+          this.list = this.onMergeArrays(this.list, res.data.map(v => ({...v, value: v.id})));
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
@@ -79,13 +107,11 @@ export default {
 
     onFabClick(item) {
       let query = "";
-
       if (!_isEmpty(item)) {
         query = `?id=${item.id}`;
       }
-
       uni.navigateTo({
-        url: `/erp/product/added${query}`,
+        url: `${PageEnums.addedProduct}${query}`,
       });
     },
 
@@ -99,7 +125,7 @@ export default {
             deleteProductApi(row)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -117,7 +143,7 @@ export default {
             upDownSaleApi(node)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -135,7 +161,7 @@ export default {
             upDownPurchaseApi(node)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -161,6 +187,33 @@ export default {
     onSearchToNameIndex(key) {
       this.queryList.nameIndex = key;
       this.getList(true);
+    },
+
+    onTrigger(event) {
+      const {path} = event.item || {};
+      if (path) {
+        if (_isEqual(PageEnums.addedProduct, path)) {
+          this.onFabClick({});
+        } else {
+          uni.navigateTo({url: path});
+        }
+      }
+      if (_isEqual("share", path)) {
+        this.isChecked = true;
+      }
+    },
+
+    onCheck(item) {
+      if (this.checked.includes(item.value)) {
+        this.checked = this.checked.filter(id => !_isEqual(item.value, id));
+      } else {
+        this.checked.push(item.value);
+      }
+    },
+
+    onUnshare() {
+      this.checked = [];
+      this.isChecked = false;
     },
   },
   computed: {
@@ -245,6 +298,17 @@ export default {
       ];
     },
     // #endif
+
+    getParams() {
+      return {
+        title: `推送产品信息给您！`,
+        path: PageEnums.shareAddedProduct,
+        checked: this.checked,
+        query: {
+          PAGE_TYPE: "BINDING_PRODUCT",
+        },
+      };
+    },
   },
 };
 </script>
@@ -270,6 +334,9 @@ export default {
           :no-more="noMore"
           @search="onSearchToNameIndex"
           is-double-row
+          :is-checked="isChecked"
+          :value="checked"
+          @click="onCheck"
 
           v20241216
           is-product
@@ -320,11 +387,23 @@ export default {
         </view>
         <!-- #endif -->
       </view>
+
+      <view class="ko-product__checked ko-basic-box-shadow" v-if="isChecked">
+        <button class="ko-basic-button__card" @click="onUnshare">取消</button>
+        <button
+          class="ko-basic-button__card"
+          open-type="share"
+          :data-params="getParams"
+        >
+          分享
+        </button>
+      </view>
     </view>
 
     <KoMovable
-      v-if="isPerm('Product_Write')"
-      @click="onFabClick('')"
+      v-if="isPerm('Product_Write') && !isChecked"
+      :content="content"
+      @click="onTrigger"
     />
 
     <!-- #ifdef MP -->
@@ -395,6 +474,20 @@ export default {
         justify-content: center;
         align-items: center;
       }
+    }
+  }
+
+  &__checked {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    padding: 10px 30px 30px;
+    background: #fff;
+
+    .ko-basic-button__card {
+      padding: 10px 15px;
+      width: 100px;
     }
   }
 }

@@ -214,8 +214,8 @@ export default {
       // flat tree
       this.datalist = this.checkInitData(this.datalist);
 
-      console.log("init datalist", this.datalist);
-      console.log("init datamap", this.datamap);
+      // console.log("init datalist", this.datalist);
+      // console.log("init datamap", this.datamap);
     },
 
     /**

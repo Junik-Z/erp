@@ -72,12 +72,12 @@ export default {
     },
 
     // 获取通用的分享 query 参数
-    async _GET_SHARE_APP_PARAMS_(obj) {
+    async _GET_SHARE_APP_PARAMS_(obj, sceneName = "scene") {
       const scene = uni.getStorageSync("__APP_SCENE__") || "";
       // 添加默认的参数数据
       const query = {
         ...(obj.query || {}),
-        ...(scene ? {scene} : {}),
+        ...(scene ? {[sceneName]: scene} : {}),
         // 分享用户的ID
         SHARE_USER_ID: this.GET_USER_INFO?.userId,
       };

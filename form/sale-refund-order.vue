@@ -59,6 +59,9 @@ export default {
 
       // 客户绑定用户列表
       bindList: [],
+
+      current: 0,
+      tabs: ["客户", "其它客户"],
     };
   },
   created() {
@@ -156,6 +159,18 @@ export default {
       this.form.orderAddress = node.address;
       this.form.orderPhone = _get(node, "contacts.0.phone");
     },
+
+    onTabItem() {
+      if (this.current === 0) {
+        this.form.otherSupplier = "";
+        this.form.otherSupplierPhone = "";
+      }
+
+      if (this.current === 1) {
+        this.form.supplierId = "";
+      }
+
+    },
   },
 };
 </script>
@@ -170,7 +185,16 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <UniFormsItem label="客户：" name="supplierId">
+          <view style="margin: 0 30px 20px;" v-if="!isClient">
+            <UniSegmentedControl
+              :current.sync="current"
+              :values="tabs"
+              style-type="text"
+              @click-item="onTabItem"
+            />
+          </view>
+
+          <UniFormsItem label="客户：" v-if="false" name="supplierId">
             <PickerUser
               style="width: 100%;"
               is-input
@@ -191,6 +215,33 @@ export default {
               placeholder="请输入"
             />
           </UniFormsItem>
+
+          <template v-if="isClient ? bindList.length : current === 0">
+            <UniFormsItem label="客户：" name="supplierId">
+              <PickerUser
+                style="width: 100%;"
+                is-input
+                title="选择客户"
+                v-model="form.supplierId"
+                :disabled="!!orderId"
+                type="client"
+                ref="UserRef"
+                :is-long-list="isClient"
+                :options="bindList"
+                @input="onSupplierId"
+              />
+            </UniFormsItem>
+          </template>
+
+          <template v-else>
+            <UniFormsItem :label="`${isClient ? '姓名' : '姓名'}：`" name="otherSupplier">
+              <UniEasyinput
+                v-model="form.otherSupplier"
+                style="width: 100%;"
+                placeholder="请输入"
+              />
+            </UniFormsItem>
+          </template>
         </view>
       </UniSection>
 

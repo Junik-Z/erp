@@ -6,6 +6,7 @@ import ProductList from "./components/ProductList.vue";
 import FieldList from "@/erp/product/components/Field.vue";
 import { _deepCopy } from "@/utils";
 import mixins from "@/mixins/mixins";
+import { shareProductApi } from "@/api/erp/product";
 
 export default {
   name: "product",
@@ -46,6 +47,25 @@ export default {
   onShow() {
     this.$nextTick(() => {
       this.getList();
+    });
+  },
+
+  // 分享相关
+  onShareAppMessage(res) {
+    const obj = res.target.dataset.params;
+
+    return new Promise(async (resolve) => {
+      try {
+        const res = await shareProductApi(obj.checked.map(productId => ({productId})));
+        obj.query.PRODUCT_SHARE_ID = res.data;
+      } catch (e) {
+      }
+
+      const query = await this._GET_SHARE_APP_PARAMS_(obj, 'form_scene');
+
+      if (query.title) query.title = `${this.GET_SHOP_NAME || ""} ${query.title}`;
+
+      resolve(query);
     });
   },
 };

@@ -198,3 +198,41 @@ export function checkDuplicateApi(data) {
     data,
   });
 }
+
+
+/**
+ * @description 分享出去获取分享ID
+ */
+export function shareProductApi(data) {
+  return request({url: "/share/shareProduct", method: "post", data});
+}
+
+/**
+ * @description 检查重复产品
+ */
+export function checkDuplicateByShareApi(data) {
+  return request({url: "/share/checkDuplicate", method: "post", data});
+}
+
+
+/**
+ * @description 获取所有分享的产品
+ */
+export function getShareProductApi(data) {
+  return request({url: "/share/getShareProduct", method: "get", data});
+}
+
+
+/**
+ * @description 获取所有分享的产品
+ */
+export function getProductExtApi(data) {
+  return request({url: "/share/getProductExt", method: "get", data});
+}
+
+/**
+ * @description 接收分享过来的产品
+ */
+export function receiveShareProductApi(data) {
+  return request({url: "/share/receiveShareProduct", method: "post", data});
+}

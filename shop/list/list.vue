@@ -338,7 +338,7 @@ export default {
       }
 
       this.$nextTick(() => {
-        this.getList();
+        this.getList(true);
       });
     },
     // #endif
@@ -525,7 +525,7 @@ export default {
             @cancel="onCancel"
             v-model="queryList.name"
             placeholder="产品名称"
-            :clear-button="false"
+            clear-button="none"
           />
         </view>
         <!-- #ifdef MP -->

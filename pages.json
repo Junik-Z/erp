@@ -215,6 +215,18 @@
             "navigationBarTitleText": "订单打印",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "binding/binding",
+          "style": {
+            "navigationBarTitleText": "批量导入产品"
+          }
+        },
+        {
+          "path": "binding/share",
+          "style": {
+            "navigationBarTitleText": "批量分享"
+          }
         }
       ]
     },

@@ -199,6 +199,12 @@ export default {
         ESVm?.close();
       }, false);
 
+      // 表示登陆成功
+      ESVm.addEventListener("AccessToken", (res) => {
+        const scene = res.data;
+        uni.setStorageSync("AccessToken", scene);
+      }, false);
+
       // 获取到的二维码图片
       ESVm.addEventListener("scanCode", (res) => {
         const codeImage = res.data;

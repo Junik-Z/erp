@@ -281,7 +281,7 @@ export default {
             <UniEasyinput v-model="form.fieldName" placeholder="请输入" />
           </UniFormsItem>
           <UniFormsItem label="字段编码：" required name="fieldCode">
-            <UniEasyinput v-model="form.fieldCode" placeholder="请输入" />
+            <UniEasyinput :disabled="isEdit" v-model="form.fieldCode" placeholder="请输入" />
           </UniFormsItem>
         </UniForms>
 

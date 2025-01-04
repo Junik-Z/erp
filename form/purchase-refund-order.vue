@@ -133,7 +133,6 @@ export default {
         this.form.otherSupplier = "";
         this.form.otherSupplierPhone = "";
       }
-
       if (this.current === 1) {
         this.form.supplierId = "";
       }
@@ -182,7 +181,7 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <UniFormsItem label="供应商：" name="supplierId">
+          <UniFormsItem v-if="false" label="供应商：" name="supplierId">
             <PickerUser
               style="width: 100%;"
               v-model="form.supplierId"
@@ -202,6 +201,43 @@ export default {
               placeholder="请输入"
             />
           </UniFormsItem>
+
+
+          <view style="margin: 0 30px 20px;" v-if="!isClient">
+            <UniSegmentedControl
+              :current.sync="current"
+              :values="tabs"
+              style-type="text"
+              @click-item="onTabItem"
+            />
+          </view>
+
+          <template v-if="isClient ? bindList.length : current === 0">
+            <UniFormsItem label="供应商：" name="supplierId">
+              <PickerUser
+                style="width: 100%;"
+                v-model="form.supplierId"
+                placeholder="请选择"
+                title="选择供应商"
+                is-input
+                type="supplier"
+                ref="UserRef"
+                :is-long-list="isClient"
+                :options="bindList"
+                @input="onSupplierId"
+              />
+            </UniFormsItem>
+          </template>
+
+          <template v-else>
+            <UniFormsItem :label="`${isClient ? '姓名' : '名称'}：`" name="otherSupplier">
+              <UniEasyinput
+                v-model="form.otherSupplier"
+                style="width: 100%;"
+                placeholder="请输入"
+              />
+            </UniFormsItem>
+          </template>
         </view>
       </UniSection>
 

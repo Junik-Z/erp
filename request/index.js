@@ -21,6 +21,10 @@ export default function request(config, isLoading = false, whole = false) {
     const scene = uni.getStorageSync("__APP_SCENE__") || "";
     const query = uni.getStorageSync("__APP_QUERY__") || {};
 
+    // #ifdef H5
+    const Token = uni.getStorageSync("AccessToken") || "";
+    // #endif
+
     console.log("打印出来的商户ID", scene);
 
     uni.request({
@@ -34,6 +38,9 @@ export default function request(config, isLoading = false, whole = false) {
         "Content-Type": "application/json",
         // #ifndef H5
         ...(Cookie ? {Cookie} : {}),
+        // #endif
+        // #ifdef H5
+        ...(Token ? {Authorization: Token} : {}),
         // #endif
         "X-MiniApp-ID": CONFIG.APP_ID,
         "X-Tenant-ID": scene || "",
@@ -62,7 +69,7 @@ export default function request(config, isLoading = false, whole = false) {
         if (res.statusCode === 200 && code === 200) {
           resolve(res.data);
         } else if (code === 401) {
-          if (uni.$__IS_LOGOUT_FLAG__) return false
+          if (uni.$__IS_LOGOUT_FLAG__) return false;
 
           if (!isFlag) {
             isFlag = true;
