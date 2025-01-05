@@ -19,10 +19,12 @@ import KoList from "@/components/List/List.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import Pay from "@/erp/components/Pay/Pay.vue";
 
 export default {
   name: "RefundList",
   components: {
+    Pay,
     UniEasyinput,
     UniCol,
     UniRow,
@@ -221,7 +223,7 @@ export default {
     // 添加单据
     onAddedDocuments(item) {
       this.jumpDocumentsTicket({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId"]),
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         orderType: "PURCHASE_RETURN",
         noUnable: true,
       });
@@ -327,7 +329,7 @@ export default {
               >
                 <button
                   class="ko-basic-button__card"
-                  v-if="['FINISHED'].includes(item.status)"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status)"
                   @click.stop="onPrint(item)"
                 >
                   打印单据
@@ -378,7 +380,7 @@ export default {
             style="display: flex; align-items: center; justify-content: center;"
           >
             <button
-              v-if="['FINISHED'].includes(item.status)"
+              v-if="['FINISHED', 'CREATED'].includes(item.status)"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchaseReturn')"
             >
@@ -452,6 +454,8 @@ export default {
       @select="onSelect"
     />
     <!-- #endif -->
+
+    <Pay ref="TPRef" />
   </view>
 </template>
 

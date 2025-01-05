@@ -8,6 +8,11 @@ export default {
     loading: Boolean,
     noMore: Boolean,
     noData: Boolean,
+    hideTips: Boolean,
+    safeAreaInsetBottom: {
+      type: Boolean,
+      default: true,
+    },
   },
   methods: {
     // 滚动到底部了
@@ -28,20 +33,22 @@ export default {
     @scrolltolower="onToLower"
     refresher-threshold="60"
   >
-    <view class="ko-list__wrap">
+    <view class="ko-list__wrap" :class="{'safe': safeAreaInsetBottom}">
       <slot />
 
       <view class="ko-list__loading" v-if="loading">
         <UvLoadingIcon size="40" />
       </view>
 
-      <view class="ko-list__no-more" v-if="noMore && !loading && !noData">
-        没有更多数据了
-      </view>
+      <block v-if="!hideTips">
+        <view class="ko-list__no-more" v-if="noMore && !loading && !noData">
+          没有更多数据了
+        </view>
 
-      <view class="ko-list__no-data" v-if="!loading && noData">
-        暂无数据
-      </view>
+        <view class="ko-list__no-data" v-if="!loading && noData">
+          暂无数据
+        </view>
+      </block>
     </view>
   </scroll-view>
 </template>
@@ -52,7 +59,10 @@ export default {
   width: 100%;
 
   &__wrap {
-    padding-bottom: env(safe-area-inset-bottom);
+
+    &.safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
   }
 
   &__loading {

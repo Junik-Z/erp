@@ -23,10 +23,12 @@ import { CONFIG, PageEnums } from "@/utils/config";
 import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import Pay from "@/erp/components/Pay/Pay.vue";
 
 export default {
   name: "RefundList",
   components: {
+    Pay,
     UniEasyinput,
     KoList,
     KoMovable,
@@ -216,7 +218,7 @@ export default {
     // 添加单据
     onAddedDocuments(item) {
       this.jumpSaleAddedDocuments({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId"]),
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         orderType: "SALE_RETURN",
         noUnable: true,
       });
@@ -318,7 +320,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onPrint(item)"
-                  v-if="['FINISHED'].includes(item.status)"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status)"
                 >
                   打印单据
                 </button>
@@ -388,38 +390,12 @@ export default {
             </button>
 
             <button
-              v-if="['FINISHED'].includes(item.status)"
+              v-if="['FINISHED', 'CREATED'].includes(item.status)"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'saleReturn')"
             >
               打印单据
             </button>
-
-            <template v-if="true">
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onJump(item)"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-              >
-                修改
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="cancelRefundSale(item)"
-                v-if="['CREATED'].includes(item.status)"
-              >
-                取消
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="removeRefundSale(item)"
-                :loading="item.__r_loading__"
-                :disabled="item.__r_loading__"
-                v-if="['CANCELLED', 'CREATED'].includes(item.status)"
-              >
-                删除
-              </button>
-            </template>
           </view>
         </template>
       </KoTable>
@@ -442,6 +418,8 @@ export default {
       @select="onSelect"
     />
     <!-- #endif -->
+
+    <Pay ref="TPRef" />
   </view>
 </template>
 

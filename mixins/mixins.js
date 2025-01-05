@@ -205,6 +205,16 @@ export default {
       });
       return L;
     },
+
+    lookImage(url) {
+      if (url) {
+        if (url) {
+          uni.previewImage({
+            urls: [url],
+          });
+        }
+      }
+    }
   },
   components: {
     // #ifdef H5

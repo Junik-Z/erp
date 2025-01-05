@@ -145,6 +145,7 @@ export default {
   },
   onLoad(option) {
     this.option = option;
+
     this.noUnable = option.noUnable === "true";
     this.isDetails = option.isDetails === "true";
 

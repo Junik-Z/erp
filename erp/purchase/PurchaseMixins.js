@@ -86,10 +86,11 @@ export default {
 
     // 跳转到对账
     jumpDocumentsTicket(query) {
-      const q = this.getQueryString(query);
+      this?.$refs?.TPRef?.open(query);
+      /* const q = this.getQueryString(query);
       uni.navigateTo({
         url: `${PageEnums.ticket}${q}`,
-      });
+      }); */
     },
 
     // 添加采购单退货

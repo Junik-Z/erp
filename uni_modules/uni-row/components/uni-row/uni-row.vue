@@ -44,7 +44,7 @@ export default {
     },
     align: {
       type: String,
-      default: "top",
+      default: "center",
     },
     // nvue如果使用span等属性，需要配置宽度
     width: {

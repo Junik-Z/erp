@@ -92,18 +92,6 @@
           }
         },
         {
-          "path": "produce/produce",
-          "style": {
-            "navigationBarTitleText": "生产"
-          }
-        },
-        {
-          "path": "produce/work",
-          "style": {
-            "navigationBarTitleText": "生产工单"
-          }
-        },
-        {
           "path": "finance/finance",
           "style": {
             "navigationBarTitleText": "财务"
@@ -219,7 +207,7 @@
         {
           "path": "binding/binding",
           "style": {
-            "navigationBarTitleText": "批量导入产品"
+            "navigationBarTitleText": ""
           }
         },
         {
@@ -255,6 +243,23 @@
           "path": "purchase-refund-order",
           "style": {
             "navigationBarTitleText": "采购退货订单"
+          }
+        }
+      ]
+    },
+    {
+      "root": "produce",
+      "pages": [
+        {
+          "path": "produce",
+          "style": {
+            "navigationBarTitleText": "生产"
+          }
+        },
+        {
+          "path": "work",
+          "style": {
+            "navigationBarTitleText": "生产工单"
           }
         }
       ]

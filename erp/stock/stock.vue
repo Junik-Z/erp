@@ -35,7 +35,7 @@ export default {
         {
           label: "核对库存",
           ref: "VRef",
-          roles: ["Stock_Write"],
+          roles: ["Stock_Read", "Stock_Write"],
         },
       ],
       // TAB: 3,

@@ -25,8 +25,18 @@ export default {
 
     console.log(option);
 
+
     this.getProductExt();
     this.getList();
+  },
+  watch: {
+    GET_SHOP_NAME: {
+      handler() {
+        uni.setNavigationBarTitle({title: this.GET_SHOP_NAME});
+      },
+      immediate: true,
+      deep: true,
+    }
   },
   data() {
     return {
@@ -286,6 +296,7 @@ export default {
     <view
       class="ko-binding__header ko-basic-box-shadow"
       style="padding-top: 10px; font-size: 18px"
+      v-if="false"
     >
       {{ GET_SHOP_NAME }}
     </view>

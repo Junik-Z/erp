@@ -23,10 +23,12 @@ import KoList from "@/components/List/List.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import Pay from "@/erp/components/Pay/Pay.vue";
 
 export default {
   name: "OrderList",
   components: {
+    Pay,
     UniCol,
     UniEasyinput,
     UniRow,
@@ -232,7 +234,7 @@ export default {
     // 添加单据
     onAddedDocuments(item) {
       this.jumpDocumentsTicket({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId"]),
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         orderType: "PURCHASE",
         noUnable: true,
       });
@@ -357,7 +359,7 @@ export default {
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   class="ko-basic-button__card"
-                  v-if="['FINISHED'].includes(item.status)"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status)"
                   @click.stop="onPrint(item)"
                 >
                   打印单据
@@ -408,7 +410,7 @@ export default {
         <template #operate="{item}" v-if="isPerm('Purchase_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">‘
             <button
-              v-if="['FINISHED'].includes(item.status)"
+              v-if="['FINISHED', 'CREATED'].includes(item.status)"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchase')"
             >
@@ -492,6 +494,8 @@ export default {
       @select="onSelect"
     />
     <!-- #endif -->
+
+    <Pay ref="TPRef" />
   </view>
 </template>
 

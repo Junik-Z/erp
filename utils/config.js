@@ -102,6 +102,52 @@ export const ROLE_LIST_ENUMS = {
  */
 
 /**
+ * @description 页面枚举
+ */
+export const PageEnums = {
+  home: "/pages/home/home",
+
+  // 添加付款单据
+  ticket: "/erp/finance/ticket",
+  // 新增修改销售订单
+  editSale: "/form/sale-order",
+  // 添加销售退货单
+  saleRefund: "/form/sale-refund-order",
+
+  // 新增修改采购订单
+  editPurchase: "/form/purchase-order",
+  // 添加采购退货单
+  refundPurchase: "/form/purchase-refund-order",
+
+  // 销售客户
+  saleClient: "/erp/sale/sale?TO_REF=CLRef",
+  // 采购供应商
+  purchaseClient: "/erp/purchase/purchase?TO_REF=CLRef",
+
+  // 销售客户下单返回地址
+  saleClientAddedBack: "/erp/sale/sale?TO_REF=MOLRef",
+  // 采购供应商下单返回地址
+  purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
+
+  // 物流商
+  logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
+
+  // 添加产品
+  addedProduct: "/erp/product/added",
+
+  // 分享出去进来
+  shareAddedProduct: "/shop/binding/binding",
+
+  // 批量分享
+  shareProduct: "/shop/binding/share",
+
+  // 生产
+  produce: "/produce/produce",
+  // 生产工单
+  produceWork: "/produce/work",
+};
+
+/**
  * @description 系统菜单列表
  */
 export const MENU_LIST = [
@@ -141,7 +187,7 @@ export const MENU_LIST = [
   {
     label: "生产",
     icon: "icon-Datastatistics",
-    value: "/erp/produce/produce",
+    value: PageEnums.produce,
     checkField: "produceEnable",
     modelKey: "produce",
     role: ["Admin", "Business", "Produce_Read", "Produce_Write", "Produce_Member"],
@@ -197,47 +243,6 @@ export const MENU_LIST = [
     isUpRole: false,
   },
 ];
-
-/**
- * @description 页面枚举
- */
-export const PageEnums = {
-  home: "/pages/home/home",
-
-  // 添加付款单据
-  ticket: "/erp/finance/ticket",
-  // 新增修改销售订单
-  editSale: "/form/sale-order",
-  // 添加销售退货单
-  saleRefund: "/form/sale-refund-order",
-
-  // 新增修改采购订单
-  editPurchase: "/form/purchase-order",
-  // 添加采购退货单
-  refundPurchase: "/form/purchase-refund-order",
-
-  // 销售客户
-  saleClient: "/erp/sale/sale?TO_REF=CLRef",
-  // 采购供应商
-  purchaseClient: "/erp/purchase/purchase?TO_REF=CLRef",
-
-  // 销售客户下单返回地址
-  saleClientAddedBack: "/erp/sale/sale?TO_REF=MOLRef",
-  // 采购供应商下单返回地址
-  purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
-
-  // 物流商
-  logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
-
-  // 添加产品
-  addedProduct: "/erp/product/added",
-
-  // 分享出去进来
-  shareAddedProduct: "/shop/binding/binding",
-
-  // 批量分享
-  shareProduct: "/shop/binding/share",
-};
 
 /**
  * @description 首页页面类型
