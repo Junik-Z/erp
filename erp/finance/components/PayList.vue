@@ -15,12 +15,12 @@ import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import { _deepCopy, _get, _isEmpty, _pick } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { CONFIG, PageEnums } from "@/utils/config";
+import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
 export default {
-  name: "PayList",
+  name: "Pay",
   mixins: [mixins],
   components: {
     UniEasyinput,
@@ -261,14 +261,17 @@ export default {
     },
     // 添加票据
     onAddedTicket(item) {
-      const q = this.getQueryString({
-        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
+      this.$refs.TPRef.open({
+        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId", "totalAmount"]),
         isReceivable: false,
       });
-
-      uni.navigateTo({
-        url: `${PageEnums.ticket}${q}`,
-      });
+      /*  const q = this.getQueryString({
+         ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
+         isReceivable: false,
+       });
+       uni.navigateTo({
+         url: `${PageEnums.ticket}${q}`,
+       }); */
     },
 
     // 跳转到对账客户页面
@@ -436,6 +439,8 @@ export default {
       </view>
       <!-- #endif -->
     </view>
+
+    <Pay ref="TPRef" @success="getList(true)" />
   </view>
 </template>
 

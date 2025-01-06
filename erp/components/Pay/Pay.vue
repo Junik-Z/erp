@@ -14,10 +14,14 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import { _deepCopy, _get } from "@/utils";
+import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
+import PrintList from "@/components/PrintList/PrintList.vue";
 
 export default {
   name: "ToPay",
   components: {
+    PrintList, UvActionSheet,
     UniSection,
     UniListItem,
     OrderCard,
@@ -39,31 +43,76 @@ export default {
       visible: false,
       title: "付款",
       list: [],
+
+      moreNode: {},
     };
   },
   methods: {
     open(query) {
       this.list = [];
-      console.log(query);
       this.visible = true;
       this.setOption(query);
     },
 
     onLast() {
-      if (this.last > 0) {
+      if (this.last > 0 || this.isEdit) {
         this.onSubmit();
       } else {
         this.visible = false;
         this.$emit("success");
       }
     },
+
+    onLookVoucher() {
+      this.lookImage(this.getImageUrl(this.GET_FUNC(this.moreNode, "user.avatar")));
+    },
+
+    onSelect(node) {
+      this[node.func](_deepCopy(this.moreNode));
+    },
+
+    onMore(item) {
+      this.moreNode = _deepCopy(item);
+      this.$refs.UASRef.open();
+    },
   },
-  computed: {},
+  computed: {
+    getTitle() {
+      return (_get(this.list, "0.customer.name") || "");
+    },
+
+    actionList() {
+      const item = this.moreNode;
+      return [
+        {
+          name: "查看凭证",
+          func: "onLookVoucher",
+          disabled: !item.voucher,
+        },
+        {
+          name: "修改",
+          func: "addedTicket",
+        },
+        {
+          name: "确认单据金额",
+          func: "onConfirmOrder",
+        },
+      ].filter(li => {
+        if (li.name === "修改") {
+          return item.orderStatus !== "FINISHED" && !this.isDetails;
+        }
+        if (li.name === "确认单据金额") {
+          return item.orderStatus !== "FINISHED" && !this.isDetails && !this.noUnable;
+        }
+        return true;
+      });
+    },
+  },
 };
 </script>
 
 <template>
-  <BasicPopup :visible.sync="visible" :title="title">
+  <BasicPopup :visible.sync="visible" :title="getTitle">
     <view class="ko-pay">
       <UniSection title="已付" type="line" v-if="list.length">
         <view class="ko-pay__wrap">
@@ -76,19 +125,16 @@ export default {
                       <view class="ko-pay__cell">金额</view>
                     </UniCol>
                     <UniCol :span="3">
-                      <view class="ko-pay__cell">客户</view>
-                    </UniCol>
-                    <UniCol :span="3">
                       <view class="ko-pay__cell">操作人</view>
                     </UniCol>
-                    <UniCol :span="6">
+                    <UniCol :span="8">
                       <view class="ko-pay__cell">时间</view>
-                    </UniCol>
-                    <UniCol :span="3">
-                      <view class="ko-pay__cell">凭证</view>
                     </UniCol>
                     <UniCol :span="6">
                       <view class="ko-pay__cell">备注</view>
+                    </UniCol>
+                    <UniCol :span="4">
+                      <view class="ko-pay__cell">操作</view>
                     </UniCol>
                   </UniRow>
                 </view>
@@ -100,35 +146,27 @@ export default {
                     <UniCol :span="3">
                       <view
                         class="ko-pay__cell"
-                        :class="{'ko-link': GET_FUNC(item, 'customer.logo')}"
-                        @click="lookImage(getImageUrl(GET_FUNC(item, 'customer.logo')))"
-                      >
-                        {{ GET_FUNC(item, "customer.name") || "-" }}
-                      </view>
-                    </UniCol>
-                    <UniCol :span="3">
-                      <view
-                        class="ko-pay__cell"
                         :class="{'ko-link': GET_FUNC(item, 'user.avatar')}"
                         @click="lookImage(getImageUrl(GET_FUNC(item, 'user.avatar')))"
                       >
                         {{ GET_FUNC(item, "user.nickName") || "-" }}
                       </view>
                     </UniCol>
-                    <UniCol :span="6">
+                    <UniCol :span="8">
                       <view class="ko-pay__cell">{{ item.updateTime || "-" }}</view>
-                    </UniCol>
-                    <UniCol :span="3">
-                      <view
-                        :class="{'ko-link': item.voucher}"
-                        class="ko-pay__cell"
-                        @click="lookImage(getImageUrl(item.voucher))"
-                      >
-                        查看
-                      </view>
                     </UniCol>
                     <UniCol :span="6">
                       <view class="ko-pay__cell">{{ item.remark || "-" }}</view>
+                    </UniCol>
+                    <UniCol :span="4">
+                      <view class="ko-pay__cell">
+                        <button
+                          class="ko-basic-button__user"
+                          @click="onMore(item)"
+                        >
+                          更多
+                        </button>
+                      </view>
                     </UniCol>
                   </UniRow>
                 </view>
@@ -137,7 +175,7 @@ export default {
           </KoList>
         </view>
       </UniSection>
-      <UniSection title="剩余" type="line" v-if="last > 0">
+      <UniSection title="剩余" type="line" v-if="last > 0 || isEdit">
         <view class="ko-pay__added">
           <UniForms
             label-width="100px"
@@ -172,6 +210,16 @@ export default {
           </UniForms>
         </view>
       </UniSection>
+
+
+      <UvActionSheet
+        ref="UASRef"
+        :actions="actionList"
+        safe-area-inset-bottom
+        round="10"
+        cancel-text="取消"
+        @select="onSelect"
+      />
     </view>
     <template #footer>
       <view class="ko-pay__footer">
@@ -181,7 +229,7 @@ export default {
           :loading="sLoading"
           :disabled="sLoading"
         >
-          {{ last > 0 ? "付款" : "完成" }}
+          {{ last > 0 ? "付款" : isEdit ? "修改" : "完成" }}
         </button>
       </view>
     </template>
@@ -206,7 +254,7 @@ export default {
   &__cell {
     // #ifdef MP
     font-size: 10px;
-    padding: 3px 0;
+    padding: 4px;
     line-height: 1.2;
     // #endif
     text-align: center;

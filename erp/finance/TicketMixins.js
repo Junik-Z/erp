@@ -158,6 +158,7 @@ export default {
 
     // 计算剩余金额
     getLast() {
+      this.form = _deepCopy(this.$options.data().form);
       const last = Number(this.option.totalAmount);
       const paid = _sum(this.list?.map((item) => item.totalAmount || 0));
       this.last = (isNaN(last) ? 0 : last) - (isNaN(paid) ? 0 : paid);
@@ -167,7 +168,6 @@ export default {
     // 添加单据
     addedTicket(node) {
       this.confirmationList = [];
-      this.visible = true;
       this.isEdit = !_isEmpty(node);
 
       const params = _isEmpty(node) ? _deepCopy(this.$options.data().form) : _deepCopy(node);
@@ -176,7 +176,9 @@ export default {
       this.form = params;
 
       // #ifdef MP
-      this.$refs.FormRef.clearValidate();
+      setTimeout(() => {
+        this.$refs.FormRef.clearValidate();
+      }, 60);
       // #endif
     },
 
@@ -197,6 +199,10 @@ export default {
             .then(() => {
               uni.showToast({title: "操作成功"});
               this.getList();
+              this.isEdit = false;
+              setTimeout(() => {
+                this.getLast();
+              }, 10);
             })
             .finally(() => {
               this.sLoading = false;
