@@ -1,5 +1,5 @@
 <template>
-  <view class="ko-grid-table">
+  <view>
     <view
       class="_table"
       :style="{'--col':'auto '.repeat(tableData.thead.length).trim(),'text-align':align}"
@@ -43,10 +43,6 @@ $tb-color: rgb(81, 82, 83);
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.ko-grid-table {
-  width: 100%;
 }
 
 ._table {

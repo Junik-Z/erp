@@ -101,6 +101,9 @@ export default class WxCanvas {
     });
   }
 
+  // 新增空函数，修复调用 echarts.init 时报错
+  addEventListener() {}
+
   set width(w) {
     if (this.canvasNode) this.canvasNode.width = w
   }
