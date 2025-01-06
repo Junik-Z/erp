@@ -56,7 +56,7 @@ export default {
     isJudge: Boolean,
 
     // 隐藏入库价格
-    isHideStockPrice: Boolean
+    isHideStockPrice: Boolean,
   },
   data() {
     return {
@@ -93,7 +93,7 @@ export default {
     onImgPreview(url) {
       if (url) {
         uni.previewImage({
-          urls: [url]
+          urls: [url],
         });
       }
     },
@@ -364,14 +364,14 @@ export default {
               <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
             </view>
           </UniCol>
-         <!-- <UniCol :span="span">
-            <label class="ko-basic-label">产品介绍：</label>
-            {{ node.description || "-" }}
-          </UniCol>
-          <UniCol :span="span">
-            <label class="ko-basic-label">备注：</label>
-            {{ node.remark || "-" }}
-          </UniCol>-->
+          <!-- <UniCol :span="span">
+             <label class="ko-basic-label">产品介绍：</label>
+             {{ node.description || "-" }}
+           </UniCol>
+           <UniCol :span="span">
+             <label class="ko-basic-label">备注：</label>
+             {{ node.remark || "-" }}
+           </UniCol>-->
           <UniCol :span="24">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 6px;">
               <view class="xiao" :class="{'is-active': node.saleOff}">

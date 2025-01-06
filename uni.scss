@@ -91,6 +91,7 @@ button::after {
   font-size: 12px;
   padding: 8px 12px;
   line-height: 1.2;
+  white-space: nowrap;
 
   // #ifdef H5
   border: 0.1px solid transparent;

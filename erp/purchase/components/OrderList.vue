@@ -183,7 +183,7 @@ export default {
         {
           label: "操作",
           slot: "operate",
-          width: 420,
+          width: 480,
         },
       ],
       // #endif
@@ -408,7 +408,7 @@ export default {
         @row-click="onRowClick"
       >
         <template #operate="{item}" v-if="isPerm('Purchase_Write')">
-          <view style="display: flex; align-items: center; justify-content: center;">‘
+          <view style="display: flex; align-items: center; justify-content: center;">
             <button
               v-if="['FINISHED', 'CREATED'].includes(item.status)"
               class="ko-basic-button__card"
