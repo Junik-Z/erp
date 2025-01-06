@@ -147,7 +147,14 @@ export default {
     };
   },
   methods: {
-    getList() {
+    getList(reset = false) {
+
+      if (reset) {
+        this.list = [];
+        this.queryList.pageNum = 0;
+      }
+
+
       this.loading = true;
       const Fn = [getCustomerListApi, getTempCustomerListApi][+this.tab];
 
@@ -183,7 +190,7 @@ export default {
             removeCustomerApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -208,7 +215,7 @@ export default {
                 uni.showToast({
                   title: "解绑成功",
                 });
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -227,7 +234,7 @@ export default {
           uni.showToast({
             title: "绑定成功",
           });
-          this.getList();
+          this.getList(true);
         });
     },
 
@@ -284,7 +291,7 @@ export default {
                 uni.showToast({
                   title: "转换成功",
                 });
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -301,7 +308,7 @@ export default {
       this.list = [];
       this.queryList.pageNum = 0;
       this.queryList.nameIndex = key;
-      this.getList();
+      this.getList(true);
     },
   },
   computed: {

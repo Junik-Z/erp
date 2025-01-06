@@ -143,7 +143,13 @@ export default {
     };
   },
   methods: {
-    getList() {
+    getList(reset = false) {
+
+      if (reset) {
+        this.list = [];
+        this.queryList.pageNum = 0;
+      }
+
       this.loading = true;
       const Fn = [getSupplierListApi, getTempSupplierListApi][+this.tab];
 
@@ -191,7 +197,7 @@ export default {
             removeSupplierApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -214,7 +220,7 @@ export default {
             )
               .then(() => {
                 uni.showToast({title: "解绑成功"});
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -231,7 +237,7 @@ export default {
       )
         .then(() => {
           uni.showToast({title: "绑定成功"});
-          this.getList();
+          this.getList(true);
         });
     },
 
@@ -278,7 +284,7 @@ export default {
                 uni.showToast({
                   title: "转换成功",
                 });
-                this.getList();
+                this.getList(true);
               });
           }
         },
@@ -292,10 +298,8 @@ export default {
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
-      this.list = [];
-      this.queryList.pageNum = 0;
       this.queryList.nameIndex = key;
-      this.getList();
+      this.getList(true);
     },
   },
   computed: {
