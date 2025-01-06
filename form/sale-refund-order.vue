@@ -266,7 +266,8 @@ export default {
                 :total.sync="form.totalAmount"
                 :is-not-added="!!orderId"
                 type="sale"
-                :is-client="isPerm('Sales_Write')"
+                :is-client="isClient"
+                is-actual
               />
             </view>
           </UniFormsItem>

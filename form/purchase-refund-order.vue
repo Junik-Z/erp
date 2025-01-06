@@ -252,7 +252,6 @@ export default {
         </view>
       </UniSection>
 
-
       <UniSection title="退货产品明细" type="line">
         <view style="padding: 10px;">
           <UniFormsItem
@@ -265,7 +264,8 @@ export default {
                 :total.sync="form.totalAmount"
                 :is-not-added="!!orderId"
                 type="purchase"
-                :is-client="isPerm('Purchase_Write')"
+                :is-client="isClient"
+                is-actual
               />
             </view>
           </UniFormsItem>

@@ -40,7 +40,7 @@ export default function request(config, isLoading = false, whole = false) {
         ...(Cookie ? {Cookie} : {}),
         // #endif
         // #ifdef H5
-        ...(Token ? {Authorization: Token} : {}),
+        ...(Token && false ? {Authorization: Token} : {}),
         // #endif
         "X-MiniApp-ID": CONFIG.APP_ID,
         "X-Tenant-ID": scene || "",
