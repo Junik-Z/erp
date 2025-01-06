@@ -54,10 +54,9 @@ export default {
         this.onSubmit();
       } else {
         this.visible = false;
+        this.$emit("success");
       }
     },
-
-
   },
   computed: {},
 };

@@ -455,7 +455,7 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" />
+    <Pay ref="TPRef" @success="getList(true)" />
   </view>
 </template>
 
