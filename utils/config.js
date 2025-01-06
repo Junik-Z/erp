@@ -16,7 +16,7 @@ DEFAULT_PAGE_SIZE = 30;
 
 let type = "test";
 
-type = "env";
+// type = "env";
 
 // #ifdef MP
 // type = "env";
@@ -144,6 +144,12 @@ export const PageEnums = {
   // 生产
   produce: "/produce/produce",
   // 生产工单
+  produceWorkList: "/produce/work-list",
+  // 员工管理
+  produceStaff: "/produce/staff",
+  // 新员工
+  produceNewStaff: "/produce/new-staff",
+  // 新的生产工单
   produceWork: "/produce/work",
 };
 

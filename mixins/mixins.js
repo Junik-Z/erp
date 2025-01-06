@@ -34,7 +34,6 @@ export default {
       },
       TABS_LIST: [],
       TAB: 0,
-
     };
   },
   onShow() {
@@ -206,6 +205,7 @@ export default {
       return L;
     },
 
+    // 查看图片
     lookImage(url) {
       if (url) {
         if (url) {
@@ -214,7 +214,9 @@ export default {
           });
         }
       }
-    }
+    },
+
+
   },
   components: {
     // #ifdef H5

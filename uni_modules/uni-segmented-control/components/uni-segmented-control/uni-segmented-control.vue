@@ -74,6 +74,7 @@ export default {
       type: String,
       default: "button",
     },
+    isRouter: Boolean,
   },
   data() {
     return {
@@ -95,7 +96,11 @@ export default {
     _onClick(index) {
       if (this.currentIndex !== index) {
         this.$emit("update:current", index);
-        this.currentIndex = index;
+
+        if (!this.isRouter) {
+          this.currentIndex = index;
+        }
+
 
         this.$emit("clickItem", {
           currentIndex: index,

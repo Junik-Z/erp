@@ -17,10 +17,13 @@ import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sh
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
+import TopMenus from "@/produce/components/TopMenus.vue";
+import { TabList } from "@/produce/define";
 
 export default {
-  name: "ClientList",
+  name: "WorkList",
   components: {
+    TopMenus,
     KoList,
     KoMovable,
     UvActionSheet,
@@ -32,6 +35,8 @@ export default {
   data() {
     const _this = this;
     return {
+      TabList,
+
       isHistory: false,
       list: [],
       loading: false,
@@ -80,6 +85,9 @@ export default {
     };
   },
   mixins: [mixins],
+  onShow() {
+    this.getList(true);
+  },
   methods: {
     // 请求下一页数据
     onRequestNextPage() {
@@ -237,6 +245,8 @@ export default {
 
 <template>
   <view class="ko-client">
+    <TopMenus :tabs="TabList" :current="2" />
+
     <HistoryBar v-model="isHistory" text="生产" @change="getList(true)" />
 
     <!-- #ifdef MP -->

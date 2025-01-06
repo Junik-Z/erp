@@ -257,6 +257,24 @@
           }
         },
         {
+          "path": "work-list",
+          "style": {
+            "navigationBarTitleText": "生产工单"
+          }
+        },
+        {
+          "path": "staff",
+          "style": {
+            "navigationBarTitleText": "员工管理"
+          }
+        },
+        {
+          "path": "new-staff",
+          "style": {
+            "navigationBarTitleText": "员工"
+          }
+        },
+        {
           "path": "work",
           "style": {
             "navigationBarTitleText": "生产工单"

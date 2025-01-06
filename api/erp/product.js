@@ -236,3 +236,62 @@ export function getProductExtApi(data) {
 export function receiveShareProductApi(data) {
   return request({url: "/share/receiveShareProduct", method: "post", data});
 }
+
+
+/**
+ * @description 获取员工
+ */
+export function getStaffListApi(data) {
+  return request({url: "/staff/list", method: "get", data});
+}
+
+/**
+ * @description 添加员工
+ */
+export function addedStaffApi(data) {
+  return request({url: "/staff/add", method: "post", data});
+}
+
+/**
+ * @description 修改员工
+ */
+export function editStaffApi(data) {
+  return request({url: "/staff/edit", method: "post", data});
+}
+
+/**
+ * @description 删除员工
+ */
+export function removeStaffApi(data) {
+  return request({url: "/staff/delete", method: "post", data});
+}
+
+
+/**
+ * @description 绑定员工
+ */
+export function bindStaffApi(data) {
+  return request({url: "/staff/bind", method: "post", data});
+}
+
+/**
+ * @description 解绑员工
+ */
+export function unbindStaffApi(data) {
+  return request({url: "/staff/unbind", method: "post", data});
+}
+
+/**
+ * @description 刷新员工金额
+ */
+export function refreshStaffApi(data) {
+  return request({url: "/staff/refresh", method: "post", data});
+}
+
+
+/**
+ * @description 员工详情
+ */
+export function getStaffInfoApi(data) {
+  return request({url: "/staff/detail", method: "get", data});
+}
