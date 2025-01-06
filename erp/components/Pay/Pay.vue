@@ -195,17 +195,27 @@ export default {
   height: 78vh;
   // #endif
 
+  // #ifdef H5
+  width: 600px;
+  // #endif
 
   &__wrap {
     flex: 1;
   }
 
   &__cell {
+    // #ifdef MP
     font-size: 10px;
-    text-align: center;
-    min-height: 18px;
     padding: 3px 0;
     line-height: 1.2;
+    // #endif
+    text-align: center;
+    min-height: 18px;
+
+    // #ifdef H5
+    font-size: 14px;
+    padding: 8px;
+    // #endif
   }
 
   &__item {
