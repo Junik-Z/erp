@@ -67,7 +67,7 @@ export default {
 
       isClient: false,
 
-      clientTabs: ["下单", "历史下单"],
+      clientTabs: ["下单", "已完成"],
       clientCurrent: 0,
       orderList: [],
 

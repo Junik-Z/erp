@@ -284,7 +284,7 @@ export default {
   <view class="ko-client">
     <HistoryBar
       v-model="tab"
-      :values="['待处理', '待付款', '历史']"
+      :values="['待处理', '待付款', '已完成']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"

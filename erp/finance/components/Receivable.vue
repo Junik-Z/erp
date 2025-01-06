@@ -332,7 +332,7 @@ export default {
 
     <HistoryBar
       v-model="isHistory"
-      :values="['待清帐', '历史']"
+      :values="['待清帐', '已完成']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"

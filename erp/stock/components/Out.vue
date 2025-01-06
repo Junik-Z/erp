@@ -254,7 +254,7 @@ export default {
   <view class="ko-out">
     <HistoryBar
       v-model="isHistory"
-      :values="['待处理', '历史']"
+      :values="['待处理', '已完成']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"

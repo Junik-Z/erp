@@ -175,7 +175,7 @@ export default {
           </KoList>
         </view>
       </UniSection>
-      <UniSection title="剩余" type="line" v-if="last > 0 || isEdit">
+      <UniSection :title="`${isEdit ? '修改' : ''}剩余`" type="line" v-if="last > 0 || isEdit">
         <view class="ko-pay__added">
           <UniForms
             label-width="100px"

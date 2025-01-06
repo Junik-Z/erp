@@ -127,6 +127,12 @@ export default {
   },
   methods: {
     setOption(option) {
+      this.last = 0;
+      this.confirmationList = [];
+      this.isEdit = false;
+      this.form = _deepCopy(this.form);
+      this.list = [];
+
       this.option = option;
       this.noUnable = option.noUnable === "true";
       this.isDetails = option.isDetails === "true";
