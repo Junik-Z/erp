@@ -1,3 +1,15 @@
+.icon-duigou:before {
+  content: "\e65b";
+}
+
+.icon-cha:before {
+  content: "\e61b";
+}
+
+.icon-duigoux:before {
+  content: "\ec9e";
+}
+
 .icon-jiantou:before {
   content: "\e601";
 }

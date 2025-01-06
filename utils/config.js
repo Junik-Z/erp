@@ -16,7 +16,7 @@ DEFAULT_PAGE_SIZE = 30;
 
 let type = "test";
 
-// type = "env";
+type = "env";
 
 // #ifdef MP
 // type = "env";
@@ -25,7 +25,6 @@ let type = "test";
 // #ifdef H5
 // type = "env";
 // #endif
-
 
 export const CONFIG = {
   // 请求头的参数

@@ -136,22 +136,6 @@ export default {
         });
     },
 
-    getServerData() {
-      //模拟从服务器获取数据时的延时
-      setTimeout(() => {
-        let res = {
-          categories: ["2018", "2019", "2020", "2021", "2022", "2023"],
-          series: [
-            {
-              name: "成交量A",
-              data: [{value: 35, color: "#000"}, 8, 25, 37, 4, 20],
-            },
-          ],
-        };
-        this.chartData = JSON.parse(JSON.stringify(res));
-      }, 500);
-    },
-
     // 跳转到库存预警页面
     onJumpWarning() {
       uni.navigateTo({

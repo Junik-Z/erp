@@ -15,7 +15,7 @@ import mixins from "@/mixins/mixins";
 import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import { CONFIG } from "@/utils/config";
+import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "@/produce/define";
@@ -118,9 +118,8 @@ export default {
       if (row) {
         query = `?id=${row.id}`;
       }
-
       uni.navigateTo({
-        url: "/erp/produce/work" + query,
+        url: PageEnums.produceWork + query,
       });
     },
     onCancel(item) {
