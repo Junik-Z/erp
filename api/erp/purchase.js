@@ -175,6 +175,16 @@ export function addedPurchaseApi(data) {
     data,
   });
 }
+/**
+ * @description 重新下采购订单
+ */
+export function reOrderPurchaseApi(data) {
+  return request({
+    url: "/purchase/reOrder",
+    method: "post",
+    data,
+  });
+}
 
 /**
  * @description 确认采购订单
@@ -314,6 +324,16 @@ export function returnPrintPurchaseApi(data) {
 export function updatePurchaseReturnApi(data) {
   return request({
     url: "/purchase/return/update",
+    method: "post",
+    data,
+  });
+}
+/**
+ * @description 重新下退货采购订单
+ */
+export function reOrderPurchaseReturnApi(data) {
+  return request({
+    url: "/purchase/return/reOrder",
     method: "post",
     data,
   });

@@ -259,7 +259,7 @@ export default {
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED"],
+          status: ["CREATED", "CANCELLED", "FINISHED"],
         },
         {
           name: "删除",
@@ -268,7 +268,13 @@ export default {
           status: ["CANCELLED", "CREATED"],
         },
       ]
-        .filter(li => li.status.includes(node.status));
+        .filter(li => {
+          if (li.name === "编辑") {
+            return this.tab !== 2 && li.status.includes(node.status);
+          }
+
+          return li.status.includes(node.status);
+        });
     },
   },
 };
@@ -345,7 +351,6 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item)"
-                  v-if='["CREATED", "CANCELLED"].includes(item.status)'
                 >
                   更多
                 </button>
@@ -372,6 +377,13 @@ export default {
             style="display: flex; align-items: center; justify-content: center;"
           >
             <button
+              v-if="['FINISHED', 'CREATED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onJumpPrint(item, 'saleReturn')"
+            >
+              打印单据
+            </button>
+            <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
               @click.stop="submitRefundSale(item)"
@@ -380,7 +392,6 @@ export default {
             >
               提交订单
             </button>
-
             <button
               v-if="['FINISHED'].includes(item.status) && !item.confirmable"
               class="ko-basic-button__card"
@@ -389,13 +400,31 @@ export default {
               付款
             </button>
 
+
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="onJumpPrint(item, 'saleReturn')"
+              @click.stop="cancelRefundSale(item)"
             >
-              打印单据
+              取消订单
             </button>
+
+            <button
+              v-if="['FINISHED', 'CREATED', 'CANCELLED'].includes(item.status) && tab !== 2"
+              class="ko-basic-button__card"
+              @click.stop="onJump(item)"
+            >
+              编辑
+            </button>
+
+            <button
+              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="removeRefundSale(item)"
+            >
+              删除
+            </button>
+
           </view>
         </template>
       </KoTable>

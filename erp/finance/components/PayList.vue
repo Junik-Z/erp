@@ -18,9 +18,10 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import Pay from "@/erp/components/Pay/Pay.vue";
 
 export default {
-  name: "Pay",
+  name: "PayList",
   mixins: [mixins],
   components: {
     UniEasyinput,
@@ -31,6 +32,7 @@ export default {
     UniCol,
     UniRow,
     UvCountTo,
+    Pay,
   },
   data() {
     const _this = this;
@@ -282,7 +284,6 @@ export default {
     },
 
     onFunc(item) {
-
       if (item.func) {
         this[item.func](item);
       }

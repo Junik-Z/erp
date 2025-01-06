@@ -290,6 +290,7 @@ export default {
         {
           name: "打印采购单(A4)",
           func: "onPrint",
+          status: [],
         },
         {
           name: "申请退货",
@@ -304,7 +305,7 @@ export default {
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED"],
+          status: ["CREATED", "CANCELLED", "FINISHED"],
         },
         {
           name: "删除",
@@ -313,7 +314,14 @@ export default {
           status: ["CANCELLED", "CREATED"],
         },
       ]
-        .filter(li => li.status ? (li.status || [])?.includes(node.status) : true);
+        .filter(li => {
+          if (li.func === "onPrint") return true;
+          if (li.name === "编辑") {
+            return this.tab !== 2 && li?.status?.includes(node.status);
+          }
+
+          return li?.status?.includes?.(node.status);
+        });
     },
   },
 };
@@ -457,7 +465,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJump(item)"
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
             >
               编辑
             </button>

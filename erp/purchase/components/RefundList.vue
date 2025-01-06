@@ -271,7 +271,7 @@ export default {
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED"],
+          status: ["CREATED", "CANCELLED", "FINISHED"],
         },
         {
           name: "删除",
@@ -280,7 +280,12 @@ export default {
           status: ["CANCELLED", "CREATED"],
         },
       ]
-        .filter(li => li.status.includes(node.status));
+        .filter(li => {
+          if (li.name === "编辑") {
+            return this.tab !== 2 && li?.status?.includes(node.status);
+          }
+          return li?.status?.includes?.(node.status);
+        });
     },
   },
 };
@@ -353,7 +358,6 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item)"
-                  v-if='["CREATED", "CANCELLED"].includes(item.status)'
                 >
                   更多
                 </button>
@@ -413,11 +417,9 @@ export default {
               取消订单
             </button>
             <button
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
               class="ko-basic-button__card"
               @click.stop="onJump(item)"
-              :disabled="item.__s_loading__"
-              :loading="item.__s_loading__"
             >
               编辑
             </button>
@@ -430,8 +432,6 @@ export default {
             >
               删除
             </button>
-
-
           </view>
         </template>
       </KoTable>

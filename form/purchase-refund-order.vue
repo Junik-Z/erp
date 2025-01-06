@@ -11,6 +11,7 @@ import {
   getBindInfoApi,
   getPurchaseDetailApi,
   getPurchaseReturnDetailApi,
+  reOrderPurchaseReturnApi,
   updatePurchaseReturnApi,
 } from "@/api/erp/purchase";
 import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
@@ -60,6 +61,7 @@ export default {
       bindList: [],
 
       isEdit: false,
+      isAgain: false,
     };
   },
   mixins: [mixins],
@@ -93,7 +95,7 @@ export default {
             params.purchaseOrderId = this.orderId;
           }
 
-          const Func = this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi;
+          const Func = this.isAgain ? reOrderPurchaseReturnApi : (this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi);
 
           Func(params)
             .then(() => {
@@ -124,6 +126,9 @@ export default {
           console.log(params);
           params.totalAmount = transferYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
+
+          this.isAgain = ["FINISHED"].includes(params.status) && !this.orderId;
+
           this.form = params;
         });
     },
@@ -315,6 +320,7 @@ export default {
     .ko-basic-button {
       width: 200px;
     }
+
     // #endif
   }
 }

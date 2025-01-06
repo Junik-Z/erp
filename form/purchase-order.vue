@@ -8,6 +8,7 @@ import {
   getBindInfoApi,
   getPurchaseCheckShareIdApi,
   getPurchaseDetailApi,
+  reOrderPurchaseApi,
   updatePurchaseApi,
 } from "@/api/erp/purchase";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
@@ -91,6 +92,8 @@ export default {
           ],
         },
       },
+
+      isAgain: false,
     };
   },
   created() {
@@ -147,6 +150,8 @@ export default {
 
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
+          this.isAgain = ["FINISHED"].includes(params.status);
+
           this.form = params;
         });
     },
@@ -158,7 +163,7 @@ export default {
           // params.details = this.$refs.PPRef.getDiscountedPrices();
 
           this.loading = true;
-          const Func = this.isEdit ? updatePurchaseApi : addedPurchaseApi;
+          const Func = this.isAgain ? reOrderPurchaseApi : (this.isEdit ? updatePurchaseApi : addedPurchaseApi);
           Func(params)
             .then(() => {
               showToast({

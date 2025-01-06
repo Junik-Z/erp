@@ -4,7 +4,14 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
-import { addedSaleApi, getBindInfoApi, getSaleCheckShareIdApi, getSaleDetailApi, updateSaleApi } from "@/api/erp/sale";
+import {
+  addedSaleApi,
+  getBindInfoApi,
+  getSaleCheckShareIdApi,
+  getSaleDetailApi,
+  reOrderSaleApi,
+  updateSaleApi,
+} from "@/api/erp/sale";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -81,6 +88,8 @@ export default {
 
       // 客户绑定用户列表
       bindList: [],
+
+      isAgain: false,
     };
   },
   onLoad(option) {
@@ -137,6 +146,8 @@ export default {
           const params = res.data;
           params.totalAmount = transferYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
+
+          this.isAgain = ["FINISHED"].includes(params.status);
           this.form = params;
         });
     },
@@ -150,7 +161,7 @@ export default {
 
           this.loading = true;
 
-          const Func = this.isEdit ? updateSaleApi : addedSaleApi;
+          const Func = this.isAgain ? reOrderSaleApi : (this.isEdit ? updateSaleApi : addedSaleApi);
 
           Func(params)
             .then(() => {

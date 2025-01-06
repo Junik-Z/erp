@@ -253,7 +253,7 @@ export default {
 
   &__cell {
     // #ifdef MP
-    font-size: 10px;
+    font-size: 11px;
     padding: 4px;
     line-height: 1.2;
     // #endif
