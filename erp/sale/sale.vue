@@ -53,8 +53,15 @@ export default {
     };
   },
   onShow() {
+    const isNotRefresh = uni.getStorageSync("TO_DETAILS");
+
     this.$nextTick(() => {
-      this.getList();
+      if (!isNotRefresh) {
+        this.getList();
+      }
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 100);
     });
   },
   mounted() {

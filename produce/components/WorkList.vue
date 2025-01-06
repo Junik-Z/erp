@@ -112,7 +112,7 @@ export default {
       }
 
       uni.navigateTo({
-        url: "/erp/produce/work" + query,
+        url: "/produce/produce/work" + query,
       });
     },
     onCancel(item) {

@@ -5,7 +5,7 @@ import Receivable from "./components/Receivable.vue";
 import PayList from "./components/PayList.vue";
 import CostList from "./components/CostList.vue";
 import Verification from "./components/Verification.vue";
-import { _deepCopy, _get, _isEqual } from "@/utils";
+import { _deepCopy } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -41,9 +41,16 @@ export default {
     }
   },
   onShow() {
+    const isNotRefresh = uni.getStorageSync("TO_DETAILS");
+
     this.$nextTick(() => {
-      this.getList();
-    })
+      if (!isNotRefresh) {
+        this.getList();
+      }
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 100);
+    });
   },
   methods: {
     getList() {
