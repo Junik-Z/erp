@@ -422,13 +422,8 @@ export default {
       if (columnIndex === 2) {
         if (rowIndex % 2 === 0) {
           return {
-            rowspan: 2,
-            colspan: 3
-          };
-        } else {
-          return {
-            rowspan: 0,
-            colspan: 0
+            // rowspan: 1,
+            // colspan: 10
           };
         }
       }

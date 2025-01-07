@@ -57,7 +57,18 @@
 </template>
 
 <script>
-import { _deepCopy, _get, _isNotUnNil, _sum } from "@/utils";
+import { _deepCopy, _get, _isEqual, _sum } from "@/utils";
+
+// 获取包含的坐标
+function calculateCoveredCoordinatesByRow(x_start, x_end, y_start, y_end) {
+  const coveredCoordinates = [];
+  for (let x = x_start; x < x_end; x++) {
+    for (let y = y_start; y < y_end; y++) {
+      coveredCoordinates.push([x, y]);
+    }
+  }
+  return coveredCoordinates;
+}
 
 export default {
   name: "GridTable",
@@ -103,41 +114,39 @@ export default {
       const list = _deepCopy(this.data);
       const cols = _deepCopy(this.columns);
 
-      const obj = {};
-
-      let rowEndIndex = list.length;
-      let rowColumnIndex = null;
+      let hidePos = [];
 
       return list.map((row, rowIndex) => {
         const _grid_obj_ = {};
-        let columnEndIndex = cols.length;
-
         cols.forEach((column, columnIndex) => {
           const {rowspan, colspan} = this.gridAreaFunc?.({row, column, rowIndex, columnIndex}) || {};
 
-          _grid_obj_[columnIndex] || (_grid_obj_[columnIndex] = {});
+          const obj = {
+            rs: rowIndex + 1,
+            re: rowspan ? `span ${rowspan}` : rowIndex + 1,
 
-          if (colspan) {
-            _grid_obj_[columnIndex].cols = (columnIndex + 1);
-            _grid_obj_[columnIndex].cole = columnIndex + (colspan + 1);
-            columnEndIndex = columnIndex + colspan;
-          } else {
-            _grid_obj_[columnIndex].hide = columnEndIndex !== cols.length && columnIndex < columnEndIndex;
+            cs: columnIndex + 1,
+            ce: colspan ? `span ${colspan}` : columnIndex + 1,
+          };
+
+          if (rowspan || colspan) {
+            const s = rowIndex;
+            const e = s + (rowspan || 0);
+
+            const cCs = columnIndex;
+            const cCe = cCs + (colspan || 0);
+
+            const pos = calculateCoveredCoordinatesByRow(s, e, cCs, cCe);
+            pos.shift();
+
+            hidePos = pos;
           }
 
+          obj.hide = hidePos.some(v => _isEqual(v, [rowIndex, columnIndex]));
 
-          // if (rowspan) {
-          //   _grid_obj_[columnIndex].rows = columnIndex + (rowIndex + 1);
-          //   _grid_obj_[columnIndex].rowe = rowIndex + (rowspan + 1);
-          //   rowEndIndex = rowIndex + rowspan;
-          //   rowColumnIndex = columnIndex;
-          // } else {
-          //   _grid_obj_[columnIndex].rowhide = rowEndIndex !== list.length && rowIndex < rowEndIndex && rowColumnIndex === columnIndex;
-          // }
+          _grid_obj_[columnIndex] = obj;
 
         });
-
-        console.log(_grid_obj_);
 
         return {
           ...row,
@@ -169,33 +178,30 @@ export default {
 
     getTableGridArea() {
       return (row, column, rowIndex, columnIndex) => {
-        let unset = "unset";
 
-        const style = {
-          "grid-area": unset,
-          display: "",
-        };
+        const style = {"grid-area": "unset"};
 
         // 获取行配置
-        const {hide, cols, cole, rows, rowe} = _get(row, `_grid_obj_.${columnIndex}`) || {};
+        const {rs, re, cs, ce, hide} = _get(row, `_grid_obj_.${columnIndex}`) || {};
+
+        style["grid-area"] = [rs, cs, re, ce].join("/");
+
+        if (/^span/.test(ce)) {
+          style.width = "auto";
+          // style["background-color"] = "#fff";
+          style["z-index"] = "2";
+        }
+
+        if (/^span/.test(re)) {
+          // style["background-color"] = "#fff";
+          style["z-index"] = "2";
+        }
 
         if (hide) {
-          style.display = "none";
+          style.opacity = 0;
         }
 
-        if (_isNotUnNil(cols) || _isNotUnNil(cole) || _isNotUnNil(rows) || _isNotUnNil(rowe)) {
-          style["grid-area"] = [rows || 1, cols || 1, rowe || 1, cole || 1].join("/");
-          style.width = "auto";
-        }
-
-        /*  if (rowspan || colspan) {
-           const rs = rowIndex;
-           const re = rowIndex + (rowspan || 0);
-
-           const cs = colspan;
-           const ce = colspan + (colspan || 0);
-           unset = [rs, cs, re, ce].join("/");
-         } */
+        // console.log(style, rowIndex, columnIndex);
 
         return style;
       };
@@ -221,9 +227,6 @@ $cell-padding: 4px 8px;
   &__scroll {
     height: 100%;
     width: 100%;
-  }
-
-  &__wrap {
   }
 }
 
