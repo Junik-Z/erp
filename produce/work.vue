@@ -228,16 +228,6 @@ export default {
           {value: "赵坤明"},
           {value: "33"},
           {value: "踢足球，倒挂金钩！", gridArea: "4/4/6/4", isFlex: true},
-
-          {value: "4"},
-          {value: "赵坤明"},
-          {value: "33"},
-          {value: "踢足球，倒挂金钩！", gridArea: "4/4/6/4", isFlex: true},
-
-          {value: "4"},
-          {value: "赵坤明"},
-          {value: "33"},
-          {value: "踢足球，倒挂金钩！", gridArea: "4/4/6/4", isFlex: true},
         ],
       },
 
@@ -429,11 +419,11 @@ export default {
     },
 
     onGridAreaFunc({ row, column, rowIndex, columnIndex }) {
-      if (columnIndex === 0) {
+      if (columnIndex === 2) {
         if (rowIndex % 2 === 0) {
           return {
             rowspan: 2,
-            colspan: 4
+            colspan: 3
           };
         } else {
           return {

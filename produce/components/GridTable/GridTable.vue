@@ -34,7 +34,7 @@
     </scroll-view>
 
     <view
-      v-if="false"
+      v-if="true"
       class="_table"
       :style="{'--col':'auto '.repeat(tableData.thead.length).trim(),'text-align':align}"
     >
@@ -105,6 +105,9 @@ export default {
 
       const obj = {};
 
+      let rowEndIndex = list.length;
+      let rowColumnIndex = null;
+
       return list.map((row, rowIndex) => {
         const _grid_obj_ = {};
         let columnEndIndex = cols.length;
@@ -115,16 +118,22 @@ export default {
           _grid_obj_[columnIndex] || (_grid_obj_[columnIndex] = {});
 
           if (colspan) {
-            _grid_obj_[columnIndex].cols = columnIndex;
-            _grid_obj_[columnIndex].cole = columnIndex + colspan;
+            _grid_obj_[columnIndex].cols = (columnIndex + 1);
+            _grid_obj_[columnIndex].cole = columnIndex + (colspan + 1);
             columnEndIndex = columnIndex + colspan;
           } else {
-            _grid_obj_[columnIndex].hide = columnEndIndex !== cols.length && columnIndex > columnEndIndex;
+            _grid_obj_[columnIndex].hide = columnEndIndex !== cols.length && columnIndex < columnEndIndex;
           }
 
 
-          if (rowspan) {
-          }
+          // if (rowspan) {
+          //   _grid_obj_[columnIndex].rows = columnIndex + (rowIndex + 1);
+          //   _grid_obj_[columnIndex].rowe = rowIndex + (rowspan + 1);
+          //   rowEndIndex = rowIndex + rowspan;
+          //   rowColumnIndex = columnIndex;
+          // } else {
+          //   _grid_obj_[columnIndex].rowhide = rowEndIndex !== list.length && rowIndex < rowEndIndex && rowColumnIndex === columnIndex;
+          // }
 
         });
 
@@ -168,18 +177,16 @@ export default {
         };
 
         // 获取行配置
-        const {hide, cols, cole} = _get(row, `_grid_obj_.${columnIndex}`) || {};
+        const {hide, cols, cole, rows, rowe} = _get(row, `_grid_obj_.${columnIndex}`) || {};
 
         if (hide) {
           style.display = "none";
         }
 
-        if (_isNotUnNil(cols) || _isNotUnNil(cole)) {
-          style["grid-area"] = [rowIndex, cols, rowIndex, cole + 1].join("/");
+        if (_isNotUnNil(cols) || _isNotUnNil(cole) || _isNotUnNil(rows) || _isNotUnNil(rowe)) {
+          style["grid-area"] = [rows || 1, cols || 1, rowe || 1, cole || 1].join("/");
+          style.width = "auto";
         }
-
-
-        console.log(style);
 
         /*  if (rowspan || colspan) {
            const rs = rowIndex;
@@ -243,6 +250,7 @@ $cell-padding: 4px 8px;
     border: 1px solid $border-color;
     border-left: none;
     font-weight: bold;
+    box-sizing: border-box;
   }
 
   &__tr {
@@ -251,6 +259,7 @@ $cell-padding: 4px 8px;
     border: 1px solid $border-color;
     border-left: none;
     border-top: none;
+    box-sizing: border-box;
   }
 
   &__cell {
@@ -260,6 +269,7 @@ $cell-padding: 4px 8px;
     align-items: center;
     justify-content: center;
     height: 100%;
+    box-sizing: border-box;
   }
 }
 
