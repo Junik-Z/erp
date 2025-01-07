@@ -213,14 +213,17 @@ export default {
           {value: "张牧之"},
           {value: "25"},
           {value: ""},
+
           {value: "2"},
           {value: "赵坤明"},
           {value: "33"},
           {value: "打篮球,三分贼强~", gridArea: "2/4/4/4"},
+
           {value: "3"},
           {value: "张牧之"},
           {value: "25"},
           {value: ""},
+
           {value: "4"},
           {value: "赵坤明"},
           {value: "33"},
@@ -295,6 +298,70 @@ export default {
         ],
       },
 
+
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 55,
+        },
+        {
+          label: "姓名",
+          prop: "name",
+          width: 55,
+        },
+        {
+          label: "年龄",
+          prop: "age",
+          width: 55,
+        },
+        {
+          label: "专业",
+          prop: "zy",
+          width: 55,
+        },
+        {
+          label: "专业",
+          prop: "zy",
+          width: 55,
+        },
+        {
+          label: "专业",
+          prop: "zy",
+          width: 55,
+        },
+        {
+          label: "专业",
+          prop: "zy",
+          width: 55,
+        },
+        {
+          label: "专业",
+          prop: "zy",
+          width: 55,
+        },
+        {
+          label: "专业",
+          prop: "zy",
+          width: 55,
+        },
+      ],
+
+      list: [
+        {name: "张三", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三1", age: 16, zy: "踢足球，倒挂金钩！"},
+        {name: "张三2", age: 16, zy: "踢足球，倒挂金钩！"},
+        {name: "张三3", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三4", age: 13, zy: "踢足球，倒挂金钩！"},
+        {name: "张三5", age: 19, zy: "踢足球，倒挂金钩！"},
+        {name: "张三6", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三7", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三8", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三9", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三10", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三11", age: 18, zy: "踢足球，倒挂金钩！"},
+        {name: "张三12", age: 18, zy: "踢足球，倒挂金钩！"},
+      ],
     };
   },
   onLoad(option) {
@@ -458,8 +525,10 @@ export default {
           </view>
         </UniSection>
       </block>
-
-      <GridTable :table-data="tableData" align="center" />
+      
+      <view style="padding: 10px;">
+        <GridTable :columns="columns" :data="list" :table-data="tableData" align="center" />
+      </view>
     </UniForms>
 
     <view style="width: 100vw; height: 40vh; position: relative; z-index: 1">
