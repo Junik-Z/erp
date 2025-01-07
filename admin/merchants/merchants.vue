@@ -34,8 +34,7 @@ export default {
       this.loading = true;
       getPermissionsApi()
         .then(res => {
-          console.log(res.data);
-          this.premList = res.data;
+          this.premList = _deepCopy(res.data);
         })
         .finally(() => {
           this.loading = false;
@@ -72,18 +71,19 @@ export default {
 
       const cUsers = users?.map(id => {
         const node = this.$refs.PickerUserRef.getUserInfo(id);
-        if (node.role.indexOf(this.role) > -1) {
+
+        if (node?.role?.indexOf?.(this.role) > -1) {
           node.role = node.role?.filter(v => !_isEqual(v, this.role));
         } else {
-          node.role.push(this.role);
+          node?.role?.push?.(this.role);
         }
-        return setUserRoleApi(node);
+        return !_isEmpty(node) && setUserRoleApi(node);
       });
 
       Promise.all(cUsers)
         .then(() => {
           uni.showToast({title: "设置成功"});
-          this.$refs.PickerUserRef.getList();
+          this.$refs.PickerUserRef.getList(true);
           this.getList();
         })
         .finally(() => {

@@ -122,7 +122,7 @@ export default {
       ],
       // #endif
 
-      tableKey: +new Date()
+      tableKey: +new Date(),
     };
   },
   methods: {
@@ -254,7 +254,7 @@ export default {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
-      this.tableKey = +new Date()
+      this.tableKey = +new Date();
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
@@ -321,42 +321,40 @@ export default {
   <view class="ko-client">
     <view class="ko-client__wrap">
       <!-- #ifdef MP -->
-      <view class="ko-client__wrap">
-        <IndexList
-          :data="list"
-          :loading="loading"
-          @click="onJumpInfo"
-          button-perm="Delivery_Write"
-          is-receipt-list
+      <IndexList
+        :data="list"
+        :loading="loading"
+        @click="onJumpInfo"
+        button-perm="Delivery_Write"
+        is-receipt-list
 
-          @lower="onLower"
-          :no-more="noMore"
-          @search="onSearchToNameIndex"
-        >
-          <template #default="{node}">
-            <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
-              <!--<button
-                    @click.stop="() => {}"
-                    open-type="share"
-                    :data-params="getBindingParams(actionItem)"
-                    class="ko-basic-button__card"
-                  >
-                    邀请绑定
-                  </button>
-                  -->
-              <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定物流商</button>
-              <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑物流商</button>
+        @lower="onLower"
+        :no-more="noMore"
+        @search="onSearchToNameIndex"
+      >
+        <template #default="{node}">
+          <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
+            <!--<button
+                  @click.stop="() => {}"
+                  open-type="share"
+                  :data-params="getBindingParams(actionItem)"
+                  class="ko-basic-button__card"
+                >
+                  邀请绑定
+                </button>
+                -->
+            <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定物流商</button>
+            <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑物流商</button>
 
-              <button
-                class="ko-basic-button__user"
-                @click.stop="onActionClick(node)"
-              >
-                更多
-              </button>
-            </view>
-          </template>
-        </IndexList>
-      </view>
+            <button
+              class="ko-basic-button__user"
+              @click.stop="onActionClick(node)"
+            >
+              更多
+            </button>
+          </view>
+        </template>
+      </IndexList>
       <!--
        <button
                     @click.stop="() => {}"
@@ -438,6 +436,7 @@ export default {
   width: 100%;
 
   &__wrap {
+    position: relative;
     height: calc(100vh - 66px);
 
     // #ifdef H5
