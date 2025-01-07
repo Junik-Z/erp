@@ -101,6 +101,8 @@ export default {
 
       noMore: false,
       sLoading: false,
+
+      tableKey: +new Date().getTime(),
     };
   },
   components: {
@@ -149,6 +151,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
+        this.tableKey = +new Date().getTime();
       }
 
       this.loading = true;
@@ -589,6 +592,7 @@ export default {
         </div>
         <div style="height: 100%; overflow: hidden; flex: 1;">
           <KoTable
+            :key="tableKey"
             :columns="getTableColumns"
             :loading="loading"
             :data="list"

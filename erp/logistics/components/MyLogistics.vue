@@ -127,6 +127,7 @@ export default {
         },
       ],
       // #endif
+      tableKey: +new Date()
     };
   },
   created() {
@@ -145,6 +146,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date()
       }
 
       this.loading = true;
@@ -246,6 +248,7 @@ export default {
 
       <!-- #ifdef H5 -->
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"

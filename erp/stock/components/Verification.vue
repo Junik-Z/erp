@@ -24,6 +24,7 @@ export default {
       loading: false,
 
       FieldList: [],
+      tableKey: +new Date().getTime(),
     };
   },
   created() {
@@ -34,6 +35,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
+        this.tableKey = +new Date().getTime();
       }
 
       this.loading = true;
@@ -215,6 +217,7 @@ export default {
       <!-- #ifdef H5 -->
       <view style="padding: 10px; height: 100%; overflow: hidden;">
         <KoTable
+          :key="tableKey"
           :loading="loading"
           :columns="columnsList"
           :data="list"

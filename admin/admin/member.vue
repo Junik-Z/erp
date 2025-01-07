@@ -102,6 +102,8 @@ export default {
         },
       ],
       // #endif
+
+      tableKey: +new Date(),
     };
   },
   onLoad(option) {
@@ -119,6 +121,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
       }
 
       this.loading = false;
@@ -228,6 +231,7 @@ export default {
     <!-- #ifdef H5 -->
     <view style="padding: 10px; flex: 1; overflow: hidden;">
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"

@@ -121,6 +121,8 @@ export default {
         },
       ],
       // #endif
+
+      tableKey: +new Date()
     };
   },
   methods: {
@@ -252,6 +254,7 @@ export default {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
+      this.tableKey = +new Date()
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
@@ -369,6 +372,7 @@ export default {
       <!-- #ifdef H5 -->
       <view style="padding: 10px; height: 100%; overflow: hidden">
         <KoTable
+          :key="tableKey"
           :loading="loading"
           :columns="getColumns"
           :data="list"

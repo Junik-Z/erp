@@ -73,6 +73,8 @@ export default {
       isChecked: false,
 
       checked: [],
+
+      tableKey: +new Date(),
     };
   },
   created() {
@@ -85,6 +87,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
+        this.tableKey = +new Date();
       }
 
       this.loading = true;
@@ -260,7 +263,6 @@ export default {
           label: "分类",
           prop: "className",
         },
-
         {
           label: "预警库存",
           prop: "stockWarning",
@@ -272,6 +274,22 @@ export default {
           label: item.fieldName,
           prop: `extend.${item.fieldCode}`,
         }))),
+        {
+          label: "销售",
+          prop: "salePrice",
+          render: (h, {row}) => {
+            return h("label", {class: "ko-basic-money"}, this.toYuan(row.salePrice));
+          },
+        },
+        ...(this.isHideStockPrice ? [] : [
+          {
+            label: "采购",
+            prop: "purchasePrice",
+            render: (h, {row}) => {
+              return h("label", {class: "ko-basic-money"}, this.toYuan(row.purchasePrice));
+            },
+          },
+        ]),
         {
           label: "上架销售",
           prop: "saleOff",
@@ -348,6 +366,7 @@ export default {
 
         <!-- #ifdef H5 -->
         <KoTable
+          :key="tableKey"
           style="padding: 10px 10px 40px;"
           :loading="loading"
           :columns="columnsList"
