@@ -98,11 +98,12 @@ export default {
           func: "onConfirmOrder",
         },
       ].filter(li => {
-        if (li.name === "修改") {
+        if (li.func === "addedTicket") {
           return item.orderStatus !== "FINISHED" && !this.isDetails;
         }
-        if (li.name === "确认单据金额") {
-          return item.orderStatus !== "FINISHED" && !this.isDetails && !this.noUnable;
+
+        if (li.func === "onConfirmOrder") {
+          return (item.orderStatus !== "FINISHED" && !this.isDetails) && !this.noUnable;
         }
         return true;
       });

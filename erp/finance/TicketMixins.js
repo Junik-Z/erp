@@ -134,14 +134,14 @@ export default {
       this.list = [];
 
       this.option = option;
-      this.noUnable = option.noUnable === "true";
-      this.isDetails = option.isDetails === "true";
+      this.noUnable = !!option.noUnable;
+      this.isDetails = !!option.isDetails;
 
       // 销售退货和采购的时候需要进行付款
       this.isRefund = ["SALE_RETURN", "PURCHASE"].includes(option.orderType);
 
       // 是否是应收模块
-      this.isReceivable = option.isReceivable === "true";
+      this.isReceivable = !!option.isReceivable;
 
       // #ifdef MP
       this.$refs?.FormRef?.setRules?.(this.rules);
