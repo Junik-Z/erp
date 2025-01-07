@@ -237,7 +237,7 @@ export default {
         const details = (list || []).filter(item => !!this.list.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
 
         if (details.length <= 0) {
-          showToast({title: "您还未盘点选任何产品"});
+          showToast({title: "您还未盘点选任何产品", icon: "none"});
           return false;
         }
 
@@ -247,7 +247,7 @@ export default {
           success: (res) => {
             if (res.confirm) {
               this.sLoading = true;
-              checkInOutOrderApi({details: list})
+              checkInOutOrderApi({details})
                 .then(() => {
                   showToast({
                     title: "提交成功",
