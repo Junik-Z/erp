@@ -258,7 +258,7 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px; height: 100%; overflow: hidden;">
       <KoTable
         :loading="loading"
         :columns="columns"
@@ -266,6 +266,8 @@ export default {
         empty-text="暂无数据"
         stripe
         @row-click="onJump"
+        @next-load="RequestNextPage"
+        :no-more="noMore || loading"
       >
         <template #operate="{item}">
           <view style="display: flex; align-items: center; justify-content: center;">
@@ -362,6 +364,10 @@ export default {
 .ko-admin {
   // #ifdef MP
   padding-bottom: 80px;
+  // #endif
+
+  // #ifdef H5
+  height: calc(100vh - 56px);
   // #endif
 
   &__item {

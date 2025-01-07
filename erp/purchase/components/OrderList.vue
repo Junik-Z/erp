@@ -406,7 +406,7 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px; flex: 1; overflow: hidden">
       <KoTable
         :loading="loading"
         :columns="columns"
@@ -414,6 +414,8 @@ export default {
         empty-text="暂无数据"
         stripe
         @row-click="onRowClick"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
       >
         <template #operate="{item}" v-if="isPerm('Purchase_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
@@ -510,7 +512,9 @@ export default {
 <style scoped lang="scss">
 .ko-order {
   width: 100%;
+  // #ifdef MP
   padding-bottom: 80px;
+  // #endif
 
   :deep(.uni-list-item__container ) {
     display: block;
@@ -539,5 +543,11 @@ export default {
       }
     }
   }
+
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px);
+  display: flex;
+  flex-direction: column;
+  // #endif
 }
 </style>

@@ -427,7 +427,7 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; flex: 1; overflow: hidden">
         <KoTable
           :loading="loading"
           :columns="getColumns"
@@ -435,6 +435,8 @@ export default {
           empty-text="暂无数据"
           stripe
           @row-click="onJumpInfo($event)"
+          @next-load="onLower"
+          :no-more="noMore || loading"
         >
           <template #operate="{item}" v-if="isPerm('Sales_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
@@ -486,6 +488,10 @@ export default {
 .ko-client {
   width: 100%;
   height: calc(100vh - 56px);
+
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px);
+  // #endif
 
   &__wrap {
     flex: 1;

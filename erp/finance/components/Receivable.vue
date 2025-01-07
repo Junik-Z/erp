@@ -402,7 +402,7 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; height: 100%; overflow: hidden;">
         <KoTable
           :loading="loading"
           :columns="columns"
@@ -410,6 +410,8 @@ export default {
           empty-text="暂无数据"
           stripe
           @row-click="onJumpDetails($event, 'receivable')"
+          @next-load="onRequestNextPage"
+          :no-more="noMore || loading"
         >
           <template #operate="{item}">
             <view
@@ -449,9 +451,17 @@ export default {
 
 <style scoped lang="scss">
 .ko-receivable {
-  //padding: 10px;
   margin-top: 10px;
+  // #ifdef MP
   padding-bottom: 30px;
+  // #endif
+
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px - 20px);
+  display: flex;
+  flex-direction: column;
+  // #endif
+
 
   &__item {
     display: flex;
@@ -465,6 +475,11 @@ export default {
 
   &__row {
     margin-top: 16px;
+
+    // #ifdef H5
+    flex: 1;
+    overflow: hidden;
+    // #endif
   }
 
   &__info {

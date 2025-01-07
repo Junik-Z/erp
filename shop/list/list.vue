@@ -587,11 +587,13 @@ export default {
             style="min-height: 100%;"
           />
         </div>
-        <div style="height: 100%; overflow-y: auto; flex: 1;">
+        <div style="height: 100%; overflow: hidden; flex: 1;">
           <KoTable
             :columns="getTableColumns"
             :loading="loading"
             :data="list"
+            @next-load="onLower"
+            :no-more="noMore || loading"
           />
         </div>
       </div>

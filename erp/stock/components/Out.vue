@@ -316,42 +316,42 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
-      <view style="padding: 10px;">
-        <KoTable
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-          @row-click="onRowClick"
-        >
-          <template #operate="{item}" v-if="isPerm('Stock_Write')">
-            <view style="display: flex; align-items: center; justify-content: center;">
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onJumpPrint(item, 'outbound')"
-              >
-                打印出库单(A4)
-              </button>
-              <button
-                v-if="['CREATED'].includes(item.status) && false"
-                class="ko-basic-button__card"
-                @click.stop="onCancel(item)"
-              >
-                取消出库
-              </button>
-              <button
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onConfirm(item)"
-              >
-                确认出库
-              </button>
-            </view>
-          </template>
-        </KoTable>
-      </view>
+    <view style="padding: 10px; flex: 1; overflow: hidden;">
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onRowClick"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
+      >
+        <template #operate="{item}" v-if="isPerm('Stock_Write')">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onJumpPrint(item, 'outbound')"
+            >
+              打印出库单(A4)
+            </button>
+            <button
+              v-if="['CREATED'].includes(item.status) && false"
+              class="ko-basic-button__card"
+              @click.stop="onCancel(item)"
+            >
+              取消出库
+            </button>
+            <button
+              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onConfirm(item)"
+            >
+              确认出库
+            </button>
+          </view>
+        </template>
+      </KoTable>
     </view>
     <!-- #endif -->
 
@@ -372,10 +372,10 @@ export default {
                   <label class="ko-basic-label">名称：</label>
                   <text>{{ child.name }}</text>
                 </view>
-               <!-- <view style="padding: 0 10px">
-                  <label class="ko-basic-label">库存：</label>
-                  <text class="ko-basic-money">{{ child.sequence }}</text>
-                </view>-->
+                <!-- <view style="padding: 0 10px">
+                   <label class="ko-basic-label">库存：</label>
+                   <text class="ko-basic-money">{{ child.sequence }}</text>
+                 </view>-->
                 <view style="padding: 0 10px">
                   <label class="ko-basic-label">数量：</label>
                   <text class="ko-basic-money">{{ child.productQuantity }}</text>
@@ -405,7 +405,9 @@ export default {
 <style scoped lang="scss">
 .ko-out {
   width: 100%;
+  // #ifdef MP
   padding-bottom: 80px;
+  // #endif
 
   :deep(.uni-list-item__container ) {
     display: block;
@@ -449,6 +451,10 @@ export default {
 
 /* #ifdef H5 */
 .ko-out {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px - 40px - 20px);
+
   .uni-group {
     display: flex;
     align-items: center;

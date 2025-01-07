@@ -391,7 +391,7 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px; flex: 1; overflow: hidden">
       <KoTable
         :loading="loading"
         :columns="columns"
@@ -399,6 +399,8 @@ export default {
         empty-text="暂无数据"
         stripe
         @row-click="onJumpDetails($event, 'logistics')"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
       >
         <!--
         @row-click="onJumpDetails($event, 'receivable')"
@@ -474,6 +476,16 @@ export default {
   padding-bottom: 50px;
   // #endif
 
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px);
+  display: flex;
+  flex-direction: column;
+
+  .ko-history {
+    width: 500px;
+  }
+  // #endif
+
   &__row {
     margin-top: 16px;
   }
@@ -515,10 +527,6 @@ export default {
     // #ifdef H5
     width: 100%;
     // #endif
-  }
-
-  .ko-basic-button__card {
-    margin: 5px;
   }
 }
 </style>

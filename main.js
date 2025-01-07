@@ -1,5 +1,5 @@
 // #ifdef H5
-import '@/utils/flexible'
+import "@/utils/flexible";
 // #endif
 
 

@@ -60,8 +60,8 @@ export default {
 
       queryList: {
         classId: "",
-        pageSize: 10,
         pageNum: 0,
+        pageSize: 10,
       },
 
       actionItem: {},
@@ -347,44 +347,45 @@ export default {
         <!-- #endif -->
 
         <!-- #ifdef H5 -->
-        <view style="padding: 10px;">
-          <KoTable
-            :loading="loading"
-            :columns="columnsList"
-            :data="list"
-            empty-text="暂无数据"
-            stripe
-          >
-            <template #operate="{item}" v-if="isPerm('Product_Write')">
-              <view style="display: flex; align-items: center; justify-content: center;">
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="upDownSale(item)"
-                >
-                  {{ item.saleOff ? "上架销售" : "下架销售" }}
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="upDownPurchase(item)"
-                >
-                  {{ item.purchaseOff ? "上架采购" : "下架采购" }}
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onFabClick(item)"
-                >
-                  编辑
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onRemove(item)"
-                >
-                  删除
-                </button>
-              </view>
-            </template>
-          </KoTable>
-        </view>
+        <KoTable
+          style="padding: 10px 10px 40px;"
+          :loading="loading"
+          :columns="columnsList"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+          @next-load="onLower"
+          :no-more="noMore || loading"
+        >
+          <template #operate="{item}" v-if="isPerm('Product_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                class="ko-basic-button__card"
+                @click.stop="upDownSale(item)"
+              >
+                {{ item.saleOff ? "上架销售" : "下架销售" }}
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="upDownPurchase(item)"
+              >
+                {{ item.purchaseOff ? "上架采购" : "下架采购" }}
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onFabClick(item)"
+              >
+                编辑
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onRemove(item)"
+              >
+                删除
+              </button>
+            </view>
+          </template>
+        </KoTable>
         <!-- #endif -->
       </view>
 
@@ -452,6 +453,9 @@ export default {
 
   &__wrap {
     height: calc(100vh - 56px);
+    // #ifdef H5
+    height: calc(100vh - 56px - 44px);
+    // #endif
     display: flex;
     flex-direction: column;
   }
@@ -459,6 +463,9 @@ export default {
   &__list {
     flex: 1;
     position: relative;
+    // #ifdef H5
+    overflow: hidden;
+    // #endif
   }
 
   &__item {

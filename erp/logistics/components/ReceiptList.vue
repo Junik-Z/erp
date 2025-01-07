@@ -43,7 +43,8 @@ export default {
 
       noMore: false,
       queryList: {
-        pageSize: 20, pageNum: 0,
+        pageSize: 20,
+        pageNum: 0,
       },
 
       actionItem: {},
@@ -315,7 +316,7 @@ export default {
 
 <template>
   <view class="ko-client">
-    <UniList>
+    <view class="ko-client__wrap">
       <!-- #ifdef MP -->
       <view class="ko-client__wrap">
         <IndexList
@@ -366,7 +367,7 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; height: 100%; overflow: hidden">
         <KoTable
           :loading="loading"
           :columns="getColumns"
@@ -374,6 +375,8 @@ export default {
           empty-text="暂无数据"
           stripe
           @row-click="onJumpInfo($event)"
+          @next-load="onLower"
+          :no-more="noMore || loading"
         >
           <template #operate="{item}" v-if="isPerm('Delivery_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
@@ -394,7 +397,7 @@ export default {
         </KoTable>
       </view>
       <!-- #endif -->
-    </UniList>
+    </view>
 
     <PickerUser
       v-if="isPerm('Delivery_Write')"
@@ -432,6 +435,10 @@ export default {
 
   &__wrap {
     height: calc(100vh - 66px);
+
+    // #ifdef H5
+    height: calc(100vh - 56px - 60px);
+    // #endif
   }
 
   :deep(.uni-list-item__container ) {

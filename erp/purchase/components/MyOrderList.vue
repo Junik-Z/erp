@@ -409,14 +409,20 @@ export default {
 
 <style scoped lang="scss">
 .ko-my-order-list {
-  //display: flex;
-  //flex-direction: column;
-  //height: calc(100vh - 64px);
+  // #ifdef H5
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px - 60px);
 
   &__wrap {
-    padding: 10px;
-    //flex: 1;
-    //overflow: hidden;
+    flex: 1;
+    overflow: hidden;
   }
+
+  .ko-history {
+    width: 500px;
+  }
+
+  // #endif
 }
 </style>

@@ -8,7 +8,7 @@ let DEFAULT_PAGE_SIZE = 5;
 BASE_URL = "/api";
 BASE_WS_URL = "/api/ws/app";
 
-DEFAULT_PAGE_SIZE = 30;
+DEFAULT_PAGE_SIZE = 20;
 
 // BASE_URL: "https://erp.kuaouyun.cn/api",
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
