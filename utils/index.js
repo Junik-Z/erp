@@ -538,6 +538,18 @@ export function _uniqWith(array, comparator) {
   return result;
 }
 
+export function _isUndefined(str) {
+  return typeof str === "undefined";
+}
+
+export function _isNull(str) {
+  return Object.is(str, null);
+}
+
+export function _isNotUnNil(str) {
+  return !_isUndefined(str) && !_isNull(str);
+}
+
 /**
  财通
  智链

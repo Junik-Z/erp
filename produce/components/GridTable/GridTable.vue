@@ -10,7 +10,7 @@
           <view
             class="ko-table__th"
             v-for="(col, index) of columns"
-            :key="col.prop || index"
+            :key="index"
             :style="[getCellStyle(col)]"
           >
             <view class="ko-table__cell">{{ col.label }}</view>
@@ -18,21 +18,20 @@
         </view>
 
         <view class="ko-table__tbody">
-          <block >
-
+          <block v-for="(item, index) of list" :key="index">
+            <view
+              class="ko-table__tr"
+              v-for="(col, j) of columns"
+              :key="col.label"
+              :style="[getCellStyle(col), getTableGridArea(item, col, index, j)]"
+            >
+              <view class="ko-table__cell" v-if="col.type === 'index'">{{ index + 1 }}</view>
+              <view class="ko-table__cell" v-else>{{ get(item, col.prop) }}</view>
+            </view>
           </block>
-          <view
-            class="ko-table__tr"
-            v-for="(col, index) of columns"
-            :key="col.prop || index"
-            :style="[getCellStyle(col)]"
-          >
-            <view class="ko-table__cell">{{ col.label }}</view>
-          </view>
         </view>
       </view>
     </scroll-view>
-
 
     <view
       v-if="false"
@@ -58,7 +57,7 @@
 </template>
 
 <script>
-import { _sum } from "@/utils";
+import { _deepCopy, _get, _isNotUnNil, _sum } from "@/utils";
 
 export default {
   name: "GridTable",
@@ -75,18 +74,70 @@ export default {
         return [];
       },
     },
-
     cellWidth: {
       type: Number,
       default: 40,
     },
 
+    gridAreaFunc: Function,
+
     tableData: Object,
     align: String,
   },
   data() {
-    return {};
+    return {
+      list: [],
+    };
   },
+  watch: {
+    data: {
+      handler() {
+        this.list = this.getTableList();
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
+  methods: {
+    getTableList() {
+      const list = _deepCopy(this.data);
+      const cols = _deepCopy(this.columns);
+
+      const obj = {};
+
+      return list.map((row, rowIndex) => {
+        const _grid_obj_ = {};
+        let columnEndIndex = cols.length;
+
+        cols.forEach((column, columnIndex) => {
+          const {rowspan, colspan} = this.gridAreaFunc?.({row, column, rowIndex, columnIndex}) || {};
+
+          _grid_obj_[columnIndex] || (_grid_obj_[columnIndex] = {});
+
+          if (colspan) {
+            _grid_obj_[columnIndex].cols = columnIndex;
+            _grid_obj_[columnIndex].cole = columnIndex + colspan;
+            columnEndIndex = columnIndex + colspan;
+          } else {
+            _grid_obj_[columnIndex].hide = columnEndIndex !== cols.length && columnIndex > columnEndIndex;
+          }
+
+
+          if (rowspan) {
+          }
+
+        });
+
+        console.log(_grid_obj_);
+
+        return {
+          ...row,
+          _grid_obj_,
+        };
+      });
+    },
+  },
+
   computed: {
     rootStyle() {
       return {
@@ -95,12 +146,56 @@ export default {
       };
     },
 
+    getColumnProp() {
+      return (col) => col.type || col.prop;
+    },
+
     getCellStyle() {
       return (col) => {
         return {
           width: col.width ? col.width + "px" : "auto",
         };
       };
+    },
+
+    getTableGridArea() {
+      return (row, column, rowIndex, columnIndex) => {
+        let unset = "unset";
+
+        const style = {
+          "grid-area": unset,
+          display: "",
+        };
+
+        // 获取行配置
+        const {hide, cols, cole} = _get(row, `_grid_obj_.${columnIndex}`) || {};
+
+        if (hide) {
+          style.display = "none";
+        }
+
+        if (_isNotUnNil(cols) || _isNotUnNil(cole)) {
+          style["grid-area"] = [rowIndex, cols, rowIndex, cole + 1].join("/");
+        }
+
+
+        console.log(style);
+
+        /*  if (rowspan || colspan) {
+           const rs = rowIndex;
+           const re = rowIndex + (rowspan || 0);
+
+           const cs = colspan;
+           const ce = colspan + (colspan || 0);
+           unset = [rs, cs, re, ce].join("/");
+         } */
+
+        return style;
+      };
+    },
+
+    get() {
+      return _get;
     },
   },
 };
@@ -136,7 +231,7 @@ $cell-padding: 4px 8px;
 
   &__tbody {
     display: grid;
-    grid-template-columns:  var(--table-col);
+    grid-template-columns: var(--table-col);
     white-space: break-spaces;
     box-sizing: border-box;
     border-left: 1px solid $border-color;
@@ -147,6 +242,7 @@ $cell-padding: 4px 8px;
     color: #333;
     border: 1px solid $border-color;
     border-left: none;
+    font-weight: bold;
   }
 
   &__tr {
@@ -160,6 +256,10 @@ $cell-padding: 4px 8px;
   &__cell {
     padding: $cell-padding;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
   }
 }
 

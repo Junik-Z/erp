@@ -298,12 +298,12 @@ export default {
         ],
       },
 
-
       columns: [
         {
           label: "序号",
           type: "index",
           width: 55,
+          prop: "index",
         },
         {
           label: "姓名",
@@ -427,6 +427,22 @@ export default {
       });
       return chart;
     },
+
+    onGridAreaFunc({ row, column, rowIndex, columnIndex }) {
+      if (columnIndex === 0) {
+        if (rowIndex % 2 === 0) {
+          return {
+            rowspan: 2,
+            colspan: 4
+          };
+        } else {
+          return {
+            rowspan: 0,
+            colspan: 0
+          };
+        }
+      }
+    },
   },
   computed: {
     getStartDate() {
@@ -525,11 +541,17 @@ export default {
           </view>
         </UniSection>
       </block>
-      
-      <view style="padding: 10px;">
-        <GridTable :columns="columns" :data="list" :table-data="tableData" align="center" />
-      </view>
     </UniForms>
+
+    <view style="padding: 10px;">
+      <GridTable
+        :columns="columns"
+        :data="list"
+        :table-data="tableData"
+        align="center"
+        :grid-area-func="onGridAreaFunc"
+      />
+    </view>
 
     <view style="width: 100vw; height: 40vh; position: relative; z-index: 1">
       <UniEcCanvas
