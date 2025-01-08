@@ -221,6 +221,17 @@ export function cancelSaleApi(data) {
   });
 }
 
+/**
+ * @description 重新下单
+ */
+export function reOrderSaleApi(data) {
+  return request({
+    url: "/sale/reOrder",
+    method: "post",
+    data,
+  });
+}
+
 
 /**
  * @description 获取退货销售订单
@@ -283,6 +294,16 @@ export function addedSaleReturnApi(data) {
 export function updateSaleReturnApi(data) {
   return request({
     url: "/sale/return/update",
+    method: "post",
+    data,
+  });
+}
+/**
+ * @description 更新退货销售订单
+ */
+export function reOrderSaleReturnApi(data) {
+  return request({
+    url: "/sale/return/reOrder",
     method: "post",
     data,
   });

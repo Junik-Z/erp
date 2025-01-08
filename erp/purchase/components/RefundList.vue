@@ -169,6 +169,7 @@ export default {
         },
       ],
       // #endif
+      tableKey: +new Date()
     };
   },
   methods: {
@@ -181,6 +182,7 @@ export default {
 
     getList(reset = false) {
       if (reset) {
+        this.tableKey = +new Date()
         this.queryList.pageNum = 0;
         this.list = [];
       }
@@ -192,6 +194,9 @@ export default {
           console.log(res.data);
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -271,7 +276,7 @@ export default {
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED"],
+          status: ["CREATED", "CANCELLED", "FINISHED"],
         },
         {
           name: "删除",
@@ -280,7 +285,12 @@ export default {
           status: ["CANCELLED", "CREATED"],
         },
       ]
-        .filter(li => li.status.includes(node.status));
+        .filter(li => {
+          if (li.name === "编辑") {
+            return this.tab !== 2 && li?.status?.includes(node.status);
+          }
+          return li?.status?.includes?.(node.status);
+        });
     },
   },
 };
@@ -289,7 +299,7 @@ export default {
 <template>
   <view class="ko-client">
     <HistoryBar
-      v-model="tab" :values="['待处理', '待付款', '历史']"
+      v-model="tab" :values="['待处理', '待付款', '已完成']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -353,7 +363,6 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item)"
-                  v-if='["CREATED", "CANCELLED"].includes(item.status)'
                 >
                   更多
                 </button>
@@ -366,14 +375,17 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px;flex: 1;overflow: hidden;">
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
         empty-text="暂无数据"
         stripe
         @row-click="onJumpDetails($event, 'purchaseReturn')"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
       >
         <template #operate="{item}" v-if="isPerm('Purchase_Write')">
           <view
@@ -413,11 +425,9 @@ export default {
               取消订单
             </button>
             <button
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
               class="ko-basic-button__card"
               @click.stop="onJump(item)"
-              :disabled="item.__s_loading__"
-              :loading="item.__s_loading__"
             >
               编辑
             </button>
@@ -430,8 +440,6 @@ export default {
             >
               删除
             </button>
-
-
           </view>
         </template>
       </KoTable>
@@ -455,13 +463,16 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" />
+    <Pay ref="TPRef" @success="getList(true)" />
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-client {
   width: 100%;
+  // #ifdef MP
+  padding-bottom: 80px;
+  // #endif
 
   :deep(.uni-list-item__container ) {
     display: block;
@@ -489,5 +500,11 @@ export default {
       }
     }
   }
+
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px);
+  display: flex;
+  flex-direction: column;
+  // #endif
 }
 </style>

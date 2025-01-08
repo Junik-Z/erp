@@ -89,11 +89,16 @@ export default {
   },
   created() {
     if (this.isInput && !this.isLongList) {
-      this.getList();
+      this.getList(true);
     }
   },
   methods: {
-    getList() {
+    getList(reset = false) {
+      if (reset) {
+        this.list = [];
+        this.queryList.pageNum = 0;
+      }
+
       this.loading = true;
       const Func = {
         default: getUserListApi,
@@ -120,6 +125,9 @@ export default {
 
           this.list = this.onMergeArrays(this.list, list, vKey);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -178,10 +186,8 @@ export default {
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
-      this.list = [];
-      this.queryList.pageNum = 0;
       this.queryList.nameIndex = key;
-      this.getList();
+      this.getList(true);
     },
   },
   watch: {
@@ -208,7 +214,7 @@ export default {
     modelVisible: {
       handler() {
         if (this.modelVisible && !this.isLongList) {
-          this.getList();
+          this.getList(true);
         }
 
         if (this.isInput && _isString(this.value)) {

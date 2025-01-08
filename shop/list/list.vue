@@ -101,6 +101,8 @@ export default {
 
       noMore: false,
       sLoading: false,
+
+      tableKey: +new Date().getTime(),
     };
   },
   components: {
@@ -149,6 +151,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
+        this.tableKey = +new Date().getTime();
       }
 
       this.loading = true;
@@ -174,8 +177,11 @@ export default {
               return obj;
             });
 
-          this.list = this.onMergeArrays(this.list, list, "id");
+          this.list = this.onMergeArrays(this.list, list, "productId");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -199,7 +205,7 @@ export default {
           productId: item.productId,
           images: item.images,
           price: _get(item, this.getMoneyKey),
-          productQuantity: val,
+          productQuantity: val || 0,
           extend: item.extend,
         });
       } else {
@@ -234,7 +240,7 @@ export default {
         const details = (list || []).filter(item => !!this.list.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
 
         if (details.length <= 0) {
-          showToast({title: "您还未盘点选任何产品"});
+          showToast({title: "您还未盘点选任何产品", icon: "none"});
           return false;
         }
 
@@ -244,7 +250,7 @@ export default {
           success: (res) => {
             if (res.confirm) {
               this.sLoading = true;
-              checkInOutOrderApi({details: list})
+              checkInOutOrderApi({details})
                 .then(() => {
                   showToast({
                     title: "提交成功",
@@ -587,11 +593,14 @@ export default {
             style="min-height: 100%;"
           />
         </div>
-        <div style="height: 100%; overflow-y: auto; flex: 1;">
+        <div style="height: 100%; overflow: hidden; flex: 1;">
           <KoTable
+            :key="tableKey"
             :columns="getTableColumns"
             :loading="loading"
             :data="list"
+            @next-load="onLower"
+            :no-more="noMore || loading"
           />
         </div>
       </div>

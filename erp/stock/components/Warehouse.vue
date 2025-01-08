@@ -149,6 +149,8 @@ export default {
 
       ],
       // #endif
+
+      tableKey: +new Date(),
     };
   },
   methods: {
@@ -163,6 +165,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
       }
 
       this.loading = true;
@@ -173,6 +176,9 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           console.log(res);
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -245,7 +251,7 @@ export default {
   <view class="ko-warehouse">
     <HistoryBar
       v-model="isHistory"
-      :values="['待处理', '历史']"
+      :values="['待处理', '已完成']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -312,14 +318,17 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px; flex: 1; overflow: hidden">
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
         empty-text="暂无数据"
         stripe
         @row-click="onRowClick"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
       >
         <template #operate="{item}" v-if="isPerm('Stock_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
@@ -358,7 +367,9 @@ export default {
 <style scoped lang="scss">
 .ko-warehouse {
   width: 100%;
+  // #ifdef MP
   padding-bottom: 80px;
+  // #endif
 
   :deep(.uni-list-item__container ) {
     display: block;
@@ -391,6 +402,10 @@ export default {
 
 /* #ifdef H5 */
 .ko-warehouse {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px - 40px - 20px);
+
   .uni-group {
     display: flex;
     align-items: center;

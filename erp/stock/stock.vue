@@ -25,12 +25,12 @@ export default {
         {
           label: "入库审批",
           ref: "WRef",
-          roles: ["Stock_Read", "Stock_Write"],
+          roles: ["Stock_Write"],
         },
         {
           label: "出库审批",
           ref: "ORef",
-          roles: ["Stock_Read", "Stock_Write"],
+          roles: ["Stock_Write"],
         },
         {
           label: "核对库存",
@@ -42,7 +42,16 @@ export default {
     };
   },
   onShow() {
-    this.getList();
+    const isNotRefresh = uni.getStorageSync("TO_DETAILS");
+
+    this.$nextTick(() => {
+      if (!isNotRefresh) {
+        this.getList();
+      }
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 100);
+    });
   },
   onLoad(option) {
     this.TABS_LIST = _deepCopy(this.tabList);
@@ -93,7 +102,6 @@ export default {
   &__tabs {
     width: 500px;
   }
-
   // #endif
 }
 </style>

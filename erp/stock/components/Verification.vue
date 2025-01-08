@@ -16,12 +16,7 @@ export default {
       list: [],
       queryList: {
         classId: "",
-        // #ifdef H5
-        pageSize: 30,
-        // #endif
-        // #ifdef MP
         pageSize: 20,
-        // #endif
         pageNum: 0,
         name: "",
       },
@@ -29,6 +24,7 @@ export default {
       loading: false,
 
       FieldList: [],
+      tableKey: +new Date().getTime(),
     };
   },
   created() {
@@ -39,6 +35,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
+        this.tableKey = +new Date().getTime();
       }
 
       this.loading = true;
@@ -46,6 +43,9 @@ export default {
         .then((res) => {
           this.list = this.onMergeArrays(this.list, res.data, "id");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -218,14 +218,17 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; height: 100%; overflow: hidden;">
         <KoTable
+          :key="tableKey"
           :loading="loading"
           :columns="columnsList"
           :data="list"
           empty-text="暂无数据"
           stripe
           @row-click="onJump"
+          @next-load="onRequestNextPage"
+          :no-more="noMore || loading"
         >
           <template #operate="{item}" v-if="isPerm('Stock_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
@@ -252,9 +255,13 @@ export default {
 
   // #ifdef MP
   height: calc(100vh - 60px);
+  // #endif
+  // #ifdef H5
+  height: calc(100vh - 60px - 56px);
+  // #endif
+
   display: flex;
   flex-direction: column;
-  // #endif
 
 
   &__class {
@@ -264,21 +271,18 @@ export default {
     justify-content: flex-end;
 
     /* #ifdef H5 */
-    width: 1366px;
+    width: 900px;
     margin: 0 auto;
 
     .ko-picker-class {
       flex: 1;
     }
-
     /* #endif */
   }
 
   &__wrap {
-    // #ifdef MP
     flex: 1;
     overflow: hidden;
-    // #endif
   }
 
   &__item {

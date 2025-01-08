@@ -189,6 +189,7 @@ export default {
         },
       ],
       // #endif
+      tableKey: +new Date()
     };
   },
   mounted() {
@@ -203,6 +204,7 @@ export default {
 
     getList(reset) {
       if (reset) {
+        this.tableKey = +new Date()
         this.queryList.pageNum = 0;
         this.list = [];
       }
@@ -232,6 +234,9 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           console.log(res);
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -391,14 +396,17 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px; flex: 1; overflow: hidden">
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
         empty-text="暂无数据"
         stripe
         @row-click="onJumpDetails($event, 'logistics')"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
       >
         <!--
         @row-click="onJumpDetails($event, 'receivable')"
@@ -474,6 +482,16 @@ export default {
   padding-bottom: 50px;
   // #endif
 
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px);
+  display: flex;
+  flex-direction: column;
+
+  .ko-history {
+    width: 500px;
+  }
+  // #endif
+
   &__row {
     margin-top: 16px;
   }
@@ -515,10 +533,6 @@ export default {
     // #ifdef H5
     width: 100%;
     // #endif
-  }
-
-  .ko-basic-button__card {
-    margin: 5px;
   }
 }
 </style>

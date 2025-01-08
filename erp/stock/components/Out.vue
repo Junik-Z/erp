@@ -150,6 +150,8 @@ export default {
 
       ],
       // #endif
+
+      tableKey: +new Date(),
     };
   },
   methods: {
@@ -164,6 +166,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
       }
       this.loading = true;
       const Func = this.isHistory ? getOutboundHistoryListApi : getOutboundListApi;
@@ -172,6 +175,9 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           console.log(res.data);
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -254,7 +260,7 @@ export default {
   <view class="ko-out">
     <HistoryBar
       v-model="isHistory"
-      :values="['待处理', '历史']"
+      :values="['待处理', '已完成']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -316,42 +322,43 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
-      <view style="padding: 10px;">
-        <KoTable
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-          @row-click="onRowClick"
-        >
-          <template #operate="{item}" v-if="isPerm('Stock_Write')">
-            <view style="display: flex; align-items: center; justify-content: center;">
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onJumpPrint(item, 'outbound')"
-              >
-                打印出库单(A4)
-              </button>
-              <button
-                v-if="['CREATED'].includes(item.status) && false"
-                class="ko-basic-button__card"
-                @click.stop="onCancel(item)"
-              >
-                取消出库
-              </button>
-              <button
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                class="ko-basic-button__card"
-                @click.stop="onConfirm(item)"
-              >
-                确认出库
-              </button>
-            </view>
-          </template>
-        </KoTable>
-      </view>
+    <view style="padding: 10px; flex: 1; overflow: hidden;">
+      <KoTable
+        :key="tableKey"
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="onRowClick"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
+      >
+        <template #operate="{item}" v-if="isPerm('Stock_Write')">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onJumpPrint(item, 'outbound')"
+            >
+              打印出库单(A4)
+            </button>
+            <button
+              v-if="['CREATED'].includes(item.status) && false"
+              class="ko-basic-button__card"
+              @click.stop="onCancel(item)"
+            >
+              取消出库
+            </button>
+            <button
+              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onConfirm(item)"
+            >
+              确认出库
+            </button>
+          </view>
+        </template>
+      </KoTable>
     </view>
     <!-- #endif -->
 
@@ -372,10 +379,10 @@ export default {
                   <label class="ko-basic-label">名称：</label>
                   <text>{{ child.name }}</text>
                 </view>
-               <!-- <view style="padding: 0 10px">
-                  <label class="ko-basic-label">库存：</label>
-                  <text class="ko-basic-money">{{ child.sequence }}</text>
-                </view>-->
+                <!-- <view style="padding: 0 10px">
+                   <label class="ko-basic-label">库存：</label>
+                   <text class="ko-basic-money">{{ child.sequence }}</text>
+                 </view>-->
                 <view style="padding: 0 10px">
                   <label class="ko-basic-label">数量：</label>
                   <text class="ko-basic-money">{{ child.productQuantity }}</text>
@@ -405,7 +412,9 @@ export default {
 <style scoped lang="scss">
 .ko-out {
   width: 100%;
+  // #ifdef MP
   padding-bottom: 80px;
+  // #endif
 
   :deep(.uni-list-item__container ) {
     display: block;
@@ -449,6 +458,10 @@ export default {
 
 /* #ifdef H5 */
 .ko-out {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px - 40px - 20px);
+
   .uni-group {
     display: flex;
     align-items: center;

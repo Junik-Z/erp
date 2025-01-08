@@ -88,6 +88,9 @@ export default {
           this.noMore = res.data.length < this.queryList.pageSize || _isEmpty(res.data);
           console.log(this.list);
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
         });

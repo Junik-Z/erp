@@ -140,6 +140,9 @@ export default {
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
 
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
         });
@@ -249,28 +252,29 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
-        <KoTable
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-        >
-          <template #operate="{item}" v-if="isPerm('Product_Write')">
-            <view style="display: flex; align-items: center; justify-content: center;">
-              <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
-              <button
-                class="ko-basic-button__card"
-                @click="onRemove(item)"
-                :loading="item.__remove_loading__"
-              >
-                删除
-              </button>
-            </view>
-          </template>
-        </KoTable>
-      </view>
+      <KoTable
+        style="padding: 10px 10px 40px;"
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
+      >
+        <template #operate="{item}" v-if="isPerm('Product_Write')">
+          <view style="display: flex; align-items: center; justify-content: center;">
+            <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
+            <button
+              class="ko-basic-button__card"
+              @click="onRemove(item)"
+              :loading="item.__remove_loading__"
+            >
+              删除
+            </button>
+          </view>
+        </template>
+      </KoTable>
       <!-- #endif -->
     </view>
 
@@ -298,16 +302,16 @@ export default {
 <style scoped lang="scss">
 .ko-field {
   margin-top: 10px;
+  // #ifdef MP
   padding-bottom: 80px;
+  // #endif
 
   &__row {
     padding: 10px;
-  }
 
-  &__info {
-    .ko-basic-button__card {
-      margin: 0 5px;
-    }
+    // #ifdef H5
+    height: calc(100vh - 56px - 44px - 20px);
+    // #endif
   }
 
   &__popup {

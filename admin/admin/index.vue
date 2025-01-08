@@ -119,6 +119,8 @@ export default {
         },
       ],
       // #endif
+
+      tableKey: +new Date(),
     };
   },
   onShow() {
@@ -139,12 +141,16 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
       }
       this.loading = true;
       getBusinessesListApi(this.queryList)
         .then((res) => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -207,7 +213,7 @@ export default {
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px;" v-for="item of list" :key="item.id">
-          <BasicCard @click="onJump(item)">
+          <BasicCard>
             <view class="ko-admin__item">
               <view class="ko-admin__item--info">
                 <UvAvatar
@@ -218,7 +224,7 @@ export default {
                   random-bg-color
                 />
 
-                <view style="padding-left: 16px; flex: 1;">
+                <view style="padding-left: 16px; flex: 1;" @click="onJump(item)">
                   <UniRow :gutter="10">
                     <UniCol :span="24">
                       <view class="ko-admin__item--info--name">
@@ -236,7 +242,9 @@ export default {
                 </view>
               </view>
 
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+              <view
+                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+              >
                 <button
                   class="ko-basic-button__card"
                   @click.stop="generateCode(item)"
@@ -254,14 +262,17 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px; height: 100%; overflow: hidden;">
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
         empty-text="暂无数据"
         stripe
         @row-click="onJump"
+        @next-load="RequestNextPage"
+        :no-more="noMore || loading"
       >
         <template #operate="{item}">
           <view style="display: flex; align-items: center; justify-content: center;">
@@ -358,6 +369,10 @@ export default {
 .ko-admin {
   // #ifdef MP
   padding-bottom: 80px;
+  // #endif
+
+  // #ifdef H5
+  height: calc(100vh - 56px);
   // #endif
 
   &__item {

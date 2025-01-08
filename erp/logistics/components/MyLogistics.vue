@@ -127,6 +127,7 @@ export default {
         },
       ],
       // #endif
+      tableKey: +new Date()
     };
   },
   created() {
@@ -145,6 +146,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date()
       }
 
       this.loading = true;
@@ -153,6 +155,9 @@ export default {
           console.log(res.data);
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -246,12 +251,15 @@ export default {
 
       <!-- #ifdef H5 -->
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
         empty-text="暂无数据"
         stripe
         @row-click="onJumpDetails($event, 'logistics')"
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
       >
         <!--
         @row-click="onJumpDetails($event, 'receivable')"
@@ -276,9 +284,17 @@ export default {
 
 <style scoped lang="scss">
 .ko-my-order-list {
-  //display: flex;
-  //flex-direction: column;
-  //height: calc(100vh - 64px);
+  // #ifdef H5
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px - 50px);
+
+  &__wrap {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  // #endif
 
   &__wrap {
     //flex: 1;

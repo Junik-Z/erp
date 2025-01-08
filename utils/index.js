@@ -1,5 +1,4 @@
 import dayjs from "./dayjs";
-import { is } from "@/components/da-tree-vue2/utils";
 
 export const weekHan = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -555,7 +554,11 @@ export function _is(val, type) {
   return toString.call(val) === `[object ${type}]`
 }
 
-
 export function _isBoolean(val) {
-  return is(val, 'Boolean')
+  return _is(val, 'Boolean')
+}
+
+// 开发模式
+export function _isDev() {
+  return process.env?.NODE_ENV === "development";
 }

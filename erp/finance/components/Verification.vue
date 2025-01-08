@@ -43,8 +43,10 @@ export default {
 
       noMore: false,
       queryList: {
-        pageSize: 20, pageNum: 0,
+        pageSize: 20,
+        pageNum: 0,
       },
+      tableKey: +new Date()
     };
   },
   methods: {
@@ -52,6 +54,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
+        this.tableKey = +new Date()
       }
       this.loading = true;
       const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.current];
@@ -67,6 +70,9 @@ export default {
 
           this.list = this.onMergeArrays(this.list, list, "id");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;

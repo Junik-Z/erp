@@ -192,6 +192,9 @@ export default {
             this.visible = true;
           }
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.sLoading = false;
         });

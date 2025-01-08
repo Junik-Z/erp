@@ -40,7 +40,7 @@ export default {
     gutter: Number,
     justify: {
       type: String,
-      default: "start",
+      default: "center",
     },
     align: {
       type: String,
@@ -148,7 +148,6 @@ $modifier-separator: "--";
 
   // 在QQ、字节、百度小程序平台，编译后使用shadow dom，不可使用flex布局，使用float
   @at-root {
-
     /* #ifndef MP-QQ || MP-TOUTIAO || MP-BAIDU */
     &#{$modifier-separator}flex {
       @include utils-flex;
@@ -186,7 +185,6 @@ $modifier-separator: "--";
         align-items: flex-end;
       }
     }
-
     /* #endif */
   }
 

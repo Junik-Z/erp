@@ -332,6 +332,18 @@ export default {
       const count = _sum((this.node?.details || []).map(item => item.total));
       const numIndex = this.filterColumnList.findIndex(item => _isEqual(item.label, "数量"));
 
+      if (count === this.node.totalAmount) {
+        return [
+          {label: "大写合计", colspan: 1},
+          {
+            label: this.toBigMoney(this.toYuan(count)),
+            colspan: numIndex - 2,
+          },
+          {label: "合计", colspan: 1},
+          {label: this.toYuan(count), colspan: 1},
+        ];
+      }
+
       return [
         {label: "大写实收", colspan: 1},
         {

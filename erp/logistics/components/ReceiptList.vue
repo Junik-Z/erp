@@ -43,7 +43,8 @@ export default {
 
       noMore: false,
       queryList: {
-        pageSize: 20, pageNum: 0,
+        pageSize: 20,
+        pageNum: 0,
       },
 
       actionItem: {},
@@ -120,6 +121,8 @@ export default {
         },
       ],
       // #endif
+
+      tableKey: +new Date(),
     };
   },
   methods: {
@@ -137,6 +140,9 @@ export default {
 
           this.list = this.onMergeArrays(this.list, list, "id");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -251,6 +257,7 @@ export default {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
+      this.tableKey = +new Date();
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
@@ -315,44 +322,42 @@ export default {
 
 <template>
   <view class="ko-client">
-    <UniList>
+    <view class="ko-client__wrap">
       <!-- #ifdef MP -->
-      <view class="ko-client__wrap">
-        <IndexList
-          :data="list"
-          :loading="loading"
-          @click="onJumpInfo"
-          button-perm="Delivery_Write"
-          is-receipt-list
+      <IndexList
+        :data="list"
+        :loading="loading"
+        @click="onJumpInfo"
+        button-perm="Delivery_Write"
+        is-receipt-list
 
-          @lower="onLower"
-          :no-more="noMore"
-          @search="onSearchToNameIndex"
-        >
-          <template #default="{node}">
-            <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
-              <!--<button
-                    @click.stop="() => {}"
-                    open-type="share"
-                    :data-params="getBindingParams(actionItem)"
-                    class="ko-basic-button__card"
-                  >
-                    邀请绑定
-                  </button>
-                  -->
-              <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定物流商</button>
-              <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑物流商</button>
+        @lower="onLower"
+        :no-more="noMore"
+        @search="onSearchToNameIndex"
+      >
+        <template #default="{node}">
+          <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
+            <!--<button
+                  @click.stop="() => {}"
+                  open-type="share"
+                  :data-params="getBindingParams(actionItem)"
+                  class="ko-basic-button__card"
+                >
+                  邀请绑定
+                </button>
+                -->
+            <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定物流商</button>
+            <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑物流商</button>
 
-              <button
-                class="ko-basic-button__user"
-                @click.stop="onActionClick(node)"
-              >
-                更多
-              </button>
-            </view>
-          </template>
-        </IndexList>
-      </view>
+            <button
+              class="ko-basic-button__user"
+              @click.stop="onActionClick(node)"
+            >
+              更多
+            </button>
+          </view>
+        </template>
+      </IndexList>
       <!--
        <button
                     @click.stop="() => {}"
@@ -366,14 +371,17 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; height: 100%; overflow: hidden">
         <KoTable
+          :key="tableKey"
           :loading="loading"
           :columns="getColumns"
           :data="list"
           empty-text="暂无数据"
           stripe
           @row-click="onJumpInfo($event)"
+          @next-load="onLower"
+          :no-more="noMore || loading"
         >
           <template #operate="{item}" v-if="isPerm('Delivery_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
@@ -394,7 +402,7 @@ export default {
         </KoTable>
       </view>
       <!-- #endif -->
-    </UniList>
+    </view>
 
     <PickerUser
       v-if="isPerm('Delivery_Write')"
@@ -431,7 +439,12 @@ export default {
   width: 100%;
 
   &__wrap {
+    position: relative;
     height: calc(100vh - 66px);
+
+    // #ifdef H5
+    height: calc(100vh - 56px - 60px);
+    // #endif
   }
 
   :deep(.uni-list-item__container ) {

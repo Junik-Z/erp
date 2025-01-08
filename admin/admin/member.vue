@@ -102,6 +102,8 @@ export default {
         },
       ],
       // #endif
+
+      tableKey: +new Date(),
     };
   },
   onLoad(option) {
@@ -119,6 +121,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
       }
 
       this.loading = false;
@@ -128,6 +131,9 @@ export default {
         .then((res) => {
           this.list = this.onMergeArrays(this.list, res.data, "userId");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -226,13 +232,16 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view style="padding: 10px; flex: 1; overflow: hidden;">
       <KoTable
+        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
         empty-text="暂无数据"
         stripe
+        @next-load="RequestNextPage"
+        :no-more="noMore || loading"
       >
         <template #operate="{item}">
           <view style="display: flex; align-items: center; justify-content: center;">
@@ -336,6 +345,10 @@ export default {
     width: 1024px;
     margin: 0 auto;
   }
+
+  height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
 
   // #endif
 

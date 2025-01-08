@@ -34,6 +34,7 @@ export default {
       },
       TABS_LIST: [],
       TAB: 0,
+
     };
   },
   onShow() {
@@ -46,7 +47,7 @@ export default {
       this._UP_INGO();
 
       uni.$on("$__get_info_success__", () => {
-        this?.getList?.();
+        // this?.getList?.();
         this._UP_INGO();
       });
 
@@ -103,6 +104,7 @@ export default {
 
     // 跳转到详情页面
     onJumpDetails(node, page_type) {
+      uni.setStorageSync("TO_DETAILS", true);
       uni.navigateTo({
         url: `/shop/details/details?${QS.stringify({page_type, ...(_pick(node, ["id"]))})}`,
       });
@@ -205,7 +207,6 @@ export default {
       return L;
     },
 
-    // 查看图片
     lookImage(url) {
       if (url) {
         if (url) {
@@ -215,8 +216,6 @@ export default {
         }
       }
     },
-
-
   },
   components: {
     // #ifdef H5

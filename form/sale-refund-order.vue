@@ -12,6 +12,7 @@ import {
   getBindInfoApi,
   getSaleDetailApi,
   getSaleReturnDetailApi,
+  reOrderSaleReturnApi,
   updateSaleReturnApi,
 } from "@/api/erp/sale";
 import UniSegmentedControl
@@ -62,6 +63,8 @@ export default {
 
       current: 0,
       tabs: ["客户", "其它客户"],
+
+      isAgain: false,
     };
   },
   created() {
@@ -93,6 +96,7 @@ export default {
 
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
+          this.isAgain = ["FINISHED"].includes(params.status) && !this.orderId;
           this.form = params;
           console.log(res);
         });
@@ -111,7 +115,7 @@ export default {
 
           this.loading = true;
 
-          const Func = this.isEdit ? updateSaleReturnApi : addedSaleReturnApi;
+          const Func = this.isAgain ? reOrderSaleReturnApi : (this.isEdit ? updateSaleReturnApi : addedSaleReturnApi);
 
           Func(params)
             .then(() => {
@@ -266,7 +270,8 @@ export default {
                 :total.sync="form.totalAmount"
                 :is-not-added="!!orderId"
                 type="sale"
-                :is-client="isPerm('Sales_Write')"
+                :is-client="isClient"
+                is-actual
               />
             </view>
           </UniFormsItem>

@@ -1,6 +1,10 @@
 <script>
+// #ifdef H5
+import { Tree } from "@/uni_modules/element-ui/element.min";
+// #endif
 import {
   deleteProductApi,
+  getProductClassApi,
   getProductFieldApi,
   getProductListApi,
   upDownPurchaseApi,
@@ -24,6 +28,9 @@ export default {
     IndexList,
     UvActionSheet,
     PickerClass,
+    // #ifdef H5
+    Tree,
+    // #endif
   },
   data() {
     return {
@@ -50,7 +57,6 @@ export default {
         },
       ],
 
-
       list: [],
       loading: true,
       noMore: false,
@@ -60,8 +66,8 @@ export default {
 
       queryList: {
         classId: "",
-        pageSize: 10,
         pageNum: 0,
+        pageSize: 10,
       },
 
       actionItem: {},
@@ -73,10 +79,16 @@ export default {
       isChecked: false,
 
       checked: [],
+
+      tableKey: +new Date(),
     };
   },
   created() {
     this.getSelectList();
+
+    // #ifdef H5
+    this.getClassList();
+    // #endif
   },
   methods: {
     // 获取商品列表
@@ -85,6 +97,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
+        this.tableKey = +new Date();
       }
 
       this.loading = true;
@@ -92,6 +105,9 @@ export default {
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data.map(v => ({...v, value: v.id})));
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -215,6 +231,32 @@ export default {
       this.checked = [];
       this.isChecked = false;
     },
+
+    // #ifdef H5
+    getClassList() {
+      // 盘点不需要传上下架数据
+      getProductClassApi({pageNum: 0, pageSize: 1000})
+        .then(res => {
+          this.classList = res.data;
+          uni.$__product_class_list__ = res.data;
+        });
+    },
+
+
+    onCheckTree(node) {
+      if (_isEqual(this.queryList.classId, node.id)) {
+        this.queryList.classId = "";
+        this.$refs.TreeRef.setCheckedKeys([]);
+      } else {
+        this.queryList.classId = node.id;
+        this.$refs.TreeRef.setCheckedKeys([node.id]);
+      }
+
+      this.$nextTick(() => {
+        this.getList(true);
+      });
+    },
+    // #endif
   },
   computed: {
     getActionsList() {
@@ -260,7 +302,6 @@ export default {
           label: "分类",
           prop: "className",
         },
-
         {
           label: "预警库存",
           prop: "stockWarning",
@@ -272,6 +313,22 @@ export default {
           label: item.fieldName,
           prop: `extend.${item.fieldCode}`,
         }))),
+        {
+          label: "销售",
+          prop: "salePrice",
+          render: (h, {row}) => {
+            return h("label", {class: "ko-basic-money"}, this.toYuan(row.salePrice));
+          },
+        },
+        ...(this.isHideStockPrice ? [] : [
+          {
+            label: "采购",
+            prop: "purchasePrice",
+            render: (h, {row}) => {
+              return h("label", {class: "ko-basic-money"}, this.toYuan(row.purchasePrice));
+            },
+          },
+        ]),
         {
           label: "上架销售",
           prop: "saleOff",
@@ -317,7 +374,10 @@ export default {
   <view class="ko-product">
     <view class="ko-product__wrap">
       <view class="ko-product__class">
+        <!-- #ifdef MP -->
         <PickerClass v-model="queryList.classId" @change="getList(true)" />
+        <!-- #endif -->
+
         <button
           class="ko-basic-button__card"
           @click="isHideStockPrice = !isHideStockPrice"
@@ -347,44 +407,63 @@ export default {
         <!-- #endif -->
 
         <!-- #ifdef H5 -->
-        <view style="padding: 10px;">
-          <KoTable
-            :loading="loading"
-            :columns="columnsList"
-            :data="list"
-            empty-text="暂无数据"
-            stripe
-          >
-            <template #operate="{item}" v-if="isPerm('Product_Write')">
-              <view style="display: flex; align-items: center; justify-content: center;">
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="upDownSale(item)"
-                >
-                  {{ item.saleOff ? "上架销售" : "下架销售" }}
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="upDownPurchase(item)"
-                >
-                  {{ item.purchaseOff ? "上架采购" : "下架采购" }}
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onFabClick(item)"
-                >
-                  编辑
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onRemove(item)"
-                >
-                  删除
-                </button>
-              </view>
-            </template>
-          </KoTable>
-        </view>
+        <div class="ko-product__list--center" style="height: 100%;">
+          <div style="height: 100%; overflow-y: auto;">
+            <Tree
+              node-key="id"
+              ref="TreeRef"
+              :data="classList"
+              :show-checkbox="true"
+              :props="{label: 'name'}"
+              check-strictly
+              :default-checked-keys="[queryList.classId]"
+              @check="onCheckTree"
+              style="min-height: 100%;"
+            />
+          </div>
+          <div style="height: 100%; overflow: hidden; flex: 1;">
+            <KoTable
+              :key="tableKey"
+              style="padding: 10px 10px 40px;"
+              :loading="loading"
+              :columns="columnsList"
+              :data="list"
+              empty-text="暂无数据"
+              stripe
+              @next-load="onLower"
+              :no-more="noMore || loading"
+            >
+              <template #operate="{item}" v-if="isPerm('Product_Write')">
+                <view style="display: flex; align-items: center; justify-content: center;">
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="upDownSale(item)"
+                  >
+                    {{ item.saleOff ? "上架销售" : "下架销售" }}
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="upDownPurchase(item)"
+                  >
+                    {{ item.purchaseOff ? "上架采购" : "下架采购" }}
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onFabClick(item)"
+                  >
+                    编辑
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onRemove(item)"
+                  >
+                    删除
+                  </button>
+                </view>
+              </template>
+            </KoTable>
+          </div>
+        </div>
         <!-- #endif -->
       </view>
 
@@ -452,6 +531,9 @@ export default {
 
   &__wrap {
     height: calc(100vh - 56px);
+    // #ifdef H5
+    height: calc(100vh - 56px - 44px);
+    // #endif
     display: flex;
     flex-direction: column;
   }
@@ -459,6 +541,26 @@ export default {
   &__list {
     flex: 1;
     position: relative;
+    // #ifdef H5
+    overflow: hidden;
+
+    &--center {
+      display: flex;
+      padding: 10px;
+
+      /deep/ .el-tree {
+        width: 260px;
+        margin-right: 20px;
+        border: 1px solid #EBEEF5;
+        padding: 10px;
+
+        .el-checkbox {
+          margin-right: 6px;
+        }
+      }
+    }
+
+    // #endif
   }
 
   &__item {

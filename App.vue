@@ -1,6 +1,6 @@
 <script>
 import { getConfigApi, getMyInfoApi, getScanQrCodeApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
-import { _deepCopy, _get, _isEnv, _isEqual, _omit } from "@/utils";
+import { _deepCopy, _get, _isDev, _isEnv, _isEqual, _omit } from "@/utils";
 import dayjs from "@/utils/dayjs";
 import { PageEnums } from "@/utils/config";
 
@@ -202,7 +202,7 @@ export default {
       // 表示登陆成功
       ESVm.addEventListener("AccessToken", (res) => {
         const scene = res.data;
-        uni.setStorageSync("AccessToken", scene);
+        _isDev() && uni.setStorageSync("AccessToken", scene);
       }, false);
 
       // 获取到的二维码图片

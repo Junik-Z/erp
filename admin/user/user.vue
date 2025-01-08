@@ -90,6 +90,7 @@ export default {
         :src="getImageUrl(GET_USER_INFO.avatar)"
         :text="GET_USER_INFO.nickName || GET_SHOP_NAME"
         random-bg-color
+        not-view
       />
       <view class="ko-user__info--name">
         {{ GET_USER_INFO.nickName || "-" }}
@@ -124,6 +125,8 @@ export default {
               >
                 <UvAvatar :size="120" :src="getImageUrl(form.avatar)" />
               </button>
+
+              <view style="width: 100%; text-align: center; font-size: 12px; color: #ccc;">点击可更换头像</view>
               <!-- #endif -->
 
               <!-- #ifdef H5 -->
@@ -132,8 +135,6 @@ export default {
                 :image-styles="{border: {radius: '6px'}, width: 180, height: 180}"
               />
               <!-- #endif -->
-
-              <view style="width: 100%; text-align: center; font-size: 12px; color: #ccc;">点击可更换头像</view>
             </view>
           </UniFormsItem>
           <UniFormsItem label="昵称" name="nickName">
@@ -195,8 +196,8 @@ export default {
   }
 
   &__popup {
-    height: 70vh;
     /* #ifdef MP */
+    height: 70vh;
     width: 98vw;
     /* #endif */
     /* #ifdef H5 */

@@ -140,12 +140,14 @@ export default {
         },
       ],
       // #endif
+      tableKey: +new Date(),
     };
   },
   methods: {
     getList(reset = false) {
 
       if (reset) {
+        this.tableKey = +new Date();
         this.list = [];
         this.queryList.pageNum = 0;
       }
@@ -166,6 +168,9 @@ export default {
 
           console.log("客户列表", this.list);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -391,14 +396,17 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; flex: 1; overflow: hidden">
         <KoTable
+          :key="tableKey"
           :loading="loading"
           :columns="columns"
           :data="list"
           empty-text="暂无数据"
           stripe
           @row-click="onJumpInfo"
+          @next-load="onLower"
+          :no-more="noMore || loading"
         >
           <template #operate="{item}" v-if="isPerm('Purchase_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
@@ -459,6 +467,10 @@ export default {
 .ko-client {
   width: 100%;
   height: calc(100vh - 56px);
+
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px);
+  // #endif
 
   &__wrap {
     flex: 1;

@@ -119,7 +119,7 @@ export default {
           >
             <view class="ko-basic-label__images-wrap">
               <label class="ko-basic-label">{{ getCustomerName(item) }}：</label>
-              <view style="margin-right: 10px;">
+              <view style="margin-right: 10px;" @click.stop>
                 <UvAvatar
                   :size="38"
                   :text="GET_FUNC(item, 'customer.name') || ''"
@@ -134,7 +134,7 @@ export default {
           <UniCol :span="24">
             <view class="ko-basic-label__images-wrap">
               <label class="ko-basic-label">{{ `${isSalesPurchase ? "提单" : "下单"}` }}用户：</label>
-              <view style="margin-right: 10px;">
+              <view style="margin-right: 10px;"  @click.stop>
                 <UvAvatar
                   :size="38"
                   random-bg-color
@@ -153,6 +153,7 @@ export default {
                 <BasicCard v-for="child of item.details" :key="child.id">
                   <view class="ko-order-card__details--cell">
                     <UvAvatar
+
                       v-if="GET_FUNC(child, 'images')"
                       :size="64"
                       :src="getImageUrl(GET_FUNC(child, 'images'))"

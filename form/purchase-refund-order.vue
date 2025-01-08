@@ -11,6 +11,7 @@ import {
   getBindInfoApi,
   getPurchaseDetailApi,
   getPurchaseReturnDetailApi,
+  reOrderPurchaseReturnApi,
   updatePurchaseReturnApi,
 } from "@/api/erp/purchase";
 import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
@@ -60,6 +61,7 @@ export default {
       bindList: [],
 
       isEdit: false,
+      isAgain: false,
     };
   },
   mixins: [mixins],
@@ -93,7 +95,7 @@ export default {
             params.purchaseOrderId = this.orderId;
           }
 
-          const Func = this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi;
+          const Func = this.isAgain ? reOrderPurchaseReturnApi : (this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi);
 
           Func(params)
             .then(() => {
@@ -124,6 +126,9 @@ export default {
           console.log(params);
           params.totalAmount = transferYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
+
+          this.isAgain = ["FINISHED"].includes(params.status) && !this.orderId;
+
           this.form = params;
         });
     },
@@ -252,7 +257,6 @@ export default {
         </view>
       </UniSection>
 
-
       <UniSection title="退货产品明细" type="line">
         <view style="padding: 10px;">
           <UniFormsItem
@@ -265,7 +269,8 @@ export default {
                 :total.sync="form.totalAmount"
                 :is-not-added="!!orderId"
                 type="purchase"
-                :is-client="isPerm('Purchase_Write')"
+                :is-client="isClient"
+                is-actual
               />
             </view>
           </UniFormsItem>
@@ -315,6 +320,7 @@ export default {
     .ko-basic-button {
       width: 200px;
     }
+
     // #endif
   }
 }

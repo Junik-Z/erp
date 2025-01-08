@@ -29,9 +29,9 @@ export default {
   <scroll-view
     scroll-y
     class="ko-list"
-    lower-threshold="100"
+    :lower-threshold="100"
     @scrolltolower="onToLower"
-    refresher-threshold="60"
+    :refresher-threshold="60"
   >
     <view class="ko-list__wrap" :class="{'safe': safeAreaInsetBottom}">
       <slot />

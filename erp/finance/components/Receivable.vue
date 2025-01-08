@@ -15,13 +15,15 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { _deepCopy, _get, _isEmpty, _pick } from "@/utils";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import mixins from "@/mixins/mixins";
-import { CONFIG, PageEnums } from "@/utils/config";
+import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import Pay from "../../components/Pay/Pay.vue";
 
 export default {
   name: "Receivable",
   components: {
+    Pay,
     UniEasyinput,
     KoList,
     KoTable,
@@ -186,6 +188,7 @@ export default {
         },
       ],
       // #endif
+      tableKey: +new Date()
     };
   },
   mounted() {
@@ -203,6 +206,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date()
       }
 
       this.loading = true;
@@ -213,6 +217,9 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           console.log(res);
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
@@ -261,14 +268,19 @@ export default {
     },
     // 添加票据
     onAddedTicket(item) {
-      const q = this.getQueryString({
-        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
+      this.$refs.TPRef.open({
+        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId", "totalAmount"]),
         isReceivable: true,
       });
 
-      uni.navigateTo({
-        url: `${PageEnums.ticket}${q}`,
-      });
+      /*
+       const q = this.getQueryString({
+          ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
+          isReceivable: true,
+        });
+       uni.navigateTo({
+          url: `${PageEnums.ticket}${q}`,
+        }); */
     },
 
     // 跳转到对账客户页面
@@ -284,13 +296,11 @@ export default {
       }
     },
 
-
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
       flag && this.$refs.SearchRef.onShowSearch();
       this.getList(true);
     },
-
   },
   computed: {
     getCountValue() {
@@ -327,7 +337,7 @@ export default {
 
     <HistoryBar
       v-model="isHistory"
-      :values="['待清帐', '历史']"
+      :values="['待清帐', '已完成']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -397,14 +407,17 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; height: 100%; overflow: hidden;">
         <KoTable
+          :key="tableKey"
           :loading="loading"
           :columns="columns"
           :data="list"
           empty-text="暂无数据"
           stripe
           @row-click="onJumpDetails($event, 'receivable')"
+          @next-load="onRequestNextPage"
+          :no-more="noMore || loading"
         >
           <template #operate="{item}">
             <view
@@ -437,14 +450,24 @@ export default {
       </view>
       <!-- #endif -->
     </view>
+
+    <Pay ref="TPRef" @success="getList(true)" />
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-receivable {
-  //padding: 10px;
   margin-top: 10px;
+  // #ifdef MP
   padding-bottom: 30px;
+  // #endif
+
+  // #ifdef H5
+  height: calc(100vh - 56px - 60px - 20px);
+  display: flex;
+  flex-direction: column;
+  // #endif
+
 
   &__item {
     display: flex;
@@ -458,6 +481,11 @@ export default {
 
   &__row {
     margin-top: 16px;
+
+    // #ifdef H5
+    flex: 1;
+    overflow: hidden;
+    // #endif
   }
 
   &__info {
