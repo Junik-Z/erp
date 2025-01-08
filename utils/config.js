@@ -18,6 +18,8 @@ let type = "test";
 
 // type = "env";
 
+// type = "prod";
+
 // #ifdef MP
 // type = "env";
 // #endif
@@ -51,7 +53,7 @@ export const CONFIG = {
   TITLE: "托手掌柜",
 
   // 分享出去时的type： 0 - 微信小程序正式版 ；1 - 微信小程序开发版；2 - 微信小程序体验版
-  SHARE_TYPE: {test: 1, env: 2, prod: 3}[type],
+  SHARE_TYPE: {test: 1, env: 2, prod: 0}[type],
 
   // WEB rem 的转换率
   H5_REM_SIZE: 136.6,
