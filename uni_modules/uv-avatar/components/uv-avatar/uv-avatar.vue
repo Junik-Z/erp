@@ -35,7 +35,6 @@
 					width: $uv.addUnit(size),
 					height: $uv.addUnit(size)
 				}]"
-        @click.stop="onImgPreview(src)"
       ></image>
       <text
         v-if="!(src) && getText"
@@ -143,7 +142,8 @@ export default {
     },
     clickHandler() {
       console.log("点击了");
-      this.$emit("click", this.name, ...arguments);
+      this.$emit("click", this.name);
+      this.onImgPreview(this.src);
     },
 
     onImgPreview(url) {
@@ -151,10 +151,6 @@ export default {
         uni.previewImage({
           urls: [url],
         });
-      }
-
-      if (this.notView) {
-        this.clickHandler(...arguments);
       }
     },
   },

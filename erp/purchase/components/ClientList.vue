@@ -169,6 +169,9 @@ export default {
           console.log("客户列表", this.list);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
         });

@@ -180,6 +180,9 @@ export default {
           this.list = this.onMergeArrays(this.list, list, "productId");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
         });

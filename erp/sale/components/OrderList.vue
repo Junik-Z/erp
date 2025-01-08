@@ -202,6 +202,9 @@ export default {
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           console.log(res);
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
         });

@@ -102,7 +102,6 @@ export default {
   &__tabs {
     width: 500px;
   }
-
   // #endif
 }
 </style>

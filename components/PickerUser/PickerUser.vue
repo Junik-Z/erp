@@ -127,6 +127,9 @@ export default {
           this.list = this.onMergeArrays(this.list, list, vKey);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
           this.checkNode = this.getUserInfo(this.value);

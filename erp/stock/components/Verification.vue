@@ -44,6 +44,9 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data, "id");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
         });

@@ -68,6 +68,9 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data.map(v => ({...v, value: v.id})));
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
+        .catch(() => {
+          this.noMore = true;
+        })
         .finally(() => {
           this.loading = false;
         });

@@ -150,7 +150,7 @@ export default {
       ],
       // #endif
 
-      tableKey: +new Date()
+      tableKey: +new Date(),
     };
   },
   methods: {
@@ -165,7 +165,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date()
+        this.tableKey = +new Date();
       }
 
       this.loading = true;
@@ -176,6 +176,9 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           console.log(res);
+        })
+        .catch(() => {
+          this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
