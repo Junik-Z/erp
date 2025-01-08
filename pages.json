@@ -128,18 +128,6 @@
           }
         },
         {
-          "path": "product/product",
-          "style": {
-            "navigationBarTitleText": "产品管理"
-          }
-        },
-        {
-          "path": "product/added",
-          "style": {
-            "navigationBarTitleText": "产品"
-          }
-        },
-        {
           "path": "qrcode/qrcode",
           "style": {
             "navigationBarTitleText": "登陆确认"
@@ -260,6 +248,23 @@
           "path": "work",
           "style": {
             "navigationBarTitleText": "生产工单"
+          }
+        }
+      ]
+    },
+    {
+      "root": "product",
+      "pages": [
+        {
+          "path": "product",
+          "style": {
+            "navigationBarTitleText": "产品"
+          }
+        },
+        {
+          "path": "added",
+          "style": {
+            "navigationBarTitleText": "产品"
           }
         }
       ]

@@ -7,7 +7,6 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
@@ -28,7 +27,6 @@ export default {
     BasicPopup,
     UniFormsItem,
     UniEasyinput,
-    UniFab,
     UniListItem,
     BasicCard,
     UniCol,
@@ -223,13 +221,6 @@ export default {
     <view class="ko-classify__added-btn">
       <button class="ko-basic-button" @click="onAdded()">添加分类</button>
     </view>
-
-    <UniFab
-      horizontal="right"
-      direction="vertical"
-      @fab-click="onAdded()"
-      v-if="false"
-    />
 
     <BasicPopup :visible.sync="visible">
       <view class="ko-classify__popup">

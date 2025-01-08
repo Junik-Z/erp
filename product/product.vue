@@ -3,7 +3,7 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import Classify from "./components/Classify.vue";
 import ProductList from "./components/ProductList.vue";
-import FieldList from "@/erp/product/components/Field.vue";
+import FieldList from "@/product/components/Field.vue";
 import { _deepCopy } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { shareProductApi } from "@/api/erp/product";

@@ -136,7 +136,9 @@ export const PageEnums = {
   logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
 
   // 添加产品
-  addedProduct: "/erp/product/added",
+  addedProduct: "/product/added",
+  // 添加产品
+  product: "/product/product",
 
   // 分享出去进来
   shareAddedProduct: "/shop/binding/binding",
@@ -219,7 +221,7 @@ export const MENU_LIST = [
   {
     label: "产品管理",
     icon: "icon-chanpinguanli",
-    value: "/erp/product/product",
+    value: PageEnums.product,
     modelKey: "product",
     role: ["Admin", "Business", "Product_Read", "Product_Write"],
     isUpRole: true,
