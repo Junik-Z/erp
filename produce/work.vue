@@ -387,8 +387,8 @@ export default {
       if (columnIndex === 2) {
         if (rowIndex % 2 === 0) {
           return {
-            // rowspan: 1,
-            // colspan: 10
+            rowspan: 2,
+            colspan: 3
           };
         }
       }
@@ -521,7 +521,7 @@ export default {
       </block>
     </UniForms>
 
-    <view style="padding: 10px;" v-if="false">
+    <view style="padding: 10px;" v-if="true">
       <GridTable
         :columns="columns"
         :data="list"
@@ -529,7 +529,7 @@ export default {
       />
     </view>
 
-    <view style="width: 100vw; height: 40vh; position: relative; z-index: 1" v-if="false">
+    <view style="width: 100vw; height: 40vh; position: relative; z-index: 1" v-if="true">
       <UniEcCanvas
         ref="canvas"
         :ec="ec"
