@@ -45,7 +45,6 @@
 
 <script>
 import { _get } from "@/utils";
-import { isString } from "@/components/da-tree-vue2/utils";
 
 export default {
   name: "UniIndexedList",
@@ -82,7 +81,6 @@ export default {
   computed: {
     getLabel() {
       return (node) => {
-        if (isString(node)) return node;
         return _get(node, `${this.showLabelKey}`);
       };
     },

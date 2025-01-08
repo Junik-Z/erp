@@ -4,7 +4,6 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import node from "@/uni_modules/uview-ui/components/u-parse/node/node.vue";
 
 export default {
   name: "OrderCard",
@@ -47,9 +46,6 @@ export default {
   },
 
   computed: {
-    node() {
-      return node;
-    },
     getCustomerName() {
       return (item) => {
 

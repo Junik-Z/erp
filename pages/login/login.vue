@@ -1,15 +1,15 @@
 <script>
 // #ifdef H5
 import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
-import UniLoadMore from "@/uni_modules/uni-load-more/components/uni-load-more/uni-load-more.vue";
 // #endif
 import { CONFIG } from "@/utils/config";
+import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
 export default {
   name: "KoLogin",
   components: {
+    UvLoadingIcon,
     // #ifdef H5
-    UniLoadMore,
     UniCard,
     // #endif
   },
@@ -89,7 +89,7 @@ export default {
           <image :src="qrimage" mode="widthFix" />
           <!-- #ifdef H5 -->
           <view class="ko-login__qrcode--loading" v-if="loading">
-            <UniLoadMore status="loading" :show-text="false" :icon-size="100" />
+            <UvLoadingIcon :size="20" />
           </view>
           <!-- #endif -->
         </view>

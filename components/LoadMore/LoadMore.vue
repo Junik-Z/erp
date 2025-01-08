@@ -1,10 +1,7 @@
 <script>
-import DaTreeVue2 from "@/components/da-tree-vue2/index.vue";
-import UniLoadMore from "@/uni_modules/uni-load-more/components/uni-load-more/uni-load-more.vue";
 
 export default {
   name: "LoadMore",
-  components: {UniLoadMore, DaTreeVue2},
   props: {
     loading: Boolean,
     more: Boolean,
@@ -25,10 +22,7 @@ export default {
 </script>
 
 <template>
-  <UniLoadMore
-    :status="getStatus"
-    :content-text="contentText"
-  />
+  <view style="font-size: 12px;color: #999;">没有更多数据了</view>
 </template>
 
 <style scoped lang="scss">

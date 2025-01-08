@@ -1,14 +1,13 @@
 <script>
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { getPrintListApi } from "@/api/admin";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import { _isEmpty } from "@/utils";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
 export default {
   name: "PrintList",
-  components: {UvLoadingIcon, BasicCard, LoadMore, BasicPopup},
+  components: {UvLoadingIcon, BasicCard, BasicPopup},
   data() {
     return {
       list: {/* ss: ["xx", "xsss"] */},

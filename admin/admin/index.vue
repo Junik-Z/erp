@@ -3,8 +3,6 @@ import { addedBusinessesApi, getBusinessesListApi, getBusinessesQRCodeApi } from
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import UniFab from "@/uni_modules/uni-fab/components/uni-fab/uni-fab.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
@@ -32,8 +30,6 @@ export default {
     BasicPopup,
     UniFormsItem,
     UniEasyinput,
-    UniFab,
-    LoadMore,
     BasicCard,
     UniListItem,
     UniList,

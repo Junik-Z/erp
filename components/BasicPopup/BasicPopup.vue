@@ -1,9 +1,9 @@
 <script>
-import UniPopup from "@/uni_modules/uni-popup/components/uni-popup/uni-popup.vue";
+import UvPopup from "@/uni_modules/uv-popup/components/uv-popup/uv-popup.vue";
 
 export default {
   name: "BasicPopup",
-  components: {UniPopup},
+  components: {UvPopup},
   props: {
     type: {
       type: String,
@@ -44,12 +44,13 @@ export default {
 </script>
 
 <template>
-  <UniPopup
-    :type="type"
+  <UvPopup
+    :mode="type"
     ref="PopupRef"
     @change="onChange"
-    :is-mask-click="false"
-    :safe-area="false"
+    :close-on-click-overlay="false"
+    :safe-area-inset-bottom="false"
+    :round="10"
   >
     <view class="ko-basic-popup" :class="[type, {close: close, 'show-title': !!title}]">
       <button
@@ -72,7 +73,7 @@ export default {
     </view>
 
     <slot name="hint"></slot>
-  </UniPopup>
+  </UvPopup>
 </template>
 
 <style scoped lang="scss">

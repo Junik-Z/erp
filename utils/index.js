@@ -1,4 +1,5 @@
 import dayjs from "./dayjs";
+import { is } from "@/components/da-tree-vue2/utils";
 
 export const weekHan = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -550,14 +551,11 @@ export function _isNotUnNil(str) {
   return !_isUndefined(str) && !_isNull(str);
 }
 
-/**
- 财通
- 智链
- 业达
- 企管家
- 智链财
- 财易通
- 企易宝
+export function _is(val, type) {
+  return toString.call(val) === `[object ${type}]`
+}
 
- 荣创达
- */
+
+export function _isBoolean(val) {
+  return is(val, 'Boolean')
+}

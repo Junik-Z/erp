@@ -6,13 +6,12 @@ import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-lis
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { getUserListApi } from "@/api/admin";
 import mixins from "@/mixins/mixins";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _isBoolean } from "@/utils";
 import { getCustomerListApi } from "@/api/erp/sale";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { getSupplierListApi } from "@/api/erp/purchase";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
-import { isBoolean } from "@/components/da-tree-vue2/utils";
 import IndexList from "../IndexList/IndexList.vue";
 import { getLogisticsListApi } from "@/api/erp/logistics";
 
@@ -167,7 +166,7 @@ export default {
       }
     },
     onClick() {
-      if (isBoolean(this.disabled) && this.disabled) return false;
+      if (_isBoolean(this.disabled) && this.disabled) return false;
       this.modelVisible = true;
     },
 
