@@ -217,7 +217,7 @@ export default {
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px;" v-for="item of list" :key="item.id">
-          <BasicCard @click="onJump(item)">
+          <BasicCard>
             <view class="ko-admin__item">
               <view class="ko-admin__item--info">
                 <UvAvatar
@@ -228,7 +228,7 @@ export default {
                   random-bg-color
                 />
 
-                <view style="padding-left: 16px; flex: 1;">
+                <view style="padding-left: 16px; flex: 1;" @click="onJump(item)">
                   <UniRow :gutter="10">
                     <UniCol :span="24">
                       <view class="ko-admin__item--info--name">
@@ -246,7 +246,9 @@ export default {
                 </view>
               </view>
 
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+              <view
+                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+              >
                 <button
                   class="ko-basic-button__card"
                   @click.stop="generateCode(item)"

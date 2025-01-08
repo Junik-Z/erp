@@ -455,13 +455,13 @@ export default {
                         <view style="margin-right: 10px;" v-if="isChecked">
                           <checkbox :checked="isSelection(item)" :disabled="getDisabled(item)" />
                         </view>
-
                         <UvAvatar
                           :size="64"
-                          :src="getImageUrl(item.logo)"
+                          :src="getImageUrl(item.avatar || item.logo)"
                           mode="aspectFill"
                           :text="item.label || GET_SHOP_NAME"
                           random-bg-color
+                          @click.stop
                         />
                         <view style="padding-left: 10px; flex: 1;">
                           <UniRow :gutter="10">

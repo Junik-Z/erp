@@ -140,9 +140,9 @@ export default {
     errorHandler() {
       this.avatarUrl = this.defaultUrl || base64Avatar;
     },
-    clickHandler() {
-      console.log("点击了");
-      this.$emit("click", this.name);
+    clickHandler(event) {
+      this.$emit("click", event, this.name);
+
       this.onImgPreview(this.src);
     },
 
