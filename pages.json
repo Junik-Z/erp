@@ -277,7 +277,8 @@
         {
           "path": "work",
           "style": {
-            "navigationBarTitleText": "生产工单"
+            "navigationBarTitleText": "生产工单",
+            "disableScroll": false
           }
         }
       ]

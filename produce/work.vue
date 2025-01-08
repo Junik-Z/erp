@@ -155,12 +155,15 @@ export default {
     return {
       form: {
         "planFinishDate": "",
-        "totalRawMaterialAmount": 0,
-        "totalProductAmount": 0,
-        "totalAmount": 0,
+        "totalRawMaterialAmount": null,
+        "totalAmount": null,
+        "totalProfit": null,
         "remark": "",
         "materialDetails": [],
+        "customizedMaterials": [],
         "productDetails": [],
+        "craftProcesses": [],
+        "user": {},
       },
       rules: {
         planFinishDate: {
@@ -192,44 +195,6 @@ export default {
       option: {},
 
       current: 0,
-
-      tableData: {
-        thead: [
-          {
-            name: "序号",
-          },
-          {
-            name: "姓名",
-          },
-          {
-            name: "年龄",
-          },
-          {
-            name: "专业",
-          },
-        ],
-        tbody: [
-          {value: "1", color: "red", bgColor: "#ace", align: "left"},
-          {value: "张牧之"},
-          {value: "25"},
-          {value: ""},
-
-          {value: "2"},
-          {value: "赵坤明"},
-          {value: "33"},
-          {value: "打篮球,三分贼强~", gridArea: "2/4/4/4"},
-
-          {value: "3"},
-          {value: "张牧之"},
-          {value: "25"},
-          {value: ""},
-
-          {value: "4"},
-          {value: "赵坤明"},
-          {value: "33"},
-          {value: "踢足球，倒挂金钩！", gridArea: "4/4/6/4", isFlex: true},
-        ],
-      },
 
       ec: {
         lazyLoad: true,
@@ -418,7 +383,7 @@ export default {
       return chart;
     },
 
-    onGridAreaFunc({ row, column, rowIndex, columnIndex }) {
+    onGridAreaFunc({row, column, rowIndex, columnIndex}) {
       if (columnIndex === 2) {
         if (rowIndex % 2 === 0) {
           return {
@@ -445,8 +410,9 @@ export default {
     <view class="ko-work__steps">
       <UvSteps :current="current">
         <UvStepsItem title="基础信息" />
-        <UvStepsItem title="2" error />
-        <UvStepsItem title="3" />
+        <UvStepsItem title="生产模式" />
+        <UvStepsItem title="生产工艺" />
+        <UvStepsItem title="其它信息" />
       </UvSteps>
     </view>
 
@@ -471,10 +437,21 @@ export default {
             />
           </UniFormsItem>
 
-          <UniFormsItem label="定制生产：" name="planFinishDate">
-            <radio color="#256eff" />
+          <UniFormsItem label="生产模式：" name="planFinishDate">
+            <radio-group>
+              <radio color="#256eff" style="transform:scale(0.9)">
+                常规生产
+              </radio>
+              <radio color="#256eff" style="transform:scale(0.9); margin-left: 10px;">
+                定制生产
+              </radio>
+            </radio-group>
           </UniFormsItem>
         </view>
+      </block>
+
+      <block v-if="current === 0">
+
       </block>
 
       <block v-else>
@@ -532,8 +509,6 @@ export default {
       <GridTable
         :columns="columns"
         :data="list"
-        :table-data="tableData"
-        align="center"
         :grid-area-func="onGridAreaFunc"
       />
     </view>
