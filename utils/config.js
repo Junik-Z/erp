@@ -85,6 +85,7 @@ export const ROLE_LIST_ENUMS = {
   Produce_Member: "生产会员",
   Purchase_Member: "采购会员",
   Delivery_Member: "送货会员",
+  Stock_Taking: "库存盘点",
 };
 
 /**
