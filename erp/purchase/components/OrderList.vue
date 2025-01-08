@@ -2,6 +2,7 @@
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import {
+  getPurchaseDetailApi,
   getPurchaseHistoryListApi,
   getPurchaseListApi,
   getPurchaseWaitPaymentListApi,
@@ -12,7 +13,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _pick, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _keys, _pick, showToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -80,8 +81,6 @@ export default {
       },
       loading: false,
       noMore: false,
-
-      actionItem: {},
 
       tab: 0,
 
@@ -187,7 +186,15 @@ export default {
         },
       ],
       // #endif
-      tableKey: +new Date()
+      tableKey: +new Date(),
+
+
+      node: {},
+      nodeIndex: null,
+
+      noRefresh: false,
+      // 退货申请
+      isReturn: false,
     };
   },
   methods: {
@@ -199,10 +206,17 @@ export default {
     },
 
     getList(reset = false) {
-      if (reset) {
-        this.tableKey = +new Date()
+      if (reset && !this.noRefresh) {
+        this.tableKey = +new Date();
         this.queryList.pageNum = 0;
         this.list = [];
+      }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (this.noRefresh && info && !this.isReturn) {
+        this.updateList();
+        return false;
       }
 
       this.loading = true;
@@ -217,14 +231,20 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
+          this.isReturn = false;
+
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
     onJump(item) {
+      this.noRefresh = true;
       this.jumpAddedPurchase({id: item.id});
     },
 
     onTrigger(event) {
+      this.noRefresh = true;
       const {path} = event.item || {};
       if (path) {
         uni.navigateTo({url: path});
@@ -233,11 +253,16 @@ export default {
 
     // 申请退货
     onReturn(item) {
+      this.noRefresh = true;
+      this.isReturn = true;
       this.jumpAddedReturnPurchase({order_id: item.id});
     },
 
     // 添加单据
-    onAddedDocuments(item) {
+    onAddedDocuments(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
+      this.noRefresh = true;
       this.jumpDocumentsTicket({
         ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         orderType: "PURCHASE",
@@ -249,17 +274,18 @@ export default {
       this.onJumpDetails(row, "sale");
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem), "footer");
+      this[item.func](_deepCopy(this.node), this.nodeIndex, "footer");
     },
 
     // 开启打印
-    onPrint(item, type) {
+    onPrint(item, index, type) {
       this.$refs.PLRef.open({orderId: item.id, type});
     },
     // 开始打印
@@ -283,14 +309,44 @@ export default {
     },
 
     onResetList(flag) {
+      this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
       flag && this.$refs.SearchRef.onShowSearch();
       this.getList(true);
     },
+
+    // 更新列表数据
+    updateList(isPayment = false) {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      getPurchaseDetailApi({id})
+        .then(res => {
+          const data = res.data || {};
+          if (data?.confirmable && isPayment) {
+            this.list.splice(this.nodeIndex, 1);
+          } else if (_isString(info) && this.tab === 1) {
+            this.list.splice(this.nodeIndex, 1);
+            this.list.unshift(_pick(data, _keys(this.node)));
+          } else {
+            const index = this.list.findIndex(v => v.id === data.id);
+            const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
+            if (index > -1) {
+              this.$set(this.list, index, _pick(data, _keys(node)));
+            } else {
+              this.list.unshift(_pick(data, _keys(node)));
+            }
+          }
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
+    },
   },
   computed: {
     actionList() {
-      const node = this.actionItem;
+      const node = this.node;
       return [
         {
           name: "打印采购单(A4)",
@@ -321,6 +377,7 @@ export default {
       ]
         .filter(li => {
           if (li.func === "onPrint") return true;
+
           if (li.name === "编辑") {
             return this.tab !== 2 && li?.status?.includes(node.status);
           }
@@ -363,7 +420,7 @@ export default {
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 10px;" v-for="item of list" :key="item.id">
+        <view style="padding: 10px;" v-for="(item, index) of list" :key="item.id">
           <OrderCard
             is-purchase :item="item"
             @click="onJumpDetails(item, 'purchase')"
@@ -373,7 +430,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   v-if="['FINISHED', 'CREATED'].includes(item.status)"
-                  @click.stop="onPrint(item)"
+                  @click.stop="onPrint(item, index)"
                 >
                   打印单据
                 </button>
@@ -381,7 +438,7 @@ export default {
                 <button
                   v-if="['FINISHED'].includes(item.status) && !item.confirmable"
                   class="ko-basic-button__card"
-                  @click.stop="onAddedDocuments(item)"
+                  @click.stop="onAddedDocuments(item, index)"
                 >
                   付款
                 </button>
@@ -389,7 +446,7 @@ export default {
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="submitPurchase(item)"
+                  @click.stop="submitPurchase(item, index)"
                   :disabled="item.__s_loading__"
                   :loading="item.__s_loading__"
                 >
@@ -398,7 +455,7 @@ export default {
 
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onActionClick(item)"
+                  @click.stop="onActionClick(item, index)"
                 >
                   更多
                 </button>
@@ -423,7 +480,7 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item}" v-if="isPerm('Purchase_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               v-if="['FINISHED', 'CREATED'].includes(item.status)"
@@ -435,14 +492,14 @@ export default {
             <button
               v-if="['FINISHED'].includes(item.status) && !item.confirmable"
               class="ko-basic-button__card"
-              @click.stop="onAddedDocuments(item)"
+              @click.stop="onAddedDocuments(item, index)"
             >
               付款
             </button>
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="submitPurchase(item)"
+              @click.stop="submitPurchase(item, index)"
               :disabled="item.__s_loading__"
               :loading="item.__s_loading__"
             >
@@ -458,21 +515,21 @@ export default {
             <button
               v-if="['FINISHED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="onReturn(item)"
+              @click.stop="onReturn(item, index)"
             >
               申请退货
             </button>
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="cancelPurchase(item)"
+              @click.stop="cancelPurchase(item, index)"
             >
               取消订单
             </button>
 
             <button
               class="ko-basic-button__card"
-              @click.stop="onJump(item)"
+              @click.stop="onJump(item, index)"
               v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
             >
               编辑
@@ -480,7 +537,7 @@ export default {
 
             <button
               class="ko-basic-button__card"
-              @click.stop="removePurchase(item)"
+              @click.stop="removePurchase(item, index)"
               :loading="item.__r_loading__"
               :disabled="item.__r_loading__"
               v-if="['CANCELLED', 'CREATED'].includes(item.status)"
@@ -511,7 +568,7 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="getList(true)" />
+    <Pay ref="TPRef" @success="updateList(true)" />
   </view>
 </template>
 

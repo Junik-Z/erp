@@ -90,6 +90,8 @@ export default {
       bindList: [],
 
       isAgain: false,
+      // 正常跳转
+      isNormal: false,
     };
   },
   onLoad(option) {
@@ -97,6 +99,8 @@ export default {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
     this.isEdit = !!option.id;
+
+    this.isNormal = option.isNormal === "true";
 
     if (this.isEdit) this.getInfo();
 
@@ -164,11 +168,11 @@ export default {
           const Func = this.isAgain ? reOrderSaleApi : (this.isEdit ? updateSaleApi : addedSaleApi);
 
           Func(params)
-            .then(() => {
+            .then((res) => {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
-                  if (this.isClient) {
+                  if (this.isClient && !this.isNormal) {
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {
@@ -180,6 +184,8 @@ export default {
                   }
                 },
               });
+
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
             })
             .finally(() => {
               this.loading = false;

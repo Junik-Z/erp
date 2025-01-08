@@ -65,6 +65,7 @@ export default {
       tabs: ["客户", "其它客户"],
 
       isAgain: false,
+      isNormal: false,
     };
   },
   created() {
@@ -75,6 +76,7 @@ export default {
     this.options = option;
     this.isEdit = !!option.id;
     this.orderId = option.order_id || "";
+    this.isNormal = option.isNormal === "true";
 
     if (this.isEdit || this.orderId) this.getInfo();
 
@@ -118,13 +120,14 @@ export default {
           const Func = this.isAgain ? reOrderSaleReturnApi : (this.isEdit ? updateSaleReturnApi : addedSaleReturnApi);
 
           Func(params)
-            .then(() => {
+            .then((res) => {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   uni.navigateBack();
                 },
               });
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
             })
             .finally(() => {
               this.loading = false;

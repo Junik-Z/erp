@@ -5,7 +5,7 @@ import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import { _deepCopy, _get } from "@/utils";
+import { _deepCopy, _get, _round } from "@/utils";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 
 export default {
@@ -51,8 +51,8 @@ export default {
         {
           label: "产品毛利率",
           key: "marginRate",
-          color: "#2979ff",
-          unit: "元",
+          unit: "%",
+          decimals: 2,
         },
         {
           label: "产品库存预警",
@@ -126,7 +126,7 @@ export default {
     getCountValue() {
       return (item) => {
         const value = _get(this.data, item.key);
-        return item.unit === "元" ? this.toYuan(value) : value;
+        return item.unit === "元" ? this.toYuan(value) : item.unit === "%" ? _round(value, 2) : value;
       };
     },
 
@@ -165,6 +165,8 @@ export default {
               <UvCountTo
                 :separator="item.unit === '元' ? ',' : ''"
                 :start-val="0"
+                :decimals="item.decimals || 0"
+                decimal="."
                 bold
                 :end-val="getCountValue(item)"
                 :color="item.color ? item.color : '#2979ff'"

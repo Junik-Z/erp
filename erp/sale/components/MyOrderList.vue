@@ -2,8 +2,14 @@
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
-import { getMyReturnSaleListApi, getMySaleListApi, getMyStatisticsApi } from "@/api/erp/sale";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _keys, _pick } from "@/utils";
+import {
+  getMyReturnSaleListApi,
+  getMySaleListApi,
+  getMyStatisticsApi,
+  getSaleDetailApi,
+  getSaleReturnDetailApi,
+} from "@/api/erp/sale";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
@@ -50,7 +56,6 @@ export default {
 
       isHistory: false,
 
-      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -154,7 +159,13 @@ export default {
         },
       ],
       // #endif
-      tableKey: +new Date()
+      tableKey: +new Date(),
+
+      node: {},
+      nodeIndex: null,
+
+      noRefresh: false,
+      isReturn: false,
     };
   },
   created() {
@@ -170,17 +181,23 @@ export default {
     },
 
     getList(reset = false) {
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.tableKey = +new Date();
         this.queryList.pageNum = 0;
         this.list = [];
+      }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (info && this.noRefresh && !this.isReturn) {
+        this.updateList();
+        return false;
       }
 
       this.loading = true;
       const Func = this.isHistory ? getMyReturnSaleListApi : getMySaleListApi;
       Func(this.queryList)
         .then(res => {
-          console.log(res.data);
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
@@ -189,6 +206,10 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.isReturn = false;
+
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
@@ -201,48 +222,80 @@ export default {
 
     // 处理添加修改
     onAdded(item) {
+      this.noRefresh = true;
+
       if (this.isHistory) {
         this.jumpSaleReturn({
           PAGE_TYPE: "ADDED_REFUND_SALE",
+          isNormal: true,
           ...(item?.id ? {id: item.id} : {}),
         });
       } else {
         this.jumpAddedSale({
           PAGE_TYPE: "ADDED_SALE",
+          isNormal: true,
           ...(item?.id ? {id: item.id} : {}),
         });
       }
     },
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.nodeIndex = index;
+      this.node = item;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
     },
 
     // 提交销售订单
-    onSubmit(item) {
+    onSubmit(item, index) {
       const Func = this.isHistory ? this.submitRefundSale : this.submitSale;
-      Func(item);
+      Func(item, index);
     },
     // 删除订单
-    onRemove(item) {
+    onRemove(item, index) {
       const Func = this.isHistory ? this.removeRefundSale : this.removeSale;
-      Func(item);
+      Func(item, index);
     },
     // 取消订单
-    onCancel(item) {
+    onCancel(item, index) {
       const Func = this.isHistory ? this.cancelRefundSale : this.cancelSale;
-      Func(item);
+      Func(item, index, true);
     },
     // 申请退货
     onReturn(item) {
+      this.noRefresh = true;
+      this.isReturn = true;
+
       this.jumpSaleReturn({
         order_id: item.id,
         PAGE_TYPE: "ADDED_REFUND_SALE",
       });
+    },
+
+    updateList() {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      const Func = this.isHistory ? getSaleReturnDetailApi : getSaleDetailApi;
+
+      Func({id})
+        .then(res => {
+          const data = res.data || {};
+          const index = this.list.findIndex(v => v.id === data.id);
+          const node = _isEmpty(this.node) ? this.list.at(-1) : this.node
+          if (index > -1) {
+            this.$set(this.list, index, _pick(data, _keys(node)));
+          } else {
+            this.list.unshift(_pick(data, _keys(node)));
+          }
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
+
     },
   },
   computed: {
@@ -254,7 +307,7 @@ export default {
     },
 
     actionList() {
-      const node = this.actionItem || {};
+      const node = this.node || {};
       return [
         {
           name: "申请退货",
@@ -315,7 +368,7 @@ export default {
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px">
           <OrderCard
-            v-for="item of list"
+            v-for="(item, index) of list"
             :key="item.id"
             :item="item"
             @click="onJumpDetails(item, isHistory ? 'saleReturn' : 'sale')"
@@ -336,7 +389,7 @@ export default {
 
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onActionClick(item)"
+                  @click.stop="onActionClick(item, index)"
                   v-if="[isHistory ? '' : 'FINISHED', 'CREATED', 'CANCELLED'].includes(item.status)"
                 >
                   更多
@@ -358,33 +411,33 @@ export default {
         stripe
         @row-click="onJumpDetails($event, isHistory ? 'saleReturn' : 'sale')"
       >
-        <template #operate="{item}">
+        <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               v-if="['FINISHED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="onReturn(item)"
+              @click.stop="onReturn(item, index)"
             >
               申请退货
             </button>
 
             <button
               class="ko-basic-button__card"
-              @click.stop="onAdded(item)"
+              @click.stop="onAdded(item, index)"
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
             >
               修改
             </button>
             <button
               class="ko-basic-button__card"
-              @click.stop="onCancel(item)"
+              @click.stop="onCancel(item, index)"
               v-if="['CREATED'].includes(item.status)"
             >
               取消订单
             </button>
             <button
               class="ko-basic-button__card"
-              @click.stop="onRemove(item)"
+              @click.stop="onRemove(item, index)"
               :loading="item.__r_loading__"
               :disabled="item.__r_loading__"
               v-if="['CANCELLED', 'CREATED'].includes(item.status)"
@@ -414,6 +467,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-my-order-list {
+
   // #ifdef H5
   display: flex;
   flex-direction: column;

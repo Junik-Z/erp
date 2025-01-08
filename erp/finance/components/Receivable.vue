@@ -5,6 +5,7 @@ import {
   cancelReceivableApi,
   finishReceivableApi,
   getReceivableCountApi,
+  getReceivableDetailApi,
   getReceivableHistoryListApi,
   getReceivableListApi,
 } from "@/api/erp/finance";
@@ -12,7 +13,7 @@ import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _pick } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import mixins from "@/mixins/mixins";
 import { CONFIG } from "@/utils/config";
@@ -39,7 +40,7 @@ export default {
     return {
       loading: false,
       list: [],
-      isHistory: false,
+      isHistory: 0,
 
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -50,16 +51,6 @@ export default {
       },
       noMore: false,
 
-      operate: [
-        {
-          label: "订单确认",
-          type: "onConfirm",
-        },
-        {
-          label: "添加单据",
-          type: "onAddedTicket",
-        },
-      ],
       count: {
         count: 0,
         customerCount: 0,
@@ -188,7 +179,10 @@ export default {
         },
       ],
       // #endif
-      tableKey: +new Date()
+      tableKey: +new Date(),
+
+      node: {},
+      nodeIndex: null,
     };
   },
   mounted() {
@@ -206,13 +200,22 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date()
+        this.tableKey = +new Date();
       }
 
       this.loading = true;
-      const Func = this.isHistory ? getReceivableHistoryListApi : getReceivableListApi;
+      const params = _deepCopy(this.queryList);
 
-      Func(this.queryList)
+      const Func = [getReceivableListApi, getReceivableHistoryListApi, getReceivableHistoryListApi][this.isHistory];
+
+      if (this.isHistory > 0) {
+        params.status = {
+          1: "FINISHED",
+          2: "CANCELLED",
+        }[this.isHistory];
+      }
+
+      Func(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -234,7 +237,7 @@ export default {
         });
     },
 
-    onCancel(item) {
+    onCancel(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `如果销售订单未出库或仓库计划取消订单，库存将保持原状。若商品已经出库，系统会自动将其退回仓库。请仓库工作人员在商品退回后进行仔细盘点。`,
@@ -243,14 +246,15 @@ export default {
             cancelReceivableApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList(true);
+                this.list.splice(index, 1);
+                // this.getList(true);
               });
           }
         },
       });
     },
 
-    onConfirm(item) {
+    onConfirm(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `请核对金额是否准确，确认后入账。`,
@@ -260,14 +264,16 @@ export default {
             finishReceivableApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList(true);
+                this.list.splice(index, 1);
               });
           }
         },
       });
     },
     // 添加票据
-    onAddedTicket(item) {
+    onAddedTicket(item, index) {
+      this.node = _deepCopy(item);
+      this.nodeIndex = _deepCopy(index);
       this.$refs.TPRef.open({
         ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId", "totalAmount"]),
         isReceivable: true,
@@ -300,6 +306,15 @@ export default {
       this.queryList = _deepCopy(this.$options.data().queryList);
       flag && this.$refs.SearchRef.onShowSearch();
       this.getList(true);
+    },
+
+    onSuccess() {
+      const node = this.node;
+      const index = this.nodeIndex;
+      getReceivableDetailApi({id: node.id})
+        .then(res => {
+          this.$set(this.list, index, _pick(res.data, _keys(node)));
+        });
     },
   },
   computed: {
@@ -337,7 +352,7 @@ export default {
 
     <HistoryBar
       v-model="isHistory"
-      :values="['待清帐', '已完成']"
+      :values="['待清帐', '已完成', '已取消']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -381,19 +396,19 @@ export default {
                   <button
                     v-if="item.confirmable"
                     class="ko-basic-button__card"
-                    @click.stop="onConfirm(item)"
+                    @click.stop="onConfirm(item, index)"
                   >
                     确认清帐
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="onAddedTicket(item)"
+                    @click.stop="onAddedTicket(item, index)"
                   >
                     添加单据
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="onCancel(item)"
+                    @click.stop="onCancel(item, index)"
                     v-if="['CREATED'].includes(item.status)"
                   >
                     取消订单
@@ -419,7 +434,7 @@ export default {
           @next-load="onRequestNextPage"
           :no-more="noMore || loading"
         >
-          <template #operate="{item}">
+          <template #operate="{item, index}">
             <view
               v-if="isPerm('Finance_Write') && !isHistory"
               style="display: flex; align-items: center; justify-content: center;"
@@ -427,19 +442,19 @@ export default {
               <button
                 v-if="item.confirmable"
                 class="ko-basic-button__card"
-                @click.stop="onConfirm(item)"
+                @click.stop="onConfirm(item, index)"
               >
                 确认清帐
               </button>
               <button
                 class="ko-basic-button__card"
-                @click.stop="onAddedTicket(item)"
+                @click.stop="onAddedTicket(item, index)"
               >
                 添加单据
               </button>
               <button
                 class="ko-basic-button__card"
-                @click.stop="onCancel(item)"
+                @click.stop="onCancel(item, index)"
                 v-if="['CREATED'].includes(item.status)"
               >
                 取消订单
@@ -451,7 +466,7 @@ export default {
       <!-- #endif -->
     </view>
 
-    <Pay ref="TPRef" @success="getList(true)" />
+    <Pay ref="TPRef" @success="onSuccess" />
   </view>
 </template>
 

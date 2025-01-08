@@ -1,4 +1,6 @@
 // 请求地址
+import { _isDev } from "@/utils/index";
+
 let BASE_URL = "http://192.168.0.7:8093/api";
 let BASE_WS_URL = "ws://192.168.0.7:8093/api/ws/app";
 
@@ -14,44 +16,45 @@ DEFAULT_PAGE_SIZE = 20;
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
 // #endif
 
-let type = "test";
+let type = "develop";
 
-type = "env";
+if (_isDev()) {
+// type = "trial";
 
-// type = "prod";
+// type = "release";
 
 // #ifdef MP
-// type = "env";
+// type = "trial";
 // #endif
 
 // #ifdef H5
-// type = "env";
+// type = "trial";
 // #endif
+} else {
+  const accountInfo = uni.getAccountInfoSync();
+  type = accountInfo?.miniProgram?.envVersion;
+}
 
+console.log("当前版本为：", type);
 
 export const CONFIG = {
   // 请求头的参数
   APP_ID: "wx525c19deacc41329",
+  SystemVersion: type,
 
   ...(
     {
-      test: {
+      develop: {
         BASE_URL,
         BASE_WS_URL,
-
-        SystemVersion: 'develop'
       },
-      env: {
+      trial: {
         BASE_URL: "https://erp.kuaouyun.cn/api",
         BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
-
-        SystemVersion: 'trial'
       },
-      prod: {
+      release: {
         BASE_URL: "https://erp.kuaouyun.cn/api",
         BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
-
-        SystemVersion: 'release'
       },
     }[type]
   ),
@@ -59,7 +62,7 @@ export const CONFIG = {
   TITLE: "托手掌柜",
 
   // 分享出去时的type： 0 - 微信小程序正式版 ；1 - 微信小程序开发版；2 - 微信小程序体验版
-  SHARE_TYPE: {test: 1, env: 2, prod: 0}[type],
+  SHARE_TYPE: {develop: 1, trial: 2, release: 0}[type],
 
   // WEB rem 的转换率
   H5_REM_SIZE: 136.6,

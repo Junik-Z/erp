@@ -94,6 +94,9 @@ export default {
       },
 
       isAgain: false,
+
+      // 正常跳转
+      isNormal: false,
     };
   },
   created() {
@@ -102,6 +105,7 @@ export default {
     this.option = option;
     this.isEdit = !!option.id;
     if (this.isEdit) this.getInfo();
+    this.isNormal = option.isNormal === "true";
 
     // 是否是客户下单
     this.isClient = _isEqual("ADDED_PURCHASE", option.PAGE_TYPE);
@@ -165,11 +169,11 @@ export default {
           this.loading = true;
           const Func = this.isAgain ? reOrderPurchaseApi : (this.isEdit ? updatePurchaseApi : addedPurchaseApi);
           Func(params)
-            .then(() => {
+            .then((res) => {
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success() {
-                  if (this.isClient) {
+                  if (this.isClient && !this.isNormal) {
                     uni.redirectTo({
                       url: PageEnums.purchaseClientAddedBack,
                       fail() {
@@ -181,6 +185,7 @@ export default {
                   }
                 },
               });
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
             })
             .finally(() => {
               this.loading = false;

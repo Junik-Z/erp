@@ -43,7 +43,7 @@ export default {
     return {
       loading: false,
       list: [],
-      isHistory: false,
+      isHistory: 0,
 
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -168,10 +168,19 @@ export default {
         this.tableKey = +new Date();
       }
 
-      this.loading = true;
-      const Func = this.isHistory ? getInboundHistoryListApi : getInboundListApi;
+      const params = _deepCopy(this.queryList);
 
-      Func(this.queryList)
+      this.loading = true;
+      const Func = [getInboundListApi, getInboundHistoryListApi, getInboundHistoryListApi][this.isHistory];
+
+      if (this.isHistory > 0) {
+        params.status = {
+          1: "FINISHED",
+          2: "CANCELLED",
+        }[this.isHistory];
+      }
+
+      Func(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -184,12 +193,8 @@ export default {
           this.loading = false;
         });
     },
-    onJump() {
-      uni.navigateTo({
-        url: "/erp/stock/verify",
-      });
-    },
-    onCancel(item) {
+
+    onCancel(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消 ${item.orderCode} 订单吗？`,
@@ -198,13 +203,14 @@ export default {
             cancelInboundApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(index, 1);
               });
           }
         },
       });
     },
-    onConfirm(item) {
+    onConfirm(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后增加库存。`,
@@ -214,7 +220,8 @@ export default {
             confirmInboundApi(item)
               .then(() => {
                 uni.showToast({title: "入库成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(index, 1);
               });
           }
         },
@@ -251,7 +258,7 @@ export default {
   <view class="ko-warehouse">
     <HistoryBar
       v-model="isHistory"
-      :values="['待处理', '已完成']"
+      :values="['待处理', '已完成', '已取消']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -298,14 +305,14 @@ export default {
                 <button
                   v-if="['CREATED'].includes(item.status) && false"
                   class="ko-basic-button__card"
-                  @click.stop="onCancel(item)"
+                  @click.stop="onCancel(item, index)"
                 >
                   取消入库
                 </button>
                 <button
                   v-if="['CREATED', 'CANCELLED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="onConfirm(item)"
+                  @click.stop="onConfirm(item, index)"
                 >
                   确认入库
                 </button>
@@ -330,7 +337,7 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item}" v-if="isPerm('Stock_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Stock_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               class="ko-basic-button__card"
@@ -341,14 +348,14 @@ export default {
             <button
               v-if="['CREATED'].includes(item.status) && false"
               class="ko-basic-button__card"
-              @click.stop="onCancel(item)"
+              @click.stop="onCancel(item, index)"
             >
               取消入库
             </button>
             <button
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="onConfirm(item)"
+              @click.stop="onConfirm(item, index)"
             >
               确认入库
             </button>

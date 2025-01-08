@@ -112,6 +112,7 @@ export default {
 
     // 跳转到打印页面
     onJumpPrint(node, page_type, params = {}) {
+      uni.setStorageSync("TO_DETAILS", true);
       uni.navigateTo({
         url: `/shop/print/print?${QS.stringify({page_type, ...(_pick(node, ["id"])), ...params})}`,
       });
@@ -200,8 +201,11 @@ export default {
     onMergeArrays(list = [], data = [], key = "id") {
       const L = _deepCopy(list);
       data.forEach((item) => {
-        if (!L.some(v => _isEqual(_get(v, key), _get(item, key)))) {
+        const index = L.findIndex(v => _isEqual(_get(v, key), _get(item, key)));
+        if (index < 0) {
           L.push(item);
+        } else {
+          L[index] = item;
         }
       });
       return L;
@@ -298,7 +302,7 @@ export default {
       return (type) => {
         return {
           CREATED: "待处理",
-          FINISHED: "已处理",
+          FINISHED: "已完成",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
         }[type] || "-";

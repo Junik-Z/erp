@@ -40,7 +40,7 @@ export default {
     return {
       loading: false,
       list: [],
-      isHistory: false,
+      isHistory: 0,
 
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -168,9 +168,20 @@ export default {
         this.list = [];
         this.tableKey = +new Date();
       }
+
+      const params = _deepCopy(this.queryList);
+
       this.loading = true;
-      const Func = this.isHistory ? getOutboundHistoryListApi : getOutboundListApi;
-      Func(this.queryList)
+      const Func = [getOutboundListApi, getOutboundHistoryListApi, getOutboundHistoryListApi][this.isHistory];
+
+      if (this.isHistory > 0) {
+        params.status = {
+          1: "FINISHED",
+          2: "CANCELLED",
+        }[this.isHistory];
+      }
+
+      Func(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -188,7 +199,7 @@ export default {
         url: "/erp/stock/verify",
       });
     },
-    onCancel(item) {
+    onCancel(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消 ${item.orderCode} 订单吗？`,
@@ -197,13 +208,15 @@ export default {
             cancelOutboundApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(index, 1);
               });
           }
         },
       });
     },
-    onConfirm(item) {
+    onConfirm(item, index) {
+      this.inadequate = [];
       uni.showModal({
         title: "温馨提示",
         content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后扣除库存。`,
@@ -212,11 +225,12 @@ export default {
           if (res.confirm) {
             confirmOutboundApi(item)
               .then((resp) => {
-                this.inadequate = _groupBy(resp.data, (item) => item.className);
+                this.inadequate = _deepCopy(_groupBy(resp.data, (item) => item.className));
 
                 if (_isEmpty(resp.data)) {
                   uni.showToast({title: "出库成功"});
-                  this.getList(true);
+                  this.list.splice(index, 1);
+                  // this.getList(true);
                 } else {
                   this.visible = true;
                 }
@@ -260,7 +274,7 @@ export default {
   <view class="ko-out">
     <HistoryBar
       v-model="isHistory"
-      :values="['待处理', '已完成']"
+      :values="['待处理', '已完成', '已取消']"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -302,14 +316,14 @@ export default {
                 <button
                   v-if="['CREATED'].includes(item.status) && false"
                   class="ko-basic-button__card"
-                  @click.stop="onCancel(item)"
+                  @click.stop="onCancel(item, index)"
                 >
                   取消出库
                 </button>
                 <button
                   v-if="['CREATED', 'CANCELLED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="onConfirm(item)"
+                  @click.stop="onConfirm(item, index)"
                 >
                   确认出库
                 </button>
@@ -334,7 +348,7 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item}" v-if="isPerm('Stock_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Stock_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               class="ko-basic-button__card"
@@ -345,14 +359,14 @@ export default {
             <button
               v-if="['CREATED'].includes(item.status) && false"
               class="ko-basic-button__card"
-              @click.stop="onCancel(item)"
+              @click.stop="onCancel(item, index)"
             >
               取消出库
             </button>
             <button
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="onConfirm(item)"
+              @click.stop="onConfirm(item, index)"
             >
               确认出库
             </button>

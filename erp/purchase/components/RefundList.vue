@@ -1,5 +1,6 @@
 <script>
 import {
+  getPurchaseReturnDetailApi,
   getPurchaseReturnHistoryListApi,
   getPurchaseReturnListApi,
   getPurchaseReturnWaitPaymentListApi,
@@ -8,7 +9,7 @@ import {
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _pick, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString, _keys, _pick, showToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -72,10 +73,6 @@ export default {
       noMore: false,
 
       tab: 0,
-
-
-      actionItem: {},
-
 
       // #ifdef H5
       columns: [
@@ -169,7 +166,14 @@ export default {
         },
       ],
       // #endif
-      tableKey: +new Date()
+      tableKey: +new Date(),
+
+      node: {},
+      nodeIndex: null,
+
+      noRefresh: false,
+
+      isReturn: false,
     };
   },
   methods: {
@@ -181,10 +185,17 @@ export default {
     },
 
     getList(reset = false) {
-      if (reset) {
-        this.tableKey = +new Date()
+      if (reset && !this.noRefresh) {
+        this.tableKey = +new Date();
         this.queryList.pageNum = 0;
         this.list = [];
+      }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (this.noRefresh && info) {
+        this.updateList();
+        return false;
       }
 
       this.loading = true;
@@ -200,19 +211,19 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
+          this.isReturn = false;
+
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
-
-    onSwitchList() {
-      this.list = [];
-      this.getList();
-    },
-
     onJump(item) {
+      this.noRefresh = true;
       this.jumpAddedReturnPurchase({id: item.id});
     },
     onTrigger(event) {
+      this.noRefresh = true;
       if ("uni") {
         this.jumpAddedReturnPurchase();
         return false;
@@ -226,7 +237,10 @@ export default {
     },
 
     // 添加单据
-    onAddedDocuments(item) {
+    onAddedDocuments(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
+      this.noRefresh = true;
       this.jumpDocumentsTicket({
         ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         orderType: "PURCHASE_RETURN",
@@ -234,13 +248,14 @@ export default {
       });
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
     },
 
     // 开启打印
@@ -259,14 +274,45 @@ export default {
     },
 
     onResetList(flag) {
+      this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
       flag && this.$refs.SearchRef.onShowSearch();
       this.getList(true);
     },
+
+    // 更新列表数据
+    updateList(isPayment = false) {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      getPurchaseReturnDetailApi({id})
+        .then(res => {
+          const data = res.data || {};
+          if (data?.confirmable && isPayment) {
+            this.list.splice(this.nodeIndex, 1);
+          } else if (_isString(info) && this.tab === 1) {
+            this.list.splice(this.nodeIndex, 1);
+            this.list.unshift(_pick(data, _keys(this.node)));
+          } else {
+            const index = this.list.findIndex(v => v.id === data.id);
+            const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
+            if (index > -1) {
+              this.$set(this.list, index, _pick(data, _keys(node)));
+            } else {
+              this.list.unshift(_pick(data, _keys(node)));
+            }
+          }
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
+    },
+
   },
   computed: {
     actionList() {
-      const node = this.actionItem || {};
+      const node = this.node || {};
       return [
         {
           name: "取消订单",
@@ -327,7 +373,7 @@ export default {
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 10px;" v-for="item of list" :key="item.id">
+        <view style="padding: 10px;" v-for="(item, index) of list" :key="item.id">
           <OrderCard
             is-purchase
             :item="item"
@@ -340,21 +386,21 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   v-if="['FINISHED', 'CREATED'].includes(item.status)"
-                  @click.stop="onPrint(item)"
+                  @click.stop="onPrint(item, index)"
                 >
                   打印单据
                 </button>
                 <button
                   v-if="['FINISHED'].includes(item.status) && !item.confirmable"
                   class="ko-basic-button__card"
-                  @click.stop="onAddedDocuments(item)"
+                  @click.stop="onAddedDocuments(item, index)"
                 >
                   付款
                 </button>
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="submitReturnPurchase(item)"
+                  @click.stop="submitReturnPurchase(item, index)"
                   :disabled="item.__s_loading__"
                   :loading="item.__s_loading__"
                 >
@@ -362,7 +408,7 @@ export default {
                 </button>
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onActionClick(item)"
+                  @click.stop="onActionClick(item, index)"
                 >
                   更多
                 </button>
@@ -387,7 +433,7 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item}" v-if="isPerm('Purchase_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
           <view
             style="display: flex; align-items: center; justify-content: center;"
           >
@@ -401,14 +447,14 @@ export default {
             <button
               v-if="['FINISHED'].includes(item.status) && !item.confirmable"
               class="ko-basic-button__card"
-              @click.stop="onAddedDocuments(item)"
+              @click.stop="onAddedDocuments(item, index)"
             >
               付款
             </button>
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="submitReturnPurchase(item)"
+              @click.stop="submitReturnPurchase(item, index)"
               :disabled="item.__s_loading__"
               :loading="item.__s_loading__"
             >
@@ -418,7 +464,7 @@ export default {
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="cancelReturnPurchase(item)"
+              @click.stop="cancelReturnPurchase(item, index)"
               :disabled="item.__s_loading__"
               :loading="item.__s_loading__"
             >
@@ -427,14 +473,14 @@ export default {
             <button
               v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
               class="ko-basic-button__card"
-              @click.stop="onJump(item)"
+              @click.stop="onJump(item, index)"
             >
               编辑
             </button>
             <button
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="removeReturnPurchase(item)"
+              @click.stop="removeReturnPurchase(item, index)"
               :disabled="item.__s_loading__"
               :loading="item.__s_loading__"
             >
@@ -463,7 +509,7 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="getList(true)" />
+    <Pay ref="TPRef" @success="updateList(true)" />
   </view>
 </template>
 

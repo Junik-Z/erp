@@ -62,6 +62,7 @@ export default {
 
       isEdit: false,
       isAgain: false,
+      isNormal: false,
     };
   },
   mixins: [mixins],
@@ -71,6 +72,7 @@ export default {
     this.orderId = option.order_id || "";
 
     if (this.isEdit || this.orderId) this.getInfo();
+    this.isNormal = option.isNormal === "true";
 
     // 是否是客户下单
     this.isClient = _isEqual("ADDED_REFUND_PURCHASE", option.PAGE_TYPE);
@@ -98,7 +100,8 @@ export default {
           const Func = this.isAgain ? reOrderPurchaseReturnApi : (this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi);
 
           Func(params)
-            .then(() => {
+            .then((res) => {
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
               showToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {

@@ -1,5 +1,5 @@
 <script>
-import { addedBusinessesApi, getBusinessesListApi, getBusinessesQRCodeApi } from "@/api/admin";
+import { addedBusinessesApi, getBusinessesListApi, getBusinessesQRCodeApi, updateBusinessNameApi } from "@/api/admin";
 import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -10,7 +10,8 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import Basic from "@/mixins/mixins";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy, _get, _isEmpty } from "@/utils";
+import * as uni from "@/utils";
+import { _deepCopy, _get, _isEmpty, _pick } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -123,6 +124,8 @@ export default {
       // #endif
 
       tableKey: +new Date(),
+
+      isEdit: false,
     };
   },
   onShow() {
@@ -159,25 +162,38 @@ export default {
         });
     },
 
-    onTrigger() {
+    onTrigger(item) {
       this.visible = true;
+      this.isEdit = false;
       this.form = _deepCopy(this.$options.data().form);
+
       // #ifdef MP
       this.$refs.FormRef.clearValidate();
       // #endif
+
+      if (item) {
+        this.form = _deepCopy(item);
+        this.isEdit = true;
+      }
     },
 
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
         if (!valid) {
-          const params = _deepCopy(this.form);
+          let params = _deepCopy(this.form);
+
+          const Func = this.isEdit ? updateBusinessNameApi : addedBusinessesApi;
+
+          if (this.isEdit) {
+            // params = _pick(params, ["logo", "remark", "id"]);
+          }
 
           this.sLoading = true;
 
-          addedBusinessesApi({...params})
+          Func({...params})
             .then(() => {
               uni.showToast({
-                title: "开户成功",
+                title: this.isEdit ? "修改成功" : "开户成功",
               });
               this.getList(true);
               this.visible = false;
@@ -249,6 +265,12 @@ export default {
               >
                 <button
                   class="ko-basic-button__card"
+                  @click.stop="onTrigger(item)"
+                >
+                  编辑
+                </button>
+                <button
+                  class="ko-basic-button__card"
                   @click.stop="generateCode(item)"
                   :loading="item.__qrcode_loading__"
                   :disabled="item.__qrcode_loading__"
@@ -317,6 +339,7 @@ export default {
               style="width: 100%;"
               placeholder="请输入"
               v-model.trim="form.name"
+              :disabled="isEdit"
             />
           </UniFormsItem>
           <view style="height: 8px;"></view>
@@ -325,7 +348,6 @@ export default {
               style="width: 100%;"
               placeholder="请输入"
               v-model="form.remark"
-              type="textarea"
             />
           </UniFormsItem>
 
@@ -338,7 +360,7 @@ export default {
           :loading="sLoading"
           :disabled="sLoading"
         >
-          确定开户
+          {{ isEdit ? "提交" : "确定开户" }}
         </button>
       </view>
     </BasicPopup>

@@ -542,3 +542,7 @@ export function _uniqWith(array, comparator) {
 export function _isDev() {
   return process.env?.NODE_ENV === "development";
 }
+
+export function _isNumber(value) {
+  return typeof value === 'number' && !isNaN(value);
+}

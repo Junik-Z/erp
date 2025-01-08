@@ -5,6 +5,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import {
+  getSaleReturnDetailApi,
   getSaleReturnHistoryApi,
   getSaleReturnListApi,
   getSaleReturnWaitPaymentApi,
@@ -14,7 +15,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _pick, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString, _keys, _pick, showToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -81,8 +82,6 @@ export default {
         "user.nickName": "",
       },
       noMore: false,
-
-      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -177,7 +176,13 @@ export default {
       ],
       // #endif
 
-      tableKey: +new Date()
+      tableKey: +new Date(),
+
+
+      node: {},
+      nodeIndex: null,
+
+      noRefresh: false,
     };
   },
   methods: {
@@ -189,10 +194,17 @@ export default {
     },
 
     getList(reset = false) {
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.tableKey = +new Date();
         this.queryList.pageNum = 0;
         this.list = [];
+      }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (this.noRefresh && info) {
+        this.updateList();
+        return false
       }
 
       this.loading = true;
@@ -209,9 +221,13 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
+
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
     onJump(item) {
+      this.noRefresh = true;
       this.jumpSaleReturn({id: item.id});
     },
 
@@ -222,7 +238,10 @@ export default {
     },
 
     // 添加单据
-    onAddedDocuments(item) {
+    onAddedDocuments(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
+      this.noRefresh = true;
       this.jumpSaleAddedDocuments({
         ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         orderType: "SALE_RETURN",
@@ -230,13 +249,14 @@ export default {
       });
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
     },
 
     // 开启打印
@@ -252,10 +272,39 @@ export default {
           });
         });
     },
+
+    updateList(isPayment = false) {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      getSaleReturnDetailApi({id})
+        .then(res => {
+          const data = res.data || {};
+          if (data?.confirmable && isPayment) {
+            this.list.splice(this.nodeIndex, 1);
+          } else if (_isString(info) && this.tab === 1) {
+            this.list.splice(this.nodeIndex, 1);
+            this.list.unshift(_pick(data, _keys(this.node)));
+          } else {
+            const index = this.list.findIndex(v => v.id === data.id);
+            const node = _isEmpty(this.node) ? this.list.at(-1) : this.node
+            if (index > -1) {
+              this.$set(this.list, index, _pick(data, _keys(node)));
+            } else {
+              this.list.unshift(_pick(data, _keys(node)));
+            }
+          }
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
+
+    },
   },
   computed: {
     actionList() {
-      const node = this.actionItem;
+      const node = this.node;
       return [
         {
           name: "取消订单",
@@ -319,7 +368,7 @@ export default {
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 10px;" v-for="item of list" :key="item.id">
+        <view style="padding: 10px;" v-for="(item, index) of list" :key="item.id">
           <OrderCard
             is-sales
             :item="item"
@@ -331,7 +380,7 @@ export default {
               >
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onPrint(item)"
+                  @click.stop="onPrint(item, index)"
                   v-if="['FINISHED', 'CREATED'].includes(item.status)"
                 >
                   打印单据
@@ -339,7 +388,7 @@ export default {
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="submitRefundSale(item)"
+                  @click.stop="submitRefundSale(item, index)"
                   :disabled="item.__s_loading__"
                   :loading="item.__s_loading__"
                 >
@@ -349,14 +398,14 @@ export default {
                 <button
                   v-if="['FINISHED'].includes(item.status) && !item.confirmable"
                   class="ko-basic-button__card"
-                  @click.stop="onAddedDocuments(item)"
+                  @click.stop="onAddedDocuments(item, index)"
                 >
                   付款
                 </button>
 
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onActionClick(item)"
+                  @click.stop="onActionClick(item, index)"
                 >
                   更多
                 </button>
@@ -382,7 +431,7 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item}" v-if="isPerm('Sales_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
           <view
             style="display: flex; align-items: center; justify-content: center;"
           >
@@ -396,7 +445,7 @@ export default {
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="submitRefundSale(item)"
+              @click.stop="submitRefundSale(item, index)"
               :disabled="item.__s_loading__"
               :loading="item.__s_loading__"
             >
@@ -405,7 +454,7 @@ export default {
             <button
               v-if="['FINISHED'].includes(item.status) && !item.confirmable"
               class="ko-basic-button__card"
-              @click.stop="onAddedDocuments(item)"
+              @click.stop="onAddedDocuments(item, index)"
             >
               付款
             </button>
@@ -414,7 +463,7 @@ export default {
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="cancelRefundSale(item)"
+              @click.stop="cancelRefundSale(item, index)"
             >
               取消订单
             </button>
@@ -422,7 +471,7 @@ export default {
             <button
               v-if="['FINISHED', 'CREATED', 'CANCELLED'].includes(item.status) && tab !== 2"
               class="ko-basic-button__card"
-              @click.stop="onJump(item)"
+              @click.stop="onJump(item, index)"
             >
               编辑
             </button>
@@ -430,7 +479,7 @@ export default {
             <button
               v-if="['CANCELLED', 'CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="removeRefundSale(item)"
+              @click.stop="removeRefundSale(item, index)"
             >
               删除
             </button>
@@ -458,7 +507,7 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="getList(true)" />
+    <Pay ref="TPRef" @success="updateList(true)" />
   </view>
 </template>
 
