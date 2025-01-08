@@ -51,6 +51,7 @@ export default {
     // 跳转到会员管理
     onJumpMember(type, item) {
       const role = (item.role || []).find(v => v.indexOf(type) > -1);
+
       const url = {
         Sales_Member: PageEnums.saleClient,
         Purchase_Member: PageEnums.purchaseClient,
@@ -77,6 +78,7 @@ export default {
         } else {
           node?.role?.push?.(this.role);
         }
+
         return !_isEmpty(node) && setUserRoleApi(node);
       });
 

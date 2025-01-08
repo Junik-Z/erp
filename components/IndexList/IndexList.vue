@@ -492,7 +492,7 @@ export default {
                         >
                           {{ button.label }}
                         </button>
-                        <slot :node="item"></slot>
+                        <slot v-if="$slots.default" :node="item"></slot>
                       </view>
                     </view>
                   </BasicCard>
