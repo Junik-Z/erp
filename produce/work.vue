@@ -393,6 +393,22 @@ export default {
         }
       }
     },
+
+    // 下一步
+    onNext() {
+      if (this.current === 3) {
+        this.onSubmit();
+      } else {
+        this.current += 1;
+      }
+    },
+    onPrev() {
+      if (this.current === 0) {
+        uni.navigateBack({});
+      } else {
+        this.current -= 1;
+      }
+    },
   },
   computed: {
     getStartDate() {
@@ -505,7 +521,7 @@ export default {
       </block>
     </UniForms>
 
-    <view style="padding: 10px;">
+    <view style="padding: 10px;" v-if="false">
       <GridTable
         :columns="columns"
         :data="list"
@@ -513,7 +529,7 @@ export default {
       />
     </view>
 
-    <view style="width: 100vw; height: 40vh; position: relative; z-index: 1">
+    <view style="width: 100vw; height: 40vh; position: relative; z-index: 1" v-if="false">
       <UniEcCanvas
         ref="canvas"
         :ec="ec"
@@ -522,15 +538,25 @@ export default {
       />
     </view>
 
-    <button
-      class="ko-basic-button"
-      style="margin: 0 40px 10px;"
-      :loading="loading"
-      :disabled="loading"
-      @click="onSubmit"
-    >
-      保存
-    </button>
+
+    <view class="ko-work__footer">
+      <button
+        class="ko-basic-button"
+        style="margin: 0 40px 10px;"
+        @click="onPrev"
+      >
+        {{ current === 0 ? "取消" : "上一步" }}
+      </button>
+      <button
+        class="ko-basic-button"
+        style="margin: 0 40px 10px;"
+        :loading="loading"
+        :disabled="loading"
+        @click="onNext"
+      >
+        {{ current === 3 ? "提交" : "下一步" }}
+      </button>
+    </view>
 
   </view>
 </template>
@@ -548,6 +574,12 @@ export default {
 
   &__steps {
     padding: 10px;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
   }
 }
 

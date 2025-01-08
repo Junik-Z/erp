@@ -67,11 +67,6 @@ export default {
       this.$emit("change");
     },
   },
-  computed: {
-    getLabel() {
-      const node = this.classList;
-    },
-  },
 };
 </script>
 
@@ -91,7 +86,7 @@ export default {
           <i class="iconfont icon-guanbi"></i>
         </button>
       </view>
-      <button  v-if="!checkedItem.label" class="ko-basic-button__card" @click="onOpen">分类</button>
+      <button v-if="!checkedItem.label" class="ko-basic-button__card" @click="onOpen">分类</button>
     </view>
 
     <BasicPopup
