@@ -115,7 +115,7 @@ export default {
       }
 
       uni.navigateTo({
-        url: "/produce/produce/work" + query,
+        url: "/produce/work" + query,
       });
     },
     onCancel(item) {
