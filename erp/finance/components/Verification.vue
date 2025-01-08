@@ -14,8 +14,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import { _deepCopy, _isEmpty } from "@/utils";
-import * as uni from "@/utils";
+import { _isEmpty } from "@/utils";
 
 export default {
   name: "Verification",
@@ -46,7 +45,7 @@ export default {
         pageSize: 20,
         pageNum: 0,
       },
-      tableKey: +new Date()
+      tableKey: +new Date(),
     };
   },
   methods: {
@@ -54,7 +53,7 @@ export default {
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
-        this.tableKey = +new Date()
+        this.tableKey = +new Date();
       }
       this.loading = true;
       const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.current];
