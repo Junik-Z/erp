@@ -177,7 +177,7 @@ export default {
               return obj;
             });
 
-          this.list = this.onMergeArrays(this.list, list, "id");
+          this.list = this.onMergeArrays(this.list, list, "productId");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
@@ -202,7 +202,7 @@ export default {
           productId: item.productId,
           images: item.images,
           price: _get(item, this.getMoneyKey),
-          productQuantity: val,
+          productQuantity: val || 0,
           extend: item.extend,
         });
       } else {

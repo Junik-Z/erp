@@ -1,6 +1,6 @@
 import { goLogin } from "@/api/user";
 import { CONFIG } from "@/utils/config";
-import { _isEqual } from "@/utils";
+import { _isDev, _isEqual } from "@/utils";
 
 export const baseURl = CONFIG.BASE_URL;
 
@@ -25,7 +25,7 @@ export default function request(config, isLoading = false, whole = false) {
     const Token = uni.getStorageSync("AccessToken") || "";
     // #endif
 
-    console.log("打印出来的商户ID", scene);
+    console.log("打印出来的商户ID", scene, _isDev());
 
     uni.request({
       url: baseURl + config["url"],
@@ -40,7 +40,7 @@ export default function request(config, isLoading = false, whole = false) {
         ...(Cookie ? {Cookie} : {}),
         // #endif
         // #ifdef H5
-        ...(Token && false ? {Authorization: Token} : {}),
+        ...(Token && false && _isDev() ? {Authorization: Token} : {}),
         // #endif
         "X-MiniApp-ID": CONFIG.APP_ID,
         "X-Tenant-ID": scene || "",

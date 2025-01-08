@@ -538,14 +538,7 @@ export function _uniqWith(array, comparator) {
   return result;
 }
 
-/**
- 财通
- 智链
- 业达
- 企管家
- 智链财
- 财易通
- 企易宝
-
- 荣创达
- */
+// 开发模式
+export function _isDev() {
+  return process.env?.NODE_ENV === "development";
+}
