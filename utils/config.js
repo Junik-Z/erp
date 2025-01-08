@@ -38,14 +38,20 @@ export const CONFIG = {
       test: {
         BASE_URL,
         BASE_WS_URL,
+
+        SystemVersion: 'develop'
       },
       env: {
         BASE_URL: "https://erp.kuaouyun.cn/api",
         BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+
+        SystemVersion: 'trial'
       },
       prod: {
         BASE_URL: "https://erp.kuaouyun.cn/api",
         BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
+
+        SystemVersion: 'release'
       },
     }[type]
   ),

@@ -1,13 +1,12 @@
 <script>
-import UniDatetimePicker
-  from "@/erp/components/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
+import UniDatetimePicker from "./components/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy, showToast } from "@/utils";
 import { addedProduceApi, getProduceDetailApi, updateProduceApi } from "@/api/erp/produce";
-import PickerProduct from "@/erp/components/PickerProduct/PickerProduct.vue";
+import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import mixins from "@/mixins/mixins";
 import dayjs from "@/utils/dayjs";
 

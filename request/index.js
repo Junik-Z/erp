@@ -38,6 +38,7 @@ export default function request(config, isLoading = false, whole = false) {
         "Content-Type": "application/json",
         // #ifndef H5
         ...(Cookie ? {Cookie} : {}),
+        "X-MiniApp-Env": CONFIG.SystemVersion,
         // #endif
         // #ifdef H5
         ...(Token && false && _isDev() ? {Authorization: Token} : {}),
