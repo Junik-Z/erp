@@ -62,6 +62,8 @@ export default {
     },
 
     onAllClass() {
+      this.$refs.DaTreeRef.setCheckedKeys(this.checkedItem?.key, false);
+
       this.checkedItem = {};
       this.$emit("input", "");
       this.$emit("change");
@@ -91,7 +93,7 @@ export default {
           <i class="iconfont icon-guanbi"></i>
         </button>
       </view>
-      <button  v-if="!checkedItem.label" class="ko-basic-button__card" @click="onOpen">分类</button>
+      <button v-if="!checkedItem.label" class="ko-basic-button__card" @click="onOpen">分类</button>
     </view>
 
     <BasicPopup

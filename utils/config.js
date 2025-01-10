@@ -10,7 +10,7 @@ let DEFAULT_PAGE_SIZE = 5;
 BASE_URL = "/api";
 BASE_WS_URL = "/api/ws/app";
 
-DEFAULT_PAGE_SIZE = 20;
+DEFAULT_PAGE_SIZE = 10;
 
 // BASE_URL: "https://erp.kuaouyun.cn/api",
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
@@ -19,20 +19,26 @@ DEFAULT_PAGE_SIZE = 20;
 let type = "develop";
 
 if (_isDev()) {
-// type = "trial";
+  // type = "trial";
 
-// type = "release";
+  // type = "release";
 
-// #ifdef MP
-// type = "trial";
-// #endif
+  // #ifdef MP
+  // type = "trial";
+  // #endif
 
-// #ifdef H5
-// type = "trial";
-// #endif
+  // #ifdef H5
+  // type = "trial";
+  // #endif
 } else {
+  // #ifdef MP
   const accountInfo = uni.getAccountInfoSync();
   type = accountInfo?.miniProgram?.envVersion;
+  // #endif
+
+  // #ifdef H5
+  type = "trial";
+  // #endif
 }
 
 console.log("当前版本为：", type);

@@ -109,6 +109,7 @@ export default {
 
     // 申请退货
     jumpSaleReturn(query) {
+      this.noRefresh = true;
       let q = this.getQueryString(query);
       uni.navigateTo({
         url: `${PageEnums.saleRefund}${q}`,

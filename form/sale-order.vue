@@ -3,7 +3,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import {
   addedSaleApi,
   getBindInfoApi,
@@ -169,7 +169,7 @@ export default {
 
           Func(params)
             .then((res) => {
-              showToast({
+              CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   if (this.isClient && !this.isNormal) {

@@ -18,6 +18,7 @@ export default {
         return [];
       },
     },
+    labelKey: String,
     isShowSearch: Boolean,
   },
   data() {
@@ -47,22 +48,17 @@ export default {
   },
   methods: {
     onClick() {
-      if (this.values.length > 2) {
-        this.$emit("input", this.content);
-      } else {
-        this.$emit("input", !!this.content);
-      }
-
+      this.$emit("input", this.content);
       this.$emit("change");
     },
 
-    onShowSearch() {
+    onShowSearch(flag) {
       getRect(".ko-history__input--wrap", this)
         .then(res => {
           this.inputWrapHeight = res.height;
         });
 
-      this.show = !this.show;
+      this.show = flag;
     },
   },
 
@@ -88,11 +84,12 @@ export default {
           :values="values.length ? values : [text, `已完成${text}`]"
           @clickItem="onClick"
           style-type="text"
+          :label-key="labelKey"
         />
       </view>
 
       <view v-if="isShowSearch" class="ko-history__search">
-        <button class="ko-basic-button__card" @click.stop="onShowSearch">
+        <button class="ko-basic-button__card" @click.stop="onShowSearch(!show)">
           <view style="display: flex; align-items: center;">
             <text style="padding-right: 5px;">搜索</text>
             <i class="iconfont icon-jiantou"></i>

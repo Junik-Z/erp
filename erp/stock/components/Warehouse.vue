@@ -16,7 +16,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, CustomToast } from "@/utils";
 import PrintList from "@/components/PrintList/PrintList.vue";
 import KoList from "@/components/List/List.vue";
 import { CONFIG } from "@/utils/config";
@@ -51,6 +51,7 @@ export default {
         orderCode: "",
         "customer.name": "",
         "user.nickName": "",
+        orderAddress: "",
       },
 
       noMore: false,
@@ -138,6 +139,10 @@ export default {
           prop: "createTime",
         },
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
         },
@@ -151,6 +156,13 @@ export default {
       // #endif
 
       tableKey: +new Date(),
+      values: [
+        "待处理",
+        "已完成",
+        // #ifdef H5
+        "已取消",
+        // #endif
+      ],
     };
   },
   methods: {
@@ -239,7 +251,7 @@ export default {
     startPrint(data) {
       printA4InboundApi(data)
         .then(() => {
-          showToast({
+          CustomToast({
             title: "请求成功",
           });
         });
@@ -247,7 +259,7 @@ export default {
 
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
-      flag && this.$refs.SearchRef.onShowSearch();
+this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
   },
@@ -258,7 +270,7 @@ export default {
   <view class="ko-warehouse">
     <HistoryBar
       v-model="isHistory"
-      :values="['待处理', '已完成', '已取消']"
+      :values="values"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -266,13 +278,16 @@ export default {
       <view class="ko-basic-search">
         <UniRow :gutter="10">
           <UniCol :span="24">
-            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
@@ -416,10 +431,6 @@ export default {
   .uni-group {
     display: flex;
     align-items: center;
-
-    .ko-basic-button__card {
-      margin: 0 5px;
-    }
   }
 }
 

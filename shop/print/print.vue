@@ -35,6 +35,18 @@ const PageType = {
   payable: "财务收款单",
 };
 
+const SummaryText = {
+  inbound: "实收",
+  outbound: "实收",
+  sale: "实收",
+  saleReturn: "实退",
+  purchase: "实收",
+  purchaseReturn: "实收",
+  produce: "实收",
+  receivable: "实收",
+  payable: "实收",
+};
+
 const Func = {
   inbound: getInboundDetailApi,
   outbound: getOutboundDetailApi,
@@ -345,14 +357,14 @@ export default {
       }
 
       return [
-        {label: "大写实收", colspan: 1},
+        {label: `大写${_get(SummaryText, this.option?.page_type)}`, colspan: 1},
         {
           label: this.toBigMoney(this.toYuan(this.node.totalAmount)),
           colspan: numIndex - 2,
         },
         {label: "合计", colspan: 1},
         {label: this.toYuan(count), colspan: 1},
-        {label: "实收", colspan: 1},
+        {label: `${_get(SummaryText, this.option?.page_type)}`, colspan: 1},
         {label: this.toYuan(this.node.totalAmount), colspan: 1},
       ];
     },

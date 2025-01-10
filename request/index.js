@@ -24,9 +24,7 @@ export default function request(config, isLoading = false, whole = false) {
     // #ifdef H5
     const Token = uni.getStorageSync("AccessToken") || "";
     // #endif
-
-    console.log("打印出来的商户ID", scene, _isDev());
-
+    
     uni.request({
       url: baseURl + config["url"],
       method: config["method"],
@@ -70,6 +68,7 @@ export default function request(config, isLoading = false, whole = false) {
         if (res.statusCode === 200 && code === 200) {
           resolve(res.data);
         } else if (code === 401) {
+
           if (uni.$__IS_LOGOUT_FLAG__) return false;
 
           if (!isFlag) {

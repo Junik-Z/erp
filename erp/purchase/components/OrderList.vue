@@ -13,7 +13,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _keys, _pick, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -78,6 +78,7 @@ export default {
         orderCode: "",
         "customer.name": "",
         "user.nickName": "",
+        orderAddress: "",
       },
       loading: false,
       noMore: false,
@@ -175,6 +176,10 @@ export default {
           },
         }, */
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
           minWidth: 120,
@@ -195,6 +200,11 @@ export default {
       noRefresh: false,
       // 退货申请
       isReturn: false,
+      values: [
+        "待处理",
+        "待付款",
+        "已完成",
+      ],
     };
   },
   methods: {
@@ -214,7 +224,7 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && !this.isReturn) {
+      if (this.noRefresh && info && !this.isReturn && this.list.length) {
         this.updateList();
         return false;
       }
@@ -293,14 +303,14 @@ export default {
       if (_isEqual(data.type, "footer")) {
         printA4PurchaseApi(data)
           .then(() => {
-            showToast({
+            CustomToast({
               title: "请求成功",
             });
           });
       } else {
         printPurchaseApi(data)
           .then(() => {
-            showToast({
+            CustomToast({
               title: "请求成功",
             });
           });
@@ -308,10 +318,10 @@ export default {
 
     },
 
-    onResetList(flag) {
+    onResetList() {
       this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
-      flag && this.$refs.SearchRef.onShowSearch();
+      this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
 
@@ -392,7 +402,8 @@ export default {
 <template>
   <view class="ko-order">
     <HistoryBar
-      v-model="tab" :values="['待处理', '待付款', '已完成']"
+      v-model="tab"
+      :values="values"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -400,13 +411,16 @@ export default {
       <view class="ko-basic-search">
         <UniRow :gutter="10">
           <UniCol :span="24">
-            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入供应商名称" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
@@ -479,6 +493,7 @@ export default {
         @row-click="onRowClick"
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
+        :no-refresh="noRefresh"
       >
         <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">

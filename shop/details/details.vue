@@ -49,7 +49,7 @@ export default {
   onLoad(option) {
     this.option = option;
 
-    console.log('财务详情的页面参数', option);
+    console.log("财务详情的页面参数", option);
 
     uni.setNavigationBarTitle({title: _get(PageType, option.page_type)});
 
@@ -77,7 +77,6 @@ export default {
       this.loading = true;
       Func[this.option.page_type]({id: this.option.id})
         .then(res => {
-          console.log(res.data);
           this.node = res.data;
         })
         .finally(() => {
@@ -184,15 +183,15 @@ export default {
     <UniSection title="基础信息" type="line">
       <view class="ko-details__item">
         <view class="ko-details__cell">
-          <label class="ko-basic-label">订单编号：</label>
+          <label class="ko-basic-label">编号：</label>
           <text class="ko-details__cell--text">{{ node.orderCode }}</text>
         </view>
         <view class="ko-details__cell" v-if="node.orderType">
-          <label class="ko-basic-label">订单类型：</label>
+          <label class="ko-basic-label">类型：</label>
           <text class="ko-details__cell--text">{{ ORDER_TYPE_ENUMS(node.orderType) }}</text>
         </view>
         <view class="ko-details__cell">
-          <label class="ko-basic-label">订单状态：</label>
+          <label class="ko-basic-label">状态：</label>
           <text class="ko-details__cell--text" v-if="isFinance">{{ FINANCE_ORDER_STATUS_ENUMS(node.status) }}</text>
           <text class="ko-details__cell--text" v-else>{{ ORDER_STATUS_ENUMS(node.status) }}</text>
         </view>
@@ -310,7 +309,7 @@ export default {
     </template>
 
     <template v-if="!isProduce">
-      <UniSection title="订单明细" type="line">
+      <UniSection title="明细" type="line">
         <view class="ko-details__item">
           <!-- #ifdef MP -->
           <view class="ko-details__cell" v-for="item of node.details" :key="item.id">
@@ -337,12 +336,12 @@ export default {
 
           <block v-if="!isLogistics">
             <view class="ko-details__cell" style="margin-top: 20px;" v-if="getTotal">
-              <label class="ko-basic-label">共计：</label>
+              <label class="ko-basic-label">金额：</label>
               <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getTotal) }}元</text>
             </view>
 
-            <view class="ko-details__cell" style="margin-top: 10px;" v-if="node.totalAmount">
-              <label class="ko-basic-label">实付金额：</label>
+            <view class="ko-details__cell" style="margin-top: 10px;">
+              <label class="ko-basic-label">实付：</label>
               <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
             </view>
           </block>

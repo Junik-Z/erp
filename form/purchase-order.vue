@@ -12,7 +12,7 @@ import {
   updatePurchaseApi,
 } from "@/api/erp/purchase";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -170,7 +170,7 @@ export default {
           const Func = this.isAgain ? reOrderPurchaseApi : (this.isEdit ? updatePurchaseApi : addedPurchaseApi);
           Func(params)
             .then((res) => {
-              showToast({
+              CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success() {
                   if (this.isClient && !this.isNormal) {

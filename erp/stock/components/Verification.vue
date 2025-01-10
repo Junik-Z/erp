@@ -25,6 +25,8 @@ export default {
 
       FieldList: [],
       tableKey: +new Date().getTime(),
+
+      noRefresh: false,
     };
   },
   created() {
@@ -32,7 +34,7 @@ export default {
   },
   methods: {
     getList(reset = false) {
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.list = [];
         this.queryList.pageNum = 0;
         this.tableKey = +new Date().getTime();
@@ -49,6 +51,7 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
         });
     },
 
@@ -72,12 +75,14 @@ export default {
         });
     },
     onJump(item) {
+      this.noRefresh = true;
       uni.navigateTo({
         url: "/erp/stock/check" + `?id=${item.id}`,
       });
     },
 
     onJudge() {
+      this.noRefresh = true;
       uni.navigateTo({
         url: "/shop/list/list?judge=true",
       });
@@ -256,6 +261,7 @@ export default {
   // #ifdef MP
   height: calc(100vh - 60px);
   // #endif
+
   // #ifdef H5
   height: calc(100vh - 60px - 56px);
   // #endif
@@ -277,6 +283,7 @@ export default {
     .ko-picker-class {
       flex: 1;
     }
+
     /* #endif */
   }
 

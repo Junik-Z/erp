@@ -21,17 +21,26 @@ export default {
         key: "producedProduceCount",
         color: "#2979ff",
         unit: "单",
+        // #ifdef H5
+        span: 6,
+        // #endif
       },
       {
         label: "待生产单数",
         key: "pendingProduceCount",
         color: "#2979ff",
         unit: "单",
+        // #ifdef H5
+        span: 6,
+        // #endif
       },
       {
         label: "商品存量",
         key: "productStock",
         color: "#2979ff",
+        // #ifdef H5
+        span: 6,
+        // #endif
       },
       {
         label: "产品库存预警",
@@ -39,6 +48,9 @@ export default {
         color: "#e43d33",
         unit: "",
         func: "onJumpWarning",
+        // #ifdef H5
+        span: 6,
+        // #endif
       },
     ],
     loading: false,

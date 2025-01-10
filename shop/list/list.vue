@@ -8,7 +8,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _sum, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _sum, CustomToast } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
@@ -240,7 +240,7 @@ export default {
         const details = (list || []).filter(item => !!this.list.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
 
         if (details.length <= 0) {
-          showToast({title: "您还未盘点选任何产品", icon: "none"});
+          CustomToast({title: "您还未盘点选任何产品", icon: "none"});
           return false;
         }
 
@@ -252,7 +252,7 @@ export default {
               this.sLoading = true;
               checkInOutOrderApi({details})
                 .then(() => {
-                  showToast({
+                  CustomToast({
                     title: "提交成功",
                     success() {
                       uni.navigateBack({});

@@ -148,7 +148,7 @@ export default {
 
     setTimeout(() => {
       this.setList();
-    }, 50);
+    }, 600);
   },
   methods: {
     async setList() {
@@ -390,7 +390,7 @@ export default {
               <block v-else-if="isProduct">
                 <view
                   class="ko-index-list__item"
-                  v-for="(item) in data"
+                  v-for="(item, index) in data"
                   :key="item.id"
                 >
                   <view v-if="isChecked" class="ko-index-list__item--checked" @click.stop="onClick(item)">
@@ -411,7 +411,7 @@ export default {
                       <view class="ko-product__item--footer">
                         <button
                           class="ko-basic-button__card action"
-                          @click="onActionClick(item)"
+                          @click="onActionClick(item, index)"
                         >
                           更多
                         </button>
@@ -487,12 +487,12 @@ export default {
                         <button
                           class="ko-basic-button__user"
                           v-for="(button, dx) of events"
-                          @click.stop="$emit('click-item', button, item)"
+                          @click.stop="$emit('click-item', button, item, index)"
                           :key="dx"
                         >
                           {{ button.label }}
                         </button>
-                        <slot v-if="$slots.default" :node="item"></slot>
+                        <slot v-if="$slots.default" :node="item" :index="index"></slot>
                       </view>
                     </view>
                   </BasicCard>

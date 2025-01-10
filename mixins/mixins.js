@@ -1,5 +1,7 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
+import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
+
 // #endif
 import {
   _deepCopy,
@@ -60,6 +62,11 @@ export default {
       });
     });
   },
+  // #ifdef H5
+  directives: {
+    InfiniteScroll,
+  },
+  // #endif
   mounted() {
   },
   methods: {

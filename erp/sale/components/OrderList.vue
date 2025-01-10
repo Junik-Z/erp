@@ -10,7 +10,7 @@ import {
 } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isString, _keys, _pick, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString, _keys, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -74,6 +74,7 @@ export default {
         orderCode: "",
         "customer.name": "",
         "user.nickName": "",
+        orderAddress: "",
       },
       noMore: false,
 
@@ -170,6 +171,10 @@ export default {
           },
         }, */
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
           minWidth: 120,
@@ -189,6 +194,12 @@ export default {
       noRefresh: false,
 
       isReturn: false,
+
+      values: [
+        "待处理",
+        "待付款",
+        "已完成",
+      ],
     };
   },
   methods: {
@@ -208,7 +219,7 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && !this.isReturn) {
+      if (this.noRefresh && info && !this.isReturn && this.list.length) {
         this.updateList();
         return false;
       }
@@ -232,10 +243,10 @@ export default {
         });
     },
 
-    onResetList(flag) {
+    onResetList() {
       this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
-      flag && this.$refs.SearchRef.onShowSearch();
+      this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
 
@@ -292,7 +303,7 @@ export default {
     startPrint(data) {
       printSaleApi(data)
         .then(() => {
-          showToast({
+          CustomToast({
             title: "请求成功",
           });
         });
@@ -369,15 +380,16 @@ export default {
 <template>
   <view class="ko-order">
     <HistoryBar
-      v-model="tab" :values="['待处理', '待付款', '已完成']"
-      @change="onResetList(false)"
+      v-model="tab"
+      :values="values"
+      @change="onResetList()"
       is-show-search
       ref="SearchRef"
     >
       <view class="ko-basic-search">
         <UniRow :gutter="10">
           <UniCol :span="24">
-            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
@@ -386,8 +398,11 @@ export default {
             <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
           </UniCol>
           <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+          </UniCol>
+          <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
-              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
+              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList()">重置</button>
               <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
             </view>
           </UniCol>
@@ -456,6 +471,8 @@ export default {
         @row-click="onRowClick"
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
+
+        :no-refresh="noRefresh"
       >
         <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">

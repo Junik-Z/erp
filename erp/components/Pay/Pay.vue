@@ -212,7 +212,6 @@ export default {
         </view>
       </UniSection>
 
-
       <UvActionSheet
         ref="UASRef"
         :actions="actionList"
@@ -246,6 +245,12 @@ export default {
 
   // #ifdef H5
   width: 600px;
+
+  /deep/ .uv-popup__content.bottom {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
   // #endif
 
   &__wrap {

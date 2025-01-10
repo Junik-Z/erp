@@ -15,7 +15,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isString, _keys, _pick, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString, _keys, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -80,6 +80,7 @@ export default {
         orderCode: "",
         "customer.name": "",
         "user.nickName": "",
+        orderAddress: "",
       },
       noMore: false,
 
@@ -165,6 +166,10 @@ export default {
           ],
         },
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
         },
@@ -178,11 +183,15 @@ export default {
 
       tableKey: +new Date(),
 
-
       node: {},
       nodeIndex: null,
 
       noRefresh: false,
+      values: [
+        "待处理",
+        "待退款",
+        "已完成",
+      ],
     };
   },
   methods: {
@@ -202,9 +211,11 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info) {
+      console.log(info, "新增数据");
+
+      if (this.noRefresh && info && this.list.length) {
         this.updateList();
-        return false
+        return false;
       }
 
       this.loading = true;
@@ -231,9 +242,9 @@ export default {
       this.jumpSaleReturn({id: item.id});
     },
 
-    onResetList(flag) {
+    onResetList() {
       this.queryList = _deepCopy(this.$options.data().queryList);
-      flag && this.$refs.SearchRef.onShowSearch();
+      this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
 
@@ -267,7 +278,7 @@ export default {
     startPrint(data) {
       returnPrintSaleApi(data)
         .then(() => {
-          showToast({
+          CustomToast({
             title: "请求成功",
           });
         });
@@ -287,7 +298,7 @@ export default {
             this.list.unshift(_pick(data, _keys(this.node)));
           } else {
             const index = this.list.findIndex(v => v.id === data.id);
-            const node = _isEmpty(this.node) ? this.list.at(-1) : this.node
+            const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
             if (index > -1) {
               this.$set(this.list, index, _pick(data, _keys(node)));
             } else {
@@ -309,7 +320,7 @@ export default {
         {
           name: "取消订单",
           func: "cancelRefundSale",
-          status: ["CREATED"],
+          status: ["CREATED", "FINISHED"],
         },
         {
           name: "编辑",
@@ -324,6 +335,10 @@ export default {
         },
       ]
         .filter(li => {
+          if (li.func === "cancelRefundSale") {
+            return ["CREATED"].includes(node.status) || (["FINISHED"].includes(node.status) && node.totalAmount === 0);
+          }
+
           if (li.name === "编辑") {
             return this.tab !== 2 && li.status.includes(node.status);
           }
@@ -339,7 +354,7 @@ export default {
   <view class="ko-client">
     <HistoryBar
       v-model="tab"
-      :values="['待处理', '待付款', '已完成']"
+      :values="values"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -347,13 +362,16 @@ export default {
       <view class="ko-basic-search">
         <UniRow :gutter="10">
           <UniCol :span="24">
-            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
@@ -373,6 +391,7 @@ export default {
             is-sales
             :item="item"
             @click="onJumpDetails(item, 'saleReturn')"
+            is-show-total-amount
           >
             <template #operate v-if="isPerm('Sales_Write')">
               <view
@@ -400,12 +419,13 @@ export default {
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
-                  付款
+                  退款
                 </button>
 
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item, index)"
+                  v-if="tab === 2 ? item.totalAmount === 0 : true"
                 >
                   更多
                 </button>
@@ -430,6 +450,7 @@ export default {
 
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
+        :no-refresh="noRefresh"
       >
         <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
           <view
@@ -456,7 +477,7 @@ export default {
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
-              付款
+              退款
             </button>
 
 

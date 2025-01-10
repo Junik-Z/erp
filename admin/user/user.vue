@@ -129,7 +129,7 @@ export default {
         查看商户码
       </button>
 
-      <view style="height: 30px;"></view>
+      <view style="height: 30px; width: 30px;"></view>
 
       <LongPressButton
         label="重新登录"

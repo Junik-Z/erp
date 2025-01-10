@@ -14,7 +14,7 @@ import {
   reOrderPurchaseReturnApi,
   updatePurchaseReturnApi,
 } from "@/api/erp/purchase";
-import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -102,7 +102,7 @@ export default {
           Func(params)
             .then((res) => {
               uni.setStorageSync("TENP_ORDER_INFO", res.data);
-              showToast({
+              CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   uni.navigateBack();

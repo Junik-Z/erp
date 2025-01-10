@@ -8,7 +8,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy, showToast } from "@/utils";
+import { _deepCopy, CustomToast } from "@/utils";
 import { validatePhone } from "@/utils/validate";
 import { addedCustomerApi, editCustomerApi, getCustomerInfoApi } from "@/api/erp/sale";
 import { isNumber } from "@/components/da-tree-vue2/utils";
@@ -141,9 +141,11 @@ export default {
                if (_isEqual(op.PAGE_TYPE, "ADDED_CLIENT_BY_SALE")) {
                  await bindCustomerApi({id: data.id, userId: op.SHARE_USER_ID, customerId: this.GET_USER_INFO.userId});
                }
-
                await  */
-              showToast({
+
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
+
+              CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success() {
                   uni.navigateBack({});

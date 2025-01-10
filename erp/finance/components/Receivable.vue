@@ -48,6 +48,7 @@ export default {
         orderCode: "",
         "customer.name": "",
         "user.nickName": "",
+        orderAddress: "",
       },
       noMore: false,
 
@@ -64,18 +65,27 @@ export default {
           key: "count",
           color: "#2979ff",
           unit: "元",
+          // #ifdef H5
+          span: 6,
+          // #endif
         },
         {
           label: "已收款总金额",
           key: "settledCount",
           color: "#2979ff",
           unit: "元",
+          // #ifdef H5
+          span: 6,
+          // #endif
         },
         {
           label: "对账订单数量",
           key: "num",
           color: "#2979ff",
           unit: "单",
+          // #ifdef H5
+          span: 6,
+          // #endif
         },
         {
           label: "对账客户数量",
@@ -83,6 +93,9 @@ export default {
           color: "#2979ff",
           unit: "家",
           func: "onJumpReconcile",
+          // #ifdef H5
+          span: 6,
+          // #endif
         },
       ],
 
@@ -169,6 +182,10 @@ export default {
           },
         },
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
         },
@@ -183,6 +200,14 @@ export default {
 
       node: {},
       nodeIndex: null,
+
+      values: [
+        "待清帐",
+        "已完成",
+        // #ifdef H5
+        "已取消",
+        // #endif
+      ],
     };
   },
   mounted() {
@@ -215,6 +240,10 @@ export default {
         }[this.isHistory];
       }
 
+      // #ifdef H5
+      const top = _deepCopy(this.$refs.WrapRef.scrollTop);
+      // #endif
+
       Func(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -226,6 +255,12 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+
+          // #ifdef H5
+          this.$nextTick(() => {
+            this.$refs.WrapRef.scrollTop = top;
+          });
+          // #endif
         });
     },
 
@@ -257,7 +292,7 @@ export default {
     onConfirm(item, index) {
       uni.showModal({
         title: "温馨提示",
-        content: `请核对金额是否准确，确认后入账。`,
+        content: `请仔细核对金额是否准确。未确认的单据将自动确认，确认后入账。`,
         confirmText: "确认",
         success: (res) => {
           if (res.confirm) {
@@ -302,9 +337,9 @@ export default {
       }
     },
 
-    onResetList(flag) {
+    onResetList() {
       this.queryList = _deepCopy(this.$options.data().queryList);
-      flag && this.$refs.SearchRef.onShowSearch();
+      this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
 
@@ -329,145 +364,168 @@ export default {
 </script>
 
 <template>
-  <view class="ko-receivable">
-    <view class="ko-basic-count__wrap">
-      <UniRow :gutter="10">
-        <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
-          <view class="ko-basic-count" @click.stop="onFunc(item)">
-            <view class="ko-basic-count__label">{{ item.label }}</view>
-            <view class="ko-basic-count__info">
-              <UvCountTo
-                :separator="item.unit === '元' ? ',' : ''"
-                :start-val="0"
-                bold
-                :end-val="getCountValue(item)"
-                :color="item.color ? item.color : '#2979ff'"
-              />
-              <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
-            </view>
-          </view>
-        </UniCol>
-      </UniRow>
-    </view>
+  <!-- #ifdef H5 -->
+  <view
+    class="ko-receivable"
+    v-infinite-scroll="onRequestNextPage"
+    infinite-scroll-immediate
+    :infinite-scroll-delay="200"
+    :infinite-scroll-disabled="noMore"
+    :infinite-scroll-distance="200"
+    ref="WrapRef"
+    :key="tableKey"
+  >
+    <!-- #endif -->
+    <!-- #ifndef H5 -->
+    <view class="ko-receivable">
+      <!-- #endif -->
 
-    <HistoryBar
-      v-model="isHistory"
-      :values="['待清帐', '已完成', '已取消']"
-      @change="onResetList(false)"
-      is-show-search
-      ref="SearchRef"
-    >
-      <view class="ko-basic-search">
+      <view class="ko-basic-count__wrap">
         <UniRow :gutter="10">
-          <UniCol :span="24">
-            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
-          </UniCol>
-          <UniCol :span="24">
-            <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户/供应商名称" />
-          </UniCol>
-          <UniCol :span="24">
-            <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
-          </UniCol>
-          <UniCol :span="24">
-            <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
-              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
-              <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+          <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
+            <view class="ko-basic-count" @click.stop="onFunc(item)">
+              <view class="ko-basic-count__label">{{ item.label }}</view>
+              <view class="ko-basic-count__info">
+                <UvCountTo
+                  :separator="item.unit === '元' ? ',' : ''"
+                  :start-val="0"
+                  bold
+                  :end-val="getCountValue(item)"
+                  :color="item.color ? item.color : '#2979ff'"
+                />
+                <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
+              </view>
             </view>
           </UniCol>
         </UniRow>
       </view>
-    </HistoryBar>
 
-    <view class="ko-receivable__row">
-      <!-- #ifdef MP -->
-      <view>
-        <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-          <view v-for="(item, index) of list" :key="index" style="padding: 5px 10px">
-            <OrderCard
-              @click="onJumpDetails(item, 'receivable')"
-              :item="item"
-              is-finance
-            >
-              <template #operate>
-                <view
-                  v-if="isPerm('Finance_Write') && !isHistory"
-                  style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                >
-                  <button
-                    v-if="item.confirmable"
-                    class="ko-basic-button__card"
-                    @click.stop="onConfirm(item, index)"
-                  >
-                    确认清帐
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onAddedTicket(item, index)"
-                  >
-                    添加单据
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onCancel(item, index)"
-                    v-if="['CREATED'].includes(item.status)"
-                  >
-                    取消订单
-                  </button>
-                </view>
-              </template>
-            </OrderCard>
-          </view>
-        </KoList>
-      </view>
-      <!-- #endif -->
+      <HistoryBar
+        v-model="isHistory"
+        :values="values"
+        @change="onResetList(false)"
+        is-show-search
+        ref="SearchRef"
+      >
+        <view class="ko-basic-search">
+          <UniRow :gutter="10">
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
+            </UniCol>
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户/供应商名称" />
+            </UniCol>
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+            </UniCol>
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+            </UniCol>
+            <UniCol :span="24">
+              <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
+                <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onResetList(true)">重置</button>
+                <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+              </view>
+            </UniCol>
+          </UniRow>
+        </view>
+      </HistoryBar>
 
-      <!-- #ifdef H5 -->
-      <view style="padding: 10px; height: 100%; overflow: hidden;">
-        <KoTable
-          :key="tableKey"
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-          @row-click="onJumpDetails($event, 'receivable')"
-          @next-load="onRequestNextPage"
-          :no-more="noMore || loading"
-        >
-          <template #operate="{item, index}">
-            <view
-              v-if="isPerm('Finance_Write') && !isHistory"
-              style="display: flex; align-items: center; justify-content: center;"
-            >
-              <button
-                v-if="item.confirmable"
-                class="ko-basic-button__card"
-                @click.stop="onConfirm(item, index)"
+      <view class="ko-receivable__row">
+        <!-- #ifdef MP -->
+        <view>
+          <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+            <view v-for="(item, index) of list" :key="index" style="padding: 5px 10px">
+              <OrderCard
+                @click="onJumpDetails(item, 'receivable')"
+                :item="item"
+                is-finance
+                is-show-total-amount
               >
-                确认清帐
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onAddedTicket(item, index)"
-              >
-                添加单据
-              </button>
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onCancel(item, index)"
-                v-if="['CREATED'].includes(item.status)"
-              >
-                取消订单
-              </button>
+                <template #operate>
+                  <view
+                    v-if="isPerm('Finance_Write') && !isHistory"
+                    style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+                  >
+                    <button
+                      v-if="item.confirmable"
+                      class="ko-basic-button__card"
+                      @click.stop="onConfirm(item, index)"
+                    >
+                      确认清帐
+                    </button>
+                    <button
+                      class="ko-basic-button__card"
+                      @click.stop="onAddedTicket(item, index)"
+                    >
+                      添加单据
+                    </button>
+                    <button
+                      class="ko-basic-button__card"
+                      @click.stop="onCancel(item, index)"
+                      v-if="['CREATED'].includes(item.status)"
+                    >
+                      取消订单
+                    </button>
+                  </view>
+                </template>
+              </OrderCard>
             </view>
-          </template>
-        </KoTable>
-      </view>
-      <!-- #endif -->
-    </view>
+          </KoList>
+        </view>
+        <!-- #endif -->
 
-    <Pay ref="TPRef" @success="onSuccess" />
+        <!-- #ifdef H5 -->
+        <view style="padding: 10px; height: 100%; overflow: hidden;">
+          <KoTable
+            :loading="loading"
+            :columns="columns"
+            :data="list"
+            empty-text="暂无数据"
+            stripe
+            @row-click="onJumpDetails($event, 'receivable')"
+            @next-load="onRequestNextPage"
+            no-more
+          >
+            <template #operate="{item, index}">
+              <view
+                v-if="isPerm('Finance_Write') && !isHistory"
+                style="display: flex; align-items: center; justify-content: center;"
+              >
+                <button
+                  v-if="item.confirmable"
+                  class="ko-basic-button__card"
+                  @click.stop="onConfirm(item, index)"
+                >
+                  确认清帐
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onAddedTicket(item, index)"
+                >
+                  添加单据
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onCancel(item, index)"
+                  v-if="['CREATED'].includes(item.status)"
+                >
+                  取消订单
+                </button>
+              </view>
+            </template>
+          </KoTable>
+        </view>
+        <!-- #endif -->
+      </view>
+
+      <Pay ref="TPRef" @success="onSuccess" />
+      <!-- #ifdef H5 -->
+    </view>
+    <!-- #endif -->
+    <!-- #ifndef H5 -->
   </view>
+  <!-- #endif -->
 </template>
 
 <style scoped lang="scss">
@@ -478,9 +536,8 @@ export default {
   // #endif
 
   // #ifdef H5
-  height: calc(100vh - 56px - 60px - 20px);
-  display: flex;
-  flex-direction: column;
+  height: calc(100vh - 56px - 60px - 10px);
+  overflow-y: auto;
   // #endif
 
 
@@ -496,11 +553,6 @@ export default {
 
   &__row {
     margin-top: 16px;
-
-    // #ifdef H5
-    flex: 1;
-    overflow: hidden;
-    // #endif
   }
 
   &__info {

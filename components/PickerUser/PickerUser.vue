@@ -199,7 +199,6 @@ export default {
             if (this.isLongList) {
               this.list = _deepCopy(this.options);
             }
-
             this.checkNode = this.getUserInfo(this.value);
           }, 500);
         }
@@ -276,10 +275,6 @@ export default {
       :styles="{disableColor: 'transparent'}"
       :value="checkNode.label"
       is-readonly
-
-      @lower="onLower"
-      :no-more="noMore"
-      @search="onSearchToNameIndex"
     />
 
     <BasicPopup
@@ -287,7 +282,7 @@ export default {
       :title="title"
       :type="isInput ? 'bottom' : 'center'"
     >
-      <view class="ko-picker-user__popup" :class="{'is-input': isInput}">
+      <view v-if="modelVisible" class="ko-picker-user__popup" :class="{'is-input': isInput}">
         <IndexList
           @click="onSelect"
           :checked-list="checkedList"
@@ -297,6 +292,10 @@ export default {
           :disabled="disabled"
           :is-receipt-list="type === 'logistics'"
           :safe-area-inset-bottom="false"
+
+          @lower="onLower"
+          :no-more="noMore"
+          @search="onSearchToNameIndex"
         />
       </view>
 

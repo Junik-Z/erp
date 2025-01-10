@@ -75,7 +75,7 @@ export default {
           const key = this.GET_TAB_LIST.findIndex(v => _isEqual(v.ref, option.TO_REF));
 
           this.TAB = key > -1 ? key : 0;
-          console.log('要显示的索引', key);
+          console.log("要显示的索引", key);
           this.getList();
         }, 300);
       });

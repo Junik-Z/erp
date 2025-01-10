@@ -4,13 +4,14 @@ import { Tree } from "@/uni_modules/element-ui/element.min";
 // #endif
 import {
   deleteProductApi,
+  getDetailApi,
   getProductClassApi,
   getProductFieldApi,
   getProductListApi,
   upDownPurchaseApi,
   upDownSaleApi,
 } from "@/api/erp/product";
-import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _isEmpty, _isEqual, _keys, _pick } from "@/utils";
 import mixins from "@/mixins/mixins";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
@@ -18,11 +19,13 @@ import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { PageEnums } from "@/utils/config";
+import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 
 export default {
   name: "ProductList",
   mixins: [mixins],
   components: {
+    UniSearchBar,
     KoMovable,
     ProductCard,
     IndexList,
@@ -68,9 +71,8 @@ export default {
         classId: "",
         pageNum: 0,
         pageSize: 10,
+        name: "",
       },
-
-      actionItem: {},
 
       FieldList: [],
 
@@ -81,6 +83,10 @@ export default {
       checked: [],
 
       tableKey: +new Date(),
+
+      node: {},
+      nodeIndex: null,
+      noRefresh: false,
     };
   },
   created() {
@@ -94,10 +100,17 @@ export default {
     // 获取商品列表
     getList(reset = false) {
 
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.list = [];
         this.queryList.pageNum = 0;
         this.tableKey = +new Date();
+      }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (this.noRefresh && info && this.list.length) {
+        this.updateList();
+        return false;
       }
 
       this.loading = true;
@@ -122,6 +135,8 @@ export default {
     },
 
     onFabClick(item) {
+      this.noRefresh = true;
+
       let query = "";
       if (!_isEmpty(item)) {
         query = `?id=${item.id}`;
@@ -141,7 +156,8 @@ export default {
             deleteProductApi(row)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(this.nodeIndex, 1);
               });
           }
         },
@@ -159,7 +175,9 @@ export default {
             upDownSaleApi(node)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.$set(this.list[this.nodeIndex], "saleOff", node.saleOff);
+
               });
           }
         },
@@ -177,26 +195,36 @@ export default {
             upDownPurchaseApi(node)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.$set(this.list[this.nodeIndex], "purchaseOff", node.purchaseOff);
               });
           }
         },
       });
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
 
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem));
+      this[item.func](_deepCopy(this.node));
     },
 
     onLower() {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
+    },
+
+    onCancel() {
+      setTimeout(() => {
+        this.$nextTick(() => {
+          this.getList(true);
+        });
+      });
     },
 
     // 根据索引搜索
@@ -241,8 +269,6 @@ export default {
           uni.$__product_class_list__ = res.data;
         });
     },
-
-
     onCheckTree(node) {
       if (_isEqual(this.queryList.classId, node.id)) {
         this.queryList.classId = "";
@@ -257,12 +283,34 @@ export default {
       });
     },
     // #endif
+
+    // 更新列表数据
+    updateList() {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? info.id : this.node.id;
+
+      getDetailApi({id})
+        .then(res => {
+          const data = res.data || {};
+          const index = this.list.findIndex(v => v.id === data.id);
+          const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
+          if (index > -1) {
+            this.$set(this.list, index, _pick(data, _keys(node)));
+          } else {
+            this.list.unshift(_pick(data, _keys(node)));
+          }
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
+    },
   },
   computed: {
     getActionsList() {
       return () => {
         if (!this.isPerm("Product_Write")) return [];
-        const {saleOff, purchaseOff} = this.actionItem || {};
+        const {saleOff, purchaseOff} = this.node || {};
 
         return [
           {
@@ -374,6 +422,16 @@ export default {
   <view class="ko-product">
     <view class="ko-product__wrap">
       <view class="ko-product__class">
+        <view style="flex: 1;">
+          <UniSearchBar
+            @confirm="getList(true)"
+            @cancel="onCancel"
+            v-model="queryList.name"
+            placeholder="产品名称"
+            clear-button="none"
+          />
+        </view>
+
         <!-- #ifdef MP -->
         <PickerClass v-model="queryList.classId" @change="getList(true)" />
         <!-- #endif -->
@@ -433,29 +491,29 @@ export default {
               @next-load="onLower"
               :no-more="noMore || loading"
             >
-              <template #operate="{item}" v-if="isPerm('Product_Write')">
+              <template #operate="{item, index}" v-if="isPerm('Product_Write')">
                 <view style="display: flex; align-items: center; justify-content: center;">
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="upDownSale(item)"
+                    @click.stop="upDownSale(item, index)"
                   >
                     {{ item.saleOff ? "上架销售" : "下架销售" }}
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="upDownPurchase(item)"
+                    @click.stop="upDownPurchase(item, index)"
                   >
                     {{ item.purchaseOff ? "上架采购" : "下架采购" }}
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="onFabClick(item)"
+                    @click.stop="onFabClick(item, index)"
                   >
                     编辑
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    @click.stop="onRemove(item)"
+                    @click.stop="onRemove(item, index)"
                   >
                     删除
                   </button>

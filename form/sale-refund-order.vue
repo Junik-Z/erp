@@ -6,7 +6,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniDataSelect from "./components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import {
   addedSaleReturnApi,
   getBindInfoApi,
@@ -121,13 +121,14 @@ export default {
 
           Func(params)
             .then((res) => {
-              showToast({
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
+
+              CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   uni.navigateBack();
                 },
               });
-              uni.setStorageSync("TENP_ORDER_INFO", res.data);
             })
             .finally(() => {
               this.loading = false;
