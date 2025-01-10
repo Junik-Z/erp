@@ -14,8 +14,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import { _deepCopy, _isEmpty } from "@/utils";
-import * as uni from "@/utils";
+import { _isEmpty } from "@/utils";
 
 export default {
   name: "Verification",
@@ -46,16 +45,19 @@ export default {
         pageSize: 20,
         pageNum: 0,
       },
-      tableKey: +new Date()
+      tableKey: +new Date(),
+
+      noRefresh: false,
     };
   },
   methods: {
     getList(reset = false) {
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.list = [];
         this.queryList.pageNum = 0;
-        this.tableKey = +new Date()
+        this.tableKey = +new Date();
       }
+
       this.loading = true;
       const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.current];
 
@@ -76,15 +78,16 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
         });
     },
 
-    onRefresh(item) {
+    onRefresh(item, index) {
       this.$set(item, "__r_loading__", true);
       ;[refreshCustomerApi, refreshSupplierApi][+this.current]({id: item.id})
-        .then(() => {
+        .then((res) => {
           uni.showToast({title: "刷新成功"});
-          this.getList();
+          this.$set(item, "amount", res.data);
         })
         .finally(() => {
           this.$set(item, "__r_loading__", false);
@@ -92,30 +95,32 @@ export default {
     },
 
     onJump(item) {
+      this.noRefresh = true;
       uni.navigateTo({
         url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.current]}`,
       });
     },
 
-    onClickItem(it, node) {
-      this.onRefresh(node);
+    onClickItem(it, node, index) {
+      this.onRefresh(node, index);
     },
 
-
     onLower() {
+      this.noRefresh = false;
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
+      this.noRefresh = false;
       this.queryList.nameIndex = key;
       this.getList(true);
     },
   },
   computed: {
     getTabsList() {
-      return this.isReconcile ? ["客户列表", "供应商列表"] : ["客户列表", "供应商列表"];
+      return this.isReconcile ? ["客户", "供应商"] : ["客户", "供应商"];
     },
 
     getEvents() {

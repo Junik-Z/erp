@@ -1,6 +1,6 @@
 <script>
 import { getScanCallbackApi } from "@/api/user";
-import { _deepCopy, _isEmpty, _omit, showToast } from "@/utils";
+import { _deepCopy, _isEmpty, _omit, CustomToast } from "@/utils";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 import mixins from "@/mixins/mixins";
 
@@ -32,7 +32,7 @@ export default {
       getScanCallbackApi({id: arr[1]})
         .then(res => {
           console.log(res);
-          showToast({
+          CustomToast({
             title: "授权成功",
             success() {
               console.log("授权成功");

@@ -12,7 +12,7 @@ import {
   getPayableAchievableApi,
   getReturnedOrderListApi,
 } from "@/api/erp/finance";
-import { _deepCopy, _get, _isEmpty, _pick, _sum, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _pick, _sum, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import mixins from "@/mixins/mixins";
 
@@ -232,7 +232,7 @@ export default {
 
             Func(params)
               .then(() => {
-                showToast({
+                CustomToast({
                   title: "单据已确认",
                   success() {
                   },

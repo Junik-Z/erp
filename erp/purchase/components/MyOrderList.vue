@@ -1,14 +1,23 @@
 <script>
+// #ifdef H5
+import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
+// #endif
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import { getMyPurchaseListApi, getMyStatisticsPurchaseApi, getReturnMyPurchaseListApi } from "@/api/erp/purchase";
+import {
+  getMyPurchaseListApi,
+  getMyStatisticsPurchaseApi,
+  getPurchaseDetailApi,
+  getPurchaseReturnDetailApi,
+  getReturnMyPurchaseListApi,
+} from "@/api/erp/purchase";
 import { CONFIG } from "@/utils/config";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
@@ -47,8 +56,6 @@ export default {
       noMore: false,
 
       isHistory: false,
-
-      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -141,6 +148,10 @@ export default {
           },
         }, */
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
           minWidth: 120,
@@ -154,8 +165,21 @@ export default {
       // #endif
 
       tableKey: +new Date(),
+
+      node: {},
+      nodeIndex: null,
+
+      noRefresh: false,
+      isReturn: false,
     };
   },
+
+  // #ifdef H5
+  directives: {
+    InfiniteScroll,
+  },
+  // #endif
+
   created() {
     this.getCount();
   },
@@ -176,11 +200,22 @@ export default {
     },
 
     getList(reset = false) {
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.tableKey = +new Date();
         this.queryList.pageNum = 0;
         this.list = [];
       }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (info && this.noRefresh && !this.isReturn && this.list.length) {
+        this.updateList();
+        return false;
+      }
+
+      // #ifdef H5
+      const top = _deepCopy(this.$refs.WrapRef.scrollTop);
+      // #endif
 
       this.loading = true;
       const Func = this.isHistory ? getReturnMyPurchaseListApi : getMyPurchaseListApi;
@@ -195,55 +230,99 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+
+          this.isReturn = false;
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+
+          // #ifdef H5
+          this.$nextTick(() => {
+            this.$refs.WrapRef.scrollTop = top;
+          });
+          // #endif
         });
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
     },
 
 
     // 处理添加修改
-    onAdded(item) {
+    onAdded(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
+      this.noRefresh = true;
       if (this.isHistory) {
         this.jumpAddedReturnPurchase({
           PAGE_TYPE: "ADDED_REFUND_PURCHASE",
+          isNormal: true,
           ...(item?.id ? {id: item.id} : {}),
         });
       } else {
         this.jumpAddedPurchase({
           PAGE_TYPE: "ADDED_PURCHASE",
+          isNormal: true,
           ...(item?.id ? {id: item.id} : {}),
         });
       }
     },
 
     // 提交销售订单
-    onSubmit(item) {
+    onSubmit(item, index) {
       const Func = this.isHistory ? this.submitReturnPurchase : this.submitPurchase;
-      Func(item);
+      Func(item, index);
     },
     // 删除订单
-    onRemove(item) {
+    onRemove(item, index) {
       const Func = this.isHistory ? this.removeReturnPurchase : this.removePurchase;
-      Func(item);
+      Func(item, index);
     },
     // 取消订单
-    onCancel(item) {
+    onCancel(item, index) {
       const Func = this.isHistory ? this.cancelReturnPurchase : this.cancelPurchase;
-      Func(item);
+      Func(item, index, true);
     },
     // 申请退货
-    onReturn(item) {
+    onReturn(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
+      this.isReturn = true;
+      this.noRefresh = true;
       this.jumpAddedReturnPurchase({
         order_id: item.id,
         PAGE_TYPE: "ADDED_REFUND_SALE",
       });
+    },
+
+    updateList() {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      const Func = this.isHistory ? getPurchaseReturnDetailApi : getPurchaseDetailApi;
+
+      Func({id})
+        .then(res => {
+          const data = res.data || {};
+          this.onProcessingListData(data);
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
+
     },
   },
   computed: {
@@ -255,7 +334,7 @@ export default {
     },
 
     actionList() {
-      const node = this.actionItem || {};
+      const node = this.node || {};
       return [
         {
           name: "申请退货",
@@ -289,142 +368,161 @@ export default {
 </script>
 
 <template>
-  <view class="ko-my-order-list">
-    <view class="ko-basic-count__wrap">
-      <UniRow :gutter="10">
-        <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
-          <view class="ko-basic-count">
-            <view class="ko-basic-count__label">{{ item.label }}</view>
-            <view class="ko-basic-count__info">
-              <UvCountTo
-                :separator="item.unit === '元' ? ',' : ''"
-                :start-val="0"
-                bold
-                :end-val="getCountValue(item)"
-                :color="item.color ? item.color : '#2979ff'"
-              />
-              <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
-            </view>
-          </view>
-        </UniCol>
-      </UniRow>
-    </view>
-
-    <HistoryBar v-model="isHistory" :values="['采购订单', '采购退货订单']" @change="getList(true)" />
-
-    <view class="ko-my-order-list__wrap">
-      <!-- #ifdef MP -->
-      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view>
-          <OrderCard
-            v-for="item of list"
-            :key="item.id"
-            :item="item"
-            @click="onJumpDetails(item, isHistory ? 'purchaseReturn' : 'purchase')"
-            is-sales
-            :spacing="10"
-          >
-            <template #operate>
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
-                <!--<button
-                  v-if="['CREATED'].includes(item.status)"
-                  class="ko-basic-button__card"
-                  @click.stop="onSubmit(item)"
-                  :disabled="item.__s_loading__"
-                  :loading="item.__s_loading__"
-                >
-                  提交订单
-                </button>-->
-
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onActionClick(item)"
-                  v-if="[isHistory ? '' : 'FINISHED', 'CREATED', 'CANCELLED'].includes(item.status)"
-                >
-                  更多
-                </button>
-              </view>
-            </template>
-          </OrderCard>
-        </view>
-      </KoList>
-      <!-- #endif -->
-
-      <!-- #ifdef H5 -->
-      <KoTable
-        :key="tableKey"
-        :loading="loading"
-        :columns="columns"
-        :data="list"
-        empty-text="暂无数据"
-        stripe
-        @row-click="onJumpDetails(item, isHistory ? 'purchaseReturn' : 'purchase')"
-      >
-        <template #operate="{item}" v-if="isPerm('Purchase_Write')">
-          <view style="display: flex; align-items: center; justify-content: center;">
-            <button
-              v-if="['FINISHED'].includes(item.status)"
-              class="ko-basic-button__card"
-              @click.stop="onReturn(item)"
-            >
-              申请退货
-            </button>
-
-            <button
-              v-if="['CREATED'].includes(item.status)"
-              class="ko-basic-button__card"
-              @click.stop="onCancel(item)"
-            >
-              取消订单
-            </button>
-            <button
-              class="ko-basic-button__card"
-              @click.stop="onAdded(item)"
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-            >
-              编辑
-            </button>
-            <button
-              class="ko-basic-button__card"
-              @click.stop="onRemove(item)"
-              :loading="item.__r_loading__"
-              :disabled="item.__r_loading__"
-              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
-            >
-              删除
-            </button>
-          </view>
-        </template>
-      </KoTable>
-      <!-- #endif -->
-    </view>
-
-    <KoMovable @click="onAdded('')" v-if="!isHistory" />
+  <!-- #ifdef H5 -->
+  <view
+    class="ko-my-order-list"
+    v-infinite-scroll="onRequestNextPage"
+    infinite-scroll-immediate
+    :infinite-scroll-delay="200"
+    :infinite-scroll-disabled="noMore"
+    :infinite-scroll-distance="200"
+    ref="WrapRef"
+    :key="tableKey"
+  >
+    <!-- #endif -->
 
     <!-- #ifdef MP -->
-    <UvActionSheet
-      ref="UASRef"
-      :actions="actionList"
-      safe-area-inset-bottom
-      round="10"
-      cancel-text="取消"
-      @select="onSelect"
-    />
+    <view class="ko-my-order-list">
+      <!-- #endif -->
+
+      <view class="ko-basic-count__wrap">
+        <UniRow :gutter="10">
+          <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
+            <view class="ko-basic-count">
+              <view class="ko-basic-count__label">{{ item.label }}</view>
+              <view class="ko-basic-count__info">
+                <UvCountTo
+                  :separator="item.unit === '元' ? ',' : ''"
+                  :start-val="0"
+                  bold
+                  :end-val="getCountValue(item)"
+                  :color="item.color ? item.color : '#2979ff'"
+                />
+                <text class="ko-basic-count__info--unit" v-if="item.unit">{{ item.unit }}</text>
+              </view>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+
+      <HistoryBar v-model="isHistory" :values="['采购订单', '采购退货订单']" @change="getList(true)" />
+
+      <view class="ko-my-order-list__wrap">
+        <!-- #ifdef MP -->
+        <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
+          <view style="padding: 5px 10px">
+            <OrderCard
+              v-for="(item, index) of list"
+              :key="item.id"
+              :item="item"
+              @click="onJumpDetails(item, isHistory ? 'purchaseReturn' : 'purchase')"
+              is-sales
+              :spacing="10"
+            >
+              <template #operate>
+                <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                  <!--<button
+                    v-if="['CREATED'].includes(item.status)"
+                    class="ko-basic-button__card"
+                    @click.stop="onSubmit(item)"
+                    :disabled="item.__s_loading__"
+                    :loading="item.__s_loading__"
+                  >
+                    提交订单
+                  </button>-->
+
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onActionClick(item, index)"
+                    v-if="[isHistory ? '' : 'FINISHED', 'CREATED', 'CANCELLED'].includes(item.status)"
+                  >
+                    更多
+                  </button>
+                </view>
+              </template>
+            </OrderCard>
+          </view>
+        </KoList>
+        <!-- #endif -->
+
+        <!-- #ifdef H5 -->
+        <KoTable
+          :key="tableKey"
+          :loading="loading"
+          :columns="columns"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+          @row-click="onJumpDetails(item, isHistory ? 'purchaseReturn' : 'purchase')"
+          no-more
+        >
+          <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                v-if="['FINISHED'].includes(item.status) && !isHistory"
+                class="ko-basic-button__card"
+                @click.stop="onReturn(item, index)"
+              >
+                申请退货
+              </button>
+
+              <button
+                v-if="['CREATED'].includes(item.status)"
+                class="ko-basic-button__card"
+                @click.stop="onCancel(item, index)"
+              >
+                取消订单
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onAdded(item, index)"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              >
+                编辑
+              </button>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onRemove(item, index)"
+                :loading="item.__r_loading__"
+                :disabled="item.__r_loading__"
+                v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+              >
+                删除
+              </button>
+            </view>
+          </template>
+        </KoTable>
+        <!-- #endif -->
+      </view>
+
+      <KoMovable @click="onAdded('')" v-if="!isHistory" />
+
+      <!-- #ifdef MP -->
+      <UvActionSheet
+        ref="UASRef"
+        :actions="actionList"
+        safe-area-inset-bottom
+        round="10"
+        cancel-text="取消"
+        @select="onSelect"
+      />
+      <!-- #endif -->
+
+      <!-- #ifdef MP -->
+    </view>
     <!-- #endif -->
+
+    <!-- #ifdef H5 -->
   </view>
+  <!-- #endif -->
 </template>
 
 <style scoped lang="scss">
 .ko-my-order-list {
-  // #ifdef H5
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 64px - 60px);
 
-  &__wrap {
-    flex: 1;
-    overflow: hidden;
-  }
+  // #ifdef H5
+  height: calc(100vh - 64px - 50px);
+  overflow-y: auto;
 
   .ko-history {
     width: 500px;

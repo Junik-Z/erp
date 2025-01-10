@@ -1,5 +1,5 @@
 <script>
-import { _isEmpty, showToast } from "@/utils";
+import { _isEmpty, CustomToast } from "@/utils";
 import ZeroLoading from "@/uni_modules/zero-loading/components/zero-loading/zero-loading.vue";
 import { bindCustomerApi } from "@/api/erp/sale";
 import mixins from "@/mixins/mixins";
@@ -44,7 +44,7 @@ export default {
               customerId: opt.CLIENT_LIST_ID,
             })
               .then((res) => {
-                showToast({
+                CustomToast({
                   title: res.msg,
                 });
               })
@@ -60,7 +60,7 @@ export default {
               supplierId: opt.CLIENT_LIST_ID,
             })
               .then((res) => {
-                showToast({title: res.msg});
+                CustomToast({title: res.msg});
               })
               .finally(() => {
                 setTimeout(() => {

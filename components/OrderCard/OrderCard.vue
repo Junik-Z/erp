@@ -38,6 +38,9 @@ export default {
     isLogistics: Boolean,
 
     spacing: Number,
+
+    // 强制显示订单总额
+    isShowTotalAmount: Boolean
   },
   methods: {
     onClickOperate(child, item) {
@@ -87,19 +90,19 @@ export default {
       </view>
       <UniRow :gutter="10">
         <UniCol :span="24">
-          <label class="ko-basic-label">订单编号：</label>
+          <label class="ko-basic-label">编号：</label>
           {{ item.orderCode || "-" }}
         </UniCol>
 
-        <UniCol :span="24" v-if="!isCheckStock && !isLogistics && (item.totalAmount && item.totalAmount !== 0)">
-          <label class="ko-basic-label">订单总金额：</label>
+        <UniCol :span="24" v-if="!isCheckStock && !isLogistics">
+          <label class="ko-basic-label">金额：</label>
           <text class="ko-basic-money">
             {{ toYuan(item.totalAmount) }}元
           </text>
         </UniCol>
 
         <UniCol :span="24" v-if="!isSalesPurchase">
-          <label class="ko-basic-label">订单类型：</label>
+          <label class="ko-basic-label">类型：</label>
           <text class="ko-order-card__order-type" :class="[item.orderType]">
             {{ ORDER_TYPE_ENUMS(item.orderType) }}
           </text>
@@ -218,6 +221,11 @@ export default {
         <UniCol :span="24">
           <label class="ko-basic-label">时间：</label>
           {{ item.updateTime || "-" }}
+        </UniCol>
+
+        <UniCol :span="24">
+          <label class="ko-basic-label">地址：</label>
+          {{ item.orderAddress || "-" }}
         </UniCol>
 
         <UniCol :span="24">

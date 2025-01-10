@@ -7,6 +7,7 @@ import {
   removeSaleReturnApi,
   submitSaleApi,
 } from "@/api/erp/sale";
+import { _isEmpty, _isNumber } from "@/utils";
 
 export default {
   name: "SaleMixins",
@@ -18,7 +19,7 @@ export default {
     },
 
     // 跳转到添加修改销售订单
-    jumpAddedSale(query = {}) {
+    jumpAddedSale(query = {}, index) {
       let q = this.getQueryString(query);
       uni.navigateTo({
         url: `${PageEnums.editSale}${q}`,
@@ -29,14 +30,14 @@ export default {
     jumpSaleAddedDocuments(query) {
       this?.$refs?.TPRef?.open(query);
 
-     /*  let q = this.getQueryString(query);
-      uni.navigateTo({
-        url: `${PageEnums.ticket}${q}`,
-      }); */
+      /*  let q = this.getQueryString(query);
+       uni.navigateTo({
+         url: `${PageEnums.ticket}${q}`,
+       }); */
     },
 
     // 取消销售订单
-    cancelSale(item) {
+    cancelSale(item, index, flag = false) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消 ${item.orderCode} 订单吗？`,
@@ -45,7 +46,12 @@ export default {
             cancelSaleApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList(true);
+                // this.getList(true);
+                if (_isNumber(index) && !flag) {
+                  this.list.splice(index, 1);
+                }
+
+                flag && this.updateList();
               });
           }
         },
@@ -53,7 +59,7 @@ export default {
     },
 
     // 提交销售订单
-    submitSale(item) {
+    submitSale(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: "您确定要提交该销售订单吗？请注意，一旦提交，订单内容将无法再进行修改。",
@@ -64,8 +70,11 @@ export default {
               .then(() => {
                 uni.showToast({title: "提交成功"});
                 this.list = [];
-                this.isHistory = true;
+                this.tab = 1;
                 this.getList(true);
+                /* if (_isNumber(index)) {
+                  this.list.splice(index, 1);
+                } */
               })
               .finally(() => {
                 this.$set(item, "__s_loading__", false);
@@ -76,7 +85,7 @@ export default {
     },
 
     // 删除销售订单
-    removeSale(item) {
+    removeSale(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: "您确定要删除此销售订单吗？",
@@ -86,7 +95,9 @@ export default {
             removeSaleApi(item)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList(true);
+                if (_isNumber(index)) {
+                  this.list.splice(index, 1);
+                }
               })
               .finally(() => {
                 this.$set(item, "__r_loading__", false);
@@ -98,6 +109,9 @@ export default {
 
     // 申请退货
     jumpSaleReturn(query) {
+      this.noRefresh = true;
+      this.isNewList = _isEmpty(query);
+
       let q = this.getQueryString(query);
       uni.navigateTo({
         url: `${PageEnums.saleRefund}${q}`,
@@ -105,7 +119,7 @@ export default {
     },
 
     // 取消销售退货单
-    cancelRefundSale(item) {
+    cancelRefundSale(item, index, flag = false) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消 ${item.orderCode} 订单吗？`,
@@ -114,7 +128,12 @@ export default {
             cancelSaleReturnApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList(true);
+                // this.getList(true);
+                if (_isNumber(index) && !flag) {
+                  this.list.splice(index, 1);
+                }
+
+                flag && this.updateList();
               });
           }
         },
@@ -122,7 +141,7 @@ export default {
     },
 
     // 提交销售退货单
-    submitRefundSale(item) {
+    submitRefundSale(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: "您确定要提交该销售退货订单吗？请注意，一旦提交，订单内容将无法再进行修改。",
@@ -132,9 +151,12 @@ export default {
             confirmSaleReturnApi(item)
               .then(() => {
                 uni.showToast({title: "提交成功"});
-                this.list = [];
-                this.isHistory = true;
-                this.getList(true);
+                /* this.list = [];
+                this.tab = 1;
+                this.getList(true); */
+                if (_isNumber(index)) {
+                  this.list.splice(index, 1);
+                }
               })
               .finally(() => {
                 this.$set(item, "__s_loading__", false);
@@ -145,7 +167,7 @@ export default {
     },
 
     // 删除销售退货单
-    removeRefundSale(item) {
+    removeRefundSale(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: "您确定要删除此销售退货订单吗？",
@@ -155,7 +177,9 @@ export default {
             removeSaleReturnApi(item)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList(true);
+                if (_isNumber(index)) {
+                  this.list.splice(index, 1);
+                }
               })
               .finally(() => {
                 this.$set(item, "__r_loading__", false);

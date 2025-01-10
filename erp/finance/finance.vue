@@ -12,27 +12,29 @@ export default {
   name: "finance",
   components: {Verification, CostList, PayList, Receivable, UniSegmentedControl},
   mixins: [mixins],
-  data: () => ({
-    tabList: [
-      {
-        label: "应收款",
-        ref: "VVRef",
-      },
-      {
-        label: "应付款",
-        ref: "PLRef",
-      },
-      {
-        label: "成本统计",
-        ref: "CLRef",
-      },
-      {
-        label: "核对款项",
-        ref: "VRef",
-      },
-    ],
-    // TAB: 0,
-  }),
+  data() {
+    return {
+      tabList: [
+        {
+          label: "应收款",
+          ref: "VVRef",
+        },
+        {
+          label: "应付款",
+          ref: "PLRef",
+        },
+        {
+          label: "成本统计",
+          ref: "CLRef",
+        },
+        {
+          label: "核对款项",
+          ref: "VRef",
+        },
+      ],
+      // TAB: 3,
+    };
+  },
   onLoad(option) {
     this.TABS_LIST = _deepCopy(this.tabList);
 

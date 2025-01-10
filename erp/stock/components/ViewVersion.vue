@@ -27,6 +27,7 @@ export default {
       },
 
       CountList: [
+        // #ifndef H5
         {
           label: "库存总价值",
           key: "totalValue",
@@ -46,6 +47,30 @@ export default {
           unit: "",
           func: "onJumpWarning",
         },
+        // #endif
+        // #ifdef H5
+        {
+          label: "库存总量",
+          key: "totalStock",
+          color: "#2979ff",
+          span: 6,
+        },
+        {
+          label: "库存总价值",
+          key: "totalValue",
+          color: "#2979ff",
+          unit: "元",
+          span: 12,
+        },
+        {
+          label: "库存预警",
+          key: "productStockWarning",
+          color: "#e43d33",
+          unit: "",
+          func: "onJumpWarning",
+          span: 6,
+        },
+        // #endif
       ],
     };
   },

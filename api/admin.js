@@ -61,7 +61,7 @@ export function advertisingBusinessesApi(data) {
 export function generateQRCodeBusinessesApi(data) {
   return request({
     url: "/manage/generateQRCode",
-    method: "post",
+    method: "get",
     data,
   });
 }
@@ -72,6 +72,17 @@ export function generateQRCodeBusinessesApi(data) {
 export function setBusinessUserRoleApi(data) {
   return request({
     url: "/manage/setBusinessUserRole",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 更新商户名称
+ */
+export function updateBusinessNameApi(data) {
+  return request({
+    url: "/manage/updateBusinessName",
     method: "post",
     data,
   });

@@ -24,9 +24,7 @@ export default function request(config, isLoading = false, whole = false) {
     // #ifdef H5
     const Token = uni.getStorageSync("AccessToken") || "";
     // #endif
-
-    console.log("打印出来的商户ID", scene, _isDev());
-
+    
     uni.request({
       url: baseURl + config["url"],
       method: config["method"],
@@ -38,6 +36,7 @@ export default function request(config, isLoading = false, whole = false) {
         "Content-Type": "application/json",
         // #ifndef H5
         ...(Cookie ? {Cookie} : {}),
+        "X-MiniApp-Env": CONFIG.SystemVersion,
         // #endif
         // #ifdef H5
         ...(Token && false && _isDev() ? {Authorization: Token} : {}),
@@ -69,6 +68,7 @@ export default function request(config, isLoading = false, whole = false) {
         if (res.statusCode === 200 && code === 200) {
           resolve(res.data);
         } else if (code === 401) {
+
           if (uni.$__IS_LOGOUT_FLAG__) return false;
 
           if (!isFlag) {
@@ -162,6 +162,10 @@ export default function request(config, isLoading = false, whole = false) {
             uni.__WIFI_ERROR_MODEL__ = false;
           },
         });
+      },
+
+      complete() {
+        isLoading && uni.hideLoading();
       },
     });
   });

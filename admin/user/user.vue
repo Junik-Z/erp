@@ -10,6 +10,7 @@ import { updateMyInfoApi, uploadBase64Api } from "@/api/user";
 import { getImageBase64 } from "@/utils/processingFiles";
 import LongPressButton from "@/admin/components/LongPressButton/LongPressButton.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import { generateQRCodeBusinessesApi } from "@/api/admin";
 
 export default {
   name: "user",
@@ -26,6 +27,10 @@ export default {
 
       loading: false,
       logoutLoading: false,
+
+      gLoading: false,
+      look: false,
+      qrCode: "",
     };
   },
   onLoad() {
@@ -77,6 +82,18 @@ export default {
         scene: flag ? "" : "default",
       }).finally(() => (this.logoutLoading = false));
     },
+
+    getOrCode() {
+      this.gLoading = true;
+      generateQRCodeBusinessesApi(/* {businessName: uni.getStorageSync("__APP_SCENE__") || "default"} */)
+        .then(res => {
+          this.qrCode = res.data;
+          this.look = true;
+        })
+        .finally(() => {
+          this.gLoading = false;
+        });
+    },
   },
 };
 </script>
@@ -103,6 +120,17 @@ export default {
     </view>
 
     <view class="ko-user__logout">
+      <button
+        class="ko-basic-button"
+        @click="getOrCode"
+        :loading="gLoading"
+        :disabled="gLoading"
+      >
+        查看商户码
+      </button>
+
+      <view style="height: 30px; width: 30px;"></view>
+
       <LongPressButton
         label="重新登录"
         :loading="logoutLoading"
@@ -160,6 +188,17 @@ export default {
           提交
         </button>
       </template>
+    </BasicPopup>
+
+    <BasicPopup :visible.sync="look">
+      <view class="ko-user__code">
+        <image
+          class="ko-user__code--image"
+          :src="getImageUrl(qrCode)"
+          mode="aspectFill"
+          show-menu-by-longpress
+        />
+      </view>
     </BasicPopup>
   </view>
 </template>
@@ -227,8 +266,35 @@ export default {
     }
   }
 
+  &__code {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 20px;
+
+    /* #ifdef MP */
+    width: 98vw;
+
+    &--image {
+      height: 90vw;
+      width: 90vw;
+    }
+
+    /* #endif */
+    /* #ifdef H5 */
+    width: 500px;
+
+    &--image {
+      height: 480px;
+      width: 480px;
+    }
+
+    /* #endif */
+
+  }
+
   &__logout {
-    padding: 20vh 50px 50px;
+    padding: 100px 50px 50px;
     /* #ifdef H5 */
     display: flex;
     align-items: center;

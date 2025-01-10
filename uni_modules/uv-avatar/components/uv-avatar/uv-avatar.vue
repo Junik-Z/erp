@@ -148,6 +148,7 @@ export default {
 
     onImgPreview(url) {
       if (url && !this.notView) {
+        uni.setStorageSync("TO_DETAILS", true);
         uni.previewImage({
           urls: [url],
         });

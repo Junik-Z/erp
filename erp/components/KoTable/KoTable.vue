@@ -42,6 +42,8 @@ export default {
 
     noMore: Boolean,
     loading: Boolean,
+
+    noRefresh: Boolean,
   },
   directives: {
     InfiniteScroll,
@@ -49,7 +51,9 @@ export default {
   },
   watch: {
     data: {
-      handler() {
+      handler(to, form) {
+        if (to?.length === form?.length || ((to?.length - 1) || 0) === form?.length) return false;
+
         const top = _deepCopy(this.$refs.WrapRef.scrollTop);
         this.$nextTick(() => {
           this.$refs.WrapRef.scrollTop = top;
@@ -89,7 +93,6 @@ export default {
     },
   },
   mounted() {
-    console.log(Loading);
   },
 };
 // #endif

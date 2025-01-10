@@ -16,7 +16,7 @@ import {
   getProductFieldApi,
 } from "@/api/erp/product";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy, _get, _isEmpty, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -164,7 +164,8 @@ export default {
       Func(this.submitQuery)
         .then(res => {
           console.log(res);
-          showToast({
+          uni.setStorageSync("TENP_ORDER_INFO", res.data);
+          CustomToast({
             title: `${this.isEdit ? "修改" : "新增"}成功`,
             success() {
               uni.navigateBack();

@@ -87,19 +87,30 @@ export default {
           label: "总订单数",
           key: "totalOrderCount",
           color: "#2979ff",
+          // #ifndef H5
           span: 12,
+          // #endif
           unit: "单",
+          // #ifdef H5
+          span: 8,
+          // #endif
         },
         {
           label: "总物流商数",
           key: "totalLogisticsCount",
           color: "#2979ff",
           unit: "位",
+          // #ifdef H5
+          span: 8,
+          // #endif
         },
         {
           label: "待处理订单数",
           key: "waitDealOrderCount",
           color: "#2979ff",
+          // #ifdef H5
+          span: 8,
+          // #endif
         },
       ],
       data: {
@@ -189,7 +200,7 @@ export default {
         },
       ],
       // #endif
-      tableKey: +new Date()
+      tableKey: +new Date(),
     };
   },
   mounted() {
@@ -204,7 +215,7 @@ export default {
 
     getList(reset) {
       if (reset) {
-        this.tableKey = +new Date()
+        this.tableKey = +new Date();
         this.queryList.pageNum = 0;
         this.list = [];
       }
@@ -490,6 +501,7 @@ export default {
   .ko-history {
     width: 500px;
   }
+
   // #endif
 
   &__row {

@@ -96,7 +96,6 @@ export default {
   methods: {
     getList() {
       this.$nextTick(() => {
-        console.log(this.GET_TAB_LIST);
         if (!this.GET_TABS_REF_NAME) return false;
         this.$refs[this.GET_TABS_REF_NAME]?.getList?.(true);
       });

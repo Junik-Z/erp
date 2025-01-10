@@ -8,39 +8,55 @@ let DEFAULT_PAGE_SIZE = 5;
 BASE_URL = "/api";
 BASE_WS_URL = "/api/ws/app";
 
-DEFAULT_PAGE_SIZE = 20;
+DEFAULT_PAGE_SIZE = 10;
 
 // BASE_URL: "https://erp.kuaouyun.cn/api",
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
 // #endif
 
-let type = "test";
+let type = "develop";
 
-// type = "env";
+if (_isDev()) {
+  // type = "trial";
 
-// #ifdef MP
-// type = "env";
-// #endif
+  // type = "release";
 
-// #ifdef H5
-// type = "env";
-// #endif
+  // #ifdef MP
+  // type = "trial";
+  // #endif
+
+  // #ifdef H5
+  // type = "trial";
+  // #endif
+} else {
+  // #ifdef MP
+  const accountInfo = uni.getAccountInfoSync();
+  type = accountInfo?.miniProgram?.envVersion;
+  // #endif
+
+  // #ifdef H5
+  type = "trial";
+  // #endif
+}
+
+console.log("当前版本为：", type);
 
 export const CONFIG = {
   // 请求头的参数
   APP_ID: "wx525c19deacc41329",
+  SystemVersion: type,
 
   ...(
     {
-      test: {
+      develop: {
         BASE_URL,
         BASE_WS_URL,
       },
-      env: {
+      trial: {
         BASE_URL: "https://erp.kuaouyun.cn/api",
         BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
       },
-      prod: {
+      release: {
         BASE_URL: "https://erp.kuaouyun.cn/api",
         BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
       },
@@ -50,7 +66,7 @@ export const CONFIG = {
   TITLE: "托手掌柜",
 
   // 分享出去时的type： 0 - 微信小程序正式版 ；1 - 微信小程序开发版；2 - 微信小程序体验版
-  SHARE_TYPE: {test: 1, env: 2, prod: 3}[type],
+  SHARE_TYPE: {develop: 1, trial: 2, release: 0}[type],
 
   // WEB rem 的转换率
   H5_REM_SIZE: 136.6,
@@ -133,7 +149,9 @@ export const PageEnums = {
   logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
 
   // 添加产品
-  addedProduct: "/erp/product/added",
+  addedProduct: "/product/added",
+  // 添加产品
+  product: "/product/product",
 
   // 分享出去进来
   shareAddedProduct: "/shop/binding/binding",
@@ -222,7 +240,7 @@ export const MENU_LIST = [
   {
     label: "产品管理",
     icon: "icon-chanpinguanli",
-    value: "/erp/product/product",
+    value: PageEnums.product,
     modelKey: "product",
     role: ["Admin", "Business", "Product_Read", "Product_Write"],
     isUpRole: true,

@@ -1,5 +1,5 @@
 <script>
-import { _get, _isEmpty, _isEqual, showToast } from "@/utils";
+import { _get, _isEmpty, _isEqual, CustomToast } from "@/utils";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import InventoryList from "../components/InventoryList/InventoryList.vue";
 import { PageEnums } from "@/utils/config";
@@ -193,7 +193,7 @@ export default {
       this.sLoading = true;
       receiveShareProductApi(params)
         .then(() => {
-          showToast({
+          CustomToast({
             title: "操作成功",
             success: () => {
               uni.reLaunch({

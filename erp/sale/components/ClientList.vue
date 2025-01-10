@@ -1,9 +1,10 @@
 <script>
-import { _deepCopy, _get, _isEmpty, _isEqual, _xor } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _xor } from "@/utils";
 import BasicMixins from "@/mixins/mixins";
 import {
   bindCustomerApi,
   convertTempCustomerApi,
+  getCustomerInfoApi,
   getCustomerListApi,
   getTempCustomerListApi,
   removeCustomerApi,
@@ -61,14 +62,11 @@ export default {
 
       bindUserList: [],
       isBind: false,
-      item: {},
 
       noMore: false,
       queryList: {
         pageSize: 20, pageNum: 0,
       },
-
-      actionItem: {},
 
       tab: 0,
 
@@ -145,18 +143,37 @@ export default {
       ],
       // #endif
 
-      tableKey: +new Date()
+      tableKey: +new Date(),
+      noRefresh: false,
+
+      node: {},
+      nodeIndex: null,
     };
   },
   methods: {
+    getListNode(item) {
+      return {
+        ...item,
+        value: item.id,
+        label: item.name,
+        logo: item.logo,
+      };
+    },
+
     getList(reset = false) {
 
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.tableKey = +new Date();
         this.list = [];
         this.queryList.pageNum = 0;
       }
 
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (this.noRefresh && info && this.list.length) {
+        this.updateList();
+        return false;
+      }
 
       this.loading = true;
       const Fn = [getCustomerListApi, getTempCustomerListApi][+this.tab];
@@ -164,12 +181,7 @@ export default {
       Fn({...this.queryList, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
         .then((res) => {
           console.log("客户列表", res.data);
-          const list = (res.data || []).map(item => ({
-            ...item,
-            value: item.id,
-            label: item.name,
-            logo: item.logo,
-          }));
+          const list = (res.data || []).map(this.getListNode);
 
           this.list = this.onMergeArrays(this.list, list, "id");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -179,14 +191,18 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
+
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
     onJump(row) {
+      this.noRefresh = true;
       uni.navigateTo({url: `/erp/sale/client?id=${row.id}`});
     },
 
-    onRemove(row) {
+    onRemove(row, index) {
       const node = _deepCopy(row);
       uni.showModal({
         title: "温馨提示",
@@ -196,7 +212,8 @@ export default {
             removeCustomerApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(index, 1);
               });
           }
         },
@@ -213,7 +230,7 @@ export default {
 
             Promise.all(
               user.map(userId => unbindCustomerApi({
-                customerId: this.item.id,
+                customerId: this.node.id,
                 userId,
               })),
             )
@@ -221,7 +238,11 @@ export default {
                 uni.showToast({
                   title: "解绑成功",
                 });
-                this.getList(true);
+                // this.getList(true);
+                const use = _deepCopy(this.list[this.nodeIndex].users)?.filter(v => {
+                  return !user.includes(v.userId);
+                });
+                this.$set(this.list[this.nodeIndex], "users", use);
               });
           }
         },
@@ -232,7 +253,7 @@ export default {
     onBind(user = []) {
       Promise.all(
         user.map(userId => bindCustomerApi({
-          customerId: this.item.id,
+          customerId: this.node.id,
           userId,
         })),
       )
@@ -240,14 +261,15 @@ export default {
           uni.showToast({
             title: "绑定成功",
           });
-          this.getList(true);
+          this.$set(this.list[this.nodeIndex], "users", [...this.list[this.nodeIndex]?.users || [], ...user.map(userId => ({userId}))]);
         });
     },
 
-    onBindPopup(item, isBind) {
+    onBindPopup(item, isBind, index) {
       this.bindUserList = _deepCopy(item)?.users?.map(v => v.userId) || [];
       this.isBind = isBind;
-      this.item = item;
+      this.node = item;
+      this.nodeIndex = index;
       this.visible = true;
     },
 
@@ -259,6 +281,7 @@ export default {
 
     onTrigger(event) {
       if ("uni") {
+        this.noRefresh = true;
         uni.navigateTo({url: "/erp/sale/client"});
         return false;
       }
@@ -269,23 +292,25 @@ export default {
     },
 
     onJumpInfo(item) {
+      this.noRefresh = true;
       uni.navigateTo({
         url: "/erp/finance/check" + `?id=${item.id}&customer_type=sale`,
       });
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
       if (item.openType) return false;
-      this[item.func](_deepCopy(this.actionItem), ...(item.arg || []));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
     },
 
     // 客户转换
-    onConvert(item) {
+    onConvert(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要将 ${item.name} 转为 ${["临时", "正式"][+this.tab]}客户吗？`,
@@ -297,7 +322,8 @@ export default {
                 uni.showToast({
                   title: "转换成功",
                 });
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(index, 1);
               });
           }
         },
@@ -305,16 +331,41 @@ export default {
     },
 
     onLower() {
+      this.noRefresh = false;
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
-      this.list = [];
-      this.queryList.pageNum = 0;
+      this.noRefresh = false;
       this.queryList.nameIndex = key;
       this.getList(true);
+    },
+
+    // 更新列表数据
+    updateList() {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      getCustomerInfoApi({id})
+        .then(res => {
+          const data = res.data || {};
+          const index = this.list.findIndex(v => v.id === data.id);
+          const node = this.node || {};
+
+          const item = this.getListNode(data);
+
+          if (index > -1) {
+            this.$set(this.list, index, {...node, ...item});
+          } else {
+            this.list.unshift({...node, ...item});
+          }
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
     },
   },
   computed: {
@@ -338,7 +389,7 @@ export default {
     },
 
     actionList() {
-      // const node = _deepCopy(this.actionItem);
+      // const node = _deepCopy(this.node);
       return [
         /* {
           openType: "share",
@@ -396,23 +447,23 @@ export default {
           :no-more="noMore"
           @search="onSearchToNameIndex"
         >
-          <template #default="{node}">
+          <template #default="{node, index}">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
               <!--<button
                     @click.stop="() => {}"
                     open-type="share"
-                    :data-params="getBindingParams(actionItem)"
+                    :data-params="getBindingParams(node)"
                     class="ko-basic-button__card"
                   >
                     邀请绑定
                   </button>
                   -->
-              <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑客户</button>
+              <button @click.stop="onBindPopup(node, true, index)" class="ko-basic-button__user">绑定客户</button>
+              <button @click.stop="onBindPopup(node, false, index)" class="ko-basic-button__user">解绑客户</button>
 
               <button
                 class="ko-basic-button__user"
-                @click.stop="onActionClick(node)"
+                @click.stop="onActionClick(node, index)"
               >
                 更多
               </button>
@@ -445,15 +496,15 @@ export default {
           @next-load="onLower"
           :no-more="noMore || loading"
         >
-          <template #operate="{item}" v-if="isPerm('Sales_Write')">
+          <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
-              <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__user">解绑客户</button>
-              <button class="ko-basic-button__user" @click.stop="onConvert(item)">
+              <button @click.stop="onBindPopup(item, true, index)" class="ko-basic-button__user">绑定客户</button>
+              <button @click.stop="onBindPopup(item, false, index)" class="ko-basic-button__user">解绑客户</button>
+              <button class="ko-basic-button__user" @click.stop="onConvert(item, index)">
                 {{ ["转为临时客户", "转为正式客户"][+tab] }}
               </button>
-              <button class="ko-basic-button__user" @click.stop="onJump(item)">编辑</button>
-              <button class="ko-basic-button__user" @click.stop="onRemove(item)">删除</button>
+              <button class="ko-basic-button__user" @click.stop="onJump(item, index)">编辑</button>
+              <button class="ko-basic-button__user" @click.stop="onRemove(item, index)">删除</button>
             </view>
           </template>
         </KoTable>

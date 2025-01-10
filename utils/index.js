@@ -175,7 +175,7 @@ export function dealBigMoney(n) {
 }
 
 // 通用 toast
-export function showToast(opt) {
+export function CustomToast(opt) {
   uni.showToast({
     ...opt, success() {
     },
@@ -561,4 +561,8 @@ export function _isBoolean(val) {
 // 开发模式
 export function _isDev() {
   return process.env?.NODE_ENV === "development";
+}
+
+export function _isNumber(value) {
+  return typeof value === 'number' && !isNaN(value);
 }

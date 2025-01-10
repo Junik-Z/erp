@@ -163,7 +163,7 @@ export function getSaleDetailApi(data) {
     url: "/sale/detail",
     method: "get",
     data,
-  });
+  }, true);
 }
 
 /**
@@ -298,6 +298,7 @@ export function updateSaleReturnApi(data) {
     data,
   });
 }
+
 /**
  * @description 更新退货销售订单
  */

@@ -8,7 +8,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy, showToast } from "@/utils";
+import { _deepCopy, CustomToast } from "@/utils";
 import { validatePhone } from "@/utils/validate";
 import { addedSupplierApi, editSupplierApi, getDetailSupplierApi } from "@/api/erp/purchase";
 import { isNumber } from "@/components/da-tree-vue2/utils";
@@ -131,8 +131,9 @@ export default {
           this.loading = true;
 
           Func(params)
-            .then(() => {
-              showToast({
+            .then((res) => {
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
+              CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success() {
                   uni.navigateBack({});
@@ -190,7 +191,8 @@ export default {
             <view
               style="display: flex; align-items: center; justify-content: flex-end; margin-top: 8px;"
             >
-              <button class="ko-basic-button__card" style="margin-right: 10px;" @click="addContacts(item, index)">修改</button>
+              <button class="ko-basic-button__card" style="margin-right: 10px;" @click="addContacts(item, index)">修改
+              </button>
               <button class="ko-basic-button__card" @click="form.contacts.splice(index, 1)">移除</button>
             </view>
           </BasicCard>

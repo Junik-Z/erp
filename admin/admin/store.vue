@@ -3,7 +3,7 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import { advertisingBusinessesApi } from "@/api/admin";
-import { showToast } from "@/utils";
+import { CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { getConfigApi } from "@/api/user";
@@ -34,7 +34,7 @@ export default {
       this.loading = true;
       advertisingBusinessesApi(this.form)
         .then(() => {
-          showToast({
+          CustomToast({
             title: "更新成功",
           });
           uni.$emit("$__update_config_info__");

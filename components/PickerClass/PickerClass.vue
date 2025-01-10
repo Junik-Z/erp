@@ -62,6 +62,8 @@ export default {
     },
 
     onAllClass() {
+      this.$refs.DaTreeRef.setCheckedKeys(this.checkedItem?.key, false);
+
       this.checkedItem = {};
       this.$emit("input", "");
       this.$emit("change");

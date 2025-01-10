@@ -3,7 +3,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import {
   addedSaleApi,
   getBindInfoApi,
@@ -90,6 +90,8 @@ export default {
       bindList: [],
 
       isAgain: false,
+      // 正常跳转
+      isNormal: false,
     };
   },
   onLoad(option) {
@@ -97,6 +99,8 @@ export default {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
     this.isEdit = !!option.id;
+
+    this.isNormal = option.isNormal === "true";
 
     if (this.isEdit) this.getInfo();
 
@@ -164,11 +168,11 @@ export default {
           const Func = this.isAgain ? reOrderSaleApi : (this.isEdit ? updateSaleApi : addedSaleApi);
 
           Func(params)
-            .then(() => {
-              showToast({
+            .then((res) => {
+              CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
-                  if (this.isClient) {
+                  if (this.isClient && !this.isNormal) {
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {
@@ -180,6 +184,8 @@ export default {
                   }
                 },
               });
+
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
             })
             .finally(() => {
               this.loading = false;

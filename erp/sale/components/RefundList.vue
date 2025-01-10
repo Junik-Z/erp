@@ -5,6 +5,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import {
+  getSaleReturnDetailApi,
   getSaleReturnHistoryApi,
   getSaleReturnListApi,
   getSaleReturnWaitPaymentApi,
@@ -14,7 +15,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _pick, showToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -79,10 +80,9 @@ export default {
         orderCode: "",
         "customer.name": "",
         "user.nickName": "",
+        orderAddress: "",
       },
       noMore: false,
-
-      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -166,6 +166,10 @@ export default {
           ],
         },
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
         },
@@ -177,7 +181,18 @@ export default {
       ],
       // #endif
 
-      tableKey: +new Date()
+      tableKey: +new Date(),
+
+      node: {},
+      nodeIndex: null,
+
+      noRefresh: false,
+      isNewList: false,
+      values: [
+        "待处理",
+        "待退款",
+        "已完成",
+      ],
     };
   },
   methods: {
@@ -189,10 +204,19 @@ export default {
     },
 
     getList(reset = false) {
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.tableKey = +new Date();
         this.queryList.pageNum = 0;
         this.list = [];
+      }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      console.log(info, "新增数据");
+
+      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.tab === 0)) {
+        this.updateList();
+        return false;
       }
 
       this.loading = true;
@@ -209,20 +233,33 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
+          this.isNewList = false;
+
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
-    onJump(item) {
+    onJump(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
+      this.noRefresh = true;
       this.jumpSaleReturn({id: item.id});
     },
 
-    onResetList(flag) {
+    onResetList() {
       this.queryList = _deepCopy(this.$options.data().queryList);
-      flag && this.$refs.SearchRef.onShowSearch();
+      this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
 
     // 添加单据
-    onAddedDocuments(item) {
+    onAddedDocuments(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
+      this.noRefresh = true;
       this.jumpSaleAddedDocuments({
         ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         orderType: "SALE_RETURN",
@@ -230,13 +267,14 @@ export default {
       });
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
     },
 
     // 开启打印
@@ -247,20 +285,36 @@ export default {
     startPrint(data) {
       returnPrintSaleApi(data)
         .then(() => {
-          showToast({
+          CustomToast({
             title: "请求成功",
           });
         });
     },
+
+    updateList(isPayment = false) {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      getSaleReturnDetailApi({id})
+        .then(res => {
+          const data = res.data || {};
+          this.onProcessingListData(data, isPayment);
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
+
+    },
   },
   computed: {
     actionList() {
-      const node = this.actionItem;
+      const node = this.node;
       return [
         {
           name: "取消订单",
           func: "cancelRefundSale",
-          status: ["CREATED"],
+          status: ["CREATED", "FINISHED"],
         },
         {
           name: "编辑",
@@ -275,6 +329,10 @@ export default {
         },
       ]
         .filter(li => {
+          if (li.func === "cancelRefundSale") {
+            return ["CREATED"].includes(node.status) || (["FINISHED"].includes(node.status) && node.totalAmount === 0);
+          }
+
           if (li.name === "编辑") {
             return this.tab !== 2 && li.status.includes(node.status);
           }
@@ -290,7 +348,7 @@ export default {
   <view class="ko-client">
     <HistoryBar
       v-model="tab"
-      :values="['待处理', '待付款', '已完成']"
+      :values="values"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -298,13 +356,16 @@ export default {
       <view class="ko-basic-search">
         <UniRow :gutter="10">
           <UniCol :span="24">
-            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
@@ -319,11 +380,12 @@ export default {
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 10px;" v-for="item of list" :key="item.id">
+        <view style="padding: 10px;" v-for="(item, index) of list" :key="item.id">
           <OrderCard
             is-sales
             :item="item"
             @click="onJumpDetails(item, 'saleReturn')"
+            is-show-total-amount
           >
             <template #operate v-if="isPerm('Sales_Write')">
               <view
@@ -331,7 +393,7 @@ export default {
               >
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onPrint(item)"
+                  @click.stop="onPrint(item, index)"
                   v-if="['FINISHED', 'CREATED'].includes(item.status)"
                 >
                   打印单据
@@ -339,7 +401,7 @@ export default {
                 <button
                   v-if="['CREATED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="submitRefundSale(item)"
+                  @click.stop="submitRefundSale(item, index)"
                   :disabled="item.__s_loading__"
                   :loading="item.__s_loading__"
                 >
@@ -349,14 +411,15 @@ export default {
                 <button
                   v-if="['FINISHED'].includes(item.status) && !item.confirmable"
                   class="ko-basic-button__card"
-                  @click.stop="onAddedDocuments(item)"
+                  @click.stop="onAddedDocuments(item, index)"
                 >
-                  付款
+                  退款
                 </button>
 
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onActionClick(item)"
+                  @click.stop="onActionClick(item, index)"
+                  v-if="tab === 2 ? item.totalAmount === 0 : true"
                 >
                   更多
                 </button>
@@ -381,8 +444,9 @@ export default {
 
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
+        :no-refresh="noRefresh"
       >
-        <template #operate="{item}" v-if="isPerm('Sales_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
           <view
             style="display: flex; align-items: center; justify-content: center;"
           >
@@ -396,7 +460,7 @@ export default {
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="submitRefundSale(item)"
+              @click.stop="submitRefundSale(item, index)"
               :disabled="item.__s_loading__"
               :loading="item.__s_loading__"
             >
@@ -405,16 +469,16 @@ export default {
             <button
               v-if="['FINISHED'].includes(item.status) && !item.confirmable"
               class="ko-basic-button__card"
-              @click.stop="onAddedDocuments(item)"
+              @click.stop="onAddedDocuments(item, index)"
             >
-              付款
+              退款
             </button>
 
 
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="cancelRefundSale(item)"
+              @click.stop="cancelRefundSale(item, index)"
             >
               取消订单
             </button>
@@ -422,7 +486,7 @@ export default {
             <button
               v-if="['FINISHED', 'CREATED', 'CANCELLED'].includes(item.status) && tab !== 2"
               class="ko-basic-button__card"
-              @click.stop="onJump(item)"
+              @click.stop="onJump(item, index)"
             >
               编辑
             </button>
@@ -430,7 +494,7 @@ export default {
             <button
               v-if="['CANCELLED', 'CREATED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="removeRefundSale(item)"
+              @click.stop="removeRefundSale(item, index)"
             >
               删除
             </button>
@@ -458,7 +522,7 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="getList(true)" />
+    <Pay ref="TPRef" @success="updateList(true)" />
   </view>
 </template>
 

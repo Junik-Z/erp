@@ -10,7 +10,7 @@ import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _groupBy, _isEmpty, showToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, CustomToast } from "@/utils";
 import PrintList from "@/components/PrintList/PrintList.vue";
 import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -40,7 +40,7 @@ export default {
     return {
       loading: false,
       list: [],
-      isHistory: false,
+      isHistory: 0,
 
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -48,6 +48,7 @@ export default {
         orderCode: "",
         "customer.name": "",
         "user.nickName": "",
+        orderAddress: "",
       },
 
       noMore: false,
@@ -139,6 +140,10 @@ export default {
           prop: "createTime",
         },
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
         },
@@ -152,6 +157,14 @@ export default {
       // #endif
 
       tableKey: +new Date(),
+
+      values: [
+        "待处理",
+        "已完成",
+        // #ifdef H5
+        "已取消",
+        // #endif
+      ],
     };
   },
   methods: {
@@ -168,9 +181,20 @@ export default {
         this.list = [];
         this.tableKey = +new Date();
       }
+
+      const params = _deepCopy(this.queryList);
+
       this.loading = true;
-      const Func = this.isHistory ? getOutboundHistoryListApi : getOutboundListApi;
-      Func(this.queryList)
+      const Func = [getOutboundListApi, getOutboundHistoryListApi, getOutboundHistoryListApi][this.isHistory];
+
+      if (this.isHistory > 0) {
+        params.status = {
+          1: "FINISHED",
+          2: "CANCELLED",
+        }[this.isHistory];
+      }
+
+      Func(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -188,7 +212,7 @@ export default {
         url: "/erp/stock/verify",
       });
     },
-    onCancel(item) {
+    onCancel(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消 ${item.orderCode} 订单吗？`,
@@ -197,13 +221,15 @@ export default {
             cancelOutboundApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(index, 1);
               });
           }
         },
       });
     },
-    onConfirm(item) {
+    onConfirm(item, index) {
+      this.inadequate = [];
       uni.showModal({
         title: "温馨提示",
         content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后扣除库存。`,
@@ -212,11 +238,12 @@ export default {
           if (res.confirm) {
             confirmOutboundApi(item)
               .then((resp) => {
-                this.inadequate = _groupBy(resp.data, (item) => item.className);
+                this.inadequate = _deepCopy(_groupBy(resp.data, (item) => item.className));
 
                 if (_isEmpty(resp.data)) {
                   uni.showToast({title: "出库成功"});
-                  this.getList(true);
+                  this.list.splice(index, 1);
+                  // this.getList(true);
                 } else {
                   this.visible = true;
                 }
@@ -240,7 +267,7 @@ export default {
     startPrint(data) {
       printA4OutboundApi(data)
         .then(() => {
-          showToast({
+          CustomToast({
             title: "请求成功",
           });
         });
@@ -249,7 +276,7 @@ export default {
 
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
-      flag && this.$refs.SearchRef.onShowSearch();
+      this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
   },
@@ -260,7 +287,7 @@ export default {
   <view class="ko-out">
     <HistoryBar
       v-model="isHistory"
-      :values="['待处理', '已完成']"
+      :values="values"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -268,13 +295,16 @@ export default {
       <view class="ko-basic-search">
         <UniRow :gutter="10">
           <UniCol :span="24">
-            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入订单编号" />
+            <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
@@ -302,14 +332,14 @@ export default {
                 <button
                   v-if="['CREATED'].includes(item.status) && false"
                   class="ko-basic-button__card"
-                  @click.stop="onCancel(item)"
+                  @click.stop="onCancel(item, index)"
                 >
                   取消出库
                 </button>
                 <button
                   v-if="['CREATED', 'CANCELLED'].includes(item.status)"
                   class="ko-basic-button__card"
-                  @click.stop="onConfirm(item)"
+                  @click.stop="onConfirm(item, index)"
                 >
                   确认出库
                 </button>
@@ -334,7 +364,7 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item}" v-if="isPerm('Stock_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Stock_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               class="ko-basic-button__card"
@@ -345,14 +375,14 @@ export default {
             <button
               v-if="['CREATED'].includes(item.status) && false"
               class="ko-basic-button__card"
-              @click.stop="onCancel(item)"
+              @click.stop="onCancel(item, index)"
             >
               取消出库
             </button>
             <button
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
               class="ko-basic-button__card"
-              @click.stop="onConfirm(item)"
+              @click.stop="onConfirm(item, index)"
             >
               确认出库
             </button>
@@ -444,10 +474,6 @@ export default {
     }
   }
 
-  .ko-basic-button__card {
-    margin: 0 5px;
-  }
-
   &__popup {
     // #ifdef MP
     width: 94vw;
@@ -465,10 +491,6 @@ export default {
   .uni-group {
     display: flex;
     align-items: center;
-
-    .ko-basic-button__card {
-      margin: 0 5px;
-    }
   }
 }
 

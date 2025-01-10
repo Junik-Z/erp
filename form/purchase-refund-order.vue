@@ -14,7 +14,7 @@ import {
   reOrderPurchaseReturnApi,
   updatePurchaseReturnApi,
 } from "@/api/erp/purchase";
-import { _deepCopy, _get, _isEqual, showToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -62,6 +62,7 @@ export default {
 
       isEdit: false,
       isAgain: false,
+      isNormal: false,
     };
   },
   mixins: [mixins],
@@ -71,6 +72,7 @@ export default {
     this.orderId = option.order_id || "";
 
     if (this.isEdit || this.orderId) this.getInfo();
+    this.isNormal = option.isNormal === "true";
 
     // 是否是客户下单
     this.isClient = _isEqual("ADDED_REFUND_PURCHASE", option.PAGE_TYPE);
@@ -98,8 +100,9 @@ export default {
           const Func = this.isAgain ? reOrderPurchaseReturnApi : (this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi);
 
           Func(params)
-            .then(() => {
-              showToast({
+            .then((res) => {
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
+              CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   uni.navigateBack();
