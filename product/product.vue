@@ -3,7 +3,7 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import Classify from "./components/Classify.vue";
 import ProductList from "./components/ProductList.vue";
-import FieldList from "@/product/components/Field.vue";
+import FieldList from "./components/Field.vue";
 import { _deepCopy } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { shareProductApi } from "@/api/erp/product";
@@ -67,7 +67,7 @@ export default {
       } catch (e) {
       }
 
-      const query = await this._GET_SHARE_APP_PARAMS_(obj, 'form_scene');
+      const query = await this._GET_SHARE_APP_PARAMS_(obj, "form_scene");
 
       if (query.title) query.title = `${this.GET_SHOP_NAME || ""} ${query.title}`;
 
