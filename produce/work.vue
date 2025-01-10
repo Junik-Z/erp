@@ -18,7 +18,7 @@ import * as echarts from "./components/uni-ec-canvas/echarts-tree-v5.1.2.min";
 let chart = null;
 
 export default {
-  name: "client",
+  name: "Work",
   components: {
     UvStepsItem,
     UvSteps,
@@ -388,7 +388,7 @@ export default {
         if (rowIndex % 2 === 0) {
           return {
             rowspan: 2,
-            colspan: 3
+            colspan: 3,
           };
         }
       }
@@ -521,7 +521,7 @@ export default {
       </block>
     </UniForms>
 
-    <view style="padding: 10px;" v-if="true">
+    <view style="padding: 10px;" v-if="false">
       <GridTable
         :columns="columns"
         :data="list"
@@ -529,7 +529,7 @@ export default {
       />
     </view>
 
-    <view style="width: 100vw; height: 40vh; position: relative; z-index: 1" v-if="true">
+    <view style="width: 100vw; height: 40vh; position: relative; z-index: 1" v-if="false">
       <UniEcCanvas
         ref="canvas"
         :ec="ec"
@@ -537,7 +537,6 @@ export default {
         canvas-id="uni-ec-canvas"
       />
     </view>
-
 
     <view class="ko-work__footer">
       <button
