@@ -177,7 +177,8 @@ export function dealBigMoney(n) {
 // 通用 toast
 export function CustomToast(opt) {
   uni.showToast({
-    ...opt, success() {
+    ...opt,
+    success() {
     },
   });
 

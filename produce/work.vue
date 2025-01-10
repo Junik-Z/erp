@@ -14,12 +14,16 @@ import UvStepsItem from "./components/uv-steps/components/uv-steps-item/uv-steps
 import GridTable from "./components/GridTable/GridTable.vue";
 import UniEcCanvas from "./components/uni-ec-canvas/uni-ec-canvas.vue";
 import * as echarts from "./components/uni-ec-canvas/echarts-tree-v5.1.2.min";
+import KoRadioGroup from "./components/RadioGroup.vue";
+import CustomTable from "@/produce/pages/CustomTable.vue";
 
 let chart = null;
 
 export default {
   name: "Work",
   components: {
+    CustomTable,
+    KoRadioGroup,
     UvStepsItem,
     UvSteps,
     PickerProduct,
@@ -154,6 +158,7 @@ export default {
 
     return {
       form: {
+        produceType: "customized", // customized: 自定义生产
         "planFinishDate": "",
         "totalRawMaterialAmount": null,
         "totalAmount": null,
@@ -194,7 +199,7 @@ export default {
       loading: false,
       option: {},
 
-      current: 0,
+      current: 1,
 
       ec: {
         lazyLoad: true,
@@ -253,69 +258,15 @@ export default {
         ],
       },
 
-      columns: [
+      typeOptions: [
         {
-          label: "序号",
-          type: "index",
-          width: 55,
-          prop: "index",
+          label: "常规生产",
+          value: "internal",
         },
         {
-          label: "姓名",
-          prop: "name",
-          width: 55,
+          label: "定制生产",
+          value: "customized",
         },
-        {
-          label: "年龄",
-          prop: "age",
-          width: 55,
-        },
-        {
-          label: "专业",
-          prop: "zy",
-          width: 55,
-        },
-        {
-          label: "专业",
-          prop: "zy",
-          width: 55,
-        },
-        {
-          label: "专业",
-          prop: "zy",
-          width: 55,
-        },
-        {
-          label: "专业",
-          prop: "zy",
-          width: 55,
-        },
-        {
-          label: "专业",
-          prop: "zy",
-          width: 55,
-        },
-        {
-          label: "专业",
-          prop: "zy",
-          width: 55,
-        },
-      ],
-
-      list: [
-        {name: "张三", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三1", age: 16, zy: "踢足球，倒挂金钩！"},
-        {name: "张三2", age: 16, zy: "踢足球，倒挂金钩！"},
-        {name: "张三3", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三4", age: 13, zy: "踢足球，倒挂金钩！"},
-        {name: "张三5", age: 19, zy: "踢足球，倒挂金钩！"},
-        {name: "张三6", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三7", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三8", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三9", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三10", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三11", age: 18, zy: "踢足球，倒挂金钩！"},
-        {name: "张三12", age: 18, zy: "踢足球，倒挂金钩！"},
       ],
     };
   },
@@ -326,7 +277,7 @@ export default {
     if (this.isEdit) this.getInfo();
 
     this.$nextTick(() => {
-      this.$refs.canvas.init(this.initChart);
+      // this.$refs.canvas.init(this.initChart);
     });
 
   },
@@ -439,8 +390,8 @@ export default {
       ref="FormRef"
       :rules="rules"
     >
-      <block v-if="current === 0">
-        <view style="padding: 10px;">
+      <view style="padding: 10px;">
+        <block v-if="current === 0">
           <UniFormsItem v-if="form.orderCode" label="订单编号：" name="orderCode">
             <UniEasyinput disabled :value="form.orderCode" placeholder="请输入" />
           </UniFormsItem>
@@ -453,81 +404,69 @@ export default {
             />
           </UniFormsItem>
 
-          <UniFormsItem label="生产模式：" name="planFinishDate">
-            <radio-group>
-              <radio color="#256eff" style="transform:scale(0.9)">
-                常规生产
-              </radio>
-              <radio color="#256eff" style="transform:scale(0.9); margin-left: 10px;">
-                定制生产
-              </radio>
-            </radio-group>
+          <UniFormsItem label="生产模式：" name="produceType">
+            <KoRadioGroup v-model="form.produceType" :options="typeOptions" />
           </UniFormsItem>
-        </view>
-      </block>
+        </block>
 
-      <block v-if="current === 0">
+        <block v-if="current === 1">
+          <UniSection title="所需物料" type="line" v-if="form.produceType === 'internal'">
+            <view style="padding: 10px;">
+              <UniFormsItem label-width="0" name="materialDetails">
+                <view style="width: 100%;">
+                  <PickerProduct
+                    v-model="form.materialDetails"
+                    :total.sync="form.totalRawMaterialAmount"
+                    type="purchase"
+                    hide-prices
+                  />
+                </view>
+              </UniFormsItem>
+            </view>
+          </UniSection>
 
-      </block>
+          <block v-if="form.produceType === 'customized'">
+            <CustomTable v-model="form.customizedMaterials" />
+          </block>
+        </block>
 
-      <block v-else>
-        <UniSection title="所需物料" type="line">
-          <view style="padding: 10px;">
-            <UniFormsItem label-width="0" name="materialDetails">
-              <view style="width: 100%;">
-                <PickerProduct
-                  v-model="form.materialDetails"
-                  :total.sync="form.totalRawMaterialAmount"
-                  type="purchase"
-                  hide-prices
-                />
-              </view>
-            </UniFormsItem>
-          </view>
-        </UniSection>
+        <block v-if="false">
+          <UniSection title="生产产品" type="line">
+            <view style="padding: 10px;">
+              <UniFormsItem label-width="0" name="productDetails">
+                <view style="width: 100%;">
+                  <PickerProduct
+                    v-model="form.productDetails"
+                    :total.sync="form.totalProductAmount"
+                    hide-prices
+                  />
+                </view>
+              </UniFormsItem>
+            </view>
+          </UniSection>
 
-        <UniSection title="生产产品" type="line">
-          <view style="padding: 10px;">
-            <UniFormsItem label-width="0" name="productDetails">
-              <view style="width: 100%;">
-                <PickerProduct
-                  v-model="form.productDetails"
-                  :total.sync="form.totalProductAmount"
-                  hide-prices
-                />
-              </view>
-            </UniFormsItem>
-          </view>
-        </UniSection>
+          <UniSection title="预计创造价值" type="line" v-if="false">
+            <view style="padding: 10px;">
+              <UniFormsItem label-width="30px" name="materialDetails">
+                <view>
+                  <view class="ko-basic-money"> {{ toYuan(getTotalAmount) }}元</view>
+                  <view style="margin-top: 10px;" class="ko-basic-money">{{ toBigMoney(toYuan(getTotalAmount)) }}</view>
+                </view>
+              </UniFormsItem>
+            </view>
+          </UniSection>
 
-        <UniSection title="预计创造价值" type="line" v-if="false">
-          <view style="padding: 10px;">
-            <UniFormsItem label-width="30px" name="materialDetails">
-              <view>
-                <view class="ko-basic-money"> {{ toYuan(getTotalAmount) }}元</view>
-                <view style="margin-top: 10px;" class="ko-basic-money">{{ toBigMoney(toYuan(getTotalAmount)) }}</view>
-              </view>
-            </UniFormsItem>
-          </view>
-        </UniSection>
-
-        <UniSection title="其它信息" type="line">
-          <view style="padding: 10px;">
-            <UniFormsItem label="备注：" name="remark">
-              <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
-            </UniFormsItem>
-          </view>
-        </UniSection>
-      </block>
+          <UniSection title="其它信息" type="line">
+            <view style="padding: 10px;">
+              <UniFormsItem label="备注：" name="remark">
+                <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
+              </UniFormsItem>
+            </view>
+          </UniSection>
+        </block>
+      </view>
     </UniForms>
 
-    <view style="padding: 10px;" v-if="false">
-      <GridTable
-        :columns="columns"
-        :data="list"
-        :grid-area-func="onGridAreaFunc"
-      />
-    </view>
 
     <view style="width: 100vw; height: 40vh; position: relative; z-index: 1" v-if="false">
       <UniEcCanvas
@@ -538,17 +477,15 @@ export default {
       />
     </view>
 
-    <view class="ko-work__footer">
+    <view class="ko-work__footer ko-basic-box-shadow">
       <button
-        class="ko-basic-button"
-        style="margin: 0 40px 10px;"
+        class="ko-basic-button__card"
         @click="onPrev"
       >
         {{ current === 0 ? "取消" : "上一步" }}
       </button>
       <button
-        class="ko-basic-button"
-        style="margin: 0 40px 10px;"
+        class="ko-basic-button__card"
         :loading="loading"
         :disabled="loading"
         @click="onNext"
@@ -562,7 +499,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-work {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 70px);
 
   /* #ifdef H5 */
   .ko-basic-button {
@@ -577,8 +514,24 @@ export default {
 
   &__footer {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-around;
+
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: #fff;
+
+    height: 70px;
+    padding-top: 20rpx;
+    padding-left: 40px;
+    padding-right: 40rpx;
+
+    .ko-basic-button__card {
+      width: 100px;
+    }
   }
 }
 

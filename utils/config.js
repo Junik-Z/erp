@@ -1,3 +1,5 @@
+import { _isDev } from "@/utils/index";
+
 // 请求地址
 let BASE_URL = "http://192.168.0.7:8093/api";
 let BASE_WS_URL = "ws://192.168.0.7:8093/api/ws/app";

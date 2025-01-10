@@ -258,7 +258,7 @@ export default {
               :current.sync="current"
               :values="tabs"
               style-type="text"
-              @click-item="onTabItem"
+              @clickItem="onTabItem"
             />
           </view>
 

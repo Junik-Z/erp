@@ -393,7 +393,7 @@ export default {
             </view>
           </BasicCard>
         </view>
-        <LoadMore :loading="loading" :content-text="{contentnomore: '没有更多单据了'}" />
+        <LoadMore :loading="loading" content-text="没有更多单据了" />
       </UniList>
       <!-- #endif -->
 

@@ -1,6 +1,6 @@
 <script>
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniNumberBox from "@/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
+import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";

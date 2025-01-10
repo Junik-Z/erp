@@ -31,7 +31,7 @@ export default {
       :values="tabs"
       label-key="label"
       :current="current"
-      @click-item="onJumpByTabs"
+      @clickItem="onJumpByTabs"
       is-router
     />
   </view>

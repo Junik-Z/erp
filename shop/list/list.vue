@@ -6,7 +6,7 @@ import { getProductClassApi, getProductFieldApi, getProductListApi } from "@/api
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import mixins from "@/mixins/mixins";
-import UniNumberBox from "@/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
+import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _sum, CustomToast } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";

@@ -1,42 +1,5 @@
-<template>
-  <view class="ko-grid-table" :style="[rootStyle]">
-    <scroll-view
-      scroll-y
-      scroll-x
-      class="ko-grid-table__scroll"
-    >
-      <view class="ko-grid-table__wrap">
-        <view class="ko-table__thead">
-          <view
-            class="ko-table__th"
-            v-for="(col, index) of columns"
-            :key="index"
-            :style="[getCellStyle(col)]"
-          >
-            <view class="ko-table__cell">{{ col.label }}</view>
-          </view>
-        </view>
-
-        <view class="ko-table__tbody">
-          <block v-for="(item, index) of list" :key="index">
-            <view
-              class="ko-table__tr"
-              v-for="(col, j) of columns"
-              :key="col.label"
-              :style="[getCellStyle(col), getTableGridArea(item, col, index, j)]"
-            >
-              <view class="ko-table__cell" v-if="col.type === 'index'">{{ index + 1 }}</view>
-              <view class="ko-table__cell" v-else>{{ get(item, col.prop) }}</view>
-            </view>
-          </block>
-        </view>
-      </view>
-    </scroll-view>
-  </view>
-</template>
-
 <script>
-import { _deepCopy, _get, _isEqual, _sum } from "@/utils";
+import { _deepCopy, _get, _isEqual, _sum, getAllRect } from "@/utils";
 
 // 获取包含的坐标
 function calculateCoveredCoordinatesByRow(x_start, x_end, y_start, y_end) {
@@ -48,6 +11,11 @@ function calculateCoveredCoordinatesByRow(x_start, x_end, y_start, y_end) {
   }
   return coveredCoordinates;
 }
+
+// 移动步长
+const MOVE_STEP = 20;
+// 长按步长
+const LONG_PRESS = 500;
 
 export default {
   name: "GridTable",
@@ -64,16 +32,17 @@ export default {
         return [];
       },
     },
-    cellWidth: {
-      type: Number,
-      default: 40,
-    },
 
     gridAreaFunc: Function,
   },
   data() {
     return {
+      isPC: false,
+
       list: [],
+      columnsRect: {},
+
+      TouchStart: {},
     };
   },
   watch: {
@@ -84,6 +53,21 @@ export default {
       deep: true,
       immediate: true,
     },
+    columns: {
+      handler() {
+        setTimeout(() => {
+          this.updateColumns();
+        }, 100);
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
+  mounted() {
+    // #ifdef H5
+    this.isPC = this.IsPC();
+    // #endif
+
   },
   methods: {
     getTableList() {
@@ -130,26 +114,97 @@ export default {
         };
       });
     },
-  },
+    async updateColumns() {
+      const rect = await getAllRect(".ko-table__th", this);
+      rect.forEach(item => {
+        const index = item.dataset.index;
+        this.$set(this.columnsRect, index, item.width);
+      });
+    },
 
+    // 触摸开始
+    touchStart(event) {
+      this.TouchStart = {
+        page: _deepCopy(this.isPC ? event : event.touches[0]),
+        event,
+        time: +new Date(),
+      };
+    },
+    // 触摸结束
+    touchEnd(event) {
+      const {page: sPage, time: sTime} = _deepCopy(this.TouchStart) || {};
+      const {pageY, pageX} = this.isPC ? event : event.changedTouches[0];
+      // 判断是不是在拖动
+      const isMove = Math.abs(sPage.pageY - pageY) > MOVE_STEP || Math.abs(sPage.pageX - pageX) > MOVE_STEP;
+
+      if (!isMove) {
+        // 耗时
+        const time = +new Date() - sTime;
+        const data = _deepCopy(event.currentTarget.dataset.params);
+        const params = {params: data, event, pageY, pageX};
+
+        if (time > LONG_PRESS) {
+          this.$emit("long-press", params);
+        } else {
+          this.$emit("press", params);
+        }
+      }
+    },
+
+    // 触摸开始
+    mousedown(event) {
+      if (!this.isPC) return;
+      this.touchStart(event);
+    },
+    // 触摸结束
+    mouseup(event) {
+      if (!this.isPC) return;
+      this.touchEnd(event);
+    },
+
+    // #ifdef H5
+    IsPC() {
+      const userAgentInfo = navigator.userAgent;
+      const Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
+      let flag = true;
+      for (let v = 0; v < Agents.length - 1; v++) {
+        if (userAgentInfo.indexOf(Agents[v]) > 0) {
+          flag = false;
+          break;
+        }
+      }
+      return flag;
+    },
+    // #endif
+  },
   computed: {
     rootStyle() {
       return {
         "--table-col": "auto ".repeat(this.columns?.length).trim(),
-        "--table-width": _sum(this.columns.map(v => (v.width || this.cellWidth) + 1)) - 1 + "px",
+        "--table-width": _sum(this.columns.map(v => (v.width) + 1)) - 1 + "px",
       };
     },
 
-    getCellStyle() {
+    getThCellStyle() {
       return (col) => {
+        const width = col.width;
         return {
-          width: col.width ? col.width + "px" : "auto",
+          width: width ? width + "px" : "auto",
+        };
+      };
+    },
+    getCellStyle() {
+      return (col, index) => {
+        const w = this.columnsRect?.[index] || 0;
+        const width = col.width || w;
+        return {
+          width: width ? width + "px" : "auto",
         };
       };
     },
 
     getTableGridArea() {
-      return (row, column, rowIndex, columnIndex) => {
+      return (row, columnIndex) => {
 
         const style = {"grid-area": "unset"};
 
@@ -184,10 +239,71 @@ export default {
 };
 </script>
 
+<template>
+  <view class="ko-grid-table" :style="[rootStyle]">
+    <scroll-view
+      scroll-y
+      scroll-x
+      class="ko-grid-table__scroll"
+    >
+      <view class="ko-grid-table__wrap">
+        <view class="ko-table__thead">
+          <view
+            class="ko-table__th"
+            v-for="(col, index) of columns"
+            :key="index"
+            :style="[getThCellStyle(col, index)]"
+            :data-index="index"
+          >
+            <view
+              class="ko-table__cell"
+              @touchstart="touchStart"
+              @touchend="touchEnd"
+              @mousedown.stop="mousedown"
+              @mouseup.stop="mouseup"
+              :data-params="{type: 'thead', column: col, columnIndex: index}"
+            >
+              <uni-easyinput
+                :clearable="false"
+                v-model="col.label"
+                :input-border="false"
+                auto-height
+                trim
+              />
+              <!--{{ col.label }}-->
+            </view>
+          </view>
+        </view>
+
+        <view class="ko-table__tbody">
+          <block v-for="(item, index) of list" :key="index">
+            <view
+              class="ko-table__tr"
+              v-for="(col, j) of columns"
+              :key="col.label"
+              :style="[getCellStyle(col, j), getTableGridArea(item, col, index, j)]"
+
+
+              @touchstart="touchStart"
+              @touchend="touchEnd"
+              @mousedown.stop="mousedown"
+              @mouseup.stop="mouseup"
+              :data-params="{type: 'tbody', column: col, columnIndex: j, row: item, rowIndex: index}"
+            >
+              <view class="ko-table__cell" v-if="col.type === 'index'">{{ index + 1 }}</view>
+              <view class="ko-table__cell" v-else>{{ get(item, col.prop) }}</view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
 <style lang="scss" scoped>
 $border-color: #e5e5e5;
-$cell-padding: 4px 8px;
-$thead-padding: 6px 8px;
+$cell-padding: 0px 0px;
+$thead-padding: 0px 0px;
 
 .ko-grid-table {
   width: 100%;
@@ -214,6 +330,7 @@ $thead-padding: 6px 8px;
 
     .ko-table__cell {
       padding: $thead-padding;
+      white-space: nowrap;
     }
   }
 
@@ -251,6 +368,17 @@ $thead-padding: 6px 8px;
     justify-content: center;
     height: 100%;
     box-sizing: border-box;
+    cursor: pointer;
+    transition: opacity .3s;
+
+
+    /deep/ .uni-easyinput .uni-easyinput__content-input {
+     max-height: 28px;
+    }
+
+    &:active {
+      opacity: .7;
+    }
   }
 }
 </style>

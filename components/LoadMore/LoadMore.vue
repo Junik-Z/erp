@@ -7,22 +7,16 @@ export default {
     more: Boolean,
     noMore: Boolean,
     contentText: {
-      type: Object,
-      default() {
-        return {};
-      },
+      type: String,
     },
   },
   computed: {
-    getStatus() {
-      return this.loading ? "loading" : this.more ? "more" : "noMore";
-    },
   },
 };
 </script>
 
 <template>
-  <view style="font-size: 12px;color: #999;">没有更多数据了</view>
+  <view style="font-size: 12px;color: #999; text-align: center;">{{ contentText || '没有更多数据了' }}</view>
 </template>
 
 <style scoped lang="scss">

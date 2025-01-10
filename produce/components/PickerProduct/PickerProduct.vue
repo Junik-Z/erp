@@ -5,7 +5,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import { _deepCopy, _get, _isEqual, _sum } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
-import UniNumberBox from "@/components/uni-number-box/components/uni-number-box/uni-number-box.vue";
+import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
@@ -312,7 +312,7 @@ export default {
         </view>
       </view>
     </BasicCard>
-    <LoadMore v-if="!list.length" :no-more="true" :content-text="{contentnomore: '暂无产品数据'}" />
+    <LoadMore v-if="!list.length" :no-more="true" content-text="暂无产品数据" />
     <!-- #endif -->
 
     <!-- #ifdef H5 -->

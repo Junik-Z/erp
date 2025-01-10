@@ -81,7 +81,6 @@ export default {
   position: relative;
   background: #fff;
   border-radius: 10px;
-  padding-bottom: 10px;
   display: flex;
   flex-direction: column;
   max-height: 98vh;

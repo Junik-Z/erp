@@ -131,6 +131,11 @@ button::after {
 
 .ko-basic-box-shadow {
   box-shadow: $uni-shadow-base;
+
+  // 0 1px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2)
+  &__top {
+    box-shadow: 0 -1px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2);
+  }
 }
 
 .ko-basic-label {

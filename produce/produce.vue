@@ -236,7 +236,6 @@ export default {
             :chart-data="warningTrend"
           />
         </UniSection>
-
       </view>
     </view>
   </view>

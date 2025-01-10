@@ -100,8 +100,7 @@ export default {
         if (!this.isRouter) {
           this.currentIndex = index;
         }
-
-
+        
         this.$emit("clickItem", {
           currentIndex: index,
         });
