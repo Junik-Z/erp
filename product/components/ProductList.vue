@@ -11,7 +11,7 @@ import {
   upDownPurchaseApi,
   upDownSaleApi,
 } from "@/api/erp/product";
-import { _deepCopy, _isEmpty, _isEqual, _keys, _pick } from "@/utils";
+import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
@@ -124,6 +124,9 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
@@ -292,13 +295,7 @@ export default {
       getDetailApi({id})
         .then(res => {
           const data = res.data || {};
-          const index = this.list.findIndex(v => v.id === data.id);
-          const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
-          if (index > -1) {
-            this.$set(this.list, index, _pick(data, _keys(node)));
-          } else {
-            this.list.unshift(_pick(data, _keys(node)));
-          }
+          this.onProcessingListData(data);
         })
         .finally(() => {
           this.noRefresh = false;

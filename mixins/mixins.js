@@ -9,6 +9,8 @@ import {
   _haveCommonElements,
   _isEmpty,
   _isEqual,
+  _isString,
+  _keys,
   _omit,
   _pick,
   absYuan,
@@ -218,12 +220,40 @@ export default {
       return L;
     },
 
+    // 处理查看图片
     lookImage(url) {
       if (url) {
         if (url) {
           uni.previewImage({
             urls: [url],
           });
+        }
+      }
+    },
+
+    // 处理页面列表数据
+    onProcessingListData(data, isPayment = false) {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      let index = this.list.findIndex(v => v.id === data.id);
+      let node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
+
+      node = _isEmpty(node) ? data : node;
+      node = _pick(data, _keys(node));
+
+      index = index > -1 ? index : this.nodeIndex;
+
+      if (data?.confirmable && isPayment) {
+        this.list.splice(index, 1);
+      } else if (_isString(info) && this.tab === 1) {
+        this.list.splice(index, 1);
+        this.list.unshift(node);
+      } else {
+        const V = this.list[index];
+        if (!_isEmpty(V) && V.id === data.id) {
+          this.$set(this.list, index, {...(this.node || {}), ...node});
+        } else {
+          this.list.unshift(node);
         }
       }
     },

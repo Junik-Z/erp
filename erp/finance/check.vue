@@ -205,6 +205,10 @@ export default {
           ],
         },
         {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
           label: "备注",
           prop: "remark",
           minWidth: 120,
@@ -719,8 +723,8 @@ export default {
     padding: 10px;
 
     // #ifdef H5
-    width: 400px;
-
+    width: 1024px;
+    margin: 0 auto;
     // #endif
   }
 

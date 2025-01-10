@@ -62,12 +62,12 @@ export default {
           this.FieldList = res.data;
         });
     },
-    onRefresh(item) {
+    onRefresh(item, index) {
       this.$set(item, "__r_loading__", true);
       refreshStockApi({id: item.id})
-        .then(() => {
+        .then((res) => {
           uni.showToast({title: "刷新成功"});
-          this.getList();
+          this.$set(this.list[index], "quantity", res.data || 0);
         })
         .finally(() => {
           this.$set(item, "__r_loading__", false);
@@ -235,11 +235,11 @@ export default {
           @next-load="onRequestNextPage"
           :no-more="noMore || loading"
         >
-          <template #operate="{item}" v-if="isPerm('Stock_Write')">
+          <template #operate="{item, index}" v-if="isPerm('Stock_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
                 class="ko-basic-button__card"
-                @click.stop="onRefresh(item)"
+                @click.stop="onRefresh(item, index)"
                 :loading="item.__r_loading__"
                 :disabled="item.__r_loading__"
               >

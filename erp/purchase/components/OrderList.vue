@@ -13,7 +13,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -205,6 +205,8 @@ export default {
         "待付款",
         "已完成",
       ],
+
+      isNewList: false,
     };
   },
   methods: {
@@ -224,7 +226,7 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && !this.isReturn && this.list.length) {
+      if (this.noRefresh && info && !this.isReturn && this.list.length && (!this.isNewList || this.tab === 0)) {
         this.updateList();
         return false;
       }
@@ -243,12 +245,18 @@ export default {
           this.loading = false;
           this.noRefresh = false;
           this.isReturn = false;
+          this.isNewList = false;
 
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
-    onJump(item) {
+    onJump(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
       this.noRefresh = true;
       this.jumpAddedPurchase({id: item.id});
     },
@@ -256,13 +264,20 @@ export default {
     onTrigger(event) {
       this.noRefresh = true;
       const {path} = event.item || {};
+
       if (path) {
+        this.isNewList = true;
         uni.navigateTo({url: path});
       }
     },
 
     // 申请退货
-    onReturn(item) {
+    onReturn(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
       this.noRefresh = true;
       this.isReturn = true;
       this.jumpAddedReturnPurchase({order_id: item.id});
@@ -333,20 +348,7 @@ export default {
       getPurchaseDetailApi({id})
         .then(res => {
           const data = res.data || {};
-          if (data?.confirmable && isPayment) {
-            this.list.splice(this.nodeIndex, 1);
-          } else if (_isString(info) && this.tab === 1) {
-            this.list.splice(this.nodeIndex, 1);
-            this.list.unshift(_pick(data, _keys(this.node)));
-          } else {
-            const index = this.list.findIndex(v => v.id === data.id);
-            const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
-            if (index > -1) {
-              this.$set(this.list, index, _pick(data, _keys(node)));
-            } else {
-              this.list.unshift(_pick(data, _keys(node)));
-            }
-          }
+          this.onProcessingListData(data, isPayment);
         })
         .finally(() => {
           this.noRefresh = false;

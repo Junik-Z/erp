@@ -42,6 +42,18 @@ const Func = {
   logistics: getDeliveryInfoApi,
 };
 
+const SummaryText = {
+  inbound: "实收",
+  outbound: "实收",
+  sale: "实收",
+  saleReturn: "实退",
+  purchase: "实付",
+  purchaseReturn: "实收",
+  produce: "实收",
+  receivable: "实收",
+  payable: "实收",
+};
+
 export default {
   name: "DetailsOrder",
   mixins: [mixins],
@@ -118,6 +130,10 @@ export default {
 
     ifFees() {
       return !_isEmpty(this.node.fees);
+    },
+
+    getTotalAmountText() {
+      return _get(SummaryText, this.option.page_type)
     },
 
     // #ifdef H5
@@ -341,7 +357,7 @@ export default {
             </view>
 
             <view class="ko-details__cell" style="margin-top: 10px;">
-              <label class="ko-basic-label">实付：</label>
+              <label class="ko-basic-label">{{ getTotalAmountText }}：</label>
               <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
             </view>
           </block>

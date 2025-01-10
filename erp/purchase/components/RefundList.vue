@@ -9,7 +9,7 @@ import {
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isString, _keys, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -178,6 +178,7 @@ export default {
 
       noRefresh: false,
       isReturn: false,
+      isNewList: false,
       values: [
         "待处理",
         "待付款",
@@ -202,7 +203,7 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && this.list.length) {
+      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.tab === 0)) {
         this.updateList();
         return false;
       }
@@ -211,7 +212,6 @@ export default {
       const Func = [getPurchaseReturnListApi, getPurchaseReturnWaitPaymentListApi, getPurchaseReturnHistoryListApi][this.tab];
       Func(this.queryList)
         .then(res => {
-          console.log(res.data);
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
@@ -222,17 +222,24 @@ export default {
           this.loading = false;
           this.noRefresh = false;
           this.isReturn = false;
+          this.isNewList = false;
 
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
-    onJump(item) {
+    onJump(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
       this.noRefresh = true;
       this.jumpAddedReturnPurchase({id: item.id});
     },
     onTrigger(event) {
       this.noRefresh = true;
+      this.isNewList = true;
       if ("uni") {
         this.jumpAddedReturnPurchase();
         return false;
@@ -297,20 +304,7 @@ export default {
       getPurchaseReturnDetailApi({id})
         .then(res => {
           const data = res.data || {};
-          if (data?.confirmable && isPayment) {
-            this.list.splice(this.nodeIndex, 1);
-          } else if (_isString(info) && this.tab === 1) {
-            this.list.splice(this.nodeIndex, 1);
-            this.list.unshift(_pick(data, _keys(this.node)));
-          } else {
-            const index = this.list.findIndex(v => v.id === data.id);
-            const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
-            if (index > -1) {
-              this.$set(this.list, index, _pick(data, _keys(node)));
-            } else {
-              this.list.unshift(_pick(data, _keys(node)));
-            }
-          }
+          this.onProcessingListData(data, isPayment);
         })
         .finally(() => {
           this.noRefresh = false;

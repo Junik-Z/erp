@@ -300,6 +300,7 @@ export default {
               .then(() => {
                 uni.showToast({title: "操作成功"});
                 this.list.splice(index, 1);
+                this.getCount();
               });
           }
         },

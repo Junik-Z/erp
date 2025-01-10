@@ -40,7 +40,7 @@ const SummaryText = {
   outbound: "实收",
   sale: "实收",
   saleReturn: "实退",
-  purchase: "实收",
+  purchase: "实付",
   purchaseReturn: "实收",
   produce: "实收",
   receivable: "实收",

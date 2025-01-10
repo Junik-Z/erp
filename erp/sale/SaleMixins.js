@@ -7,7 +7,7 @@ import {
   removeSaleReturnApi,
   submitSaleApi,
 } from "@/api/erp/sale";
-import { _isNumber } from "@/utils";
+import { _isEmpty, _isNumber } from "@/utils";
 
 export default {
   name: "SaleMixins",
@@ -110,6 +110,8 @@ export default {
     // 申请退货
     jumpSaleReturn(query) {
       this.noRefresh = true;
+      this.isNewList = _isEmpty(query);
+
       let q = this.getQueryString(query);
       uni.navigateTo({
         url: `${PageEnums.saleRefund}${q}`,

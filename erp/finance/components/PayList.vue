@@ -299,6 +299,7 @@ export default {
                 uni.showToast({title: "操作成功"});
                 // this.getList(true);
                 this.list.splice(index, 1);
+                this.getCount();
               });
           }
         },

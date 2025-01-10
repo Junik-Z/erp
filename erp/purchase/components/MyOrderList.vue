@@ -5,7 +5,7 @@ import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _keys, _pick } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
@@ -255,7 +255,12 @@ export default {
 
 
     // 处理添加修改
-    onAdded(item) {
+    onAdded(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
       this.noRefresh = true;
       if (this.isHistory) {
         this.jumpAddedReturnPurchase({
@@ -288,7 +293,12 @@ export default {
       Func(item, index, true);
     },
     // 申请退货
-    onReturn(item) {
+    onReturn(item, index) {
+      // #ifdef H5
+      this.node = item;
+      this.nodeIndex = index;
+      // #endif
+
       this.isReturn = true;
       this.noRefresh = true;
       this.jumpAddedReturnPurchase({
@@ -306,13 +316,7 @@ export default {
       Func({id})
         .then(res => {
           const data = res.data || {};
-          const index = this.list.findIndex(v => v.id === data.id);
-          const node = _isEmpty(this.node) ? this.list.at(-1) : this.node;
-          if (index > -1) {
-            this.$set(this.list, index, _pick(data, _keys(node)));
-          } else {
-            this.list.unshift(_pick(data, _keys(node)));
-          }
+          this.onProcessingListData(data);
         })
         .finally(() => {
           this.noRefresh = false;
