@@ -453,7 +453,7 @@ export default {
           :data="list"
           empty-text="暂无数据"
           stripe
-          @row-click="onJumpDetails(item, isHistory ? 'purchaseReturn' : 'purchase')"
+          @row-click="onJumpDetails($event, isHistory ? 'purchaseReturn' : 'purchase')"
           no-more
         >
           <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
