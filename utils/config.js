@@ -19,7 +19,7 @@ DEFAULT_PAGE_SIZE = 10;
 let type = "develop";
 
 if (_isDev()) {
-  // type = "trial";
+  type = "trial";
 
   // type = "release";
 

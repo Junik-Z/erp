@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _isEqual, _sum, getAllRect } from "@/utils";
+import { _debounce, _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _set, _sum, getAllRect } from "@/utils";
 
 // 获取包含的坐标
 function calculateCoveredCoordinatesByRow(x_start, x_end, y_start, y_end) {
@@ -39,28 +39,56 @@ export default {
     return {
       isPC: false,
 
+      thead: [],
       list: [],
       columnsRect: {},
 
       TouchStart: {},
+
+      EditObj: {},
     };
   },
   watch: {
     data: {
       handler() {
-        this.list = this.getTableList();
+        this.onOffEdit();
+        setTimeout(() => {
+          this.list = this.getTableList();
+        }, 10);
       },
       deep: true,
       immediate: true,
     },
     columns: {
       handler() {
+        this.onOffEdit();
+
+        this.thead = _deepCopy(this.columns).map((item,index) => {
+          const isEdit = this.EditObj[index];
+
+          if (_isNotUnNil(isEdit)) {
+            console.log(isEdit);
+          }
+
+          return {
+            ...item
+          }
+        });
+
         setTimeout(() => {
           this.updateColumns();
-        }, 100);
+        }, 200);
       },
       deep: true,
       immediate: true,
+    },
+    thead: {
+      handler() {
+        // setTimeout(() => {
+        //   this.updateColumns();
+        // }, 100);
+      },
+      deep: true,
     },
   },
   mounted() {
@@ -70,16 +98,27 @@ export default {
 
   },
   methods: {
+    // 预处理列表数据
     getTableList() {
       const list = _deepCopy(this.data);
-      const cols = _deepCopy(this.columns);
+      const cols = _deepCopy(this.thead);
 
       let hidePos = [];
 
       return list.map((row, rowIndex) => {
         const _grid_obj_ = {};
+        let _config_ = row._config_ || {};
+
         cols.forEach((column, columnIndex) => {
-          const {rowspan, colspan} = this.gridAreaFunc?.({row, column, rowIndex, columnIndex}) || {};
+          const config = _get(_config_, `${column.prop}`) || {};
+          if (_isEmpty(config)) {
+            _set(_config_, `${column.prop}`, {rowspan: 0, colspan: 0, _is_edit_: false});
+          }
+
+          const G = this?.gridAreaFunc?.({row, column, rowIndex, columnIndex}) || {};
+
+          const rowspan = G.rowspan || _get(config, `rowspan`) || 0;
+          const colspan = G.colspan || _get(config, `colspan`) || 0;
 
           const obj = {
             rs: rowIndex + 1,
@@ -103,17 +142,17 @@ export default {
           }
 
           obj.hide = hidePos.some(v => _isEqual(v, [rowIndex, columnIndex]));
-
           _grid_obj_[columnIndex] = obj;
-
         });
 
         return {
           ...row,
+          _config_,
           _grid_obj_,
         };
       });
     },
+    // 获取各个单元格的宽度
     async updateColumns() {
       const rect = await getAllRect(".ko-table__th", this);
       rect.forEach(item => {
@@ -142,10 +181,20 @@ export default {
         const time = +new Date() - sTime;
         const data = _deepCopy(event.currentTarget.dataset.params);
         const params = {params: data, event, pageY, pageX};
+        this.onOffEdit();
 
         if (time > LONG_PRESS) {
           this.$emit("long-press", params);
         } else {
+          if (_isEqual(data.type, "thead")) {
+            this.$set(this.thead[data.columnIndex], "_is_edit_", true);
+          }
+
+          if (_isEqual(data.type, "tbody")) {
+            const column = this.thead[data.columnIndex];
+            this.$set(this.list[data.rowIndex]._config_[column.prop], `_is_edit_`, true);
+          }
+
           this.$emit("press", params);
         }
       }
@@ -156,10 +205,39 @@ export default {
       if (!this.isPC) return;
       this.touchStart(event);
     },
+
     // 触摸结束
     mouseup(event) {
       if (!this.isPC) return;
       this.touchEnd(event);
+    },
+
+    // 关闭所有输入框
+    onOffEdit() {
+      this.thead.forEach(item => {
+        this.$set(item, "_is_edit_", false);
+      });
+      this.list.forEach(item => {
+        for (const key in item._config_) {
+          this.$set(item._config_[key], "_is_edit_", false);
+        }
+      });
+    },
+
+    _debounceInputChange: _debounce(function (...arg) {
+      this.onChangeThead(...arg);
+    }, 200),
+
+    // 表头内容变化时触发
+    onChangeThead(value, {column, columnIndex, type, row, index}) {
+      console.log(value, column);
+      if (_isEqual(type, "thead")) {
+        this.$emit("change-thead", {column, columnIndex, value});
+      }
+
+      if (_isEqual(type, "tbody")) {
+        this.$emit("change-tbody", {column, columnIndex, value, row, index});
+      }
     },
 
     // #ifdef H5
@@ -180,19 +258,21 @@ export default {
   computed: {
     rootStyle() {
       return {
-        "--table-col": "auto ".repeat(this.columns?.length).trim(),
-        "--table-width": _sum(this.columns.map(v => (v.width) + 1)) - 1 + "px",
+        "--table-col": "auto ".repeat(this.thead?.length).trim(),
+        "--table-width": _sum(this.thead.map(v => (v.width) + 1)) - 1 + "px",
       };
     },
-
     getThCellStyle() {
-      return (col) => {
+      return (col, index) => {
         const width = col.width;
+        const w = this.columnsRect?.[index] || 0;
         return {
           width: width ? width + "px" : "auto",
+          "--column-width": (width || w) + "px",
         };
       };
     },
+
     getCellStyle() {
       return (col, index) => {
         const w = this.columnsRect?.[index] || 0;
@@ -202,25 +282,23 @@ export default {
         };
       };
     },
-
     getTableGridArea() {
-      return (row, columnIndex) => {
-
+      return (row, columnIndex, index, j) => {
         const style = {"grid-area": "unset"};
 
         // 获取行配置
-        const {rs, re, cs, ce, hide} = _get(row, `_grid_obj_.${columnIndex}`) || {};
+        const {rs, re, cs, ce, hide} = _get(row, `_grid_obj_.${j}`) || {};
 
         style["grid-area"] = [rs, cs, re, ce].join("/");
 
         if (/^span/.test(ce)) {
           style.width = "auto";
-          // style["background-color"] = "#fff";
+          style["background-color"] = "#fff";
           style["z-index"] = "2";
         }
 
         if (/^span/.test(re)) {
-          // style["background-color"] = "#fff";
+          style["background-color"] = "#fff";
           style["z-index"] = "2";
         }
 
@@ -232,6 +310,11 @@ export default {
       };
     },
 
+    getTbodyIsEdit() {
+      return (row, column, index, columnIndex) => {
+        return _get(row, `_config_.${column.prop}._is_edit_`);
+      };
+    },
     get() {
       return _get;
     },
@@ -250,9 +333,9 @@ export default {
         <view class="ko-table__thead">
           <view
             class="ko-table__th"
-            v-for="(col, index) of columns"
+            v-for="(column, index) of thead"
             :key="index"
-            :style="[getThCellStyle(col, index)]"
+            :style="[getThCellStyle(column, index)]"
             :data-index="index"
           >
             <view
@@ -261,16 +344,20 @@ export default {
               @touchend="touchEnd"
               @mousedown.stop="mousedown"
               @mouseup.stop="mouseup"
-              :data-params="{type: 'thead', column: col, columnIndex: index}"
+              :data-params="{type: 'thead', column: column, columnIndex: index}"
+              :class="{'is-edit': column._is_edit_}"
             >
               <uni-easyinput
                 :clearable="false"
-                v-model="col.label"
+                v-model.trim="column.label"
                 :input-border="false"
                 auto-height
                 trim
+                v-if="column._is_edit_"
+                focus
+                @input="_debounceInputChange($event, {column, columnIndex: index, type: 'thead'})"
               />
-              <!--{{ col.label }}-->
+              <text v-if="!column._is_edit_">{{ column.label }}</text>
             </view>
           </view>
         </view>
@@ -279,19 +366,32 @@ export default {
           <block v-for="(item, index) of list" :key="index">
             <view
               class="ko-table__tr"
-              v-for="(col, j) of columns"
-              :key="col.label"
-              :style="[getCellStyle(col, j), getTableGridArea(item, col, index, j)]"
-
+              v-for="(column, j) of thead"
+              :key="column.label"
+              :style="[getCellStyle(column, j), getTableGridArea(item, column, index, j)]"
 
               @touchstart="touchStart"
               @touchend="touchEnd"
               @mousedown.stop="mousedown"
               @mouseup.stop="mouseup"
-              :data-params="{type: 'tbody', column: col, columnIndex: j, row: item, rowIndex: index}"
+              :data-params="{type: 'tbody', column: column, columnIndex: j, row: item, rowIndex: index}"
+
+              :class="{'is-edit': getTbodyIsEdit(item, column, index, j)}"
             >
-              <view class="ko-table__cell" v-if="col.type === 'index'">{{ index + 1 }}</view>
-              <view class="ko-table__cell" v-else>{{ get(item, col.prop) }}</view>
+              <view class="ko-table__cell" v-if="column.type === 'index'">{{ index + 1 }}</view>
+              <view class="ko-table__cell" v-else>
+                <uni-easyinput
+                  :clearable="false"
+                  v-model.trim="item[column.prop]"
+                  :input-border="false"
+                  auto-height
+                  trim
+                  focus
+                  v-if="getTbodyIsEdit(item, column, index, j)"
+                  @input="_debounceInputChange($event, {column, columnIndex: j, row: item, index, type: 'tbody'})"
+                />
+                <text v-else>{{ get(item, column.prop) }}</text>
+              </view>
             </view>
           </block>
         </view>
@@ -300,10 +400,10 @@ export default {
   </view>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 $border-color: #e5e5e5;
-$cell-padding: 0px 0px;
-$thead-padding: 0px 0px;
+$cell-padding: 6px 8px;
+$thead-padding: 6px 8px;
 
 .ko-grid-table {
   width: 100%;
@@ -323,7 +423,7 @@ $thead-padding: 0px 0px;
 .ko-table {
   &__thead {
     display: grid;
-    grid-template-columns:  var(--table-col);
+    grid-template-columns: var(--table-col);
     white-space: break-spaces;
     box-sizing: border-box;
     border-left: 1px solid $border-color;
@@ -331,6 +431,10 @@ $thead-padding: 0px 0px;
     .ko-table__cell {
       padding: $thead-padding;
       white-space: nowrap;
+
+      &.is-edit {
+        padding: 0;
+      }
     }
   }
 
@@ -361,7 +465,7 @@ $thead-padding: 0px 0px;
   }
 
   &__cell {
-    padding: $cell-padding;
+    //padding: $cell-padding;
     text-align: center;
     display: flex;
     align-items: center;
@@ -369,12 +473,15 @@ $thead-padding: 0px 0px;
     height: 100%;
     box-sizing: border-box;
     cursor: pointer;
+    min-height: 35px;
+
+    &.is-edit {
+      width: calc(var(--column-width) - 2px);
+    }
+
+
     transition: opacity .3s;
 
-
-    /deep/ .uni-easyinput .uni-easyinput__content-input {
-     max-height: 28px;
-    }
 
     &:active {
       opacity: .7;

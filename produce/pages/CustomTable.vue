@@ -3,7 +3,7 @@ import GridTable from "../components/GridTable/GridTable.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
-import { _deepCopy, _get, _isEqual, _pick } from "@/utils";
+import { _deepCopy, _get, _isEqual, _pick, _set } from "@/utils";
 
 const PopupEnum = {
   addedColumn: {
@@ -28,39 +28,8 @@ export default {
   components: {KoMovable, GridTable, UvActionSheet, UniNumberBox},
   data() {
     return {
-      columns: [
-        {
-          label: "姓名",
-          prop: "name",
-        },
-        {
-          label: "年龄",
-          prop: "age",
-        },
-        {
-          label: "技能",
-          prop: "zy",
-        },
-      ],
-      list: [
-        {
-          name: {
-            value: "张三",
-            colspan: 0,
-            rowspan: 0,
-          },
-          age: {
-            value: 18,
-            colspan: 0,
-            rowspan: 0,
-          },
-          zy: {
-            value: "踢足球，倒挂金钩！",
-            colspan: 0,
-            rowspan: 0,
-          },
-        },
-      ],
+      columns: [],
+      list: [],
 
       // 动作类型：added: 添加新组件；
       sheetType: "added",
@@ -116,6 +85,8 @@ export default {
           obj[item.prop] = "";
         }
       });
+
+      console.log(obj);
       this.list.push(obj);
     },
 
@@ -130,7 +101,7 @@ export default {
 
       // flag: 强制替换原有的 prop
       const onReplace = (flag) => {
-        const prop = flag ? `column${this.columns.length}.value` : (node.prop || `column${this.columns.length}.value`);
+        const prop = flag ? `column${this.columns.length}` : (node.prop || `column${this.columns.length}`);
 
         // 修改
         if (_isEqual("editColumn", this.popupType)) {
@@ -164,10 +135,13 @@ export default {
 
     // 确认单元格内容
     onNewCell() {
-      const node = _pick(_deepCopy(this.form), ["value", "colspan", "rowspan"]);
-      const {column, columnIndex} = this.pressParams;
+      const node = _pick(_deepCopy(this.form), ["colspan", "rowspan"]);
+      const {column, columnIndex, row, rowIndex} = this.pressParams;
+      const config = _get(row, `_config_.${column.prop}`);
 
-      this.$set(this.list[columnIndex], column.prop, node);
+      _set(row, `_config_.${column.prop}`, {...config, ...node});
+
+      this.$set(this.list, rowIndex, row);
 
       this.visible = false;
     },
@@ -176,11 +150,25 @@ export default {
     onLongPress(event) {
       const p = _deepCopy(event.params);
       this.pressParams = p;
+      const {type, column, columnIndex, row, rowIndex} = p;
 
-      console.log(p);
+      // 点击表体时触发
+      if (_isEqual(type, "tbody")) {
+        this.popupType = "editCell";
+        const config = _get(row, `_config_.${column.prop}`);
+        this.form = {colspan: 0, rowspan: 0, ...(config || {})};
+        this.visible = true;
+        // #ifdef MP
+        this.$nextTick(() => {
+          this.$refs.FormRef.clearValidate();
+        });
+        // #endif
+      }
     },
     // 短按
     onPress(event) {
+      if (event) return false;
+
       const p = _deepCopy(event.params);
       this.pressParams = p;
 
@@ -213,6 +201,17 @@ export default {
     onClickPopupButton() {
       this[this.getPopupButtonFuncName]?.();
     },
+
+    // 修改表头的值
+    onChangeThead({columnIndex, value}) {
+      this.$set(this.columns[columnIndex], "label", value);
+    },
+
+    // 修改表体的值
+    onChangeTbody({column, value, row, index}) {
+      _set(row, column.prop, value);
+      this.$set(this.list, index, row);
+    },
   },
 
   computed: {
@@ -225,6 +224,7 @@ export default {
           },
           {
             name: "添加行",
+            disabled: !this.columns.length,
             func: "onAddedRow",
           },
         ],
@@ -256,6 +256,9 @@ export default {
       :data="list"
       @long-press="onLongPress"
       @press="onPress"
+
+      @change-thead="onChangeThead"
+      @change-tbody="onChangeTbody"
     />
 
     <KoMovable :y-axis="-60" @click="onOpenSheet('added')" />
@@ -279,14 +282,14 @@ export default {
           </block>
 
           <block v-if="['editCell'].includes(popupType)">
-            <uni-forms-item label="显示内容">
+            <uni-forms-item label="显示内容" v-if="false">
               <uni-easyinput v-model.trim="form.value" placeholder="请输入显示内容" />
             </uni-forms-item>
             <uni-forms-item label="向下合并">
-              <UniNumberBox v-model.trim="form.rowspan" placeholder="请输入" />
+              <UniNumberBox :width="100" v-model.trim="form.rowspan" placeholder="请输入" />
             </uni-forms-item>
             <uni-forms-item label="向右合并">
-              <UniNumberBox v-model.trim="form.colspan" placeholder="请输入" />
+              <UniNumberBox :width="100" v-model.trim="form.colspan" placeholder="请输入" />
             </uni-forms-item>
           </block>
 

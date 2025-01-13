@@ -552,11 +552,11 @@ export function _isNotUnNil(str) {
 }
 
 export function _is(val, type) {
-  return toString.call(val) === `[object ${type}]`
+  return toString.call(val) === `[object ${type}]`;
 }
 
 export function _isBoolean(val) {
-  return _is(val, 'Boolean')
+  return _is(val, "Boolean");
 }
 
 // 开发模式
@@ -565,5 +565,21 @@ export function _isDev() {
 }
 
 export function _isNumber(value) {
-  return typeof value === 'number' && !isNaN(value);
+  return typeof value === "number" && !isNaN(value);
+}
+
+export function _debounce(func, wait, immediate) {
+  let timeout;
+  return function () {
+    const context = this;
+    const args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
 }
