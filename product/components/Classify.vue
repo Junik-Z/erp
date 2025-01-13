@@ -29,37 +29,41 @@ export default {
     DaTreeVue2,
   },
   mixins: [mixins],
-  data: () => ({
-    roomTreeData: [],
-    visible: false,
-    loading: false,
+  data() {
+    return {
+      roomTreeData: [],
+      visible: false,
+      loading: false,
 
-    form: {
-      name: "",
-      parentId: "",
-      remark: "",
-    },
-    rules: {
-      name: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请填写分类名称",
-          },
-          // {
-          //   required: true,
-          //   minLength: 1,
-          //   // maxLength: 30,
-          //   errorMessage: "分类名称不能小于1个字符",
-          // },
-        ],
-        validateTrigger: "submit",
+      form: {
+        name: "",
+        parentId: "",
+        remark: "",
       },
-    },
+      rules: {
+        name: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请填写分类名称",
+            },
+            // {
+            //   required: true,
+            //   minLength: 1,
+            //   // maxLength: 30,
+            //   errorMessage: "分类名称不能小于1个字符",
+            // },
+          ],
+          validateTrigger: "submit",
+        },
+      },
 
-    isEdit: false,
-    actionItem: {},
-  }),
+      isEdit: false,
+      actionItem: {},
+
+      childrenField: "field_child",
+    };
+  },
   created() {
     // this.getList();
   },
@@ -180,6 +184,17 @@ export default {
       this.actionItem = _deepCopy(row);
       this.$refs.UASRef.open();
     },
+
+    getApiData(node) {
+      return new Promise(resolve => {
+        resolve(node.originItem.children);
+      });
+    },
+
+    // 判断是不是有子级
+    getIsLeafFn(node) {
+      return _isEmpty(node.children);
+    },
   },
   computed: {
     getActionsList() {
@@ -228,8 +243,12 @@ export default {
         :show-radio-icon="false"
         not-checked
         :max-level="6"
+        load-mode
+        :load-api="getApiData"
         :is-operate="isPerm('Product_Write')"
         @action-click="onOpenAction"
+        :children-field="childrenField"
+        :is-leaf-fn="getIsLeafFn"
       >
         <!-- #ifdef H5 -->
         <template #node="{node, item}">
