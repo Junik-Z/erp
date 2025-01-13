@@ -113,9 +113,6 @@ export default {
       <i class="iconfont icon-shezhi"></i>
     </button>
 
-    <!-- #ifdef H5 -->
-    <!-- #endif -->
-
     <!-- #ifdef MP -->
     <UniRow
       @click.stop="() => {}"

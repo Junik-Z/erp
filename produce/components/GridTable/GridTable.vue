@@ -1,5 +1,5 @@
 <script>
-import { _debounce, _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _set, _sum, getAllRect } from "@/utils";
+import { _debounce, _deepCopy, _get, _isEmpty, _isEqual, _sum, getAllRect } from "@/utils";
 
 // 获取包含的坐标
 function calculateCoveredCoordinatesByRow(x_start, x_end, y_start, y_end) {
@@ -45,13 +45,13 @@ export default {
 
       TouchStart: {},
 
+      // 所有本组件用的配置参数
       EditObj: {},
     };
   },
   watch: {
     data: {
       handler() {
-        this.onOffEdit();
         setTimeout(() => {
           this.list = this.getTableList();
         }, 10);
@@ -60,19 +60,22 @@ export default {
       immediate: true,
     },
     columns: {
-      handler() {
-        this.onOffEdit();
+      handler(to, form) {
+        if (form && to?.length !== form?.length) {
+          this.onOffEdit();
+        }
 
-        this.thead = _deepCopy(this.columns).map((item,index) => {
-          const isEdit = this.EditObj[index];
+        this.thead = _deepCopy(this.columns).map((item, index) => {
+          const key = `${item.prop}_${index}`;
+          const isEdit = this.EditObj[key];
 
-          if (_isNotUnNil(isEdit)) {
-            console.log(isEdit);
+          if (_isEmpty(isEdit)) {
+            this.$set(this.EditObj, key, {"_is_edit_": false});
           }
 
           return {
-            ...item
-          }
+            ...item,
+          };
         });
 
         setTimeout(() => {
@@ -82,13 +85,11 @@ export default {
       deep: true,
       immediate: true,
     },
-    thead: {
+
+    EditObj: {
       handler() {
-        // setTimeout(() => {
-        //   this.updateColumns();
-        // }, 100);
+        console.log(this.EditObj);
       },
-      deep: true,
     },
   },
   mounted() {
@@ -106,19 +107,18 @@ export default {
       let hidePos = [];
 
       return list.map((row, rowIndex) => {
-        const _grid_obj_ = {};
         let _config_ = row._config_ || {};
 
         cols.forEach((column, columnIndex) => {
-          const config = _get(_config_, `${column.prop}`) || {};
-          if (_isEmpty(config)) {
-            _set(_config_, `${column.prop}`, {rowspan: 0, colspan: 0, _is_edit_: false});
-          }
+          const key = `${column.prop}_${columnIndex}_${rowIndex}`;
+          const config = _deepCopy(_get(this.EditObj, key) || {});
+
+          const propConfig = _deepCopy(_get(row, `_config_.${column.prop}`) || {});
 
           const G = this?.gridAreaFunc?.({row, column, rowIndex, columnIndex}) || {};
 
-          const rowspan = G.rowspan || _get(config, `rowspan`) || 0;
-          const colspan = G.colspan || _get(config, `colspan`) || 0;
+          const rowspan = G.rowspan || _get(propConfig, `rowspan`) || 0;
+          const colspan = G.colspan || _get(propConfig, `colspan`) || 0;
 
           const obj = {
             rs: rowIndex + 1,
@@ -142,13 +142,13 @@ export default {
           }
 
           obj.hide = hidePos.some(v => _isEqual(v, [rowIndex, columnIndex]));
-          _grid_obj_[columnIndex] = obj;
+
+          this.$set(this.EditObj, key, {_is_edit_: false, ...config, ...obj});
         });
 
         return {
           ...row,
           _config_,
-          _grid_obj_,
         };
       });
     },
@@ -171,6 +171,8 @@ export default {
     },
     // 触摸结束
     touchEnd(event) {
+      this.onOffEdit();
+
       const {page: sPage, time: sTime} = _deepCopy(this.TouchStart) || {};
       const {pageY, pageX} = this.isPC ? event : event.changedTouches[0];
       // 判断是不是在拖动
@@ -181,19 +183,26 @@ export default {
         const time = +new Date() - sTime;
         const data = _deepCopy(event.currentTarget.dataset.params);
         const params = {params: data, event, pageY, pageX};
-        this.onOffEdit();
 
         if (time > LONG_PRESS) {
           this.$emit("long-press", params);
         } else {
           if (_isEqual(data.type, "thead")) {
-            this.$set(this.thead[data.columnIndex], "_is_edit_", true);
+            const key = `${data.column.prop}_${data.columnIndex}`;
+            this.$set(this.EditObj[key], "_is_edit_", true);
           }
 
           if (_isEqual(data.type, "tbody")) {
-            const column = this.thead[data.columnIndex];
-            this.$set(this.list[data.rowIndex]._config_[column.prop], `_is_edit_`, true);
+            const key = `${data.column.prop}_${data.columnIndex}_${data.rowIndex}`;
+
+            if (_isEmpty(this.EditObj[key])) this.$set(this.EditObj, key, {_is_edit_: false});
+
+            this.$set(this.EditObj[key], `_is_edit_`, true);
           }
+
+          setTimeout(() => {
+            this.updateColumns();
+          }, 0);
 
           this.$emit("press", params);
         }
@@ -205,7 +214,6 @@ export default {
       if (!this.isPC) return;
       this.touchStart(event);
     },
-
     // 触摸结束
     mouseup(event) {
       if (!this.isPC) return;
@@ -214,14 +222,13 @@ export default {
 
     // 关闭所有输入框
     onOffEdit() {
-      this.thead.forEach(item => {
-        this.$set(item, "_is_edit_", false);
-      });
-      this.list.forEach(item => {
-        for (const key in item._config_) {
-          this.$set(item._config_[key], "_is_edit_", false);
-        }
-      });
+      for (const key in this.EditObj) {
+        this.$set(this.EditObj[key], "_is_edit_", false);
+      }
+
+      setTimeout(() => {
+        this.updateColumns();
+      }, 0);
     },
 
     _debounceInputChange: _debounce(function (...arg) {
@@ -279,15 +286,17 @@ export default {
         const width = col.width || w;
         return {
           width: width ? width + "px" : "auto",
+          // "--row-column-width": (width || w) + "px",
         };
       };
     },
     getTableGridArea() {
-      return (row, columnIndex, index, j) => {
+      return (row, column, index, columnIndex) => {
         const style = {"grid-area": "unset"};
+        const key = `${column.prop}_${columnIndex}_${index}`;
 
         // 获取行配置
-        const {rs, re, cs, ce, hide} = _get(row, `_grid_obj_.${j}`) || {};
+        const {rs, re, cs, ce, hide} = _get(this.EditObj, key) || {};
 
         style["grid-area"] = [rs, cs, re, ce].join("/");
 
@@ -312,7 +321,15 @@ export default {
 
     getTbodyIsEdit() {
       return (row, column, index, columnIndex) => {
-        return _get(row, `_config_.${column.prop}._is_edit_`);
+        const key = `${column.prop}_${columnIndex}_${index}`;
+        return _get(this.EditObj, `${key}._is_edit_`);
+      };
+    },
+
+    getTheadIsEdit() {
+      return (column, index) => {
+        const key = `${column.prop}_${index}`;
+        return _get(this.EditObj, `${key}._is_edit_`);
       };
     },
     get() {
@@ -339,13 +356,13 @@ export default {
             :data-index="index"
           >
             <view
-              class="ko-table__cell"
+              class="ko-table__thead--cell"
               @touchstart="touchStart"
               @touchend="touchEnd"
               @mousedown.stop="mousedown"
               @mouseup.stop="mouseup"
               :data-params="{type: 'thead', column: column, columnIndex: index}"
-              :class="{'is-edit': column._is_edit_}"
+              :class="{'is-edit': getTheadIsEdit(column, index)}"
             >
               <uni-easyinput
                 :clearable="false"
@@ -353,11 +370,12 @@ export default {
                 :input-border="false"
                 auto-height
                 trim
-                v-if="column._is_edit_"
+                v-if="getTheadIsEdit(column, index)"
                 focus
                 @input="_debounceInputChange($event, {column, columnIndex: index, type: 'thead'})"
+                @change="onOffEdit"
               />
-              <text v-if="!column._is_edit_">{{ column.label }}</text>
+              <block v-else>{{ column.label }}</block>
             </view>
           </view>
         </view>
@@ -428,9 +446,14 @@ $thead-padding: 6px 8px;
     box-sizing: border-box;
     border-left: 1px solid $border-color;
 
-    .ko-table__cell {
+    &--cell {
       padding: $thead-padding;
       white-space: nowrap;
+
+      text-align: center;
+      box-sizing: border-box;
+      cursor: pointer;
+      min-height: 35px;
 
       &.is-edit {
         padding: 0;
@@ -479,13 +502,11 @@ $thead-padding: 6px 8px;
       width: calc(var(--column-width) - 2px);
     }
 
-
-    transition: opacity .3s;
-
+    /*transition: opacity .3s;
 
     &:active {
       opacity: .7;
-    }
+    }*/
   }
 }
 </style>

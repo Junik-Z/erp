@@ -28,9 +28,62 @@ export default {
   components: {KoMovable, GridTable, UvActionSheet, UniNumberBox},
   data() {
     return {
-      columns: [],
-      list: [],
-
+      columns: [
+        /* {
+          label: "姓名",
+          prop: "name",
+        },
+        {
+          label: "年龄",
+          prop: "age",
+        },
+        {
+          label: "技能",
+          prop: "zy",
+        }, */
+      ],
+      list: [
+        /* {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        },
+        {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        },
+        {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        },
+        {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        },
+        {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        },
+        {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        },
+        {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        },
+        {
+          name: "张三",
+          age: "18",
+          zy: "踢足球，倒挂金钩！",
+        }, */
+      ],
       // 动作类型：added: 添加新组件；
       sheetType: "added",
 
@@ -261,6 +314,10 @@ export default {
       @change-tbody="onChangeTbody"
     />
 
+    <view v-if="!columns.length || !list.length" class="ko-custom-table__not">
+      {{ !columns.length ? "请先添加列" : !list.length ? "请添加行" : "" }}
+    </view>
+
     <KoMovable :y-axis="-60" @click="onOpenSheet('added')" />
 
     <UvActionSheet
@@ -314,6 +371,13 @@ export default {
 <style scoped lang="scss">
 .ko-custom-table {
   width: 100%;
+
+  &__not {
+    padding: 60px 0;
+    text-align: center;
+    font-size: 12px;
+    color: #c7c9ce;
+  }
 }
 
 .ko-ct {

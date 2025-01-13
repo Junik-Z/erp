@@ -15,8 +15,11 @@ export default {
       default: true,
     },
     title: String,
+    maxHeight: String,
   },
-  data: () => ({}),
+  data() {
+    return {};
+  },
   watch: {
     visible: {
       handler(val) {
@@ -51,8 +54,13 @@ export default {
     :close-on-click-overlay="false"
     :safe-area-inset-bottom="false"
     :round="10"
+    bg-color="transparent"
   >
-    <view class="ko-basic-popup" :class="[type, {close: close, 'show-title': !!title}]">
+    <view
+      class="ko-basic-popup"
+      :style="[maxHeight ? {'max-height': maxHeight} : {}]"
+      :class="[type, {close: close, 'show-title': !!title}]"
+    >
       <button
         v-if="close"
         class="ko-basic-popup__close"
@@ -72,7 +80,9 @@ export default {
       </view>
     </view>
 
-    <slot name="hint"></slot>
+    <view class="ko-basic-popup__hint">
+      <slot name="hint"></slot>
+    </view>
   </UvPopup>
 </template>
 
@@ -83,7 +93,7 @@ export default {
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  max-height: 98vh;
+  max-height: calc(var(--ko-popup-max-height), 98vh);
 
   // #ifdef H5
   margin: 0 auto;
@@ -114,6 +124,7 @@ export default {
   &__wrap {
     flex: 1;
     overflow-y: auto;
+    padding-bottom: 10px;
   }
 
   &__close {

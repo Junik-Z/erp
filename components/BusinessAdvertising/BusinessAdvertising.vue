@@ -76,7 +76,7 @@ export default {
 </script>
 
 <template>
-  <BasicPopup :visible.sync="modelVisible">
+  <BasicPopup :visible.sync="modelVisible" max-height="72vh">
     <view class="ko-merchants">
       <BasicCard :spacing="10" v-for="item of merchantsList" :key="item.id">
         <button @click.stop="onMerchants(item)" :disabled="loading">
@@ -118,7 +118,7 @@ export default {
   // #ifdef MP
   width: 90vw;
   // #endif
-  height: 60vh;
+  //height: 60vh;
   padding: 16px;
 }
 </style>
