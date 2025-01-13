@@ -296,7 +296,7 @@ export default {
     },
 
     onRowClick(row) {
-      this.onJumpDetails(row, "sale");
+      this.onJumpDetails(row, "purchase");
     },
 
     onActionClick(item, index) {
