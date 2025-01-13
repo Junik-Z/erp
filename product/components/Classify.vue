@@ -263,6 +263,10 @@ export default {
         </template>
         <!-- #endif -->
       </DaTreeVue2>
+
+      <view v-if="loading" style="height: 160px; display: flex; justify-content: center; align-items: center;">
+        <uv-loading-icon size="40" />
+      </view>
     </view>
 
     <BasicPopup :visible.sync="visible">
