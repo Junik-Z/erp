@@ -19,7 +19,7 @@ DEFAULT_PAGE_SIZE = 10;
 let type = "develop";
 
 if (_isDev()) {
-  type = "trial";
+  // type = "trial";
 
   // type = "release";
 
@@ -316,3 +316,17 @@ export const WEB_SOCKET_ENUMS = {
  */
 export const FINANCE_CLASSIFY_FIXED_ID = ["wages", "freight"];
 
+/**
+ * @description 计价方式
+ */
+export const PRICING_METHOD = {
+  pieceWork: "计件",
+  timingWork: "计时",
+  fixedPrice: "固定价格",
+  hourlyRate: "小时价格",
+  dailyRate: "天价格",
+  weeklyRate: "周价格",
+  monthlyRate: "月价格",
+  yearlyRate: "年价格",
+  none: "无",
+};

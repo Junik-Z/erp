@@ -583,3 +583,15 @@ export function _debounce(func, wait, immediate) {
     if (callNow) func.apply(context, args);
   };
 }
+
+export function _generateUniqueId() {
+  return `id_${+new Date()}_${Math.random().toString(50).substr(2, 9)}`;
+}
+
+export function _generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0; // 随机数
+    const v = c === 'x' ? r : (r & 0x3) | 0x8; // 确保符合 UUID 格式
+    return v.toString(16);
+  });
+}

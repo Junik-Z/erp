@@ -14,6 +14,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import IndexList from "../IndexList/IndexList.vue";
 import { getLogisticsListApi } from "@/api/erp/logistics";
+import { getStaffListApi } from "@/api/erp/product";
 
 export default {
   name: "PickerUser",
@@ -108,11 +109,13 @@ export default {
         supplier: getSupplierListApi,
         // 物流商
         logistics: getLogisticsListApi,
+        // 员工
+        staff: getStaffListApi,
       }[this.type];
 
-      const vKey = {default: "userId", client: "id", supplier: "id", logistics: "id"}[this.type];
-      const lKey = {default: "nickName", client: "name", supplier: "name", logistics: "name"}[this.type];
-      const logoKey = {default: "avatar", client: "logo", supplier: "logo", logistics: "logo"}[this.type];
+      const vKey = {default: "userId", client: "id", supplier: "id", logistics: "id", staff: "id"}[this.type];
+      const lKey = {default: "nickName", client: "name", supplier: "name", logistics: "name", staff: "name"}[this.type];
+      const logoKey = {default: "avatar", client: "logo", supplier: "logo", logistics: "logo", staff: "logo"}[this.type];
 
       Func(this.queryList)
         .then(res => {

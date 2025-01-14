@@ -115,7 +115,6 @@ export default {
         <button class="ko-basic-button__card" @click="onUpdateInfo">
           <i class="iconfont icon-shuaxin"></i>
         </button>
-
       </view>
     </view>
 
