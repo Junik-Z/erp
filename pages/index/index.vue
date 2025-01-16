@@ -64,7 +64,7 @@ export default {
           // 判断是否有单独的字段校验
           const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
 
-          if (_haveCommonElements(role, item.role) && checkField) {
+          if ((_haveCommonElements(role, item.role) && checkField) || item.role.includes("*")) {
             return [item];
           } else {
             return [];

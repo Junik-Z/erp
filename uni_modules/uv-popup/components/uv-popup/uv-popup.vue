@@ -29,7 +29,7 @@
         <view
           class="uv-popup__content"
           :style="[contentStyle]"
-          :class="[popupClass, {'no-hidden': noHidden}]"
+          :class="[popupClass]"
           @click="clear"
         >
           <uv-status-bar v-if="safeAreaInsetTop"></uv-status-bar>
@@ -43,7 +43,7 @@
             hover-class="uv-popup__content__close--hover"
             hover-stay-time="150"
           >
-            <i class="iconfont icon-guanbi" style="font-size: 18px; color: #909399;"></i>
+            X
           </view>
         </view>
       </uv-transition>
@@ -176,8 +176,6 @@ export default {
       default: 0,
     },
     ...uni.$uv?.props?.popup,
-
-    noHidden: Boolean,
   },
   watch: {
     /**

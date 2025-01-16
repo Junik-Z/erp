@@ -15,7 +15,6 @@ export default {
       this.$refs.UASRef.open();
     },
     onSelect(e) {
-      console.log("选中该项：", e);
       this.$emit("input", e.value);
     },
     onClose() {
@@ -33,7 +32,13 @@ export default {
 <template>
   <view class="ko-picker-sheet">
     <view class="ko-picker-sheet__input" @click="onClick">
-      <uni-easyinput style="width: 100%" :value="getModelValue" placeholder="请选择" />
+      <uni-easyinput
+        style="width: 100%"
+        :value="getModelValue"
+        placeholder="请选择"
+        :clearable="false"
+        suffix-icon="down"
+      />
     </view>
 
     <uv-action-sheet
@@ -41,7 +46,7 @@ export default {
       :actions="options"
       @select="onSelect"
       @close="onClose"
-      round="19"
+      round="10"
       cancel-text="取消"
     />
   </view>

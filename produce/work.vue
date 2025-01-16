@@ -4,7 +4,7 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, CustomToast } from "@/utils";
+import { _deepCopy, _get, _set, CustomToast } from "@/utils";
 import { addedProduceApi, getProduceDetailApi, updateProduceApi } from "@/api/erp/produce";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import mixins from "@/mixins/mixins";
@@ -15,11 +15,12 @@ import GridTable from "./components/GridTable/GridTable.vue";
 import KoRadioGroup from "./components/RadioGroup.vue";
 import CustomTable from "@/produce/pages/CustomTable.vue";
 import CraftProcesses from "./pages/CraftProcesses.vue";
-
+import BinPacking from "./pages/BinPacking.vue";
 
 export default {
   name: "Work",
   components: {
+    BinPacking,
     CustomTable,
     KoRadioGroup,
     UvStepsItem,
@@ -35,20 +36,24 @@ export default {
   },
   mixins: [mixins],
   data() {
-
     return {
       form: {
-        produceType: "customized", // customized: 自定义生产
+        produceType: "internal", // internal: 默认；customized: 自定义生产;
         "planFinishDate": "",
         "totalRawMaterialAmount": null,
         "totalAmount": null,
         "totalProfit": null,
         "remark": "",
+        // 材料明细
         "materialDetails": [],
+        // 定制生产
         "customizedMaterials": [],
+        // 产品明细
         "productDetails": [],
+        // 生产工艺
         "craftProcesses": [],
-        "user": {},
+        // 定制板材
+        "customizedBoards": [],
       },
       rules: {
         planFinishDate: {
@@ -78,9 +83,8 @@ export default {
       },
       loading: false,
       option: {},
-
-      current: 2,
-
+      current: 0,
+      type: "common", // common: "常规生产", packing: "板材定制", xlsx: "表格定制生产",
       typeOptions: [
         {
           label: "常规生产",
@@ -90,12 +94,21 @@ export default {
           label: "定制生产",
           value: "customized",
         },
+        {
+          label: "板材定制",
+          value: "packing",
+        },
       ],
+
+      customizedMaterials: "", // 定制生产数据
+
+      isCustomized: false,
     };
   },
   onLoad(option) {
     this.option = option;
     this.isEdit = !!option.id;
+    this.type = option.ADDED_TYPE || "common";
 
     if (this.isEdit) this.getInfo();
   },
@@ -105,6 +118,7 @@ export default {
       getProduceDetailApi({id: this.option.id})
         .then(res => {
           const params = res.data;
+          this.customizedMaterials = _get(params, "customizedMaterials.0.customTable") || "";
           this.form = params;
           console.log(params);
         });
@@ -116,12 +130,22 @@ export default {
           const Func = this.isEdit ? updateProduceApi : addedProduceApi;
           const params = _deepCopy(this.form);
 
-          params.totalAmount = this.getTotalAmount;
+          const customTable = _deepCopy(this.customizedMaterials);
+
+          _set(params, "customizedMaterials.0",
+            {
+              sequence: 1,
+              ...(_get(params, "customizedMaterials.0") || {}),
+              customTable: customTable,
+            },
+          );
+
           params.planFinishDate = dayjs(params.planFinishDate).format("YYYY-MM-DD 23:59:59");
 
           this.loading = true;
           Func(params)
-            .then(() => {
+            .then((res) => {
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
               CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success() {
@@ -139,10 +163,24 @@ export default {
 
     // 下一步
     onNext() {
-      if (this.current === 3) {
+      if (this.current === 2) {
         this.onSubmit();
       } else {
-        this.current += 1;
+        if (this.isCustomized) {
+          uni.showModal({
+            title: "温馨提示",
+            content: "您还有材料未进行排版计算，继续下一步将丢失未计算数据，是否继续？",
+            confirmText: "下一步",
+            success: (res) => {
+              if (res.confirm) {
+                this.current += 1;
+                this.isCustomized = false;
+              }
+            },
+          });
+        } else {
+          this.current += 1;
+        }
       }
     },
     onPrev() {
@@ -168,8 +206,7 @@ export default {
   <view class="ko-work ko-basic-added-form">
     <view class="ko-work__steps">
       <UvSteps :current="current">
-        <UvStepsItem title="基础信息" />
-        <UvStepsItem title="生产模式" />
+        <UvStepsItem title="工单类型" />
         <UvStepsItem title="生产工艺" />
         <UvStepsItem title="其它信息" />
       </UvSteps>
@@ -184,25 +221,7 @@ export default {
     >
       <view style="padding: 10px;">
         <block v-if="current === 0">
-          <UniFormsItem v-if="form.orderCode" label="订单编号：" name="orderCode">
-            <UniEasyinput disabled :value="form.orderCode" placeholder="请输入" />
-          </UniFormsItem>
-          <UniFormsItem label="计划完成时间：" name="planFinishDate" required>
-            <UniDatetimePicker
-              v-model="form.planFinishDate"
-              placeholder="请选择"
-              type="date"
-              :start="getStartDate"
-            />
-          </UniFormsItem>
-
-          <UniFormsItem label="生产模式：" name="produceType">
-            <KoRadioGroup v-model="form.produceType" :options="typeOptions" />
-          </UniFormsItem>
-        </block>
-
-        <block v-if="current === 1">
-          <UniSection title="所需物料" type="line" v-if="form.produceType === 'internal'">
+          <UniSection title="所需物料" type="line" v-if="isEqual(type, 'common')">
             <view style="padding: 10px;">
               <UniFormsItem label-width="0" name="materialDetails">
                 <view style="width: 100%;">
@@ -217,16 +236,29 @@ export default {
             </view>
           </UniSection>
 
-          <block v-if="form.produceType === 'customized'">
-            <CustomTable v-model="form.customizedMaterials" />
+          <block v-if="isEqual(type, 'xlsx')">
+            <CustomTable v-model="customizedMaterials" />
+          </block>
+
+          <block v-if="isEqual(type, 'packing')">
+            <BinPacking :is-customized.sync="isCustomized" v-model="form.customizedBoards[0]" />
           </block>
         </block>
 
-        <block v-if="current === 2">
+        <block v-if="current === 1">
           <CraftProcesses v-model="form.craftProcesses" />
         </block>
 
-        <block v-if="current === 3">
+        <block v-if="current === 2">
+          <UniFormsItem label="计划完成时间：" name="planFinishDate">
+            <UniDatetimePicker
+              v-model="form.planFinishDate"
+              placeholder="请选择"
+              type="date"
+              :start="getStartDate"
+            />
+          </UniFormsItem>
+
           <UniSection title="生产产品" type="line">
             <view style="padding: 10px;">
               <UniFormsItem label-width="0" name="productDetails">
@@ -236,6 +268,16 @@ export default {
                     :total.sync="form.totalProductAmount"
                     hide-prices
                   />
+                </view>
+              </UniFormsItem>
+            </view>
+          </UniSection>
+
+          <UniSection title="生产总价" type="line">
+            <view style="padding: 10px;">
+              <UniFormsItem label-width="0" name="totalAmount">
+                <view style="width: 100%;">
+                  <uni-easyinput type="digit" v-model="form.totalAmount" placeholder="请输入" />
                 </view>
               </UniFormsItem>
             </view>
@@ -263,7 +305,7 @@ export default {
       </view>
     </UniForms>
 
-    <view class="ko-work__footer ko-basic-box-shadow">
+    <view class="ko-work__footer ko-basic-box-shadow__top">
       <button
         class="ko-basic-button__card"
         @click="onPrev"
@@ -276,10 +318,9 @@ export default {
         :disabled="loading"
         @click="onNext"
       >
-        {{ current === 3 ? "提交" : "下一步" }}
+        {{ current === 2 ? "提交" : "下一步" }}
       </button>
     </view>
-
   </view>
 </template>
 

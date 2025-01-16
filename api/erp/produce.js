@@ -32,6 +32,7 @@ export function getProduceStatisticsApi(data) {
     data,
   });
 }
+
 /**
  * @description 获取生产工单详情
  */
@@ -105,6 +106,94 @@ export function applyMaterialProduceApi(data) {
   return request({
     url: "/produce/applyMaterial",
     method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 计算板材排列
+ */
+export function customizedCalculateApi(data) {
+  return request({
+    url: "/customized-board/calculate",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的生产工资
+ */
+export function getMySalaryApi(data) {
+  return request({
+    url: "/craft/mySalary",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的生产任务
+ */
+export function getMyWorkingListApi(data) {
+  return request({
+    url: "/craft/myWorking",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的待确认生产任务
+ */
+export function getWaitMyConfirmListApi(data) {
+  return request({
+    url: "/craft/waitMyConfirm",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取我的已结算生产任务
+ */
+export function getMySettledListApi(data) {
+  return request({
+    url: "/craft/mySettled",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取待结算
+ */
+export function getWaitConfirmListApi(data) {
+  return request({
+    url: "/craft/waitConfirm",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取已结算
+ */
+export function getSettledListApi(data) {
+  return request({
+    url: "/craft/settled",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取生产中
+ */
+export function getWorkingListApi(data) {
+  return request({
+    url: "/craft/working",
+    method: "get",
     data,
   });
 }

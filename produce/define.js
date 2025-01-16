@@ -13,4 +13,12 @@ export const TabList = [
     label: "生产工单",
     path: PageEnums.produceWorkList,
   },
+  {
+    label: "工资",
+    path: PageEnums.salary,
+  },
+  {
+    label: "工艺",
+    path: PageEnums.factory,
+  },
 ];

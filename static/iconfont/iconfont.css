@@ -1,3 +1,7 @@
+.icon-kaoqindaka:before {
+  content: "\e64f";
+}
+
 .icon-duigou:before {
   content: "\e65b";
 }

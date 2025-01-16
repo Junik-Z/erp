@@ -36,8 +36,10 @@ export default {
 
 <style scoped lang="scss">
 .ko-radio-group {
-  &__item + &__item {
-    margin-left: 10px;
+  margin: -5px;
+
+  &__item {
+    margin: 5px;
   }
 }
 </style>

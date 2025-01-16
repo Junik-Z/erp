@@ -6,7 +6,7 @@ import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-lis
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { getUserListApi } from "@/api/admin";
 import mixins from "@/mixins/mixins";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _isBoolean } from "@/utils";
+import { _deepCopy, _get, _isBoolean, _isEmpty, _isEqual, _isString } from "@/utils";
 import { getCustomerListApi } from "@/api/erp/sale";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { getSupplierListApi } from "@/api/erp/purchase";
@@ -34,7 +34,7 @@ export default {
       list: [],
       checked: [],
       modelVisible: false,
-      checkNode: {},
+      checkNode: null,
 
       queryList: {
         pageSize: 20,
@@ -115,7 +115,13 @@ export default {
 
       const vKey = {default: "userId", client: "id", supplier: "id", logistics: "id", staff: "id"}[this.type];
       const lKey = {default: "nickName", client: "name", supplier: "name", logistics: "name", staff: "name"}[this.type];
-      const logoKey = {default: "avatar", client: "logo", supplier: "logo", logistics: "logo", staff: "logo"}[this.type];
+      const logoKey = {
+        default: "avatar",
+        client: "logo",
+        supplier: "logo",
+        logistics: "logo",
+        staff: "logo",
+      }[this.type];
 
       Func(this.queryList)
         .then(res => {
@@ -142,12 +148,11 @@ export default {
         return false;
       }
 
-      if (this.isInput) {
+      if (this.isInput && !this.multiple) {
         this.checked = this.isChecked(item) ? [] : [item.value];
 
         if (!this.isConfirm) {
           this.checkNode = _deepCopy(this.getUserInfo(this.checked[0]));
-
           this.$emit("input", this.checked[0]);
           this.modelVisible = false;
         }
@@ -171,8 +176,9 @@ export default {
       this.$emit("confirm", this.checked);
 
       if (this.isInput) {
-        this.$emit("input", this.checked[0]);
-        this.checkNode = this.getUserInfo(this.checked[0]);
+        const value = this.multiple ? this.checked : this.checked[0];
+        this.$emit("input", value);
+        this.checkNode = this.multiple ? this.checked.map(this.getUserInfo) : this.getUserInfo(this.checked[0]);
         this.modelVisible = false;
       }
     },
@@ -201,7 +207,7 @@ export default {
             if (this.isLongList) {
               this.list = _deepCopy(this.options);
             }
-            this.checkNode = this.getUserInfo(this.value);
+            this.checkNode = this.multiple ? this.value?.map?.(this.getUserInfo) : this.getUserInfo(this.value);
           }, 500);
         }
       },
@@ -220,7 +226,7 @@ export default {
         }
 
         if (this.isInput && _isString(this.value)) {
-          this.checkNode = this.getUserInfo(this.value);
+          this.checkNode = this.multiple ? this.value?.map?.(this.getUserInfo) : this.getUserInfo(this.value);
         }
 
         if (this.modelVisible) {
@@ -263,6 +269,12 @@ export default {
         return this.disabled;
       };
     },
+
+    getShowLabel() {
+      return this.multiple
+        ? (Array.isArray(this?.checkNode) ? this?.checkNode : [])?.map(v => v.label)?.join("、")
+        : this.checkNode?.label;
+    },
   },
 };
 </script>
@@ -275,7 +287,7 @@ export default {
       @click.stop="onClick"
       suffix-icon="down"
       :styles="{disableColor: 'transparent'}"
-      :value="checkNode.label"
+      :value="getShowLabel"
       is-readonly
     />
 
@@ -317,14 +329,14 @@ export default {
 <style scoped lang="scss">
 .ko-picker-user {
   &__popup {
-    height: 74vh;
+    height: 70vh;
     // #ifdef MP
     width: 100vw;
     // #endif
     position: relative;
 
     &.is-input {
-      height: 80vh;
+      height: 70vh;
     }
 
     // #ifdef H5

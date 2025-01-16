@@ -1,147 +1,14 @@
 <script>
 import UniEcCanvas from "../components/uni-ec-canvas/uni-ec-canvas.vue";
-import * as echarts from "../components/uni-ec-canvas/echarts-tree-v5.1.2.min";
-import { _deepCopy, _generateUUID, _isEqual, _keys, _set, CustomToast, getRect } from "@/utils";
+import * as echarts from "../components/uni-ec-canvas/echarts_v5.6.0";
+import { _deepCopy, _generateUUID, _get, _isEqual, _isNotUnNil, _keys, _set, CustomToast, getRect } from "@/utils";
 import KoMovable from "@/components/Movable/index.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import PickerSheet from "../components/PickerSheet.vue";
 import { PRICING_METHOD } from "@/utils/config";
+import mixins from "@/mixins/mixins";
 
-const data = (() => {
-
-  const d = [{
-    name: "flare",
-    children: [
-      {
-        name: "data",
-        children: [
-          {
-            name: "converters",
-            children: [
-              {name: "Converters", value: 721},
-              {name: "DelimitedTextConverter", value: 4294},
-            ],
-          },
-          {
-            name: "DataUtil",
-            value: 3322,
-          },
-        ],
-      },
-      {
-        name: "display",
-        children: [
-          {name: "DirtySprite", value: 8833},
-          {name: "LineSprite", value: 1732},
-          {name: "RectSprite", value: 3623},
-        ],
-      },
-      {
-        name: "flex",
-        children: [{name: "FlareVis", value: 4116}],
-      },
-      {
-        name: "query",
-        children: [
-          {name: "AggregateExpression", value: 1616},
-          {name: "And", value: 1027},
-          {name: "Arithmetic", value: 3891},
-          {name: "Average", value: 891},
-          {name: "BinaryExpression", value: 2893},
-          {name: "Comparison", value: 5103},
-          {name: "CompositeExpression", value: 3677},
-          {name: "Count", value: 781},
-          {name: "DateUtil", value: 4141},
-          {name: "Distinct", value: 933},
-          {name: "Expression", value: 5130},
-          {name: "ExpressionIterator", value: 3617},
-          {name: "Fn", value: 3240},
-          {name: "If", value: 2732},
-          {name: "IsA", value: 2039},
-          {name: "Literal", value: 1214},
-          {name: "Match", value: 3748},
-          {name: "Maximum", value: 843},
-          {
-            name: "methods",
-            children: [
-              {name: "add", value: 593},
-              {name: "and", value: 330},
-              {name: "average", value: 287},
-              {name: "count", value: 277},
-              {name: "distinct", value: 292},
-              {name: "div", value: 595},
-              {name: "eq", value: 594},
-              {name: "fn", value: 460},
-              {name: "gt", value: 603},
-              {name: "gte", value: 625},
-              {name: "iff", value: 748},
-              {name: "isa", value: 461},
-              {name: "lt", value: 597},
-              {name: "lte", value: 619},
-              {name: "max", value: 283},
-              {name: "min", value: 283},
-              {name: "mod", value: 591},
-              {name: "mul", value: 603},
-              {name: "neq", value: 599},
-              {name: "not", value: 386},
-              {name: "or", value: 323},
-              {name: "orderby", value: 307},
-              {name: "range", value: 772},
-              {name: "select", value: 296},
-              {name: "stddev", value: 363},
-              {name: "sub", value: 600},
-              {name: "sum", value: 280},
-              {name: "update", value: 307},
-              {name: "variance", value: 335},
-              {name: "where", value: 299},
-              {name: "xor", value: 354},
-              {name: "x_x", value: 264},
-            ],
-          },
-          {name: "Minimum", value: 843},
-          {name: "Not", value: 1554},
-          {name: "Or", value: 970},
-          {name: "Query", value: 13896},
-          {name: "Range", value: 1594},
-          {name: "StringUtil", value: 4130},
-          {name: "Sum", value: 791},
-          {name: "Variable", value: 1124},
-          {name: "Variance", value: 1876},
-          {name: "Xor", value: 1101},
-        ],
-      },
-      {
-        name: "scale",
-        children: [
-          {name: "IScaleMap", value: 2105},
-          {name: "LinearScale", value: 1316},
-          {name: "LogScale", value: 3151},
-          {name: "OrdinalScale", value: 3770},
-          {name: "QuantileScale", value: 2435},
-          {name: "QuantitativeScale", value: 4839},
-          {name: "RootScale", value: 1756},
-          {name: "Scale", value: 4268},
-          {name: "ScaleType", value: 1821},
-          {name: "TimeScale", value: 5833},
-        ],
-      },
-    ],
-  }];
-
-  const fn = (list) => {
-    return list.map(item => {
-      if (item.children) item.children = fn(item.children);
-
-      return {
-        ...item,
-        __id__: _generateUUID(),
-      };
-    });
-  };
-  return fn(d);
-})();
-
-function buildTree(data, parentId = null, parentKey = "__parent_id__", idKey = "__id__") {
+function buildTree(data, parentId = null, parentKey = "parentId", idKey = "processId") {
   // 过滤出当前层级的节点
   const tree = data
     .filter(item => item[parentKey] === parentId)
@@ -165,7 +32,30 @@ export default {
     UniEcCanvas,
     FilePicker,
   },
+  mixins: [mixins],
+  props: {
+    value: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
+  },
+  watch: {
+    value: {
+      handler() {
+        this.tree = _deepCopy(this.value);
+
+        setTimeout(() => {
+          this.setCanvasNode(true);
+        }, 300);
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
   data() {
+    const _this = this;
     return {
       ec: {
         lazyLoad: true,
@@ -173,80 +63,84 @@ export default {
       options: {
         series: [
           {
-            /*  type: "tree",
-             id: 0,
-             name: "tree1",
-             orient: "TB",
-
-             layout: "orthogonal", // 正交布局
-             nodePadding: 50, // 节点之间的内边距
-             nodeGap: 100, // 节点之间的间距
-             data: [{name: ""}],
-             top: "10%",
-             left: "10%",
-             bottom: "10%",
-             right: "10%",
-             symbolSize: 7,
-             edgeShape: "polyline",
-             edgeForkPosition: "50%",
-             initialTreeDepth: 3,
-             lineStyle: {
-               width: 2,
-             },
-             // 设置允许拖动放大缩小
-             roam: true,
-             /!* label: {
-               backgroundColor: "#fff",
-               position: "left",
-               verticalAlign: "middle",
-               align: "right",
-             }, *!/
-             /!*  label: {
-                position: "top",
-                rotate: -90,
-                verticalAlign: "middle",
-                align: "right",
-                fontSize: 9,
-              }, *!/
-             // 缩放比例
-             zoom: 2,
-             leaves: {
-               label: {
-                 position: "right",
-                 verticalAlign: "middle",
-                 align: "left",
-               },
-             },
-             emphasis: {
-               focus: "descendant",
-             },
-             expandAndCollapse: true,
-             animationDuration: 550,
-             animationDurationUpdate: 750, */
             type: "tree",
-            data: [],
-            left: "2%",
-            right: "2%",
-            top: "2%",
-            bottom: "2%",
-            symbol: "emptyCircle",
+            data: [
+              /*  {
+                 description: "",
+                 images: "/files/down/png20250115/248644303b2f45f79215adf7e87bcde9.png",
+                 name: "你叫什么",
+                 orderId: "",
+                 parentId: null,
+                 price: "30",
+                 pricingMethod: "pieceWork",
+                 sequence: 0,
+                 staffList: ["d4b93e28e66a437a8aaa50c9538f5b4b", "3d11855547d74270b82d1cd360b6b123"],
+                 processId: "65c618df-5acd-4b00-8dd9-dd403a826032",
+               }, */
+              /* {name: "测试", children: []} */
+            ],
+            left: "8%",
+            right: "10%",
+            top: "10%",
+            bottom: "10%",
+            symbol: (value, {data}) => {
+              if (data.images) {
+                return "image://" + this.getImageUrl(data.images);
+              } else {
+                return "circle";
+              }
+            },
+            symbolSize: 30,
+            symbolClip: true,
             orient: "vertical",
             expandAndCollapse: false,
             label: {
-              position: "left",
+              position: "bottom",
               verticalAlign: "middle",
-              align: "right",
-              fontSize: 14,
+              fontSize: 12,
               borderWidth: 0,
+              shadowBlur: 0,
+              textBorderWidth: 0,
+              offset: [0, 16],
+              color: "#333",
+              formatter: function ({data}) {
+                return `{a|${data.name}}\n{b|共计：${data.staffList?.length}人}\n{c|${PRICING_METHOD[data.pricingMethod]}：}{d|${_this.toYuan(data.price)}元}`;
+              },
+              rich: {
+                a: {
+                  fontsize: 14,
+                  color: "#000",
+                  padding: [4, 0],
+                  align: "center",
+                },
+                b: {
+                  fontsize: 12,
+                  color: "#8f939c",
+                  padding: [2, 0],
+                  align: "center",
+                },
+                c: {
+                  fontsize: 12,
+                  color: "#8f939c",
+                  align: "center",
+                },
+                d: {
+                  fontsize: 12,
+                  color: "#e43d33",
+                  align: "center",
+                },
+              },
             },
             // 设置允许拖动放大缩小
             roam: true,
             leaves: {
               label: {
-                position: "right",
+                position: "bottom",
                 verticalAlign: "middle",
-                align: "left",
+                align: "center",
                 borderWidth: 0,
+                shadowBlur: 0,
+                textBorderWidth: 0,
               },
             },
             animationDurationUpdate: 750,
@@ -259,12 +153,11 @@ export default {
       form: {
         "name": "",
         "description": "",
-        "images": "",
+        "images": "", //"/files/down/png20250115/248644303b2f45f79215adf7e87bcde9.png",
         "pricingMethod": "none",
         "price": null,
         // "sequence": 0,
-        "orderId": "",
-        "staffId": "",
+        "staffList": [],
       },
       visible: false,
       pLoading: false,
@@ -282,6 +175,10 @@ export default {
         .finally(() => {
           this.$nextTick(() => {
             this.$refs.canvas.init(this.initChart);
+
+            this.$nextTick(() => {
+              this.setCanvasNode(true);
+            });
           });
         });
 
@@ -296,7 +193,6 @@ export default {
       });
 
       canvas.setChart(this.chart);
-
       this.chart.setOption(this.options);
 
       // 添加节点的点击事件
@@ -306,12 +202,34 @@ export default {
     },
 
     // 设置图表内容
-    setCanvasNode() {
+    setCanvasNode(flag = false) {
       const opt = _deepCopy(this.options);
-      const list = buildTree(_deepCopy(this.tree));
+      const list = buildTree(_deepCopy(this.tree).map(v => ({...v, parentId: v.parentId || null})));
+
       _set(opt, "series.0.data", list);
 
-      this.chart.setOption(opt);
+      this.chart?.setOption?.(opt);
+
+      /*  let sequence = 0;
+
+       const fn = (li) => {
+         return li.map(item => {
+           sequence += 1;
+           item.sequence = sequence;
+
+           let children = [];
+
+           if (item.children) {
+             children = fn(item.children);
+           }
+
+           return [_omit(item, "children"), ...children];
+         });
+       };
+
+       console.log(_flattenDeep(fn(_deepCopy(list))), list); */
+
+      !flag && this.$emit("input", _deepCopy(this.tree)?.map((v, index) => ({...v, sequence: index + 1})));
     },
 
     // 点击
@@ -335,30 +253,66 @@ export default {
 
     // 点击弹窗按钮
     onClickPopupButton() {
-      if (_isEqual(this.pType, "root")) {
-        this.tree.push({..._deepCopy(this.form), sequence: 0, __id__: _generateUUID(), __parent_id__: null});
+      this.$refs.FormRef.validate((valid) => {
+        if (this.isPriceRules) {
+          this.pLoading = false;
+          uni.showToast({
+            title: `请输入${PRICING_METHOD[this.form.pricingMethod]}`,
+            icon: "none",
+          });
+          return false;
+        }
 
-        this.setCanvasNode();
-        this.visible = false;
-      }
+        if (!valid) {
+          this.pLoading = true;
 
-      if (_isEqual(this.pType, "addedChild")) {
-        const obj = {..._deepCopy(this.form), children: [], __id__: _generateUUID(), __parent_id__: this.node.__id__};
-        this.tree.push(obj);
+          const params = _deepCopy(this.form);
+          params.price = _isNotUnNil(params.price) ? this.toFen(params.price) : null;
 
-        this.setCanvasNode();
-        this.visible = false;
-      }
+          if (_isEqual(this.pType, "root")) {
+            this.tree.push({...params, processId: _generateUUID(), parentId: null});
 
-      if (_isEqual(this.pType, "editor")) {
-        const node = _deepCopy(this.node);
-        const obj = {...node, ..._deepCopy(this.form)};
-        const index = this.tree.findIndex(v => _isEqual(v.__id__, node.__id__));
-        this.$set(this.tree, index, obj);
+            this.setCanvasNode();
+            this.visible = false;
+          }
 
-        this.setCanvasNode();
-        this.visible = false;
-      }
+          if (_isEqual(this.pType, "addedChild")) {
+            const obj = {
+              ...params,
+              children: [],
+              processId: _generateUUID(),
+              parentId: this.node.processId,
+            };
+            this.tree.push(obj);
+
+            this.setCanvasNode();
+            this.visible = false;
+          }
+
+          if (_isEqual(this.pType, "editor")) {
+            const node = _deepCopy(this.node);
+            const obj = {...node, ...params};
+            const index = this.tree.findIndex(v => _isEqual(v.processId, node.processId));
+            this.$set(this.tree, index, obj);
+
+            this.setCanvasNode();
+            this.visible = false;
+          }
+
+
+          setTimeout(() => {
+            this.$nextTick(() => {
+              this.pLoading = false;
+            });
+          }, 500);
+        } else {
+          this.pLoading = false;
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
+        }
+      });
     },
 
     // 选中
@@ -382,7 +336,10 @@ export default {
     onEditor() {
       this.pType = "editor";
       this.visible = true;
-      this.form = _deepCopy(this.node);
+      const node = _deepCopy(this.node);
+
+      node.price = _isNotUnNil(node.price) ? this.toYuan(node.price) : null;
+      this.form = node;
 
       // #ifdef MP
       this.$nextTick(() => {
@@ -393,8 +350,8 @@ export default {
     // 删除节点
     onRemove() {
       const node = _deepCopy(this.node);
-      if (!this.tree.some(v => _isEqual(v.__parent_id__, node.__id__))) {
-        const index = this.tree.findIndex(v => _isEqual(v.__id__, node.__id__));
+      if (!this.tree.some(v => _isEqual(v.parentId, node.processId))) {
+        const index = this.tree.findIndex(v => _isEqual(v.processId, node.processId));
         this.tree.splice(index, 1);
 
         this.setCanvasNode();
@@ -442,6 +399,10 @@ export default {
         },
       ];
     },
+    // 获取价格校验
+    isPriceRules() {
+      return this.form.pricingMethod && this.form.pricingMethod !== "none" && !this.form.price;
+    },
   },
 };
 </script>
@@ -461,7 +422,12 @@ export default {
     <BasicPopup :visible.sync="visible" :title="getPopupTitle">
       <view class="ko-craft__popup">
         <uni-forms label-align="right" ref="FormRef" :model="form">
-          <uni-forms-item label="名称" name="name">
+          <uni-forms-item
+            label="名称"
+            name="name"
+            :rules="[{required: true, errorMessage: '请输入名称'}]"
+            required
+          >
             <uni-easyinput v-model="form.name" placeholder="请输入名称" />
           </uni-forms-item>
           <uni-forms-item label="图片" name="images">
@@ -480,19 +446,32 @@ export default {
               v-model="form.pricingMethod"
             />
           </uni-forms-item>
-          <uni-forms-item label="价格" name="price">
+          <uni-forms-item
+            label="价格"
+            name="price"
+            :required="form.pricingMethod && form.pricingMethod !== 'none'"
+          >
             <uni-easyinput type="digit" v-model="form.price" placeholder="请输入" />
           </uni-forms-item>
-          <uni-forms-item label="员工" name="staffId">
+          <uni-forms-item
+            label="员工"
+            name="staffList"
+          >
             <PickerUser
               style="width: 100%;"
               is-input
               title="选择员工"
-              v-model="form.staffId"
+              v-model="form.staffList"
               type="staff"
+              multiple
+              is-confirm
               ref="UserRef"
             />
           </uni-forms-item>
+          <uni-forms-item label="描述" name="description">
+            <uni-easyinput type="textarea" v-model="form.description" placeholder="请输入" />
+          </uni-forms-item>
+
           <uni-forms-item label="订单id" name="orderId" v-if="false">
             <uni-easyinput v-model="form.orderId" />
           </uni-forms-item>
@@ -516,7 +495,7 @@ export default {
       ref="UASRef"
       :actions="getNodeSheet"
       @select="onSelect"
-      round="19"
+      round="10"
       cancel-text="取消"
     />
   </view>

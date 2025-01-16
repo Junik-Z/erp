@@ -200,6 +200,11 @@ export default {
             .finally(() => {
               this.sLoading = false;
             });
+        } else {
+          uni.showToast({
+            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+            icon: "none",
+          });
         }
       });
     },

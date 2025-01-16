@@ -547,6 +547,7 @@ export function _isNull(str) {
   return Object.is(str, null);
 }
 
+// 不是 undefined 并且不是 null 返回 true
 export function _isNotUnNil(str) {
   return !_isUndefined(str) && !_isNull(str);
 }
@@ -589,9 +590,30 @@ export function _generateUniqueId() {
 }
 
 export function _generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0; // 随机数
-    const v = c === 'x' ? r : (r & 0x3) | 0x8; // 确保符合 UUID 格式
+    const v = c === "x" ? r : (r & 0x3) | 0x8; // 确保符合 UUID 格式
     return v.toString(16);
   });
+}
+
+export function _toFinite(value) {
+  if (value === Infinity) {
+    return Number.MAX_VALUE; // 最大正数
+  }
+  if (value === -Infinity) {
+    return -Number.MAX_VALUE; // 最大负数
+  }
+  if (typeof value === "number") {
+    return isNaN(value) ? 0 : value; // 处理 NaN
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return isNaN(parsed) ? 0 : parsed; // 处理可解析的字符串
+  }
+  if (value === null || value === undefined || value === false || value === true) {
+    return +value || 0; // 转换布尔值和 null
+  }
+  const finiteValue = Number(value);
+  return isNaN(finiteValue) ? 0 : finiteValue; // 处理其他情况
 }

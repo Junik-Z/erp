@@ -3,7 +3,7 @@ import GridTable from "../components/GridTable/GridTable.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
-import { _deepCopy, _get, _isEqual, _pick, _set } from "@/utils";
+import { _debounce, _deepCopy, _generateUUID, _get, _isEqual, _pick, _set, _isEmpty } from "@/utils";
 
 const PopupEnum = {
   addedColumn: {
@@ -23,67 +23,41 @@ const PopupEnum = {
   },
 };
 
+const letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+const columns = [];
+
+for (let i = 0; i < 10; i++) {
+  columns.push({
+    label: letter[i],
+    width: 100,
+    prop: _generateUUID(),
+  });
+}
+
+const DefaultList = [];
+
+for (let i = 0; i < 20; i++) {
+  const obj = {};
+  /* columns.forEach(column => {
+    obj[column.prop] = "";
+  }); */
+  DefaultList.push(obj);
+}
+
 export default {
   name: "CustomTable",
   components: {KoMovable, GridTable, UvActionSheet, UniNumberBox},
+  props: {
+    value: {
+      type: String,
+      default: "",
+    },
+  },
   data() {
     return {
-      columns: [
-        /* {
-          label: "姓名",
-          prop: "name",
-        },
-        {
-          label: "年龄",
-          prop: "age",
-        },
-        {
-          label: "技能",
-          prop: "zy",
-        }, */
-      ],
-      list: [
-        /* {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        },
-        {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        },
-        {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        },
-        {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        },
-        {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        },
-        {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        },
-        {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        },
-        {
-          name: "张三",
-          age: "18",
-          zy: "踢足球，倒挂金钩！",
-        }, */
-      ],
+      columns: [{label: "序号", type: "index", prop: "_$index_", width: 50}, ..._deepCopy(columns)],
+      list: _deepCopy(DefaultList),
       // 动作类型：added: 添加新组件；
       sheetType: "added",
 
@@ -103,6 +77,22 @@ export default {
         rowspan: 0,
       },
     };
+  },
+  watch: {
+    changeData: {
+      handler() {
+        this.watchChangeData();
+      },
+      deep: true,
+    },
+
+    value: {
+      handler() {
+        this.takeValue();
+      },
+      deep: true,
+      immediate: true,
+    },
   },
 
   methods: {
@@ -265,9 +255,31 @@ export default {
       _set(row, column.prop, value);
       this.$set(this.list, index, row);
     },
-  },
 
+    watchChangeData: _debounce(function () {
+      this.emitValue();
+    }, 800),
+
+    // 处理更新数据
+    emitValue() {
+      this.$emit("input", JSON.stringify({columns: this.columns, list: this.list.filter(item => !_isEmpty(item))}));
+    },
+
+    // 处理接收数据
+    takeValue() {
+      if (this.value) {
+        try {
+          const {columns, list} = _deepCopy(JSON.parse(this.value));
+          this.list = DefaultList.map((v, i) => list[i] || {});
+          this.columns = columns;
+        } catch (e) {
+          console.log(e, "解析报错了");
+        }
+      }
+    },
+  },
   computed: {
+    // 动作面板
     ActionList() {
       return {
         added: [
@@ -283,20 +295,22 @@ export default {
         ],
       }[this.sheetType];
     },
-
     // 获取弹窗的title
     getPopupTitle() {
       return _get(PopupEnum, `${this.popupType}.title`);
     },
-
     // 获取弹窗确定按钮的文本
     getPopupButtonText() {
       return _get(PopupEnum, `${this.popupType}.button`);
     },
-
     // 获取弹窗确定按钮的方法
     getPopupButtonFuncName() {
       return _get(PopupEnum, `${this.popupType}.func`);
+    },
+
+    // 监听数据变化
+    changeData() {
+      return [...this.columns, ...this.list];
     },
   },
 };
@@ -309,7 +323,6 @@ export default {
       :data="list"
       @long-press="onLongPress"
       @press="onPress"
-
       @change-thead="onChangeThead"
       @change-tbody="onChangeTbody"
     />

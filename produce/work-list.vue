@@ -7,12 +7,13 @@ import {
   applyMaterialProduceApi,
   cancelProduceApi,
   finishProduceApi,
+  getProduceDetailApi,
   getProduceHistoryListApi,
   getProduceListApi,
   removeProduceApi,
 } from "@/api/erp/produce";
 import mixins from "@/mixins/mixins";
-import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _isEmpty, _isEqual, _isString } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
@@ -46,8 +47,27 @@ export default {
       },
       noMore: false,
 
+      node: {},
 
-      actionItem: {},
+      MovableList: [
+        {
+          text: "常规",
+          iconPath: "/static/images/icons/added.png",
+          path: PageEnums.produceWork + "?ADDED_TYPE=common",
+        },
+        {
+          text: "板材",
+          iconPath: "/static/images/icons/added.png",
+          path: PageEnums.produceWork + "?ADDED_TYPE=packing",
+        },
+        {
+          text: "定制",
+          iconPath: "/static/images/icons/added.png",
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx",
+        },
+      ],
+
+      tableKey: +new Date(),
 
       // #ifdef H5
       columns: [
@@ -85,8 +105,13 @@ export default {
     };
   },
   mixins: [mixins],
+  onLoad() {
+  },
   onShow() {
     this.getList(true);
+  },
+  onReachBottom() {
+    this.onRequestNextPage();
   },
   methods: {
     // 请求下一页数据
@@ -97,9 +122,17 @@ export default {
     },
 
     getList(reset) {
-      if (reset) {
+      if (reset && !this.noRefresh) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
+      }
+
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+
+      if (this.noRefresh && info && this.list.length) {
+        this.updateList();
+        return false;
       }
 
       this.loading = true;
@@ -114,18 +147,23 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          this.noRefresh = false;
+
+          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
     onJump(row) {
       let query = "";
+      this.noRefresh = true;
       if (row) {
-        query = `?id=${row.id}`;
+        const type = !_isEmpty(row.customizedMaterials) ? "xlsx" : !_isEmpty(row.customizedBoards) ? "packing" : "common";
+        query = `?id=${row.id}&ADDED_TYPE=${type}`;
       }
       uni.navigateTo({
         url: PageEnums.produceWork + query,
       });
     },
-    onCancel(item) {
+    onCancel(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `确定要取消生产工单吗？此操作不可撤销。`,
@@ -135,7 +173,7 @@ export default {
             cancelProduceApi(item)
               .then(() => {
                 uni.showToast({title: "取消成功"});
-                this.getList(true);
+                this.list.splice(index, 1);
               })
               .finally(() => {
                 this.$set(item, "__cancel_loading__", false);
@@ -144,7 +182,7 @@ export default {
         },
       });
     },
-    onDischarging(item) {
+    onDischarging(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `请确认是否需要申请出料，出料后工单将无法修改。`,
@@ -154,7 +192,7 @@ export default {
             applyMaterialProduceApi({id: item.id})
               .then(() => {
                 uni.showToast({title: "申请成功"});
-                this.getList(true);
+                // this.getList(true);
               })
               .finally(() => {
                 this.$set(item, "__discharging_loading__", false);
@@ -163,7 +201,8 @@ export default {
         },
       });
     },
-    onFinish(item) {
+    // 完成生产
+    onFinish(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: `请确认您是否已真正完成工单。`,
@@ -173,7 +212,7 @@ export default {
             finishProduceApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this.getList(true);
+                this.list.splice(index, 1);
               })
               .finally(() => {
                 this.$set(item, "__finish_loading__", false);
@@ -183,7 +222,7 @@ export default {
       });
     },
 
-    onRemove(item) {
+    onRemove(item, index) {
       uni.showModal({
         title: "温馨提示",
         content: "您确定要删除此工单吗？",
@@ -193,7 +232,8 @@ export default {
             removeProduceApi(item)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList(true);
+                // this.getList(true);
+                this.list.splice(index, 1);
               })
               .finally(() => {
                 this.$set(item, "__r_loading__", false);
@@ -203,13 +243,38 @@ export default {
       });
     },
 
-    onActionClick(item) {
-      this.actionItem = item;
+    onActionClick(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.actionItem));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
+    },
+
+    // 处理新增
+    onAddedJump({item}) {
+      this.noRefresh = true;
+      uni.navigateTo({
+        url: item.path,
+      });
+    },
+
+    // 更新列表数据
+    updateList() {
+      const info = uni.getStorageSync("TENP_ORDER_INFO");
+      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+
+      getProduceDetailApi({id})
+        .then(res => {
+          const data = res.data || {};
+          this.onProcessingListData(data);
+        })
+        .finally(() => {
+          this.noRefresh = false;
+          uni.setStorageSync("TENP_ORDER_INFO", null);
+        });
     },
   },
   computed: {
@@ -220,7 +285,7 @@ export default {
     // #endif
 
     actionList() {
-      const node = this.actionItem;
+      const node = this.node;
       return [
         {
           name: "取消工单",
@@ -254,7 +319,7 @@ export default {
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 5px 10px" v-for="item of list" :key="item.id">
+        <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
           <BasicCard @click="onJumpDetails(item, 'produce')">
             <view class="ko-client__info">
               <UniRow gutter="10">
@@ -290,7 +355,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   v-if="['CREATED'].includes(item.status)"
-                  @click.stop="onDischarging(item)"
+                  @click.stop="onDischarging(item, index)"
                   :loading="item.__discharging_loading__"
                   :disabled="item.__discharging_loading__"
                 >
@@ -300,7 +365,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   v-if="['APPLY_MATERIAL'].includes(item.status)"
-                  @click.stop="onFinish(item)"
+                  @click.stop="onFinish(item, index)"
                   :loading="item.__finish_loading__"
                   :disabled="item.__finish_loading__"
                 >
@@ -309,39 +374,11 @@ export default {
 
                 <button
                   class="ko-basic-button__card"
-                  @click.stop="onActionClick(item)"
+                  @click.stop="onActionClick(item, index)"
                   v-if='["CREATED", "CANCELLED"].includes(item.status)'
                 >
                   更多
                 </button>
-
-                <template v-if="false">
-                  <button
-                    class="ko-basic-button__card"
-                    v-if="['CREATED'].includes(item.status)"
-                    @click.stop="onCancel(item)"
-                    :loading="item.__cancel_loading__"
-                    :disabled="item.__cancel_loading__"
-                  >
-                    取消工单
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                    @click.stop="onJump(item)"
-                  >
-                    修改
-                  </button>
-                  <button
-                    class="ko-basic-button__card"
-                    v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-                    @click.stop="onRemove(item)"
-                    :loading="item.__r_loading__"
-                    :disabled="item.__r_loading__"
-                  >
-                    删除
-                  </button>
-                </template>
               </view>
             </view>
           </BasicCard>
@@ -360,12 +397,12 @@ export default {
         stripe
         @row-click="onJumpDetails($event, 'produce')"
       >
-        <template #operate="{item}" v-if="isPerm('Produce_Write')">
+        <template #operate="{item, index}" v-if="isPerm('Produce_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               class="ko-basic-button__card"
               v-if="['CREATED'].includes(item.status)"
-              @click.stop="onDischarging(item)"
+              @click.stop="onDischarging(item, index)"
               :loading="item.__discharging_loading__"
               :disabled="item.__discharging_loading__"
             >
@@ -374,7 +411,7 @@ export default {
             <button
               class="ko-basic-button__card"
               v-if="['APPLY_MATERIAL'].includes(item.status)"
-              @click.stop="onFinish(item)"
+              @click.stop="onFinish(item, index)"
               :loading="item.__finish_loading__"
               :disabled="item.__finish_loading__"
             >
@@ -383,7 +420,7 @@ export default {
             <button
               class="ko-basic-button__card"
               v-if="['CREATED'].includes(item.status)"
-              @click.stop="onCancel(item)"
+              @click.stop="onCancel(item, index)"
               :loading="item.__cancel_loading__"
               :disabled="item.__cancel_loading__"
             >
@@ -392,14 +429,14 @@ export default {
             <button
               class="ko-basic-button__card"
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-              @click.stop="onJump(item)"
+              @click.stop="onJump(item, index)"
             >
               修改
             </button>
             <button
               class="ko-basic-button__card"
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-              @click.stop="onRemove(item)"
+              @click.stop="onRemove(item, index)"
               :loading="item.__r_loading__"
               :disabled="item.__r_loading__"
             >
@@ -412,8 +449,9 @@ export default {
     <!-- #endif -->
 
     <KoMovable
+      :content="MovableList"
       v-if="isPerm('Produce_Write')"
-      @click="onJump('')"
+      @click="onAddedJump"
     />
 
     <!-- #ifdef MP -->

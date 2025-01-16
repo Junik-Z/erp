@@ -171,6 +171,15 @@ export const PageEnums = {
   produceNewStaff: "/produce/new-staff",
   // 新的生产工单
   produceWork: "/produce/work",
+  // 员工工艺工资
+  salary: "/produce/salary",
+  // 工艺
+  factory: "/produce/factory",
+
+  // 考勤
+  attend: "/attend/attend",
+  // 考勤记录
+  attendRecord: "/attend/record",
 };
 
 /**
@@ -255,10 +264,17 @@ export const MENU_LIST = [
     isUpRole: false,
   },
   {
+    label: "打卡",
+    icon: "icon-kaoqindaka",
+    value: PageEnums.attend,
+    role: ["*"],
+    isUpRole: false,
+  },
+  {
     label: "个人中心",
     icon: "icon-gerenzhongxin",
     value: "/admin/user/user",
-    role: ["Admin", "Business", "User"],
+    role: ["*"],
     isUpRole: false,
   },
   {
@@ -330,3 +346,50 @@ export const PRICING_METHOD = {
   yearlyRate: "年价格",
   none: "无",
 };
+
+/**
+ * @description 生产工单类型
+ */
+export const PRODUCTION_TYPE_ENUMS = {
+  common: "常规生产",
+  packing: "板材定制",
+  xlsx: "表格定制生产",
+};
+
+/**
+ * @description 板材规格枚举
+ */
+export const PLATE_SPECIF_ENUMS = [
+  {
+    name: "1220x2440",
+    value: "1220x2440",
+  },
+  {
+    name: "1220x2750",
+    value: "1220x2750",
+  },
+  /* {
+    name: "1220x2440x9",
+    value: "1220x2440x9",
+  },
+  {
+    name: "1220x2440x18",
+    value: "1220x2440x18",
+  },
+  {
+    name: "1220x2440x17",
+    value: "1220x2440x17",
+  },
+  {
+    name: "1220x2750x9",
+    value: "1220x2750x9",
+  },
+  {
+    name: "1220x2750x18",
+    value: "1220x2750x18",
+  },
+  {
+    name: "1220x2750x17",
+    value: "1220x2750x17",
+  }, */
+];

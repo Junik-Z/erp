@@ -32,8 +32,9 @@ export default {
         return [];
       },
     },
-
     gridAreaFunc: Function,
+    notEdit: Boolean,
+    noMore: Boolean,
   },
   data() {
     return {
@@ -84,12 +85,6 @@ export default {
       },
       deep: true,
       immediate: true,
-    },
-
-    EditObj: {
-      handler() {
-        console.log(this.EditObj);
-      },
     },
   },
   mounted() {
@@ -171,7 +166,9 @@ export default {
     },
     // 触摸结束
     touchEnd(event) {
-      this.onOffEdit();
+      if (!this.notEdit) {
+        this.onOffEdit();
+      }
 
       const {page: sPage, time: sTime} = _deepCopy(this.TouchStart) || {};
       const {pageY, pageX} = this.isPC ? event : event.changedTouches[0];
@@ -187,22 +184,22 @@ export default {
         if (time > LONG_PRESS) {
           this.$emit("long-press", params);
         } else {
-          if (_isEqual(data.type, "thead")) {
-            const key = `${data.column.prop}_${data.columnIndex}`;
-            this.$set(this.EditObj[key], "_is_edit_", true);
+          if (!this.notEdit) {
+            if (_isEqual(data.type, "thead")) {
+              const key = `${data.column.prop}_${data.columnIndex}`;
+              this.$set(this.EditObj[key], "_is_edit_", true);
+            }
+
+            if (_isEqual(data.type, "tbody")) {
+              const key = `${data.column.prop}_${data.columnIndex}_${data.rowIndex}`;
+              if (_isEmpty(this.EditObj[key])) this.$set(this.EditObj, key, {_is_edit_: false});
+              this.$set(this.EditObj[key], `_is_edit_`, true);
+            }
+
+            setTimeout(() => {
+              this.updateColumns();
+            }, 0);
           }
-
-          if (_isEqual(data.type, "tbody")) {
-            const key = `${data.column.prop}_${data.columnIndex}_${data.rowIndex}`;
-
-            if (_isEmpty(this.EditObj[key])) this.$set(this.EditObj, key, {_is_edit_: false});
-
-            this.$set(this.EditObj[key], `_is_edit_`, true);
-          }
-
-          setTimeout(() => {
-            this.updateColumns();
-          }, 0);
 
           this.$emit("press", params);
         }
@@ -237,7 +234,6 @@ export default {
 
     // 表头内容变化时触发
     onChangeThead(value, {column, columnIndex, type, row, index}) {
-      console.log(value, column);
       if (_isEqual(type, "thead")) {
         this.$emit("change-thead", {column, columnIndex, value});
       }
@@ -245,6 +241,11 @@ export default {
       if (_isEqual(type, "tbody")) {
         this.$emit("change-tbody", {column, columnIndex, value, row, index});
       }
+    },
+
+    // 点击更多按钮
+    onMoreButton(item, index, column, columnIndex) {
+      this.$emit("click-more", {item, index, column, columnIndex});
     },
 
     // #ifdef H5
@@ -275,6 +276,7 @@ export default {
         const w = this.columnsRect?.[index] || 0;
         return {
           width: width ? width + "px" : "auto",
+          minWidth: col.minWidth ? col.minWidth + "px" : "auto",
           "--column-width": (width || w) + "px",
         };
       };
@@ -286,6 +288,7 @@ export default {
         const width = col.width || w;
         return {
           width: width ? width + "px" : "auto",
+          minWidth: col.minWidth ? col.minWidth + "px" : "auto",
           // "--row-column-width": (width || w) + "px",
         };
       };
@@ -393,11 +396,12 @@ export default {
               @mousedown.stop="mousedown"
               @mouseup.stop="mouseup"
               :data-params="{type: 'tbody', column: column, columnIndex: j, row: item, rowIndex: index}"
-
-              :class="{'is-edit': getTbodyIsEdit(item, column, index, j)}"
             >
               <view class="ko-table__cell" v-if="column.type === 'index'">{{ index + 1 }}</view>
-              <view class="ko-table__cell" v-else>
+              <view class="ko-table__cell" v-else-if="column.type === 'more'">
+                <button @click.stop="onMoreButton(item, index, column, j)" class="ko-basic-button__card">更多</button>
+              </view>
+              <view class="ko-table__cell" v-else :class="{'is-edit': getTbodyIsEdit(item, column, index, j)}">
                 <uni-easyinput
                   :clearable="false"
                   v-model.trim="item[column.prop]"
@@ -412,6 +416,17 @@ export default {
               </view>
             </view>
           </block>
+
+          <view
+            v-if="noMore"
+            class="ko-table__tr"
+            :style="{width: 'auto', 'grid-area': `1/1/1/span ${columns.length}`, color: '#c7c9ce'}"
+          >
+            <view class="ko-table__cell">
+              还没有添加任何材料
+            </view>
+          </view>
+
         </view>
       </view>
     </scroll-view>
@@ -448,12 +463,25 @@ $thead-padding: 6px 8px;
 
     &--cell {
       padding: $thead-padding;
-      white-space: nowrap;
+      //white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
 
       text-align: center;
       box-sizing: border-box;
-      cursor: pointer;
       min-height: 35px;
+
+      text {
+        word-wrap: break-word; /* 允许长单词或无法使用断点的URL强制换行 */
+        white-space: normal; /* 保持正常换行行为 */
+        overflow-wrap: break-word;
+      }
+
+      // #ifdef MP
+      cursor: pointer;
+      // #endif
 
       &.is-edit {
         padding: 0;
@@ -488,25 +516,33 @@ $thead-padding: 6px 8px;
   }
 
   &__cell {
-    //padding: $cell-padding;
+    padding: $cell-padding;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100%;
     box-sizing: border-box;
-    cursor: pointer;
     min-height: 35px;
 
+    text {
+      word-wrap: break-word; /* 允许长单词或无法使用断点的URL强制换行 */
+      white-space: normal; /* 保持正常换行行为 */
+      overflow-wrap: break-word;
+    }
+
+    // #ifdef MP
+    cursor: pointer;
+    // #endif
+
     &.is-edit {
+      padding: 0;
       width: calc(var(--column-width) - 2px);
     }
 
-    /*transition: opacity .3s;
-
-    &:active {
-      opacity: .7;
-    }*/
+    .ko-basic-button__card {
+      padding: 4px 10px;
+    }
   }
 }
 </style>
