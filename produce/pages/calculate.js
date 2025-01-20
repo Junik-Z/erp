@@ -160,3 +160,14 @@ export function setAdaptiveTextColor(bgColor) {
   // 根据亮度设置文字颜色
   return brightness > 128 ? "#000" : "#fff"; // 明亮背景用深色文字，暗背景用浅色文字
 }
+
+// 获取包含的坐标
+export function calculateCoveredCoordinatesByRow(x_start, x_end, y_start, y_end) {
+  const coveredCoordinates = [];
+  for (let x = x_start; x < x_end; x++) {
+    for (let y = y_start; y < y_end; y++) {
+      coveredCoordinates.push([x, y]);
+    }
+  }
+  return coveredCoordinates;
+}

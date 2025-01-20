@@ -57,7 +57,7 @@ const SummaryText = {
 export default {
   name: "DetailsOrder",
   mixins: [mixins],
-  components: {FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection, UniForms},
+  components: {FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection, },
   onLoad(option) {
     this.option = option;
 
@@ -133,7 +133,7 @@ export default {
     },
 
     getTotalAmountText() {
-      return _get(SummaryText, this.option.page_type)
+      return _get(SummaryText, this.option.page_type);
     },
 
     // #ifdef H5
@@ -261,7 +261,7 @@ export default {
 
     <!-- 生产订单 -->
     <template v-if="isProduce">
-      <UniSection title="材料明细" type="line">
+      <UniSection title="材料明细" type="line" v-if="!isEmpty(node.materialDetails)">
         <view class="ko-details__item">
           <!-- #ifdef MP -->
           <view class="ko-details__cell" v-for="item of node.materialDetails" :key="item.id">
@@ -289,6 +289,12 @@ export default {
             <label class="ko-basic-label">共计：</label>
             <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalRawMaterialAmount) }}元</text>
           </view>
+        </view>
+      </UniSection>
+
+      <UniSection title="生产工艺" type="line" v-if="!isEmpty(node.craftProcesses)">
+        <view class="ko-details__item">
+          <CraftProcesses />
         </view>
       </UniSection>
 
@@ -324,6 +330,7 @@ export default {
       </UniSection>
     </template>
 
+    <!-- 其它订单 -->
     <template v-if="!isProduce">
       <UniSection title="明细" type="line">
         <view class="ko-details__item">

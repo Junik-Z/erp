@@ -6,7 +6,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import UniDataPicker from "@/uni_modules/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
+import UniDataPicker from "./components/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
 import {
   addedProductApi,
   checkDuplicateApi,

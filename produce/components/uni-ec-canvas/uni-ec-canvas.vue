@@ -1,4 +1,5 @@
 <template>
+  <!-- #ifndef H5-->
   <canvas
     type="2d"
     v-if="isUseNewCanvas"
@@ -19,6 +20,10 @@
     @touchmove="touchMove"
     @touchend="touchEnd"
   />
+  <!-- #endif -->
+  <!-- #ifdef H5-->
+  <div :id="canvasId"></div>
+  <!-- #endif -->
 </template>
 
 <script>
@@ -85,14 +90,15 @@ export default {
     };
   },
   watch: {
+    // #ifndef H5
     "ec.option": {
       deep: true,
       handler(val, oldVal) {
         this.setOption(val);
       },
     },
+    // #endif
   },
-
   onReady: function () {
     echarts.registerPreprocessor(option => {
       if (option && option.series) {
@@ -106,19 +112,49 @@ export default {
       }
     });
 
+    // #ifdef H5
+
+    // #endif
+
+
+    // #ifndef H5
     if (!this.ec) {
       console.warn("组件需绑定 ec 变量，例：<ec-canvas id=\"mychart-dom-bar\" "
         + "canvas-id=\"mychart-bar\" ec=\"{{ ec }}\"></ec-canvas>");
       return;
     }
 
-
     if (!this.ec.lazyLoad) {
       this.init();
     }
+    // #endif
   },
   methods: {
+
     init(callback) {
+      // #ifdef H5
+      const canvas = document.getElementById(this.canvasId);
+      const canvasWidth = canvas.offsetWidth;
+      const canvasHeight = canvas.offsetHeight;
+      const canvasDpr = uni.getSystemInfoSync().pixelRatio;
+
+      if (typeof callback === "function") {
+        this.chart = callback(canvas, canvasWidth, canvasHeight, canvasDpr);
+      } else if (this.ec && typeof this.ec.onInit === "function") {
+        this.chart = this.ec.onInit(canvas, canvasWidth, canvasHeight, canvasDpr);
+      } else {
+        this.triggerEvent("init", {
+          canvas: canvas,
+          width: canvasWidth,
+          height: canvasHeight,
+          dpr: canvasDpr,
+        });
+      }
+
+      // #endif
+
+
+      // #ifndef H5
       const version = wx.getSystemInfoSync().SDKVersion;
 
       const canUseNewCanvas = compareVersion(version, "2.9.0") >= 0;
@@ -146,7 +182,10 @@ export default {
           this.initByOldWay(callback);
         }
       }
+      // #endif
     },
+
+    // #ifndef H5
 
     initByOldWay(callback) {
       // 1.9.91 <= version < 2.9.0：原来的方式初始化
@@ -259,7 +298,6 @@ export default {
       }
     },
 
-
     touchStart(e) {
       if (this.chart && e.touches.length > 0) {
         var touch = e.touches[0];
@@ -287,7 +325,6 @@ export default {
         handler.processGesture(wrapTouch(e), "start");
       }
     },
-
     touchMove(e) {
       if (this.chart && e.touches.length > 0) {
         var touch = e.touches[0];
@@ -305,7 +342,6 @@ export default {
         handler.processGesture(wrapTouch(e), "change");
       }
     },
-
     touchEnd(e) {
       if (this.chart) {
         const touch = e.changedTouches ? e.changedTouches[0] : {};
@@ -333,6 +369,7 @@ export default {
         handler.processGesture(wrapTouch(e), "end");
       }
     },
+    // #endif
   },
 };
 </script>

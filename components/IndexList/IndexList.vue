@@ -92,6 +92,8 @@ export default {
 
     // 隐藏入库价格
     isHideStockPrice: Boolean,
+
+    isStaff: Boolean,
   },
   watch: {
     data: {
@@ -462,7 +464,19 @@ export default {
                           random-bg-color
                           @click.stop
                         />
-                        <view style="padding-left: 10px; flex: 1;">
+                        <view style="padding-left: 10px; flex: 1; position: relative">
+                          <view
+                            v-if="isStaff && !isEmpty(GET_FUNC(item, 'users'))"
+                            style="position: absolute; top: 6px; right: 20px;"
+                          >
+                            <uv-avatar
+                              :src="getImageUrl(GET_FUNC(item, 'users.0.avatar'))"
+                              :text="GET_FUNC(item, 'users.0.nickName')"
+                              random-bg-color
+                              :size="32"
+                            />
+                          </view>
+
                           <UniRow :gutter="10">
                             <UniCol :span="24">
                               <view class="ko-user__name">{{ item.label || "-" }}</view>
@@ -470,6 +484,9 @@ export default {
                             <UniCol :span="24" v-if="item.amount">
                               <label v-if="isReceiptList" class="ko-basic-label" style="font-size: 14px;">
                                 {{ item.amount > 0 ? "待结账" : "多付" }}：
+                              </label>
+                              <label v-else-if="isStaff" class="ko-basic-label" style="font-size: 14px;">
+                                工资：
                               </label>
                               <label v-else class="ko-basic-label" style="font-size: 14px;">
                                 {{ item.amount > 0 ? "多付" : isSupplier ? "应付" : "欠款" }}：

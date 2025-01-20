@@ -102,7 +102,6 @@ export default {
     </tr>
     </thead>
 
-
     <tbody>
     <tr v-for="(item, index) of data" :key="`tr-td-${index}--${item.id}`" :data-type="item.id" :data-id="item.id">
       <td v-for="(column, cIndex) of columns" :key="cIndex">

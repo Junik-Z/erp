@@ -162,6 +162,8 @@ export const PageEnums = {
   shareProduct: "/shop/binding/share",
 
   // 生产
+  produceLoading: "/produce/loading",
+  // 生产
   produce: "/produce/produce",
   // 生产工单
   produceWorkList: "/produce/work-list",
@@ -169,17 +171,26 @@ export const PageEnums = {
   produceStaff: "/produce/staff",
   // 新员工
   produceNewStaff: "/produce/new-staff",
+  // 员工的已完结工单列表
+  produceStaffCompleteProcess: "/produce/complete-process",
   // 新的生产工单
   produceWork: "/produce/work",
   // 员工工艺工资
   salary: "/produce/salary",
-  // 工艺
+  // 生产流程
   factory: "/produce/factory",
+  // 生产详情
+  produceDetails: "/produce/details",
+
+  // 员工，我的工资
+  produceSalary: "/produce/salary",
 
   // 考勤
   attend: "/attend/attend",
   // 考勤记录
   attendRecord: "/attend/record",
+  // 打卡二维码
+  attendCheckIn: "/attend/check-in",
 };
 
 /**
@@ -205,8 +216,8 @@ export const MENU_LIST = [
     role: ["Admin", "Business", "Sales_Read", "Sales_Write", "Sales_Member"],
     isUpRole: true,
     // 是否有会员系统
-    isMember: true,
-    memberLabel: "客户",
+    // isMember: true,
+    // memberLabel: "客户",
   },
   {
     label: "采购",
@@ -216,13 +227,13 @@ export const MENU_LIST = [
     role: ["Admin", "Business", "Purchase_Read", "Purchase_Write", "Purchase_Member"],
     isUpRole: true,
     // 是否有会员系统
-    isMember: true,
-    memberLabel: "供应商",
+    // isMember: true,
+    // memberLabel: "供应商",
   },
   {
     label: "生产",
     icon: "icon-Datastatistics",
-    value: PageEnums.produce,
+    value: PageEnums.produceLoading,
     checkField: "produceEnable",
     modelKey: "produce",
     role: ["Admin", "Business", "Produce_Read", "Produce_Write", "Produce_Member"],
@@ -245,8 +256,8 @@ export const MENU_LIST = [
     role: ["Admin", "Business", "Delivery_Read", "Delivery_Write", "Delivery_Member"],
     isUpRole: true,
     // 是否有会员系统
-    isMember: true,
-    memberLabel: "物流商",
+    // isMember: true,
+    // memberLabel: "物流商",
   },
   {
     label: "产品管理",
@@ -264,10 +275,10 @@ export const MENU_LIST = [
     isUpRole: false,
   },
   {
-    label: "打卡",
+    label: "考勤",
     icon: "icon-kaoqindaka",
     value: PageEnums.attend,
-    role: ["*"],
+    role: ["Admin", "Business", "Produce_Member", "Product_Write"],
     isUpRole: false,
   },
   {
@@ -336,15 +347,13 @@ export const FINANCE_CLASSIFY_FIXED_ID = ["wages", "freight"];
  * @description 计价方式
  */
 export const PRICING_METHOD = {
-  pieceWork: "计件",
-  timingWork: "计时",
+  pieceWork: "计件工作",
+  piecePriceGroup: "计件价格组内平分",
+  timingWork: "计时工作",
   fixedPrice: "固定价格",
-  hourlyRate: "小时价格",
-  dailyRate: "天价格",
-  weeklyRate: "周价格",
-  monthlyRate: "月价格",
-  yearlyRate: "年价格",
-  none: "无",
+  fixedPriceGroup: "固定价格组内平分",
+  dailyRate: "按日工资",
+  none: "没有定价方式",
 };
 
 /**
@@ -361,12 +370,12 @@ export const PRODUCTION_TYPE_ENUMS = {
  */
 export const PLATE_SPECIF_ENUMS = [
   {
-    name: "1220x2440",
-    value: "1220x2440",
+    name: "1220×2440",
+    value: "1220×2440",
   },
   {
-    name: "1220x2750",
-    value: "1220x2750",
+    name: "1220×2750",
+    value: "1220×2750",
   },
   /* {
     name: "1220x2440x9",

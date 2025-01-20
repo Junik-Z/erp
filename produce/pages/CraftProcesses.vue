@@ -1,7 +1,18 @@
 <script>
 import UniEcCanvas from "../components/uni-ec-canvas/uni-ec-canvas.vue";
 import * as echarts from "../components/uni-ec-canvas/echarts_v5.6.0";
-import { _deepCopy, _generateUUID, _get, _isEqual, _isNotUnNil, _keys, _set, CustomToast, getRect } from "@/utils";
+import {
+  _deepCopy,
+  _generateUUID,
+  _get,
+  _isEmpty,
+  _isEqual,
+  _isNotUnNil,
+  _keys,
+  _set,
+  CustomToast,
+  getRect,
+} from "@/utils";
 import KoMovable from "@/components/Movable/index.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import PickerSheet from "../components/PickerSheet.vue";
@@ -40,6 +51,7 @@ export default {
         return [];
       },
     },
+    readonly: Boolean,
   },
   watch: {
     value: {
@@ -82,7 +94,7 @@ export default {
             left: "8%",
             right: "10%",
             top: "10%",
-            bottom: "10%",
+            bottom: "18%",
             symbol: (value, {data}) => {
               if (data.images) {
                 return "image://" + this.getImageUrl(data.images);
@@ -94,17 +106,34 @@ export default {
             symbolClip: true,
             orient: "vertical",
             expandAndCollapse: false,
+            /* itemStyle: {
+              color: 'rgba(0, 0, 0, .03)'
+            }, */
             label: {
-              position: "bottom",
-              verticalAlign: "middle",
+              position: "top",
+              verticalAlign: "top",
               fontSize: 12,
               borderWidth: 0,
+              borderColor: "#333",
               shadowBlur: 0,
               textBorderWidth: 0,
-              offset: [0, 16],
+              offset: [0, -10],
               color: "#333",
-              formatter: function ({data}) {
-                return `{a|${data.name}}\n{b|共计：${data.staffList?.length}人}\n{c|${PRICING_METHOD[data.pricingMethod]}：}{d|${_this.toYuan(data.price)}元}`;
+              backgroundColor: "rgba(0, 0, 0, .1)",
+              padding: [50, 10, 10, 10],
+              borderRadius: 6,
+              formatter: function (res) {
+                const data = res?.data || {};
+
+                let arr = [`{a|${data.name}}`];
+
+                if (!_isEmpty(data.staffs)) {
+                  arr.push(`{b|员工：${data.staffs?.map(item => item.name)?.join("、")}}`);
+                }
+
+                arr.push(`{c|${PRICING_METHOD[data.pricingMethod]}：}{d|${_this.toYuan(data.price)}元}`);
+
+                return arr.join("\n");
               },
               rich: {
                 a: {
@@ -135,8 +164,8 @@ export default {
             roam: true,
             leaves: {
               label: {
-                position: "bottom",
-                verticalAlign: "middle",
+                position: "top",
+                verticalAlign: "top",
                 align: "center",
                 borderWidth: 0,
                 shadowBlur: 0,
@@ -156,8 +185,8 @@ export default {
         "images": "", //"/files/down/png20250115/248644303b2f45f79215adf7e87bcde9.png",
         "pricingMethod": "none",
         "price": null,
-        // "sequence": 0,
         "staffList": [],
+        "staffs": [],
       },
       visible: false,
       pLoading: false,
@@ -192,7 +221,10 @@ export default {
         devicePixelRatio: canvasDpr,
       });
 
+      // #ifndef H5
       canvas.setChart(this.chart);
+      // #endif
+
       this.chart.setOption(this.options);
 
       // 添加节点的点击事件
@@ -234,12 +266,16 @@ export default {
 
     // 点击
     onClickTreeNode(event) {
+      if (this.readonly) return;
+
       this.node = event.data;
       this.$refs.UASRef.open();
     },
 
     // 添加根节点
     onAdderRoot(type) {
+      if (this.readonly) return;
+
       this.pType = type;
       this.visible = true;
       this.form = _deepCopy(this.$options.data().form);
@@ -362,6 +398,22 @@ export default {
         });
       }
     },
+
+    // 选中菜单
+    onSMovable({item}) {
+      const {func, arg} = item;
+      this[func]?.(...arg);
+    },
+
+    // 打开选择快捷生产
+    onSelectCraft(type) {
+      this.$emit("select", type);
+    },
+
+    // 选中的员工
+    onCheckNode(list) {
+      this.form.staffs = _deepCopy(list);
+    },
   },
   computed: {
     // 获取弹窗标题
@@ -403,6 +455,24 @@ export default {
     isPriceRules() {
       return this.form.pricingMethod && this.form.pricingMethod !== "none" && !this.form.price;
     },
+
+    // 更多按钮
+    getMContent() {
+      return [
+        {
+          text: "新增",
+          iconPath: "/static/images/icons/added.png",
+          func: "onAdderRoot",
+          arg: ["root"],
+        },
+        {
+          text: "快捷",
+          iconPath: "/static/images/icons/added.png",
+          func: "onSelectCraft",
+          arg: ["craft"],
+        },
+      ];
+    },
   },
 };
 </script>
@@ -417,7 +487,12 @@ export default {
       class="uni-ec-canvas"
     />
 
-    <KoMovable v-if="!tree.length" :y-axis="-60" @click="onAdderRoot('root')" />
+    <KoMovable
+      v-if="!tree.length && !readonly"
+      :content="getMContent"
+      :y-axis="-60"
+      @click="onSMovable"
+    />
 
     <BasicPopup :visible.sync="visible" :title="getPopupTitle">
       <view class="ko-craft__popup">
@@ -466,6 +541,7 @@ export default {
               multiple
               is-confirm
               ref="UserRef"
+              @check-node="onCheckNode"
             />
           </uni-forms-item>
           <uni-forms-item label="描述" name="description">
@@ -537,4 +613,12 @@ export default {
   position: relative;
   z-index: 9;
 }
+
+// #ifdef H5
+/deep/ .uv-popup__content.bottom {
+  max-width: 1024px;
+  margin: 0 auto;
+}
+
+// #endif
 </style>

@@ -1,9 +1,9 @@
 <!-- 员工工资 -->
 <script>
 import { getMySalaryApi, getMySettledListApi, getMyWorkingListApi, getWaitMyConfirmListApi } from "@/api/erp/produce";
-import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
-import { CONFIG } from "@/utils/config";
+import { CONFIG, PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "./define";
@@ -26,9 +26,9 @@ export default {
 
       tab: 0,
       values: [
-        "待处理",
+        "生产中",
         "待确认",
-        "已结算",
+        "已确认",
       ],
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -41,6 +41,8 @@ export default {
 
       node: {},
       nodeIndex: null,
+
+      tableKey: +new Date(),
     };
   },
   mixins: [mixins],
@@ -49,9 +51,11 @@ export default {
 
     this.getList(true);
   },
+  // #ifdef MP
   onReachBottom() {
     this.onRequestNextPage();
   },
+  // #endif
   methods: {
     // 获取我的工资
     getMySalary() {
@@ -73,6 +77,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
       }
 
       this.loading = true;
@@ -106,7 +111,7 @@ export default {
   computed: {
     getCountValue() {
       return (item) => {
-        return this[item.key];
+        return this.toYuan(this[item.key]);
       };
     },
 
@@ -116,13 +121,126 @@ export default {
 
     // #ifdef H5
     getColumns() {
-      return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
+      const _this = this;
+
+      return [
+        {
+          label: "序号",
+          type: "index",
+          width: 60,
+        },
+        {
+          label: "名称",
+          prop: "name",
+        },
+        {
+          label: "图片",
+          prop: "images",
+          render(h, {row}) {
+            return h(
+              UvAvatar,
+              {
+                props: {
+                  src: _this.getImageUrl(row.images),
+                },
+              });
+          },
+        },
+        {
+          label: "计价方式",
+          prop: "pricingMethod",
+          render(h, {row}) {
+            return h("span", [PRICING_METHOD[row.pricingMethod]]);
+          },
+        },
+        {
+          label: "价格",
+          prop: "price",
+          render(h, {row}) {
+            return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.price)]);
+          },
+        },
+
+        {
+          label: "结算",
+          prop: "finalAmount",
+          render(h, {row}) {
+            return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.finalAmount)]);
+          },
+        },
+        {
+          label: "数量",
+          prop: "quantity",
+        },
+        {
+          label: "时间",
+          prop: "updateTime",
+        },
+        {
+          label: "员工",
+          prop: "staffList",
+          render(h, {row}) {
+            return h("div", {
+                style: {
+                  flex: 1,
+                  display: "flex",
+                  flexWrap: "wrap",
+                },
+              },
+              _this.getStaffListLogo(row)
+                .map(item => h(
+                  "div",
+                  {
+                    style: {
+                      padding: "5px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    },
+                  },
+                  [
+                    h(
+                      UvAvatar,
+                      {
+                        props: {
+                          src: _this.getImageUrl(item.logo),
+                          randomBgColor: true,
+                          size: 38,
+                          text: item.name,
+                        },
+                      }),
+                    h("span", {
+                      style: {fontSize: "14px", color: "#8f939c", paddingTop: "5px"},
+                    }, [item.name]),
+                  ],
+                )),
+            );
+          },
+        },
+        {
+          label: "描述",
+          prop: "description",
+          render(h, {row}) {
+            return h("span", [row.description]);
+          },
+        },
+      ];
     },
     // #endif
 
-
     TabList() {
       return TabList;
+    },
+
+    // 获取计价方式
+    getPricingMethod() {
+      return key => PRICING_METHOD[key];
+    },
+
+    // 获取人员头像
+    getStaffListLogo() {
+      return (item) => _isEmpty(item?.staffs) ? (item.staff ? [item.staff] : []) : item?.staffs || [];
     },
   },
 };
@@ -130,7 +248,7 @@ export default {
 
 <template>
   <view class="ko-salary">
-    <TopMenus :tabs="TabList" :current="3" />
+    <TopMenus :tabs="TabList" :path="PageEnums.produceSalary" />
 
     <view class="ko-basic-count__wrap">
       <UniRow :gutter="10">
@@ -164,54 +282,71 @@ export default {
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
-          <BasicCard @click="onJumpDetails(item, 'produce')">
-            <view class="ko-client__info">
-              <UniRow gutter="10">
-                <UniCol :span="24">
-                  <label class="ko-basic-label">计划编号：</label>
-                  <text>{{ item.orderCode }}</text>
-                </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">原材料总值：</label>
-                  <text class="ko-basic-money"> {{ toYuan(item.totalRawMaterialAmount) }}元</text>
-                </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">成品总值：</label>
-                  <text class="ko-basic-money"> {{ toYuan(item.totalProductAmount) }}元</text>
-                </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">预计创造价值：</label>
-                  <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">预计完成时间：</label>
-                  <text>{{ item.planFinishDate }}</text>
-                </UniCol>
-                <UniCol :span="24" v-if="isHistory">
-                  <label class="ko-basic-label">工单状态：</label>
-                  <text>{{ PRODUCE_STATUS_ENUMS(item.status) }}</text>
-                </UniCol>
-              </UniRow>
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-              >
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL'].includes(item.status)"
-                  @click.stop="onFinish(item, index)"
-                  :loading="item.__finish_loading__"
-                  :disabled="item.__finish_loading__"
-                >
-                  完成生产
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onActionClick(item, index)"
-                  v-if='["CREATED", "CANCELLED"].includes(item.status)'
-                >
-                  更多
-                </button>
-              </view>
+          <BasicCard>
+            <view class="ko-salary__info">
+              <uni-row gutter="10">
+                <uni-col :span="24">
+                  <label class="ko-basic-label">名称：</label>
+                  <text>{{ item.name }}</text>
+                </uni-col>
+                <uni-col :span="24">
+                  <label class="ko-basic-label">编号：</label>
+                  <text>{{ item.orderCode || "-" }}</text>
+                </uni-col>
+                <uni-col :span="24" v-if="item.images">
+                  <label class="ko-basic-label">图片：</label>
+                  <uv-avatar
+                    :src="getImageUrl(item.images)"
+                    shape="square"
+                    random-bg-color
+                    :size="64"
+                  />
+                </uni-col>
+                <uni-col :span="24">
+                  <label class="ko-basic-label">计价方式：</label>
+                  <text>{{ getPricingMethod(item.pricingMethod) }}</text>
+                </uni-col>
+                <uni-col :span="24">
+                  <label class="ko-basic-label">价格：</label>
+                  <text class="ko-basic-money">{{ toYuan(item.price) }}元</text>
+                </uni-col>
+                <uni-col :span="24">
+                  <label class="ko-basic-label">结算：</label>
+                  <text class="ko-basic-money">{{ toYuan(item.finalAmount) }}元</text>
+                </uni-col>
+                <uni-col :span="24" v-if="!['fixedPrice', 'fixedPriceGroup'].includes(item.pricingMethod)">
+                  <label class="ko-basic-label">数量：</label>
+                  <text>{{ item.quantity }}</text>
+                </uni-col>
+                <uni-col :span="24">
+                  <label class="ko-basic-label">时间：</label>
+                  <text>{{ item.updateTime }}</text>
+                </uni-col>
+                <uni-col :span="24">
+                  <view style="display: flex; align-items: center;">
+                    <label class="ko-basic-label">员工：</label>
+                    <view style="flex: 1; display: flex; flex-wrap: wrap;">
+                      <view
+                        style="padding: 5px; display: flex; flex-direction: column; justify-content: center;align-items: center;"
+                        v-for="staff of getStaffListLogo(item)"
+                        :key="staff.id"
+                      >
+                        <uv-avatar
+                          :src="getImageUrl(staff.logo)"
+                          random-bg-color
+                          size="38"
+                          :text="staff.name"
+                        />
+                        <text style="font-size: 14px; color: #8f939c;padding-top: 5px;">{{ staff.name }}</text>
+                      </view>
+                    </view>
+                  </view>
+                </uni-col>
+                <uni-col :span="24">
+                  <label class="ko-basic-label">描述：</label>
+                  <text>{{ item.description || "-" }}</text>
+                </uni-col>
+              </uni-row>
             </view>
           </BasicCard>
         </view>
@@ -227,48 +362,8 @@ export default {
         :data="list"
         empty-text="暂无数据"
         stripe
-        @row-click="onJumpDetails($event, 'produce')"
-      >
-        <template #operate="{item, index}" v-if="isPerm('Produce_Write')">
-          <view style="display: flex; align-items: center; justify-content: center;">
-
-            <!-- <button
-               class="ko-basic-button__card"
-               v-if="['APPLY_MATERIAL'].includes(item.status)"
-               @click.stop="onFinish(item, index)"
-               :loading="item.__finish_loading__"
-               :disabled="item.__finish_loading__"
-             >
-               完成生产
-             </button>
-             <button
-               class="ko-basic-button__card"
-               v-if="['CREATED'].includes(item.status)"
-               @click.stop="onCancel(item, index)"
-               :loading="item.__cancel_loading__"
-               :disabled="item.__cancel_loading__"
-             >
-               取消工单
-             </button>
-             <button
-               class="ko-basic-button__card"
-               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-               @click.stop="onJump(item, index)"
-             >
-               修改
-             </button>
-             <button
-               class="ko-basic-button__card"
-               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-               @click.stop="onRemove(item, index)"
-               :loading="item.__r_loading__"
-               :disabled="item.__r_loading__"
-             >
-               删除
-             </button>-->
-          </view>
-        </template>
-      </KoTable>
+        :key="tableKey"
+      />
     </view>
     <!-- #endif -->
 
@@ -287,6 +382,17 @@ export default {
 
 <style scoped lang="scss">
 .ko-salary {
+  &__info {
+    font-size: 14px;
+    color: $uni-base-color;
+  }
 
+  // #ifdef H5
+  .ko-basic-count__wrap {
+    width: 1024px;
+    margin: 0 auto;
+  }
+
+  // #endif
 }
 </style>

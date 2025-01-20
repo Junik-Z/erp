@@ -155,6 +155,8 @@ export default {
           this.checkNode = _deepCopy(this.getUserInfo(this.checked[0]));
           this.$emit("input", this.checked[0]);
           this.modelVisible = false;
+
+          this.$emit('check-node', this.checkNode)
         }
         return false;
       }
@@ -180,6 +182,7 @@ export default {
         this.$emit("input", value);
         this.checkNode = this.multiple ? this.checked.map(this.getUserInfo) : this.getUserInfo(this.checked[0]);
         this.modelVisible = false;
+        this.$emit('check-node', this.checkNode)
       }
     },
     onClick() {

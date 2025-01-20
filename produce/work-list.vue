@@ -9,21 +9,26 @@ import {
   finishProduceApi,
   getProduceDetailApi,
   getProduceHistoryListApi,
+  getProduceInListApi,
   getProduceListApi,
+  pauseProduceApi,
   removeProduceApi,
 } from "@/api/erp/produce";
 import mixins from "@/mixins/mixins";
-import { _deepCopy, _isEmpty, _isEqual, _isString } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "@/produce/define";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import FastPopup from "./components/FastProduce/FastPopup.vue";
 
 export default {
   name: "WorkList",
   components: {
+    FastPopup,
     TopMenus,
     KoList,
     KoMovable,
@@ -38,7 +43,6 @@ export default {
     return {
       TabList,
 
-      isHistory: false,
       list: [],
       loading: false,
       queryList: {
@@ -60,14 +64,19 @@ export default {
           iconPath: "/static/images/icons/added.png",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing",
         },
+        // #ifdef H5
         {
           text: "定制",
           iconPath: "/static/images/icons/added.png",
           path: PageEnums.produceWork + "?ADDED_TYPE=xlsx",
         },
+        // #endif
       ],
 
       tableKey: +new Date(),
+
+      values: ["待生产", "生产中", "已完成"],
+      tab: 0,
 
       // #ifdef H5
       columns: [
@@ -77,19 +86,56 @@ export default {
           width: 80,
         },
         {
-          label: "工单单号",
+          label: "编号",
           prop: "orderCode",
-        },
-        {
-          label: "计划完成时间",
-          prop: "planFinishDate",
         },
         {
           label: "状态",
           prop: "status",
-          render: (h, {row}) => {
-            return h("div", {}, [_this.PRODUCE_STATUS_ENUMS(row.status)]);
+          render(h, {row}) {
+            return h("span", [_this.PRODUCE_STATUS_ENUMS(row.status)]);
           },
+        },
+        {
+          label: "总价",
+          prop: "totalAmount",
+          render(h, {row}) {
+            return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.totalAmount)]);
+          },
+        },
+        {
+          label: "提单用户",
+          prop: "user",
+          children: [
+            {
+              label: "头像",
+              prop: "user.avatar",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 64}})],
+                );
+              },
+            },
+            {
+              label: "昵称",
+              prop: "user.nickName",
+            },
+          ],
+        },
+        {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
+          label: "电话",
+          prop: "orderPhone",
+        },
+        {
+          label: "计划完成时间",
+          prop: "planFinishDate",
         },
         {
           label: "备注",
@@ -108,7 +154,13 @@ export default {
   onLoad() {
   },
   onShow() {
-    this.getList(true);
+    if (!uni.getStorageSync("TO_DETAILS")) {
+      this.getList(true);
+    }
+
+    setTimeout(() => {
+      uni.setStorageSync("TO_DETAILS", false);
+    }, 100);
   },
   onReachBottom() {
     this.onRequestNextPage();
@@ -136,7 +188,7 @@ export default {
       }
 
       this.loading = true;
-      const Func = this.isHistory ? getProduceHistoryListApi : getProduceListApi;
+      const Func = [getProduceInListApi, getProduceListApi, getProduceHistoryListApi][this.tab];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -156,8 +208,8 @@ export default {
       let query = "";
       this.noRefresh = true;
       if (row) {
-        const type = !_isEmpty(row.customizedMaterials) ? "xlsx" : !_isEmpty(row.customizedBoards) ? "packing" : "common";
-        query = `?id=${row.id}&ADDED_TYPE=${type}`;
+        // &ADDED_TYPE=${type} const type = !_isEmpty(row.customizedMaterials) ? "xlsx" : !_isEmpty(row.customizedBoards) ? "packing" : "common";
+        query = `?id=${row.id}`;
       }
       uni.navigateTo({
         url: PageEnums.produceWork + query,
@@ -182,17 +234,19 @@ export default {
         },
       });
     },
+
+    // 进入生产
     onDischarging(item, index) {
       uni.showModal({
         title: "温馨提示",
-        content: `请确认是否需要申请出料，出料后工单将无法修改。`,
+        content: `请确认是否需要进入生产，出料后工单将无法修改。`,
         success: (res) => {
           if (res.confirm) {
             this.$set(item, "__discharging_loading__", true);
-            applyMaterialProduceApi({id: item.id})
+            applyMaterialProduceApi({id: item.id, produceType: item.produceType})
               .then(() => {
                 uni.showToast({title: "申请成功"});
-                // this.getList(true);
+                this.$set(this.list[index], "status", "APPLY_MATERIAL");
               })
               .finally(() => {
                 this.$set(item, "__discharging_loading__", false);
@@ -222,6 +276,29 @@ export default {
       });
     },
 
+    // 完成生产
+    onPause(item, index) {
+      console.log(item.status === "PAUSED");
+      uni.showModal({
+        title: "温馨提示",
+        content: `您确定要${item.status === "PAUSED" ? "恢复" : "暂停"}生产吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            this.$set(this.list[index], "__pause_loading__", true);
+            pauseProduceApi(item)
+              .then(() => {
+                uni.showToast({title: "操作成功"});
+                this.$set(this.list, index, {...item, status: item.status === "PAUSED" ? "APPLY_MATERIAL" : "PAUSED"});
+              })
+              .finally(() => {
+                this.$set(this.list[index], "__pause_loading__", false);
+              });
+          }
+        },
+      });
+    },
+
+    // 删除
     onRemove(item, index) {
       uni.showModal({
         title: "温馨提示",
@@ -243,6 +320,7 @@ export default {
       });
     },
 
+    // 点击更多按钮
     onActionClick(item, index) {
       this.node = item;
       this.nodeIndex = index;
@@ -276,11 +354,15 @@ export default {
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
+
+    // 快捷生产
+    onApplyFast() {
+    },
   },
   computed: {
     // #ifdef H5
     getColumns() {
-      return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
+      return this.columns.filter(item => this.tab == 2 ? !_isEqual(item.label, "操作") : true);
     },
     // #endif
 
@@ -312,9 +394,9 @@ export default {
 
 <template>
   <view class="ko-client">
-    <TopMenus :tabs="TabList" :current="2" />
+    <TopMenus :tabs="TabList" :path="PageEnums.produceWorkList" />
 
-    <HistoryBar v-model="isHistory" text="生产" @change="getList(true)" />
+    <HistoryBar v-model="tab" :values="values" @change="getList(true)" />
 
     <!-- #ifdef MP -->
     <view>
@@ -324,28 +406,44 @@ export default {
             <view class="ko-client__info">
               <UniRow gutter="10">
                 <UniCol :span="24">
-                  <label class="ko-basic-label">计划编号：</label>
+                  <label class="ko-basic-label">编号：</label>
                   <text>{{ item.orderCode }}</text>
                 </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">原材料总值：</label>
-                  <text class="ko-basic-money"> {{ toYuan(item.totalRawMaterialAmount) }}元</text>
-                </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">成品总值：</label>
-                  <text class="ko-basic-money"> {{ toYuan(item.totalProductAmount) }}元</text>
-                </UniCol>
-                <UniCol :span="24" v-if="false">
-                  <label class="ko-basic-label">预计创造价值：</label>
-                  <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
+                <UniCol :span="24">
+                  <label class="ko-basic-label">状态：</label>
+                  <text>{{ PRODUCE_STATUS_ENUMS(item.status) }}</text>
                 </UniCol>
                 <UniCol :span="24">
-                  <label class="ko-basic-label">预计完成时间：</label>
+                  <label class="ko-basic-label">总价：</label>
+                  <text class="ko-basic-money">{{ toYuan(item.totalAmount) }}元</text>
+                </UniCol>
+                <UniCol :span="24">
+                  <view style="display: flex; align-items: center">
+                    <label class="ko-basic-label">提单用户：</label>
+                    <uv-avatar
+                      :src="getImageUrl(GET_FUNC(item,'user.avatar'))"
+                      :size="38"
+                      :text="GET_FUNC(item, 'user.nickName') || ''"
+                      random-bg-color
+                    />
+                    <text style="margin-left: 10px;">{{ GET_FUNC(item, "user.nickName") || "" }}</text>
+                  </view>
+                </UniCol>
+                <UniCol :span="24">
+                  <label class="ko-basic-label">地址：</label>
+                  <text>{{ item.orderAddress || "-" }}</text>
+                </UniCol>
+                <UniCol :span="24">
+                  <label class="ko-basic-label">电话：</label>
+                  <text>{{ item.orderPhone || "-" }}</text>
+                </UniCol>
+                <UniCol :span="24">
+                  <label class="ko-basic-label">计划完成时间：</label>
                   <text>{{ item.planFinishDate }}</text>
                 </UniCol>
-                <UniCol :span="24" v-if="isHistory">
-                  <label class="ko-basic-label">工单状态：</label>
-                  <text>{{ PRODUCE_STATUS_ENUMS(item.status) }}</text>
+                <UniCol :span="24">
+                  <label class="ko-basic-label">备注：</label>
+                  <text>{{ item.remark || "-" }}</text>
                 </UniCol>
               </UniRow>
               <view
@@ -359,9 +457,17 @@ export default {
                   :loading="item.__discharging_loading__"
                   :disabled="item.__discharging_loading__"
                 >
-                  申请出料
+                  进入生产
                 </button>
-
+                <button
+                  class="ko-basic-button__card"
+                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+                  @click.stop="onPause(item, index)"
+                  :loading="item.__pause_loading__"
+                  :disabled="item.__pause_loading__"
+                >
+                  {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
+                </button>
                 <button
                   class="ko-basic-button__card"
                   v-if="['APPLY_MATERIAL'].includes(item.status)"
@@ -371,7 +477,6 @@ export default {
                 >
                   完成生产
                 </button>
-
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item, index)"
@@ -406,7 +511,16 @@ export default {
               :loading="item.__discharging_loading__"
               :disabled="item.__discharging_loading__"
             >
-              申请出料
+              进入生产
+            </button>
+            <button
+              class="ko-basic-button__card"
+              v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+              @click.stop="onPause(item, index)"
+              :loading="item.__pause_loading__"
+              :disabled="item.__pause_loading__"
+            >
+              {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
             </button>
             <button
               class="ko-basic-button__card"
@@ -431,7 +545,7 @@ export default {
               v-if="['CREATED', 'CANCELLED'].includes(item.status)"
               @click.stop="onJump(item, index)"
             >
-              修改
+              编辑
             </button>
             <button
               class="ko-basic-button__card"
@@ -454,6 +568,8 @@ export default {
       @click="onAddedJump"
     />
 
+    <FastPopup ref="FPRef" @apply-fast="onApplyFast" />
+
     <!-- #ifdef MP -->
     <UvActionSheet
       ref="UASRef"
@@ -470,10 +586,6 @@ export default {
 <style scoped lang="scss">
 .ko-client {
   width: 100%;
-
-  .ko-basic-button__card {
-    margin: 5px;
-  }
 
   :deep(.uni-list-item__container ) {
     display: block;

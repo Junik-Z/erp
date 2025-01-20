@@ -89,7 +89,7 @@ export default {
           <image :src="qrimage" mode="widthFix" />
           <!-- #ifdef H5 -->
           <view class="ko-login__qrcode--loading" v-if="loading">
-            <UvLoadingIcon :size="20" />
+            <UvLoadingIcon :size="40" />
           </view>
           <!-- #endif -->
         </view>

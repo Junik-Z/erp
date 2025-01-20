@@ -11,6 +11,7 @@ import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import { _flattenDeep, _get, _groupBy, _keys } from "@/utils";
 import TopMenus from "./components/TopMenus.vue";
 import { getProduceStatisticsApi } from "@/api/erp/produce";
+import { PageEnums } from "@/utils/config";
 
 export default {
   name: "ViewVersion",
@@ -25,47 +26,61 @@ export default {
     TopMenus,
   },
   mixins: [mixins],
-  data: () => ({
-    TabList,
-    CountList: [
-      {
-        label: "已生产单数",
-        key: "producedProduceCount",
-        color: "#2979ff",
-        unit: "单",
+  data() {
+    return {
+      TabList,
+      CountList: [
+        {
+          label: "已生产单数",
+          key: "producedProduceCount",
+          color: "#2979ff",
+          unit: "单",
+          // #ifdef H5
+          span: 6,
+          // #endif
+        },
+        {
+          label: "待生产单数",
+          key: "pendingProduceCount",
+          color: "#2979ff",
+          unit: "单",
+          // #ifdef H5
+          span: 6,
+          // #endif
+        },
+        {
+          label: "商品存量",
+          key: "productStock",
+          color: "#2979ff",
+          // #ifdef H5
+          span: 6,
+          // #endif
+        },
+        {
+          label: "产品库存预警",
+          key: "productStockWarning",
+          color: "#e43d33",
+          unit: "",
+          func: "onJumpWarning",
+          // #ifdef H5
+          span: 6,
+          // #endif
+        },
+      ],
+      loading: false,
+      data: {
+        "productStock": 0,
+        "productStockWarning": 0,
+        "pendingProduceCount": 0,
+        "producedProduceCount": 0,
+        "warningTrend": [],
+        "halfYearProduce": [],
       },
-      {
-        label: "待生产单数",
-        key: "pendingProduceCount",
-        color: "#2979ff",
-        unit: "单",
-      },
-      {
-        label: "商品存量",
-        key: "productStock",
-        color: "#2979ff",
-      },
-      {
-        label: "产品库存预警",
-        key: "productStockWarning",
-        color: "#e43d33",
-        unit: "",
-        func: "onJumpWarning",
-      },
-    ],
-    loading: false,
-    data: {
-      "productStock": 0,
-      "productStockWarning": 0,
-      "pendingProduceCount": 0,
-      "producedProduceCount": 0,
-      "warningTrend": [],
-      "halfYearProduce": [],
-    },
 
-    halfYearProduce: {},
-    warningTrend: {},
-  }),
+      halfYearProduce: {},
+      warningTrend: {},
+    };
+  },
   onShow() {
     this.getList();
   },
@@ -152,13 +167,15 @@ export default {
     },
   },
   computed: {
+    PageEnums() {
+      return PageEnums;
+    },
     getCountValue() {
       return (item) => {
         const value = _get(this.data, item.key);
         return item.unit === "元" ? this.toYuan(value) : value;
       };
     },
-
     getOptions() {
       return {
         ...this.getBasicChartsOptions(this.warningTrend),
@@ -196,7 +213,7 @@ export default {
 
 <template>
   <view class="ko-purchase">
-    <TopMenus :tabs="TabList" :current="0" />
+    <TopMenus :tabs="TabList" :path="PageEnums.produce" />
 
     <view class="ko-view-version">
       <view class="ko-basic-count__wrap">

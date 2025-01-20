@@ -39,6 +39,8 @@ export default {
     hidePrices: Boolean,
     // 实际付款金额
     isActual: Boolean,
+
+    isWork: Boolean,
   },
   data() {
     const _this = this;
@@ -170,7 +172,7 @@ export default {
             list: this.list,
             type: this.type,
             isClient: this.isClient,
-            hidePrices: this.hidePrices,
+            hidePrices: this.hidePrices || this.isWork,
             takeOverName: this.takeOverName,
           });
         },
@@ -272,10 +274,10 @@ export default {
               <label class="ko-basic-label">名称：</label>
               {{ item.name }}
             </UniCol>
-            <UniCol :span="24" v-if="item.price !== 0 && !hidePrices">
+            <UniCol :span="24" v-if="item.price !== 0 && !hidePrices || isWork">
               <view style="display: flex; align-items: center;">
                 <label class="ko-basic-label">单价：</label>
-                <text class="ko-basic-money" v-if="isClient">{{ toYuan(item.price) }} 元</text>
+                <text class="ko-basic-money" v-if="isClient || isWork">{{ toYuan(item.price) }} 元</text>
                 <view v-else class="ko-basic-money" style="display: flex; align-items: center;">
                   <view style="margin-right: 5px">
                     <UniNumberBox

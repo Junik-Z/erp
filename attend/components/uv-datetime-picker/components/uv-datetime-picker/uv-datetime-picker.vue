@@ -207,7 +207,7 @@ export default {
       const formatter = this.formatter || this.innerFormatter;
       if (this.mode === "time") {
         // 将time模式的时间用:分隔成数组
-        const timeArr = value.split(":");
+        const timeArr = value?.split?.(":") || [];
         // 使用formatter格式化方法进行管道处理
         values = [formatter("hour", timeArr[0]), formatter("minute", timeArr[1])];
       } else {

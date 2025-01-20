@@ -1,0 +1,296 @@
+<script>
+import { _get, _isEqual } from "@/utils";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import mixins from "@/mixins/mixins";
+import ProductCard from "@/components/ProductCard/ProductCard.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import { getProduceDetailApi, getProduceOrderDetailApi } from "@/api/erp/produce";
+import { getProductFieldApi } from "@/api/erp/product";
+import FeesList from "../components/FeesList/FeesList.vue";
+import CraftProcesses from "./pages/CraftProcesses.vue";
+import BinPacking from "./pages/BinPacking.vue";
+import CustomTable from "./pages/CustomTable.vue";
+
+export default {
+  name: "DetailsOrder",
+  mixins: [mixins],
+  components: {CustomTable, BinPacking, FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection, CraftProcesses},
+  onLoad(option) {
+    this.option = option;
+
+    this.getFieldList();
+    this.getList();
+  },
+  data() {
+    return {
+      option: {},
+      node: {},
+      // 财务订单
+      isFinance: false,
+      // 配送订单
+      isLogistics: false,
+
+      FieldList: [],
+    };
+  },
+  methods: {
+    getList() {
+      this.loading = true;
+      const isSale = _isEqual(this.option.FORM, "SALE");
+
+      const Func = isSale ? getProduceOrderDetailApi : getProduceDetailApi;
+
+      Func({[isSale ? "orderCode" : "id"]: this.option.id})
+        .then(res => {
+          this.node = res.data;
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+
+    getFieldList() {
+      getProductFieldApi({pageSize: 1000000, pageNum: 0}).then(res => {
+        uni.$__FIELD_LIST__ = res.data;
+
+        this.FieldList = res.data;
+      });
+    },
+  },
+  computed: {
+    // #ifdef H5
+    columnsList() {
+      const _this = this;
+      return (flag) => [
+        {
+          label: "序号",
+          type: "index",
+          width: 60,
+        },
+        {
+          label: "图片",
+          prop: "images",
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: _this.getImageUrl(_get(row, "images")),
+                  size: 64,
+                  text: _get(row, "name") || _this.GET_SHOP_NAME,
+                  shape: "square",
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "产品名称",
+          prop: "name",
+        },
+        ...(this.FieldList.map(item => ({
+          label: item.fieldName,
+          prop: `extend.${item.fieldCode}`,
+        }))),
+        {
+          label: "单价(元)",
+          prop: "price",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.price)}`);
+          },
+        },
+        {
+          label: "数量",
+          prop: "productQuantity",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, row.productQuantity);
+          },
+        },
+      ].filter(item => !(flag && _isEqual(item.prop, "price")));
+    },
+    // #endif
+  },
+};
+</script>
+
+<template>
+  <view class="ko-details ko-basic-added-form">
+    <UniSection title="基础信息" type="line">
+      <view class="ko-details__item">
+        <view class="ko-details__cell">
+          <label class="ko-basic-label">编号：</label>
+          <text class="ko-details__cell--text">{{ node.orderCode }}</text>
+        </view>
+        <view class="ko-details__cell" v-if="node.orderType">
+          <label class="ko-basic-label">类型：</label>
+          <text class="ko-details__cell--text">{{ ORDER_TYPE_ENUMS(node.orderType) }}</text>
+        </view>
+        <view class="ko-details__cell">
+          <label class="ko-basic-label">状态：</label>
+          <text class="ko-details__cell--text">{{ ORDER_STATUS_ENUMS(node.status) }}</text>
+        </view>
+        <view class="ko-details__cell">
+          <label class="ko-basic-label">下单时间：</label>
+          <text class="ko-details__cell--text">{{ node.createTime || "-" }}</text>
+        </view>
+        <view class="ko-details__cell">
+          <label class="ko-basic-label">计划完工日期：</label>
+          <text class="ko-details__cell--text">{{ node.planFinishDate || "-" }}</text>
+        </view>
+      </view>
+    </UniSection>
+
+    <!-- 生产订单 -->
+    <UniSection title="材料明细" type="line" v-if="!isEmpty(node.materialDetails)">
+      <view class="ko-details__item">
+        <!-- #ifdef MP -->
+        <view class="ko-details__cell" v-for="item of node.materialDetails" :key="item.id">
+          <ProductCard
+            style="width: 100%;"
+            :node="item"
+            readonly
+            hide-prices
+          />
+        </view>
+        <!-- #endif -->
+
+        <!-- #ifdef H5 -->
+        <view style="padding: 10px;">
+          <KoTable
+            :columns="columnsList(true)"
+            :data="node.materialDetails"
+            empty-text="暂无数据"
+            stripe
+          />
+        </view>
+        <!-- #endif -->
+
+        <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
+          <label class="ko-basic-label">共计：</label>
+          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalRawMaterialAmount) }}元</text>
+        </view>
+      </view>
+    </UniSection>
+
+    <UniSection title="板材切割" type="line" v-if="!isEmpty(node.customizedBoards)">
+      <view class="ko-details__item">
+        <BinPacking readonly :value="node.customizedBoards[0]" />
+      </view>
+    </UniSection>
+
+    <UniSection title="定制生产" type="line" v-if="!isEmpty(node.customizedMaterials)">
+      <view class="ko-details__item">
+        <CustomTable readonly :value="GET_FUNC(node, 'customizedMaterials.0.customTable')" />
+      </view>
+    </UniSection>
+
+    <UniSection title="生产工艺" type="line" v-if="!isEmpty(GET_FUNC(node, 'craftProcesses.0'))">
+      <view class="ko-details__item">
+        <CraftProcesses :value="node.craftProcesses" readonly />
+      </view>
+    </UniSection>
+
+    <UniSection title="产品明细" type="line" v-if="!isEmpty(node.productDetails)">
+      <view class="ko-details__item">
+        <!-- #ifdef MP -->
+        <view class="ko-details__cell" v-for="item of node.productDetails" :key="item.id">
+          <ProductCard
+            style="width: 100%;"
+            :node="item"
+            readonly
+            hide-prices
+          />
+        </view>
+        <!-- #endif -->
+
+        <!-- #ifdef H5 -->
+        <view style="padding: 10px;">
+          <KoTable
+            :columns="columnsList(true)"
+            :data="node.productDetails"
+            empty-text="暂无数据"
+            stripe
+          />
+        </view>
+        <!-- #endif -->
+
+        <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
+          <label class="ko-basic-label">共计：</label>
+          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalProductAmount) }}元</text>
+        </view>
+      </view>
+    </UniSection>
+
+    <UniSection title="提单用户" type="line">
+      <view class="ko-details__item">
+        <UniRow>
+          <UniCol :span="24" v-if="GET_FUNC(node, 'user.avatar')">
+            <view style="display: flex;justify-content: center;align-items: center" class="ko-details__cell">
+              <UvAvatar :size="64" :src="getImageUrl(GET_FUNC(node, 'user.avatar'))" />
+            </view>
+          </UniCol>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">名称：</label>
+              <text class="ko-details__cell--text">{{ GET_FUNC(node, "user.nickName") || "-" }}</text>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </UniSection>
+
+    <UniSection title="其它信息" type="line">
+      <view class="ko-details__item">
+        <UniRow>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">电话：</label>
+              <text class="ko-details__cell--text">{{ node.orderPhone || "-" }}</text>
+            </view>
+          </UniCol>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">地址：</label>
+              <text class="ko-details__cell--text">{{ node.orderAddress || "-" }}</text>
+            </view>
+          </UniCol>
+          <UniCol :span="24">
+            <view class="ko-details__cell">
+              <label class="ko-basic-label">备注：</label>
+              <text class="ko-details__cell--text">{{ node.remark || "-" }}</text>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </UniSection>
+  </view>
+</template>
+
+<style scoped lang="scss">
+.ko-details {
+  padding-bottom: 50px;
+
+  &__item {
+    padding: 15px;
+  }
+
+  &__cell {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .ko-basic-label {
+      margin-right: 10px;
+    }
+
+    &--text {
+      @include basic-text-ellipsis(2);
+    }
+  }
+}
+</style>

@@ -5,6 +5,7 @@ import { checkinApi, getAttendanceListApi, getAttendanceSettingApi, settingApi }
 import { PageEnums } from "@/utils/config";
 import PickerDate from "@/attend/components/PickerDate.vue";
 import { _deepCopy, _pick, CustomToast } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 const day = dayjs();
 
@@ -45,6 +46,7 @@ export default {
     this.updateTime();
     this.getAttendList();
   },
+  mixins: [mixins],
   methods: {
     // 更新时间
     updateTime() {
@@ -75,7 +77,7 @@ export default {
     getAttendList() {
       getAttendanceListApi(this.attendQuery)
         .then(res => {
-          console.log(res.data);
+          console.log("考勤记录", res.data);
           const data = res.data;
 
           // 获取今天的记录
@@ -155,15 +157,40 @@ export default {
 
     // 处理打卡
     onCheckin() {
-      checkinApi()
-        .then(res => {
-          console.log(res);
-          CustomToast({
-            title: "打卡成功",
-          });
-        })
-        .finally(() => {
-        });
+      uni.scanCode({
+        onlyFromCamera: true,
+        success(res) {
+          // console.log("条码类型：" + res.scanType);
+          // console.log("条码内容：" + res.result);
+
+          console.log(res.result);
+
+          checkinApi({sign: res.result})
+            .then(res => {
+              console.log(res);
+              CustomToast({
+                title: "打卡成功",
+              });
+            })
+            .finally(() => {
+            });
+
+        },
+      });
+    },
+
+    // 跳转到员工管理
+    onJumpStaff() {
+      uni.navigateTo({
+        url: PageEnums.produceStaff + "?isNotMenu=true",
+      });
+    },
+
+    // 跳转二维码
+    onJumpCheckIn() {
+      uni.navigateTo({
+        url: PageEnums.attendCheckIn,
+      });
     },
   },
   onUnload() {
@@ -187,11 +214,11 @@ export default {
     // 标记是否打卡
     getSelected() {
       return [
-        {
+        /* {
           date: "2025-01-16",
           info: "已打卡",
           // badgeBgc: '#4177f6'
-        },
+        }, */
       ];
     },
 
@@ -210,6 +237,13 @@ export default {
 
 <template>
   <view class="ko-attend">
+    <view class="ko-attend__set" v-if="isPerm('Product_Write')">
+      <button class="ko-basic-button__card" @click="onJumpStaff">员工管理</button>
+      <button class="ko-basic-button__card" @click="onJumpRecord">记录</button>
+      <button class="ko-basic-button__card" @click="onSetCheckIn">设置</button>
+      <button class="ko-basic-button__card" @click="onJumpCheckIn">二维码</button>
+    </view>
+
     <view class="ko-attend__check-in">
       <view class="ko-attend__check" :class="[getCheckInStatus]" @click="onCheckin">
         <view class="ko-attend__check--title">上班打卡</view>
@@ -221,10 +255,7 @@ export default {
         <view class="ko-attend__check--desc">{{ getDescText }}</view>
       </view>
 
-      <view class="ko-attend__set">
-        <button class="ko-basic-button__card" @click="onJumpRecord">记录</button>
-        <button class="ko-basic-button__card" @click="onSetCheckIn">设置</button>
-      </view>
+      <button class="ko-basic-button__card" @click="onCheckin">上班打卡</button>
     </view>
 
     <view class="ko-attend__calendar">
@@ -234,6 +265,25 @@ export default {
         @monthSwitch="onMonthSwitch"
         :selected="getSelected"
       />
+    </view>
+
+    <view class="ko-attend__footer">
+      <view class="ko-attend__in">
+        <view class="ko-attend__in--item">
+          <view class="ko-attend__in--item--time">09:00</view>
+          <view class="ko-attend__in--item--info">
+            <view>上班</view>
+            <view style="font-size: 12px;color: #c7c9ce;">08:34</view>
+          </view>
+        </view>
+        <view class="ko-attend__in--item">
+          <view class="ko-attend__in--item--time">09:00</view>
+          <view class="ko-attend__in--item--info" style="border-bottom: none;">
+            <view>下班</view>
+            <view style="font-size: 12px;color: #c7c9ce;">16:34</view>
+          </view>
+        </view>
+      </view>
     </view>
 
     <BasicPopup
@@ -281,19 +331,26 @@ export default {
 }
 
 .ko-attend {
+  position: relative;
+
   &__check-in {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 260px;
-
     position: relative;
+    padding: 70px 10px 30px;
+
+    .ko-basic-button__card {
+      margin-top: 20px;
+    }
   }
 
   &__set {
     position: absolute;
     right: 10px;
     top: 10px;
+    z-index: 99;
     display: flex;
     justify-content: center;
     border-radius: 20px;
@@ -304,18 +361,16 @@ export default {
       border-radius: 0;
       position: relative;
 
-      &:first-child {
-        &:before {
-          content: " ";
-          height: 30%;
-          width: 1px;
-          background: #fff;
+      &:before {
+        content: " ";
+        height: 30%;
+        width: 1px;
+        background: #fff;
 
-          position: absolute;
-          right: 0;
-          top: 50%;
-          transform: translateY(-50%);
-        }
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
       }
 
       &:last-child {
@@ -328,8 +383,8 @@ export default {
   }
 
   &__check {
-    height: 160px;
-    width: 160px;
+    height: 140px;
+    width: 140px;
     border: 6px solid #4177f6;
     border-radius: 50%;
 
@@ -362,6 +417,30 @@ export default {
   &__calendar {
     padding: 0 10px;
     border-top: 1px solid #e9e9eb;
+  }
+
+  &__footer {
+    padding: 20px 10px 50px;
+  }
+
+  &__in {
+
+    &--item {
+      display: flex;
+      align-items: center;
+
+      &--time {
+        font-size: 18px;
+        width: 110px;
+        text-align: center;
+      }
+
+      &--info {
+        flex: 1;
+        border-bottom: 1px solid #e9e9eb;
+        padding: 20px 0;
+      }
+    }
   }
 
   // #ifdef H5

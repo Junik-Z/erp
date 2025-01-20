@@ -239,6 +239,12 @@
       "root": "produce",
       "pages": [
         {
+          "path": "loading",
+          "style": {
+            "navigationBarTitleText": "生产"
+          }
+        },
+        {
           "path": "produce",
           "style": {
             "navigationBarTitleText": "生产"
@@ -279,7 +285,21 @@
         {
           "path": "factory",
           "style": {
-            "navigationBarTitleText": "工艺",
+            "navigationBarTitleText": "生产流程",
+            "disableScroll": false
+          }
+        },
+        {
+          "path": "details",
+          "style": {
+            "navigationBarTitleText": "生产工单详情",
+            "disableScroll": false
+          }
+        },
+        {
+          "path": "complete-process",
+          "style": {
+            "navigationBarTitleText": "员工生产记录",
             "disableScroll": false
           }
         }
@@ -315,6 +335,12 @@
           "path": "record",
           "style": {
             "navigationBarTitleText": "考勤记录"
+          }
+        },
+        {
+          "path": "check-in",
+          "style": {
+            "navigationBarTitleText": "扫码打卡"
           }
         }
       ]

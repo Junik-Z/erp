@@ -14,11 +14,13 @@ const RenderDom = {
       type: Object,
       default: null,
     },
+    columnIndex: Number,
   },
   render(h) {
     const params = {
       row: this.row,
       index: this.index,
+      columnIndex: this.columnIndex,
     };
     if (this.column) params.column = this.column;
     return this.render(h, params);
@@ -44,6 +46,8 @@ export default {
     loading: Boolean,
 
     noRefresh: Boolean,
+
+    noPaddingBottom: Boolean,
   },
   directives: {
     InfiniteScroll,
@@ -86,6 +90,19 @@ export default {
     onInfiniteLoad() {
       !this.noMore && this.$emit("next-load");
     },
+
+    onRowContextmenu(...arg) {
+      this.$emit("row-contextmenu", ...arg);
+    },
+    onHeaderContextmenu(...arg) {
+      this.$emit("header-contextmenu", ...arg);
+    },
+    onCellClick(...arg) {
+      this.$emit("cell-click", ...arg);
+    },
+    onHeaderClick(...arg) {
+      this.$emit("header-click", ...arg);
+    },
   },
   computed: {
     getElementTableProps() {
@@ -109,44 +126,55 @@ export default {
     :infinite-scroll-distance="200"
     ref="WrapRef"
   >
-    <div style="padding-bottom: 40px;">
+    <div :style="{paddingBottom: noPaddingBottom ? 0 : '40px'}">
       <ElTable
         v-bind="getElementTableProps"
         @row-click="onRowClick"
+        @row-contextmenu="onRowContextmenu"
+        @header-contextmenu="onHeaderContextmenu"
+        @cell-click="onCellClick"
+        @header-click="onHeaderClick"
       >
         <ElTableColumn
           v-for="(item, index) of columns"
           :key="index"
           v-bind="getColBind(item)"
         >
-          <template v-if="item.renderHeader" #header="{column, $index}">
+          <!--<template v-if="item.renderHeader" #header="{column, $index}">
             <RenderDom v-if="item.renderHeader" :column="column" :index="$index" :render="item.renderHeader" />
-          </template>
+          </template>-->
 
-          <template v-if="item.render || item.slot" #default="{row, column, $index}">
+          <template v-if="(item || {}).render || (item || {}).slot" #default="{row, column, $index}">
             <slot v-if="item.slot" :name="item.slot" :item="row" :column="column" :index="$index"></slot>
             <RenderDom
-              v-if="item.render && !item.slot"
+              v-if="(item || {}).render && !item.slot"
               :row="row"
               :column="column"
               :index="$index"
               :render="item.render"
+              :column-index="index"
             />
           </template>
 
-          <template v-if="item.children">
+          <template v-if="(item || {}).children">
             <ElTableColumn
               v-for="(child, jIndex) of item.children"
               :key="index + '————' + jIndex"
               v-bind="getColBind(child)"
             >
-              <template v-if="child.renderHeader" #header="{column, $index}">
-                <RenderDom v-if="child.renderHeader" :column="column" :index="$index" :render="item.renderHeader" />
-              </template>
+              <!--  <template v-if="child.renderHeader" #header="{column, $index}">
+                  <RenderDom v-if="child.renderHeader" :column="column" :index="$index" :render="item.renderHeader" />
+                </template>-->
 
               <template v-if="child.render || child.slot" #default="{row, column, $index}">
                 <slot v-if="child.slot" :name="child.slot" :item="row" :column="column" :index="$index"></slot>
-                <RenderDom v-if="child.render" :row="row" :column="column" :index="$index" :render="child.render" />
+                <RenderDom
+                  v-if="(child || {}).render"
+                  :row="row"
+                  :column="column"
+                  :index="$index"
+                  :render="child.render"
+                />
               </template>
             </ElTableColumn>
           </template>

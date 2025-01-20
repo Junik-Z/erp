@@ -12,6 +12,17 @@ export function getProduceListApi(data) {
 }
 
 /**
+ * @description 获取生产中列表
+ */
+export function getProduceInListApi(data) {
+  return request({
+    url: "/produce/pending",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取生产历史订单列表
  */
 export function getProduceHistoryListApi(data) {
@@ -194,6 +205,198 @@ export function getWorkingListApi(data) {
   return request({
     url: "/craft/working",
     method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 申请结算当前工艺
+ */
+export function applySettleApi(data) {
+  return request({
+    url: "/craft/applySettle",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 取消结算工艺
+ */
+export function cancelSettleApi(data) {
+  return request({
+    url: "/craft/cancelSettle",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 确认结算工艺
+ */
+export function confirmSettleApi(data) {
+  return request({
+    url: "/craft/confirmSettle",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 更新生产工艺
+ */
+export function craftUpdateApi(data) {
+  return request({
+    url: "/craft/update",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 暂停/恢复生产
+ */
+export function pauseProduceApi(data) {
+  return request({
+    url: "/produce/pause",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 获取快捷生产列表
+ */
+export function getQuickListApi(data) {
+  return request({
+    url: "/quick/produce/list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除快捷生产
+ */
+export function removeQuickApi(data) {
+  return request({
+    url: "/quick/produce/delete",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 添加快捷生产
+ */
+export function addedQuickApi(data) {
+  return request({
+    url: "/quick/produce/add",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除快捷生产
+ */
+export function detailQuickApi(data) {
+  return request({
+    url: "/quick/produce/detail",
+    method: "get",
+    data,
+  });
+}
+
+
+/**
+ * @description 获取快捷工艺列表
+ */
+export function getCraftListApi(data) {
+  return request({
+    url: "/quick/craft/list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除快捷工艺
+ */
+export function removeCraftApi(data) {
+  return request({
+    url: "/quick/craft/delete",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 添加快捷工艺
+ */
+export function addedCraftApi(data) {
+  return request({
+    url: "/quick/craft/add",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除快捷工艺
+ */
+export function detailCraftApi(data) {
+  return request({
+    url: "/quick/craft/detail",
+    method: "get",
+    data,
+  });
+}
+
+// -------------------
+
+/**
+ * @description 获取生产工单详情
+ */
+export function getOrderCodeDetailApi(data) {
+  return request({
+    url: "/sale/produce/produceConvertSaleOrder",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取生产工单销售详情
+ */
+export function getProduceOrderDetailApi(data) {
+  return request({
+    url: "/sale/produce/detail",
+    method: "get",
+    data,
+  });
+}
+
+
+/**
+ * @description 新增销售工单
+ */
+export function addedSaleProduceApi(data) {
+  return request({
+    url: "/sale/produce/add",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 编辑销售工单
+ */
+export function updateSaleProduceApi(data) {
+  return request({
+    url: "/sale/produce/update",
+    method: "post",
     data,
   });
 }

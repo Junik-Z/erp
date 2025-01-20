@@ -169,6 +169,7 @@
 import uCharts from "../../js_sdk/u-charts/u-charts.js";
 import cfu from "../../js_sdk/u-charts/config-ucharts.js";
 import { addUnit } from "@/utils";
+import QiunLoading from "../qiun-loading/qiun-loading.vue";
 
 // #ifdef APP-VUE || H5
 import cfe from "../../js_sdk/u-charts/config-echarts.js";
@@ -246,6 +247,9 @@ function debounce(fn, wait) {
 export default {
   name: "qiun-data-charts",
   mixins: [uniCloud.mixinDatacom],
+  // #ifdef H5
+  components: {QiunLoading},
+  // #endif
   props: {
     type: {
       type: String,

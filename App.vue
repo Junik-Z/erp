@@ -6,6 +6,8 @@ import { PageEnums } from "@/utils/config";
 
 export default {
   async onLaunch(option) {
+    uni.setStorageSync("TO_DETAILS", false);
+
     const {query: _query} = option || {};
     console.log("App.vue", _query, option, option.path);
 

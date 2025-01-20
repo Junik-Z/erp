@@ -54,3 +54,14 @@ export function settingApi(data) {
     data,
   });
 }
+
+/**
+ * @description 二维码密钥
+ */
+export function showQRCodeApi(data) {
+  return request({
+    url: "/attendance/showQRCode",
+    method: "get",
+    data,
+  });
+}

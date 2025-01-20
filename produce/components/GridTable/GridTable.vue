@@ -1,16 +1,9 @@
 <script>
-import { _debounce, _deepCopy, _get, _isEmpty, _isEqual, _sum, getAllRect } from "@/utils";
+import { _debounce, _deepCopy, _get, _isEmpty, _isEqual, _sum, _toFinite, getAllRect, getRect } from "@/utils";
 
-// 获取包含的坐标
-function calculateCoveredCoordinatesByRow(x_start, x_end, y_start, y_end) {
-  const coveredCoordinates = [];
-  for (let x = x_start; x < x_end; x++) {
-    for (let y = y_start; y < y_end; y++) {
-      coveredCoordinates.push([x, y]);
-    }
-  }
-  return coveredCoordinates;
-}
+
+import UvCheckbox from "../uv-checkbox/components/uv-checkbox/uv-checkbox.vue";
+import { calculateCoveredCoordinatesByRow } from "@/produce/pages/calculate";
 
 // 移动步长
 const MOVE_STEP = 20;
@@ -36,6 +29,7 @@ export default {
     notEdit: Boolean,
     noMore: Boolean,
   },
+  components: {UvCheckbox},
   data() {
     return {
       isPC: false,
@@ -48,6 +42,8 @@ export default {
 
       // 所有本组件用的配置参数
       EditObj: {},
+
+      tableWidth: 370,
     };
   },
   watch: {
@@ -92,6 +88,12 @@ export default {
     this.isPC = this.IsPC();
     // #endif
 
+    setTimeout(() => {
+      getRect(".ko-table__thead", this)
+        .then(res => {
+          this.tableWidth = res?.width;
+        });
+    }, 100);
   },
   methods: {
     // 预处理列表数据
@@ -267,7 +269,7 @@ export default {
     rootStyle() {
       return {
         "--table-col": "auto ".repeat(this.thead?.length).trim(),
-        "--table-width": _sum(this.thead.map(v => (v.width) + 1)) - 1 + "px",
+        "--table-width": Math.max(_sum(this.thead.map(v => v.width)) + 1, this.tableWidth) + "px",
       };
     },
     getThCellStyle() {
@@ -338,6 +340,10 @@ export default {
     get() {
       return _get;
     },
+
+    toNumber() {
+      return _toFinite;
+    },
   },
 };
 </script>
@@ -401,6 +407,12 @@ export default {
               <view class="ko-table__cell" v-else-if="column.type === 'more'">
                 <button @click.stop="onMoreButton(item, index, column, j)" class="ko-basic-button__card">更多</button>
               </view>
+              <view class="ko-table__cell" v-else-if="column.type === 'checkbox'">
+                <UvCheckbox is-alone :value="get(item, column.prop)" readonly />
+              </view>
+              <view class="ko-table__cell" v-else-if="column.type === 'number'">
+                {{ toNumber(get(item, column.prop)) }}
+              </view>
               <view class="ko-table__cell" v-else :class="{'is-edit': getTbodyIsEdit(item, column, index, j)}">
                 <uni-easyinput
                   :clearable="false"
@@ -416,17 +428,13 @@ export default {
               </view>
             </view>
           </block>
+        </view>
 
-          <view
-            v-if="noMore"
-            class="ko-table__tr"
-            :style="{width: 'auto', 'grid-area': `1/1/1/span ${columns.length}`, color: '#c7c9ce'}"
-          >
-            <view class="ko-table__cell">
-              还没有添加任何材料
-            </view>
-          </view>
-
+        <view
+          v-if="noMore"
+          class="ko-table__no-more"
+        >
+          还没有添加任何材料
         </view>
       </view>
     </scroll-view>
@@ -543,6 +551,16 @@ $thead-padding: 6px 8px;
     .ko-basic-button__card {
       padding: 4px 10px;
     }
+  }
+
+  &__no-more {
+    color: #c7c9ce;
+    width: calc(var(--table-width, 100%) - 0px);
+    border: 1px solid $border-color;
+    border-top: none;
+    padding: 10px;
+    text-align: center;
+    font-size: 12px;
   }
 }
 </style>

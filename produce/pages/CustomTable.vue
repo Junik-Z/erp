@@ -1,9 +1,12 @@
 <script>
+/* #ifdef H5 */
+import H5Table from "@/produce/components/H5Table.vue";
+/* #endif */
 import GridTable from "../components/GridTable/GridTable.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
-import { _debounce, _deepCopy, _generateUUID, _get, _isEqual, _pick, _set, _isEmpty } from "@/utils";
+import { _debounce, _deepCopy, _generateUUID, _get, _isEmpty, _isEqual, _pick, _set } from "@/utils";
 
 const PopupEnum = {
   addedColumn: {
@@ -23,41 +26,46 @@ const PopupEnum = {
   },
 };
 
-const letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-
 const columns = [];
 
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 6; i++) {
   columns.push({
-    label: letter[i],
-    width: 100,
+    label: "",
     prop: _generateUUID(),
   });
 }
 
 const DefaultList = [];
 
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 10; i++) {
   const obj = {};
-  /* columns.forEach(column => {
-    obj[column.prop] = "";
-  }); */
   DefaultList.push(obj);
 }
 
 export default {
   name: "CustomTable",
-  components: {KoMovable, GridTable, UvActionSheet, UniNumberBox},
+  components: {
+    // #ifdef H5
+    H5Table,
+    // #endif
+
+    KoMovable,
+    GridTable,
+    UvActionSheet,
+    UniNumberBox,
+  },
   props: {
     value: {
       type: String,
       default: "",
     },
+    readonly: Boolean,
   },
   data() {
     return {
-      columns: [{label: "序号", type: "index", prop: "_$index_", width: 50}, ..._deepCopy(columns)],
+      columns: _deepCopy(columns),
       list: _deepCopy(DefaultList),
+
       // 动作类型：added: 添加新组件；
       sheetType: "added",
 
@@ -76,18 +84,27 @@ export default {
         colspan: 0,
         rowspan: 0,
       },
+
+      // 外部更新的阀门
+      isExternalUpdatesFlag: false,
+      // 内部向外部更新数据的阀门
+      isToOutsideFlag: false,
     };
   },
   watch: {
     changeData: {
       handler() {
-        this.watchChangeData();
+        if (this.isExternalUpdatesFlag) return false;
+        this.isToOutsideFlag = true;
+        this.emitValue();
       },
       deep: true,
     },
 
     value: {
       handler() {
+        if (this.isToOutsideFlag) return false;
+        this.isExternalUpdatesFlag = true;
         this.takeValue();
       },
       deep: true,
@@ -128,9 +145,8 @@ export default {
           obj[item.prop] = "";
         }
       });
-
       console.log(obj);
-      this.list.push(obj);
+      // this.list.push(obj);
     },
 
     // 添加编辑列头
@@ -185,12 +201,13 @@ export default {
       _set(row, `_config_.${column.prop}`, {...config, ...node});
 
       this.$set(this.list, rowIndex, row);
-
       this.visible = false;
     },
 
     // 长按
     onLongPress(event) {
+      if (this.readonly) return;
+
       const p = _deepCopy(event.params);
       this.pressParams = p;
       const {type, column, columnIndex, row, rowIndex} = p;
@@ -247,6 +264,7 @@ export default {
 
     // 修改表头的值
     onChangeThead({columnIndex, value}) {
+      if (this.readonly) return;
       this.$set(this.columns[columnIndex], "label", value);
     },
 
@@ -262,7 +280,10 @@ export default {
 
     // 处理更新数据
     emitValue() {
-      this.$emit("input", JSON.stringify({columns: this.columns, list: this.list.filter(item => !_isEmpty(item))}));
+      this.$emit("input", JSON.stringify({columns: this.columns, list: this.list?.filter(item => !_isEmpty(item))}));
+      setTimeout(() => {
+        this.isToOutsideFlag = false;
+      }, 600);
     },
 
     // 处理接收数据
@@ -276,6 +297,10 @@ export default {
           console.log(e, "解析报错了");
         }
       }
+
+      setTimeout(() => {
+        this.isExternalUpdatesFlag = false;
+      }, 600);
     },
   },
   computed: {
@@ -318,6 +343,16 @@ export default {
 
 <template>
   <view class="ko-custom-table">
+
+    <!-- #ifdef H5 -->
+    <H5Table
+      :columns.sync="columns"
+      :data.sync="list"
+    />
+    <!-- #endif -->
+
+
+    <!-- #ifndef H5 -->
     <GridTable
       :columns="columns"
       :data="list"
@@ -325,13 +360,15 @@ export default {
       @press="onPress"
       @change-thead="onChangeThead"
       @change-tbody="onChangeTbody"
+      :not-edit="readonly"
     />
+    <!-- #endif -->
 
     <view v-if="!columns.length || !list.length" class="ko-custom-table__not">
       {{ !columns.length ? "请先添加列" : !list.length ? "请添加行" : "" }}
     </view>
 
-    <KoMovable :y-axis="-60" @click="onOpenSheet('added')" />
+    <KoMovable v-if="false" :y-axis="-60" @click="onOpenSheet('added')" />
 
     <UvActionSheet
       ref="UASRef"
@@ -340,6 +377,7 @@ export default {
       round="10"
       cancel-text="取消"
       @select="onSelectSheet"
+      v-if="false"
     />
 
     <BasicPopup :visible.sync="visible" :title="getPopupTitle">

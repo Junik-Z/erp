@@ -19,7 +19,7 @@ import {
   yuanToPoints,
 } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
-import { CONFIG } from "@/utils/config";
+import { CONFIG, PageEnums } from "@/utils/config";
 import QS from "@/utils/qs.min";
 import { goLogin, logoutApi } from "@/api/user";
 
@@ -114,8 +114,18 @@ export default {
     // 跳转到详情页面
     onJumpDetails(node, page_type) {
       uni.setStorageSync("TO_DETAILS", true);
+
+      const query = QS.stringify({page_type, ...(_pick(node, ["id"]))});
+
+      if (_isEqual("produce", page_type)) {
+        uni.navigateTo({
+          url: PageEnums.produceDetails + `?${query}`,
+        });
+        return false;
+      }
+
       uni.navigateTo({
-        url: `/shop/details/details?${QS.stringify({page_type, ...(_pick(node, ["id"]))})}`,
+        url: `/shop/details/details?${query}`,
       });
     },
 
@@ -263,7 +273,7 @@ export default {
     KoTable,
     // #endif
   },
-  // #ifdef MP | H5
+  // #ifdef MP
   // 页面滚动到最底部时触发
   onReachBottom() {
     this.RequestNextPage();
@@ -377,9 +387,10 @@ export default {
     PRODUCE_STATUS_ENUMS() {
       return (status) => {
         return {
-          CREATED: "已创建",
-          APPLY_MATERIAL: "已出料",
+          CREATED: "待生产",
+          APPLY_MATERIAL: "生产中",
           FINISHED: "已完成",
+          PAUSED: "已暂停",
           CANCELLED: "已取消",
         }[status] || "-";
       };
@@ -472,6 +483,11 @@ export default {
       return _get;
     },
 
+    // 判断空数据
+    isEmpty() {
+      return _isEmpty;
+    },
+
     // 获取店铺名称
     GET_SHOP_NAME() {
       return _get(this.GET_CONFIG_INFO, "remark") || "";
@@ -516,5 +532,9 @@ export default {
         PURCHASE_RETURN: "剩余未收",
       }, name);
     },
+
+    PageEnums() {
+      return PageEnums
+    }
   },
 };

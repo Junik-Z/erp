@@ -48,6 +48,8 @@ export default {
       node: {},
       nodeIndex: null,
 
+      isNotMenu: false,
+
       // #ifdef H5
       columns: [
         {
@@ -124,6 +126,9 @@ export default {
   },
   onShow() {
     this.getList(true);
+  },
+  onLoad(option) {
+    this.isNotMenu = option.isNotMenu === "true";
   },
   methods: {
     getListNode(item) {
@@ -226,7 +231,10 @@ export default {
           uni.showToast({
             title: "绑定成功",
           });
-          this.$set(this.list[this.nodeIndex], "users", [...this.list[this.nodeIndex]?.users || [], ...user.map(userId => ({userId}))]);
+          this.$set(this.list[this.nodeIndex], "users", [
+            ...this.list[this.nodeIndex]?.users || [],
+            ...user.map(userId => ({userId})),
+          ]);
         });
     },
 
@@ -257,10 +265,9 @@ export default {
     },
 
     onJumpInfo(item) {
-      if (item) return false;
       this.noRefresh = true;
       uni.navigateTo({
-        url: "/erp/finance/check" + `?id=${item.id}&customer_type=staff`,
+        url: PageEnums.produceStaffCompleteProcess + `?id=${item.id}`,
       });
     },
 
@@ -341,7 +348,7 @@ export default {
 
 <template>
   <view class="ko-staff">
-    <TopMenus :tabs="TabList" :current="1" />
+    <TopMenus :tabs="TabList" :path="PageEnums.produceStaff" v-if="!isNotMenu" />
 
     <view class="ko-staff__content">
       <!-- #ifdef MP -->
@@ -354,6 +361,7 @@ export default {
           @lower="onLower"
           :no-more="noMore"
           @search="onSearchToNameIndex"
+          is-staff
         >
           <template #default="{node, index}">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">

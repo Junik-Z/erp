@@ -10,7 +10,7 @@ import {
 } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isString, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -22,6 +22,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import Pay from "../../components/Pay/Pay.vue";
+import { getOrderCodeDetailApi } from "@/api/erp/produce";
 
 export default {
   name: "OrderList",
@@ -58,6 +59,18 @@ export default {
           },
         },
         // #endif
+        // #ifdef H5
+        {
+          text: "定制",
+          iconPath: "/static/images/icons/added.png",
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE",
+        },
+        // #endif
+        {
+          text: "板材",
+          iconPath: "/static/images/icons/added.png",
+          path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE",
+        },
         {
           text: "新增",
           iconPath: "/static/images/icons/added.png",
@@ -259,8 +272,28 @@ export default {
       this.nodeIndex = index;
       // #endif
 
+      if (_isEqual(item.orderType, "PRODUCTION")) {
+        this.noRefresh = true;
+        uni.navigateTo({
+          url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE`,
+        });
+        return false;
+      }
+
       this.noRefresh = true;
       this.jumpAddedSale({id: item.id}, this.nodeIndex);
+    },
+
+    onToDetails(item) {
+      if (_isEqual(item.orderType, "PRODUCTION")) {
+        uni.setStorageSync("TO_DETAILS", true);
+
+        uni.navigateTo({
+          url: PageEnums.produceDetails + `?id=${item.orderCode}&FORM=SALE`,
+        });
+        return false;
+      }
+      this.onJumpDetails(item, "sale");
     },
 
     onTrigger(event) {
@@ -297,7 +330,7 @@ export default {
     },
 
     onRowClick(row) {
-      this.onJumpDetails(row, "sale");
+      this.onToDetails(row, "sale");
     },
 
     onActionClick(item, index) {
@@ -329,7 +362,8 @@ export default {
       const info = uni.getStorageSync("TENP_ORDER_INFO");
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
 
-      getSaleDetailApi({id})
+      const Func = _isEqual("customized", info.produceType) ? getOrderCodeDetailApi : getSaleDetailApi;
+      Func({id})
         .then(res => {
           const data = res.data || {};
           this.onProcessingListData(data, isPayment);
@@ -368,7 +402,11 @@ export default {
         },
       ]
         .filter(li => {
-          if (li.name === "编辑") {
+          if (li.func === "onJump") {
+            if (this.tab === 1 && _isEqual(node.orderType, "PRODUCTION")) {
+              return false;
+            }
+
             return this.tab !== 2 && li.status.includes(node.status);
           }
 
@@ -418,7 +456,7 @@ export default {
         <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
           <OrderCard
             :item="item"
-            @click="onJumpDetails(item, 'sale')"
+            @click="onToDetails(item, 'sale')"
             is-sales
           >
             <template #operate v-if="isPerm('Sales_Write')">

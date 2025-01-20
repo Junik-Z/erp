@@ -103,7 +103,7 @@ export default {
           :data="classList"
           labelField="name"
           valueField="id"
-          defaultExpandAll
+          :default-expand-all="false"
           @change="onChange"
           expand-checked
         />
