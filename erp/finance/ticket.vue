@@ -1,5 +1,4 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import {
   addedPaidOrderApi,
@@ -25,7 +24,6 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy, _get, _isEmpty, _pick, CustomToast, transferYuan, yuanToPoints } from "@/utils";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import KoMovable from "@/components/Movable/index.vue";
@@ -36,7 +34,6 @@ export default {
     KoMovable,
     UvAvatar,
     OrderCard,
-    UniListItem,
     UniEasyinput,
     FilePicker,
     UniFormsItem,
@@ -46,7 +43,6 @@ export default {
     UniRow,
     BasicCard,
     LoadMore,
-    UniList,
   },
   mixins: [mixins],
   data() {
@@ -324,77 +320,75 @@ export default {
   <view class="ko-ticket">
     <view class="ko-ticket__wrap">
       <!-- #ifdef MP -->
-      <UniList>
-        <view style="padding: 10px;">
-          <BasicCard :spacing="10" v-for="(item, index) of list" :key="index">
-            <view class="ko-ticket__item">
-              <view class="ko-ticket__item--info">
-                <UniRow :gutter="10">
-                  <UniCol :span="24" v-if="item.voucher">
-                    <view style="display: flex; align-items: center;">
-                      <label class="ko-basic-label">凭证：</label>
-                      <image
-                        class="ko-ticket__item--image ko-basic-box-shadow"
-                        :src="getImageUrl(item.voucher)"
-                        mode="scaleToFill"
+      <view style="padding: 10px;">
+        <BasicCard :spacing="10" v-for="(item, index) of list" :key="index">
+          <view class="ko-ticket__item">
+            <view class="ko-ticket__item--info">
+              <UniRow :gutter="10">
+                <UniCol :span="24" v-if="item.voucher">
+                  <view style="display: flex; align-items: center;">
+                    <label class="ko-basic-label">凭证：</label>
+                    <image
+                      class="ko-ticket__item--image ko-basic-box-shadow"
+                      :src="getImageUrl(item.voucher)"
+                      mode="scaleToFill"
+                    />
+                  </view>
+                </UniCol>
+                <UniCol :span="24">
+                  <view>
+                    <label class="ko-basic-label">{{ current === 2 ? "收款金额" : "付款金额" }}：</label>
+                    <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
+                  </view>
+                </UniCol>
+                <UniCol :span="24">
+                  <view style="display: flex; align-items: center;">
+                    <label class="ko-basic-label">客户：</label>
+                    <view style="margin-right: 10px;">
+                      <UvAvatar
+                        :size="38"
+                        :text="GET_FUNC(item, 'customer.name') || ''"
+                        :src="getImageUrl(GET_FUNC(item, 'customer.logo'))"
+                        random-bg-color
                       />
                     </view>
-                  </UniCol>
-                  <UniCol :span="24">
-                    <view>
-                      <label class="ko-basic-label">{{ current === 2 ? "收款金额" : "付款金额" }}：</label>
-                      <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
+                    <text>{{ GET_FUNC(item, "customer.name") || "-" }}</text>
+                  </view>
+                </UniCol>
+                <UniCol :span="24">
+                  <view style="display: flex; align-items: center;">
+                    <label class="ko-basic-label">操作人：</label>
+                    <view style="margin-right: 10px;">
+                      <UvAvatar
+                        :size="38"
+                        random-bg-color
+                        :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
+                        :text="GET_FUNC(item, 'user.nickName') || ''"
+                      />
                     </view>
-                  </UniCol>
-                  <UniCol :span="24">
-                    <view style="display: flex; align-items: center;">
-                      <label class="ko-basic-label">客户：</label>
-                      <view style="margin-right: 10px;">
-                        <UvAvatar
-                          :size="38"
-                          :text="GET_FUNC(item, 'customer.name') || ''"
-                          :src="getImageUrl(GET_FUNC(item, 'customer.logo'))"
-                          random-bg-color
-                        />
-                      </view>
-                      <text>{{ GET_FUNC(item, "customer.name") || "-" }}</text>
-                    </view>
-                  </UniCol>
-                  <UniCol :span="24">
-                    <view style="display: flex; align-items: center;">
-                      <label class="ko-basic-label">操作人：</label>
-                      <view style="margin-right: 10px;">
-                        <UvAvatar
-                          :size="38"
-                          random-bg-color
-                          :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
-                          :text="GET_FUNC(item, 'user.nickName') || ''"
-                        />
-                      </view>
-                      <text>{{ GET_FUNC(item, "user.nickName") || "-" }}</text>
-                    </view>
-                  </UniCol>
-                  <UniCol :span="24">
-                    <label class="ko-basic-label">时间：</label>
-                    <text>{{ item.updateTime || "-" }}</text>
-                  </UniCol>
-                  <UniCol :span="24">
-                    <label class="ko-basic-label">备注：</label>
-                    <text>{{ item.remark || "-" }}</text>
-                  </UniCol>
-                </UniRow>
-                <view class="ko-ticket__item--button" v-if="item.orderStatus !== 'FINISHED' && !isDetails">
-                  <button class="ko-basic-button__card" @click.stop="addedTicket(item)">修改</button>
-                  <button class="ko-basic-button__card" v-if="!noUnable" @click.stop="onConfirmOrder(item)">
-                    确认单据金额
-                  </button>
-                </view>
+                    <text>{{ GET_FUNC(item, "user.nickName") || "-" }}</text>
+                  </view>
+                </UniCol>
+                <UniCol :span="24">
+                  <label class="ko-basic-label">时间：</label>
+                  <text>{{ item.updateTime || "-" }}</text>
+                </UniCol>
+                <UniCol :span="24">
+                  <label class="ko-basic-label">备注：</label>
+                  <text>{{ item.remark || "-" }}</text>
+                </UniCol>
+              </UniRow>
+              <view class="ko-ticket__item--button" v-if="item.orderStatus !== 'FINISHED' && !isDetails">
+                <button class="ko-basic-button__card" @click.stop="addedTicket(item)">修改</button>
+                <button class="ko-basic-button__card" v-if="!noUnable" @click.stop="onConfirmOrder(item)">
+                  确认单据金额
+                </button>
               </view>
             </view>
-          </BasicCard>
-        </view>
-        <LoadMore :loading="loading" content-text="没有更多单据了" />
-      </UniList>
+          </view>
+        </BasicCard>
+      </view>
+      <LoadMore :loading="loading" content-text="没有更多单据了" />
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
@@ -452,17 +446,12 @@ export default {
           </UniFormsItem>
         </UniForms>
 
-        <UniList v-else>
-          <UniListItem v-for="(item, index) of confirmationList" :key="index">
-            <template #body>
-              <OrderCard
-                :item="item"
-                :operate='[{label: "订单确认",type: "onConfirm"}]'
-                @operate="onOperate"
-              />
-            </template>
-          </UniListItem>
-        </UniList>
+        <OrderCard
+          v-else v-for="(item, index) of confirmationList" :key="index"
+          :item="item"
+          :operate='[{label: "订单确认",type: "onConfirm"}]'
+          @operate="onOperate"
+        />
       </view>
 
       <template #footer>

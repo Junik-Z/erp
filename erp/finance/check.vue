@@ -2,8 +2,6 @@
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import KoNotice from "@/components/Notice/Notice.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import {
   addedPaidOrderApi,
@@ -38,8 +36,6 @@ export default {
     UniRow,
     OrderCard,
     LoadMore,
-    UniListItem,
-    UniList,
     KoNotice,
     UniSegmentedControl,
     UniEasyinput,

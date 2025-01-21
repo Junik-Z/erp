@@ -4,7 +4,6 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import mixins from "@/mixins/mixins";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
@@ -23,7 +22,6 @@ export default {
     IndexList,
     UvAvatar,
     UniSegmentedControl,
-    UniList,
     UniCol,
     BasicCard,
     UniRow,

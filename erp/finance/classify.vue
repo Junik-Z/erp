@@ -2,11 +2,9 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 // #endif
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
@@ -27,11 +25,9 @@ export default {
     BasicPopup,
     UniFormsItem,
     UniEasyinput,
-    UniListItem,
     BasicCard,
     UniCol,
     UniRow,
-    UniList,
   },
   data() {
     const _this = this;
@@ -168,55 +164,49 @@ export default {
 
 <template>
   <view class="ko-classify">
-    <UniList>
-      <!-- #ifdef MP -->
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
-          <BasicCard>
-            <view class="ko-classify__info">
-              <view class="ko-classify__info--name">{{ item.name }}</view>
-              <UniRow>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">备注：</label>
-                  <text>{{ item.description }}</text>
-                </UniCol>
-              </UniRow>
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end;"
-                v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
-              >
-                <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
-                <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
-              </view>
-            </view>
-          </BasicCard>
-        </template>
-      </UniListItem>
-      <LoadMore :loading="loading" />
-      <!-- #endif -->
-
-      <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
-        <KoTable
-          :loading="loading"
-          :columns="columns"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
+    <!-- #ifdef MP -->
+    <BasicCard :spacing="10" v-for="item of list" :key="item.id">
+      <view class="ko-classify__info">
+        <view class="ko-classify__info--name">{{ item.name }}</view>
+        <UniRow>
+          <UniCol :span="24">
+            <label class="ko-basic-label">备注：</label>
+            <text>{{ item.description }}</text>
+          </UniCol>
+        </UniRow>
+        <view
+          style="display: flex; align-items: center; justify-content: flex-end;"
+          v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
         >
-          <template #operate="{item}">
-            <view
-              v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
-              style="display: flex; align-items: center; justify-content: center;"
-            >
-              <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
-              <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
-            </view>
-          </template>
-        </KoTable>
+          <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
+          <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+        </view>
       </view>
-      <!-- #endif -->
-    </UniList>
+    </BasicCard>
+    <LoadMore :loading="loading" />
+    <!-- #endif -->
+
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <KoTable
+        :loading="loading"
+        :columns="columns"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+      >
+        <template #operate="{item}">
+          <view
+            v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
+            style="display: flex; align-items: center; justify-content: center;"
+          >
+            <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
+            <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+          </view>
+        </template>
+      </KoTable>
+    </view>
+    <!-- #endif -->
 
     <view class="ko-classify__added-btn">
       <button class="ko-basic-button" @click="onAdded()">添加分类</button>
@@ -243,6 +233,7 @@ export default {
 <style scoped lang="scss">
 .ko-classify {
   width: 100%;
+  padding: 10px;
 
   &__added-btn {
     display: flex;

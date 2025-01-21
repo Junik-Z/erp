@@ -54,20 +54,25 @@ export default {
       node: {},
 
       MovableList: [
+        /* {
+          text: "快捷",
+          iconfont: "icon-shiliangzhinengduixiang6",
+          type: "fast",
+        }, */
         {
           text: "常规",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-tianjia",
           path: PageEnums.produceWork + "?ADDED_TYPE=common",
         },
         {
           text: "板材",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-ziyuanicon",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing",
         },
         // #ifdef H5
         {
           text: "定制",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-dingzhishengchan",
           path: PageEnums.produceWork + "?ADDED_TYPE=xlsx",
         },
         // #endif
@@ -204,12 +209,16 @@ export default {
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
-    onJump(row) {
+    onJump(row, index, isTechnology = false) {
       let query = "";
       this.noRefresh = true;
-      if (row) {
+      if (row || isTechnology) {
         // &ADDED_TYPE=${type} const type = !_isEmpty(row.customizedMaterials) ? "xlsx" : !_isEmpty(row.customizedBoards) ? "packing" : "common";
         query = `?id=${row.id}`;
+
+        if (isTechnology) {
+          query += `&isTechnology=true`;
+        }
       }
       uni.navigateTo({
         url: PageEnums.produceWork + query,
@@ -334,6 +343,10 @@ export default {
     // 处理新增
     onAddedJump({item}) {
       this.noRefresh = true;
+      if (_isEqual(item.type, "fast")) {
+        this.$refs.FPRef.open("quick");
+        return false;
+      }
       uni.navigateTo({
         url: item.path,
       });
@@ -356,7 +369,17 @@ export default {
     },
 
     // 快捷生产
-    onApplyFast() {
+    onApplyFast(item) {
+      this.$refs.FPRef.close();
+
+      uni.navigateTo({
+        url: PageEnums.produceWork + `?fastId=${item.id}`,
+      });
+    },
+
+    // 修改工艺
+    onTechnology(item, index) {
+      this.onJump(item, index, true);
     },
   },
   computed: {
@@ -470,6 +493,13 @@ export default {
                 </button>
                 <button
                   class="ko-basic-button__card"
+                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+                  @click.stop="onTechnology(item, index)"
+                >
+                  修改工艺
+                </button>
+                <button
+                  class="ko-basic-button__card"
                   v-if="['APPLY_MATERIAL'].includes(item.status)"
                   @click.stop="onFinish(item, index)"
                   :loading="item.__finish_loading__"
@@ -568,7 +598,7 @@ export default {
       @click="onAddedJump"
     />
 
-    <FastPopup ref="FPRef" @apply-fast="onApplyFast" />
+    <FastPopup v-if="false" ref="FPRef" @apply-fast="onApplyFast" />
 
     <!-- #ifdef MP -->
     <UvActionSheet

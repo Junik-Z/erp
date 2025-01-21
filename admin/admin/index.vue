@@ -1,7 +1,5 @@
 <script>
 import { addedBusinessesApi, getBusinessesListApi, getBusinessesQRCodeApi, updateBusinessNameApi } from "@/api/admin";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
@@ -33,8 +31,6 @@ export default {
     UniEasyinput,
     LoadMore,
     BasicCard,
-    UniListItem,
-    UniList,
   },
   data() {
     return {

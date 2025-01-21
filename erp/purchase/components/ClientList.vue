@@ -1,5 +1,4 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import {
   bindSupplierApi,
   convertSupplierListApi,
@@ -27,7 +26,6 @@ export default {
     IndexList,
     UvAvatar,
     PickerUser,
-    UniList,
   },
   mixins: [mixins],
   data() {

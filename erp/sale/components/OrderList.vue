@@ -62,18 +62,18 @@ export default {
         // #ifdef H5
         {
           text: "定制",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-dingzhishengchan",
           path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE",
         },
         // #endif
         {
           text: "板材",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-ziyuanicon",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE",
         },
         {
           text: "新增",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: 'icon-tianjia',
           path: PageEnums.editSale,
         },
       ],

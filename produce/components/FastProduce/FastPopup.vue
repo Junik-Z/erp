@@ -34,6 +34,10 @@ export default {
       this.visible = true;
     },
 
+    close() {
+      this.visible = false;
+    },
+
     // 应用快捷生产/工艺
     onApplyFast(arg) {
       this.$emit("apply-fast", arg, this.type);
@@ -51,13 +55,13 @@ export default {
 
       const params = this.params;
 
-      if (_isEqual(this.type, "quick") && (_isEmpty(params.materialDetails) || _isEmpty(params.productDetails))) {
+      /* if (_isEqual(this.type, "quick") && (_isEmpty(params.productDetails))) {
         CustomToast({
           title: "请先选择材料和产品",
           icon: "none",
         });
         return false;
-      }
+      } */
 
       if (_isEqual(this.type, "craft") && (_isEmpty(params.processDetails))) {
         CustomToast({

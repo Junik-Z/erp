@@ -8,9 +8,9 @@ import {
   getWaitConfirmListApi,
   getWorkingListApi,
 } from "@/api/erp/produce";
-import { _deepCopy, _get, _isEmpty, _isNotUnNil, _keys, CustomToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isNotUnNil, _keys, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
-import { CONFIG, PRICING_METHOD } from "@/utils/config";
+import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "./define";
@@ -42,7 +42,7 @@ export default {
         "已确认",
       ],
       queryList: {
-        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageSize: 20,
         pageNum: 0,
       },
 
@@ -69,7 +69,9 @@ export default {
       settlementVisible: false,
 
       // 结算数量
-      settlementQuantity: null,
+      settlementQuantity: 1,
+
+      groupList: {},
     };
   },
   mixins: [mixins],
@@ -91,6 +93,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.groupList = {};
       }
 
       this.loading = true;
@@ -98,6 +101,8 @@ export default {
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
+          this.groupList = _groupBy(this.list, (item) => item.orderCode);
+
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .catch(() => {
@@ -106,6 +111,10 @@ export default {
         .finally(() => {
           this.loading = false;
         });
+    },
+
+    onUpdateGroupList() {
+      this.groupList = _groupBy(this.list, (item) => item.orderCode);
     },
 
     // 重置列表
@@ -166,6 +175,7 @@ export default {
               });
               this.$set(this.list, this.nodeIndex, params);
               this.visible = false;
+              this.onUpdateGroupList();
             })
             .finally(() => {
               this.pLoading = false;
@@ -188,7 +198,7 @@ export default {
     },
 
     // 确认结算
-    onFinish(item, index) {
+    onFinish(item, index, key) {
       uni.showModal({
         title: "温馨提示",
         content: `请先与员工确认金额无误后再结算。`,
@@ -198,7 +208,14 @@ export default {
             confirmSettleApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
+
+                // #ifdef H5
                 this.list.splice(index, 1);
+                // #endif
+
+                // #ifndef H5
+                this.groupList[key].splice(index, 1);
+                // #endif
               });
           }
         },
@@ -206,7 +223,7 @@ export default {
     },
 
     // 取消结算
-    onCancel(item, index) {
+    onCancel(item, index, key) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要取消吗？`,
@@ -216,7 +233,13 @@ export default {
             cancelSettleApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
+                // #ifdef H5
                 this.list.splice(index, 1);
+                // #endif
+
+                // #ifndef H5
+                this.groupList[key].splice(index, 1);
+                // #endif
               });
           }
         },
@@ -300,6 +323,13 @@ export default {
     // 获取人员头像
     getStaffListLogo() {
       return (item) => _isEmpty(item?.staffs) ? (item.staff ? [item.staff] : []) : item?.staffs || [];
+    },
+
+    // 获取单元格的分配
+    getGridTemplateColumnsStyle() {
+      return {
+        "--ko-basic-table-grid-col": "auto ".repeat([5, 7, 7][this.tab]).trim(),
+      };
     },
 
     // #ifdef H5
@@ -435,53 +465,104 @@ export default {
     />
 
     <!-- #ifdef MP -->
-    <view>
+    <view style="padding: 0;">
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
-          <CraftCard :item="item" :show-final="tab > 0">
-            <template #operate v-if="isPerm('Produce_Write')">
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-              >
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onSettlement(item, index)"
-                  v-if="tab === 0"
-                >
-                  结算
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onEditor(item, index)"
-                  v-if="[0].includes(tab)"
-                >
-                  编辑
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onCancel(item, index)"
-                  v-if="[1].includes(tab)"
-                >
-                  取消结算
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onFinish(item, index)"
-                  v-if="[1].includes(tab)"
-                >
-                  确认结算
-                </button>
+        <view :style="[getGridTemplateColumnsStyle]">
+          <block v-for="(child, key) of groupList" :key="key">
+            <uni-section :title="key" type="line">
+              <view class="ko-basic-table">
+                <view class="ko-basic-table--th">名称</view>
+                <view class="ko-basic-table--th">计价方式</view>
+                <view class="ko-basic-table--th">价格</view>
 
-                <!--<button
-                  class="ko-basic-button__card"
-                  @click.stop="onActionClick(item, index)"
-                  v-if='["CREATED", "CANCELLED"].includes(item.status) && false'
-                >
-                  更多
-                </button>-->
+                <block v-if="tab > 0">
+                  <view class="ko-basic-table--th">数量</view>
+                  <view class="ko-basic-table--th">结算</view>
+                </block>
+
+                <block v-if="tab > 1">
+                  <view class="ko-basic-table--th">时间</view>
+                </block>
+
+                <view class="ko-basic-table--th">员工</view>
+                <view class="ko-basic-table--th" v-if="tab <= 1">操作</view>
+
+                <block v-for="(item, index) of child" :key="item.id">
+                  <view class="ko-basic-table--cell">
+                    {{ item.name }}
+                  </view>
+                  <view class="ko-basic-table--cell">
+                    {{ getPricingMethod(item.pricingMethod) }}
+                  </view>
+                  <view class="ko-basic-table--cell">
+                    {{ toYuan(item.price) }}
+                  </view>
+
+                  <block v-if="tab > 0">
+                    <view class="ko-basic-table--cell">{{ item.quantity }}</view>
+                    <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
+                  </block>
+
+                  <block v-if="tab > 1">
+                    <view class="ko-basic-table--cell">{{ item.updateTime }}</view>
+                  </block>
+
+                  <view class="ko-basic-table--cell">
+                    <view
+                      style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+                      <view
+                        style="padding: 2px; display: flex; flex-direction: column; justify-content: center;align-items: center;"
+                        v-for="staff of getStaffListLogo(item)"
+                        :key="staff.id"
+                      >
+                        <uv-avatar
+                          :src="getImageUrl(staff.logo)"
+                          random-bg-color
+                          size="18"
+                          :text="staff.name"
+                        />
+                        <text style="font-size: 10px; color: #8f939c;padding-top: 2px;">{{ staff.name }}</text>
+                      </view>
+                    </view>
+                  </view>
+                  <view class="ko-basic-table--cell" v-if="tab <= 1">
+                    <view
+                      style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap;"
+                    >
+                      <button
+                        class="ko-basic-button__card"
+                        @click.stop="onSettlement(item, index)"
+                        v-if="tab === 0"
+                      >
+                        结算
+                      </button>
+                      <button
+                        class="ko-basic-button__card"
+                        @click.stop="onEditor(item, index)"
+                        v-if="[0].includes(tab)"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        class="ko-basic-button__card"
+                        @click.stop="onCancel(item, index, key)"
+                        v-if="[1].includes(tab)"
+                      >
+                        取消
+                      </button>
+                      <button
+                        class="ko-basic-button__card"
+                        @click.stop="onFinish(item, index, key)"
+                        v-if="[1].includes(tab)"
+                      >
+                        确认
+                      </button>
+                    </view>
+                  </view>
+                </block>
               </view>
-            </template>
-          </CraftCard>
+            </uni-section>
+          </block>
         </view>
       </KoList>
     </view>
@@ -628,7 +709,7 @@ export default {
             name="name"
             required
           >
-            <uni-easyinput v-model="settlementQuantity" placeholder="请输入数量" />
+            <uni-easyinput type="digit" v-model="settlementQuantity" placeholder="请输入数量" />
           </uni-forms-item>
         </uni-forms>
       </view>

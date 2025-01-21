@@ -172,8 +172,9 @@ export default {
             list: this.list,
             type: this.type,
             isClient: this.isClient,
-            hidePrices: this.hidePrices || this.isWork,
+            hidePrices: this.hidePrices,
             takeOverName: this.takeOverName,
+            isWork: this.isWork,
           });
         },
       });

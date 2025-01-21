@@ -35,6 +35,10 @@ function buildTree(data, parentId = null, parentKey = "parentId", idKey = "proce
   return tree;
 }
 
+
+const systemInfo = uni.getSystemInfoSync();
+const screenHeight = systemInfo.screenHeight - 100;
+
 export default {
   name: "CraftProcesses",
   components: {
@@ -56,11 +60,13 @@ export default {
   watch: {
     value: {
       handler() {
-        this.tree = _deepCopy(this.value);
+        if (this.value) {
+          this.tree = _deepCopy(this.value);
 
-        setTimeout(() => {
-          this.setCanvasNode(true);
-        }, 300);
+          setTimeout(() => {
+            this.setCanvasNode(true);
+          }, 600);
+        }
       },
       deep: true,
       immediate: true,
@@ -176,7 +182,7 @@ export default {
           },
         ],
       },
-      wrapHeight: 0,
+      wrapHeight: screenHeight,
       tree: [],
 
       form: {
@@ -197,20 +203,19 @@ export default {
   },
   mounted() {
     setTimeout(() => {
+      this.$nextTick(() => {
+        this.$refs.canvas.init(this.initChart);
+        this.$nextTick(() => {
+          this.setCanvasNode(true);
+        });
+      });
+    }, 30);
+
+    setTimeout(() => {
       getRect(".ko-craft", this)
         .then(res => {
-          this.wrapHeight = res.height;
-        })
-        .finally(() => {
-          this.$nextTick(() => {
-            this.$refs.canvas.init(this.initChart);
-
-            this.$nextTick(() => {
-              this.setCanvasNode(true);
-            });
-          });
+          this.wrapHeight = res?.height || screenHeight;
         });
-
     }, 80);
   },
   methods: {
@@ -226,10 +231,8 @@ export default {
       // #endif
 
       this.chart.setOption(this.options);
-
       // 添加节点的点击事件
       this.chart.on("click", this.onClickTreeNode);
-
       return this.chart;
     },
 
@@ -240,7 +243,13 @@ export default {
 
       _set(opt, "series.0.data", list);
 
-      this.chart?.setOption?.(opt);
+      try {
+        this.chart.setOption(opt);
+      } catch (e) {
+        setTimeout(() => {
+          this.setCanvasNode(flag);
+        }, 600);
+      }
 
       /*  let sequence = 0;
 
@@ -461,13 +470,13 @@ export default {
       return [
         {
           text: "新增",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-tianjia",
           func: "onAdderRoot",
           arg: ["root"],
         },
         {
           text: "快捷",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-zt-01-02",
           func: "onSelectCraft",
           arg: ["craft"],
         },

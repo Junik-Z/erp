@@ -1,6 +1,4 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import {
   getPurchaseDetailApi,
   getPurchaseHistoryListApi,
@@ -40,8 +38,6 @@ export default {
     OrderCard,
     HistoryBar,
     LoadMore,
-    UniListItem,
-    UniList,
   },
   mixins: [BasicMixins, PurchaseMixins],
   data() {

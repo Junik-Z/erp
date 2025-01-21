@@ -193,6 +193,40 @@ button::after {
   color: #4177f6;
 }
 
+.ko-basic-table {
+  $border-color: #e9e9eb;
+  display: grid;
+  grid-template-columns: var(--ko-basic-table-grid-col);
+  white-space: break-spaces;
+  box-sizing: border-box;
+  border-left: 1px solid $border-color;
+  border-top: 1px solid $border-color;
+
+  &--th {
+    text-align: center;
+    border-bottom: 1px solid $border-color;
+    padding: 6px 2px;
+    font-size: 12px;
+    font-weight: bold;
+    border-right: 1px solid $border-color;
+  }
+
+  &--cell {
+    text-align: center;
+    border-bottom: 1px solid $border-color;
+    padding: 6px 2px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid $border-color;
+
+    .ko-basic-button__card {
+      padding: 5px 10px;
+    }
+  }
+}
+
 
 // #ifdef H5
 $--ko-print-font-size: 11pt;

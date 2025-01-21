@@ -1,16 +1,24 @@
 <!-- 员工工资 -->
 <script>
-import { getMySalaryApi, getMySettledListApi, getMyWorkingListApi, getWaitMyConfirmListApi } from "@/api/erp/produce";
-import { _deepCopy, _isEmpty } from "@/utils";
+import {
+  getMyMonthListApi,
+  getMySalaryApi,
+  getMySettledListApi,
+  getMyWorkingListApi,
+  getWaitMyConfirmListApi,
+} from "@/api/erp/produce";
+import { _deepCopy, _groupBy, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
-import { CONFIG, PRICING_METHOD } from "@/utils/config";
+import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "./define";
+import UvCalendars from "./components/uv-calendars/components/uv-calendars/uv-calendars.vue";
+import dayjs from "@/utils/dayjs";
 
 export default {
   name: "salary",
-  components: {TopMenus, KoList},
+  components: {TopMenus, KoList, UvCalendars},
   data() {
     return {
       MySalary: 0,
@@ -31,7 +39,7 @@ export default {
         "已确认",
       ],
       queryList: {
-        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageSize: 20,
         pageNum: 0,
       },
 
@@ -43,11 +51,21 @@ export default {
       nodeIndex: null,
 
       tableKey: +new Date(),
+
+      MyMonth: [],
+
+      MyMonthQuery: {
+        year: dayjs().year(),
+        month: dayjs().month() + 1,
+      },
+
+      groupList: {},
     };
   },
   mixins: [mixins],
   onLoad() {
     this.getMySalary();
+    this.getMyMonth();
 
     this.getList(true);
   },
@@ -66,6 +84,19 @@ export default {
         });
     },
 
+    // 获取月工资
+    getMyMonth() {
+      getMyMonthListApi(this.MyMonthQuery)
+        .then(res => {
+          this.MyMonth = res.data.map(item => {
+            return {
+              date: item.settleDate,
+              info: this.toYuan(item.finalAmount),
+            };
+          });
+        });
+    },
+
     // 请求下一页数据
     onRequestNextPage() {
       if (this.noMore) return false;
@@ -78,6 +109,7 @@ export default {
         this.queryList.pageNum = 0;
         this.list = [];
         this.tableKey = +new Date();
+        this.groupList = {};
       }
 
       this.loading = true;
@@ -85,6 +117,9 @@ export default {
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
+
+          this.groupList = _groupBy(this.list, (item) => item.orderCode);
+
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .catch(() => {
@@ -106,6 +141,12 @@ export default {
       this.node = node;
       this.nodeIndex = index;
       this.$refs.UASRef.open();
+    },
+
+    // 年月切换
+    onMonthSwitch(date) {
+      this.MyMonthQuery = date;
+      this.getMyMonth();
     },
   },
   computed: {
@@ -242,6 +283,13 @@ export default {
     getStaffListLogo() {
       return (item) => _isEmpty(item?.staffs) ? (item.staff ? [item.staff] : []) : item?.staffs || [];
     },
+
+    // 获取单元格的分配
+    getGridTemplateColumnsStyle() {
+      return {
+        "--ko-basic-table-grid-col": "auto ".repeat([5, 5, 6][this.tab]).trim(),
+      };
+    },
   },
 };
 </script>
@@ -270,6 +318,16 @@ export default {
       </UniRow>
     </view>
 
+    <view style="padding: 10px;">
+      <UvCalendars
+        :insert="true"
+        :lunar="true"
+        readonly
+        :selected="MyMonth"
+        @month-switch="onMonthSwitch"
+      />
+    </view>
+
     <HistoryBar
       v-model="tab"
       :values="values"
@@ -281,7 +339,65 @@ export default {
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
+        <view :style="[getGridTemplateColumnsStyle]">
+          <block v-for="(child, key) of groupList" :key="key">
+            <uni-section :title="key" type="line">
+              <view class="ko-basic-table">
+                <view class="ko-basic-table--th">名称</view>
+                <view class="ko-basic-table--th">计价方式</view>
+                <view class="ko-basic-table--th">价格</view>
+                <view class="ko-basic-table--th">数量</view>
+                <view class="ko-basic-table--th">结算</view>
+
+                <block v-if="tab > 1">
+                  <view class="ko-basic-table--th">时间</view>
+                </block>
+
+                <view class="ko-basic-table--th" v-if="false">员工</view>
+
+                <block v-for="item of child" :key="item.id">
+                  <view class="ko-basic-table--cell">
+                    {{ item.name }}
+                  </view>
+                  <view class="ko-basic-table--cell">
+                    {{ getPricingMethod(item.pricingMethod) }}
+                  </view>
+                  <view class="ko-basic-table--cell">
+                    {{ toYuan(item.price) }}
+                  </view>
+
+                  <view class="ko-basic-table--cell">{{ item.quantity }}</view>
+                  <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
+
+                  <block v-if="tab > 1">
+                    <view class="ko-basic-table--cell">{{ item.updateTime }}</view>
+                  </block>
+
+                  <view class="ko-basic-table--cell" v-if="false">
+                    <view
+                      style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+                      <view
+                        style="padding: 2px; display: flex; flex-direction: column; justify-content: center;align-items: center;"
+                        v-for="staff of getStaffListLogo(item)"
+                        :key="staff.id"
+                      >
+                        <uv-avatar
+                          :src="getImageUrl(staff.logo)"
+                          random-bg-color
+                          size="18"
+                          :text="staff.name"
+                        />
+                        <text style="font-size: 10px; color: #8f939c;padding-top: 2px;">{{ staff.name }}</text>
+                      </view>
+                    </view>
+                  </view>
+                </block>
+              </view>
+            </uni-section>
+          </block>
+        </view>
+
+        <!--<view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
           <BasicCard>
             <view class="ko-salary__info">
               <uni-row gutter="10">
@@ -349,7 +465,7 @@ export default {
               </uni-row>
             </view>
           </BasicCard>
-        </view>
+        </view>-->
       </KoList>
     </view>
     <!-- #endif -->
@@ -381,7 +497,26 @@ export default {
 </template>
 
 <style scoped lang="scss">
+$border-color: #e9e9eb;
+
 .ko-salary {
+  /deep/ .uv-calendar__header {
+    height: 32px;
+    padding-bottom: 10px;
+  }
+
+  /deep/ .uv-calendar__backtoday {
+    display: none;
+  }
+
+  .ko-basic-count__wrap {
+    padding-bottom: 0;
+
+    .ko-basic-count {
+      padding: 0;
+    }
+  }
+
   &__info {
     font-size: 14px;
     color: $uni-base-color;

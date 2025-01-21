@@ -57,6 +57,9 @@ export default {
 
     // 隐藏入库价格
     isHideStockPrice: Boolean,
+
+    // 生产工单
+    isWork: Boolean,
   },
   data() {
     return {
@@ -328,6 +331,10 @@ export default {
           <UniCol :span="24" v-if="!hidePrices">
             <label class="ko-basic-label">单价：</label>
             <text class="ko-basic-money"> {{ toYuan(getPrice(node)) }}元</text>
+          </UniCol>
+          <UniCol :span="24" v-if="isWork">
+            <label class="ko-basic-label">单价：</label>
+            <text class="ko-basic-money"> {{ toYuan(node.salePrice) }}元</text>
           </UniCol>
           <UniCol :span="24">
             <UniNumberBox

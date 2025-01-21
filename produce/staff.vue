@@ -134,6 +134,7 @@ export default {
     getListNode(item) {
       return {
         ...item,
+        _no_bind_: _isEmpty(item.users),
         value: item.id,
         label: item.name,
         logo: item.logo,
@@ -193,26 +194,22 @@ export default {
     },
 
     // 解绑
-    onUnbind(user) {
+    onUnbind(node, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要解绑员工吗？`,
         success: (res) => {
           if (res.confirm) {
-            Promise.all(
-              user.map(userId => unbindStaffApi({
-                staffId: this.node.id,
-                userId,
-              })),
-            )
+            unbindStaffApi({
+              staffId: node.id,
+              userId: _get(node, "users.0.userId"),
+            })
               .then(() => {
                 uni.showToast({
                   title: "解绑成功",
                 });
-                const use = _deepCopy(this.list[this.nodeIndex].users)?.filter(v => {
-                  return !user.includes(v.userId);
-                });
-                this.$set(this.list[this.nodeIndex], "users", use);
+                this.$set(this.list[index], "users", null);
+                this.$set(this.list[index], "_no_bind_", true);
               });
           }
         },
@@ -231,10 +228,9 @@ export default {
           uni.showToast({
             title: "绑定成功",
           });
-          this.$set(this.list[this.nodeIndex], "users", [
-            ...this.list[this.nodeIndex]?.users || [],
-            ...user.map(userId => ({userId})),
-          ]);
+
+          this.$set(this.list[this.nodeIndex], "users", user.map(userId => this.$refs.PURef.getUserInfo(userId)));
+          this.$set(this.list[this.nodeIndex], "_no_bind_", false);
         });
     },
 
@@ -365,8 +361,20 @@ export default {
         >
           <template #default="{node, index}">
             <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
-              <button @click.stop="onBindPopup(node, true, index)" class="ko-basic-button__user">绑定员工</button>
-              <button @click.stop="onBindPopup(node, false, index)" class="ko-basic-button__user">解绑员工</button>
+              <button
+                @click.stop="onBindPopup(node, true, index)"
+                class="ko-basic-button__user"
+                v-if="node._no_bind_"
+              >
+                绑定员工
+              </button>
+              <button
+                v-else
+                @click.stop="onUnbind(node, index)"
+                class="ko-basic-button__user"
+              >
+                解绑员工
+              </button>
               <button
                 class="ko-basic-button__user"
                 @click.stop="onActionClick(node, index)"
@@ -412,13 +420,14 @@ export default {
       :checked-list="isBind ? [] : bindUserList"
       :multiple="false"
       @confirm="onConfirm"
+      ref="PURef"
+      type="noBindStaff"
     />
 
     <KoMovable
       v-if="isPerm('Produce_Write')"
       @click="onTrigger('')"
     />
-
     <!-- #ifdef MP -->
     <UvActionSheet
       ref="UASRef"

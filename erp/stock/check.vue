@@ -7,8 +7,6 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { getInboundDetailListApi, getOutboundDetailListApi } from "@/api/erp/stock";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _flattenDeep, _get } from "@/utils";
@@ -17,7 +15,7 @@ import mixins from "@/mixins/mixins";
 
 export default {
   name: "check",
-  components: {KoTable, OrderCard, UniListItem, UniList, LoadMore, UniSegmentedControl, KoNotice},
+  components: {KoTable, OrderCard, LoadMore, UniSegmentedControl, KoNotice},
   mixins: [mixins],
   data() {
     const _this = this;
@@ -197,14 +195,10 @@ export default {
     </view>
 
     <!-- #ifdef MP -->
-    <UniList>
-      <UniListItem v-for="item of list" :key="item.id">
-        <template #body>
-          <OrderCard is-check-stock :item="item" />
-        </template>
-      </UniListItem>
+    <view style="padding: 10px;">
+      <OrderCard v-for="item of list" :key="item.id" is-check-stock :item="item" />
       <LoadMore :loading="loading" />
-    </UniList>
+    </view>
     <!-- #endif -->
 
     <!-- #ifdef H5 -->

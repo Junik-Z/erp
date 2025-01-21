@@ -1,3 +1,19 @@
+.icon-zt-01-02:before {
+  content: "\e705";
+}
+
+.icon-shiliangzhinengduixiang6:before {
+  content: "\e61c";
+}
+
+.icon-dingzhishengchan:before {
+  content: "\e6d5";
+}
+
+.icon-ziyuanicon:before {
+  content: "\e61d";
+}
+
 .icon-kaoqindaka:before {
   content: "\e64f";
 }

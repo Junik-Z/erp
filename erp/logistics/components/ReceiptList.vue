@@ -1,6 +1,4 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -26,8 +24,6 @@ export default {
     UniCol,
     UniRow,
     BasicCard,
-    UniListItem,
-    UniList,
   },
   mixins: [BasicMixins],
   data() {

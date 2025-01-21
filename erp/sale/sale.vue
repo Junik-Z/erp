@@ -49,7 +49,7 @@ export default {
           roles: ["Sales_Member"],
         },
       ],
-      TAB: 1,
+      // TAB: 1,
     };
   },
   onShow() {

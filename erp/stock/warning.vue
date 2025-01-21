@@ -1,8 +1,6 @@
 <script>
 import { getWarningListApi } from "@/api/erp/stock";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -25,8 +23,6 @@ export default {
     UniSection,
     KoTable,
     ProductCard,
-    UniList,
-    UniListItem,
     LoadMore,
   },
   data() {
@@ -84,7 +80,7 @@ export default {
 
       getWarningListApi(this.queryList)
         .then(res => {
-          this.list = this.onMergeArrays(this.list, res.data, 'id');
+          this.list = this.onMergeArrays(this.list, res.data, "id");
           this.noMore = res.data.length < this.queryList.pageSize || _isEmpty(res.data);
           console.log(this.list);
         })

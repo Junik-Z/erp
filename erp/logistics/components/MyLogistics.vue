@@ -7,14 +7,13 @@ import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import { confirmDeliveryApi, getDeliveryMyListApi, getMyStatisticsApi } from "@/api/erp/logistics";
 import { CONFIG } from "@/utils/config";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
   name: "MyOrderList",
-  components: {UniListItem, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo},
+  components: {OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo},
   mixins: [mixins],
   data() {
     const _this = this;
@@ -127,7 +126,7 @@ export default {
         },
       ],
       // #endif
-      tableKey: +new Date()
+      tableKey: +new Date(),
     };
   },
   created() {
@@ -146,7 +145,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date()
+        this.tableKey = +new Date();
       }
 
       this.loading = true;

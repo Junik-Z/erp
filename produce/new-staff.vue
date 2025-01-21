@@ -205,7 +205,7 @@ export default {
 
       <UniSection title="财务信息" type="line">
         <view style="padding: 10px;">
-          <UniFormsItem label="发票抬头：" name="invoiceTitle">
+          <!--<UniFormsItem label="发票抬头：" name="invoiceTitle">
             <UniEasyinput v-model="form.invoiceTitle" placeholder="请输入" />
           </UniFormsItem>
           <UniFormsItem label="发票税号：" name="taxNumber">
@@ -216,7 +216,7 @@ export default {
           </UniFormsItem>
           <UniFormsItem label="增值税税率：" name="taxRate">
             <UniEasyinput v-model="form.taxRate" placeholder="请输入" />
-          </UniFormsItem>
+          </UniFormsItem>-->
           <UniFormsItem label="银行：" name="bank">
             <UniEasyinput v-model="form.bank" placeholder="请输入" />
           </UniFormsItem>

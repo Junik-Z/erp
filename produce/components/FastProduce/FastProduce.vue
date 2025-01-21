@@ -3,7 +3,7 @@ import KoList from "@/components/List/List.vue";
 import mixins from "@/mixins/mixins";
 import { getCraftListApi, getQuickListApi, removeCraftApi, removeQuickApi } from "@/api/erp/produce";
 import { CONFIG } from "@/utils/config";
-import { _isEmpty, CustomToast } from "@/utils";
+import { _get, _isEmpty, CustomToast } from "@/utils";
 import FastMixins from "./FastMixins";
 
 export default {
@@ -96,8 +96,7 @@ export default {
                 this.list.splice(index, 1);
               })
               .finally(() => {
-
-                this.$set(this.list[index], "__r_loading__", false);
+                this.list[index] && this.$set(this.list[index], "__r_loading__", false);
               });
 
           }
@@ -114,6 +113,12 @@ export default {
         });
     },
   },
+
+  computed: {
+    getProcessName() {
+      return (item) => _get(item, {quick: "produceName", craft: "processName"}[this.type]);
+    },
+  },
 };
 </script>
 
@@ -127,7 +132,7 @@ export default {
             <uni-row :gutter="10">
               <uni-col :span="24">
                 <label class="ko-basic-label">名称：</label>
-                <text>{{ item.processName }}</text>
+                <text>{{ getProcessName(item) }}</text>
               </uni-col>
               <uni-col :span="24">
                 <view style="display: flex; align-items: center; justify-content: flex-end;">

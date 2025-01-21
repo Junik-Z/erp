@@ -6,11 +6,12 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import mixins from "@/mixins/mixins";
 import { getBusinessesListApi } from "@/api/admin";
-import { _deepCopy, _isEmpty } from "@/utils";
+import KoList from "@/components/List/List.vue";
+import { _isEmpty } from "@/utils";
 
 export default {
   name: "BusinessAdvertising",
-  components: {UniCol, UniRow, BasicCard, UvAvatar, BasicPopup},
+  components: {KoList, UniCol, UniRow, BasicCard, UvAvatar, BasicPopup},
   mixins: [mixins],
   props: {
     visible: Boolean,
@@ -18,37 +19,48 @@ export default {
   },
   data() {
     return {
-      merchantsList: [],
+      list: [],
       loading: false,
+
+      noMore: false,
+      queryList: {
+        pageNum: 0,
+        pageSize: 5,
+      },
+
+      logoutLoading: false,
     };
   },
   watch: {
     visible: {
       handler() {
-        this.visible && this.getMerchantsList();
+        this.visible && this.getList();
       },
     },
   },
   methods: {
+    // 请求下一页数据
+    onRequestNextPage() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
+
     // 获取商户列表
-    getMerchantsList() {
-      if (_isEmpty(uni.$__merchants_list__)) {
-        this.loading = true;
-        getBusinessesListApi({pageSize: 5, pageNum: 0})
-          .then(res => {
-            this.merchantsList = res.data;
-            uni.$__merchants_list__ = res.data;
-          })
-          .finally(() => {
-            this.loading = false;
-          });
-      } else {
-        this.merchantsList = _deepCopy(uni.$__merchants_list__);
-      }
+    getList() {
+      this.loading = true;
+      getBusinessesListApi(this.queryList)
+        .then(res => {
+          this.list = this.onMergeArrays(this.list, res.data);
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
 
     onMerchants(item) {
-      this.loading = true;
+      this.logoutLoading = true;
       this.onLogout(
         {
           scene: item.name,
@@ -58,7 +70,7 @@ export default {
       )
         .finally(() => {
           this.$emit("update:visible", false);
-          this.loading = false;
+          this.logoutLoading = false;
         });
     },
   },
@@ -78,35 +90,45 @@ export default {
 <template>
   <BasicPopup :visible.sync="modelVisible" max-height="72vh">
     <view class="ko-merchants">
-      <BasicCard :spacing="10" v-for="item of merchantsList" :key="item.id">
-        <button @click.stop="onMerchants(item)" :disabled="loading">
-          <UniRow :gutter="10">
-            <UniCol :span="24">
-              <view style="display: flex; justify-content: center; align-items: center;">
-                <UvAvatar
-                  :src="getImageUrl(item.logo)"
-                  :size="64"
-                  random-bg-color
-                  :text="item.remark || GET_SHOP_NAME"
-                />
-              </view>
-            </UniCol>
-            <UniCol :span="24">
-              <view style="display: flex; justify-content: center; align-items: center;">
-                <text>{{ item.remark || "-" }}</text>
-              </view>
-            </UniCol>
-            <UniCol :span="24" v-if="false">
-              <view style="display: flex; justify-content: center; align-items: center;">
-                <text>{{ item.name || "-" }}</text>
-              </view>
-            </UniCol>
-          </UniRow>
-        </button>
-      </BasicCard>
+      <KoList
+        @lower="onRequestNextPage"
+        :loading="loading"
+        :no-more="noMore"
+        :no-data="!list.length"
+        no-more-text="期待您的加入"
+      >
+        <view style="padding: 16px">
+          <BasicCard :spacing="10" v-for="item of list" :key="item.id">
+            <button @click.stop="onMerchants(item)" :disabled="logoutLoading">
+              <UniRow :gutter="10">
+                <UniCol :span="24">
+                  <view style="display: flex; justify-content: center; align-items: center;">
+                    <UvAvatar
+                      :src="getImageUrl(item.logo)"
+                      :size="64"
+                      random-bg-color
+                      :text="item.remark || GET_SHOP_NAME"
+                    />
+                  </view>
+                </UniCol>
+                <UniCol :span="24">
+                  <view style="display: flex; justify-content: center; align-items: center;">
+                    <text>{{ item.remark || "-" }}</text>
+                  </view>
+                </UniCol>
+                <UniCol :span="24" v-if="false">
+                  <view style="display: flex; justify-content: center; align-items: center;">
+                    <text>{{ item.name || "-" }}</text>
+                  </view>
+                </UniCol>
+              </UniRow>
+            </button>
+          </BasicCard>
+        </view>
+      </KoList>
     </view>
     <template #hint>
-      <view style="padding: 10px 20px 0; font-size: 14px; color: #e9e9eb;">
+      <view style="padding: 10px 20px 0; font-size: 14px; color: #e9e9eb; width: 70vw;">
         众多商户已加盟，您还在等什么？快来加入我们！
       </view>
     </template>
@@ -116,9 +138,9 @@ export default {
 <style scoped lang="scss">
 .ko-merchants {
   // #ifdef MP
-  width: 90vw;
+  width: 70vw;
   // #endif
-  //height: 60vh;
-  padding: 16px;
+  height: 50vh;
+  overflow: hidden;
 }
 </style>

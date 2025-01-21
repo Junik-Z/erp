@@ -4,12 +4,13 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _set, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _isObject, _keys, _pick, _set, CustomToast } from "@/utils";
 import {
   addedProduceApi,
   addedSaleProduceApi,
   getProduceDetailApi,
   getProduceOrderDetailApi,
+  updateCraftProcessApi,
   updateProduceApi,
   updateSaleProduceApi,
 } from "@/api/erp/produce";
@@ -25,10 +26,12 @@ import CraftProcesses from "./pages/CraftProcesses.vue";
 import BinPacking from "./pages/BinPacking.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
+import KoMovable from "@/components/Movable/index.vue";
 
 export default {
   name: "Work",
   components: {
+    KoMovable,
     BinPacking,
     CustomTable,
     KoRadioGroup,
@@ -61,7 +64,7 @@ export default {
         "customizedMaterials": [],
         // 产品明细
         "productDetails": [],
-        // 生产工艺
+        // 生产流程
         "craftProcesses": [],
         // 定制板材
         "customizedBoards": [],
@@ -101,16 +104,34 @@ export default {
       customizedMaterials: "", // 定制生产数据
       isCustomized: false,
       isSale: false, // 是否是销售过来
+      isTechnology: false, // 单独修改工艺
     };
   },
   onLoad(option) {
     this.option = option;
     this.isEdit = !!option.id;
     this.isSale = _isEqual(option.FORM, "SALE");
+    this.isTechnology = _isEqual(option.isTechnology, "true");
+
+    this.fastId = option?.fastId;
+
+    if (this.fastId) {
+      this.$nextTick(() => {
+        const info = this.$refs.FPRef.getDetails({id: this.fastId}, "quick");
+        info
+          .then(res => {
+            this.form = {...this.form, ..._pick(res.data, _keys(this.form))};
+          });
+      });
+    }
 
     if (this.isSale) {
       this.form.produceType = "customized";
       uni.setNavigationBarTitle({title: "定制工单"});
+    }
+
+    if (this.isTechnology) {
+      this.current = 1;
     }
 
     if (option.ADDED_TYPE) {
@@ -150,9 +171,11 @@ export default {
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
         if (!valid) {
-          const Func = this.isSale ?
-            this.isEdit ? updateSaleProduceApi : addedSaleProduceApi
-            : this.isEdit ? updateProduceApi : addedProduceApi;
+          const Func =
+            this.isTechnology ? updateCraftProcessApi :
+              (this.isSale ?
+                this.isEdit ? updateSaleProduceApi : addedSaleProduceApi
+                : this.isEdit ? updateProduceApi : addedProduceApi);
 
           const params = _deepCopy(this.form);
 
@@ -177,7 +200,7 @@ export default {
           this.loading = true;
           Func(params)
             .then((res) => {
-              uni.setStorageSync("TENP_ORDER_INFO", res.data);
+              uni.setStorageSync("TENP_ORDER_INFO", _isObject(res.data) ? res.data : this.form);
               CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success() {
@@ -199,7 +222,7 @@ export default {
 
     // 下一步
     onNext() {
-      if (this.current === this.getStepsList.length - 1) {
+      if (this.current === this.getStepsList.length - 1 || this.isTechnology) {
         this.onSubmit();
       } else {
         if (this.isCustomized) {
@@ -240,6 +263,16 @@ export default {
 
     // 快捷生产
     onApplyFast(data, type) {
+      console.log(data, type);
+      if (_isEqual(type, "quick")) {
+        this.form = {...this.form, ..._pick(data, _keys(this.form))};
+      }
+
+      if (_isEqual(type, "craft")) {
+        this.$set(this.form, "craftProcesses", _deepCopy(data.processDetails));
+      }
+
+      this.$refs.FPRef.close();
     },
 
     // 另存为快捷工艺
@@ -247,11 +280,21 @@ export default {
       this.$refs.FPRef.open("craft", true, {processDetails: this.form.craftProcesses});
     },
 
+    // 另存为快捷生产
+    onSubmitQuick() {
+      this.$refs.FPRef.open("quick", true, this.form);
+    },
 
+    // 选中客户回填电话及地址
     onSupplierId(val) {
       const node = this.$refs.UserRef.getUserInfo(val) || {};
       this.form.orderAddress = node.address;
       this.form.orderPhone = _get(node, "contacts.0.phone");
+    },
+
+    // 开启快捷生产
+    onFast() {
+      this.$refs.FPRef.open("quick");
     },
   },
   computed: {
@@ -270,7 +313,7 @@ export default {
           value: "type",
         },
         {
-          label: "生产工艺",
+          label: "生产流程",
           value: "crafts",
         },
         {
@@ -288,7 +331,7 @@ export default {
 
 <template>
   <view class="ko-work ko-basic-added-form">
-    <view class="ko-work__steps" v-if="getStepsList.length > 1">
+    <view class="ko-work__steps" v-if="getStepsList.length > 1 && !isTechnology">
       <UvSteps :current="current">
         <UvStepsItem v-for="item of getStepsList" :title="item.label" :key="item.value" />
       </UvSteps>
@@ -315,6 +358,20 @@ export default {
                 </view>
               </UniFormsItem>
             </view>
+
+            <KoMovable
+              :y-axis="-60"
+              @click="onFast('')"
+            >
+              <view style="line-height: 1.3">
+                <view style="font-size: 12px;">
+                  快捷
+                </view>
+                <view style="font-size: 12px;">
+                  生产
+                </view>
+              </view>
+            </KoMovable>
           </UniSection>
 
           <block v-if="isEqual(type, 'xlsx')">
@@ -374,6 +431,7 @@ export default {
                     v-model="form.productDetails"
                     :total.sync="form.totalAmount"
                     is-work
+                    hide-prices
                   />
                 </view>
               </UniFormsItem>
@@ -418,26 +476,35 @@ export default {
       </view>
     </UniForms>
     <view class="ko-work__footer ko-basic-box-shadow__top">
-      <button
-        class="ko-basic-button__card"
-        @click="onPrev"
-      >
-        {{ current === 0 ? "取消" : "上一步" }}
-      </button>
-      <button
-        class="ko-basic-button__card"
-        v-if="isEqual(getCurrentValue, 'crafts')"
-        @click.stop="onSubmitCraft"
-      >
-        存为快捷工艺
-      </button>
+      <block v-if="!isTechnology">
+        <button
+          class="ko-basic-button__card"
+          @click="onPrev"
+        >
+          {{ current === 0 ? "取消" : "上一步" }}
+        </button>
+        <button
+          class="ko-basic-button__card"
+          v-if="isEqual(getCurrentValue, 'crafts')"
+          @click.stop="onSubmitCraft"
+        >
+          存为快捷工艺
+        </button>
+        <button
+          class="ko-basic-button__card"
+          v-if="isEqual(getCurrentValue, 'type') && isEqual(type, 'common')"
+          @click.stop="onSubmitQuick"
+        >
+          存为快捷生产
+        </button>
+      </block>
       <button
         class="ko-basic-button__card"
         :loading="loading"
         :disabled="loading"
         @click="onNext"
       >
-        {{ current === (getStepsList.length - 1) ? "提交" : "下一步" }}
+        {{ current === (getStepsList.length - 1) || isTechnology ? "提交" : "下一步" }}
       </button>
     </view>
 

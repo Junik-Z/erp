@@ -1,17 +1,17 @@
 <script>
 import dayjs from "@/utils/dayjs";
-import UniCalendar from "./components/uni-calendar/components/uni-calendar/uni-calendar.vue";
+import UvCalendar from "./components/uv-calendars/components/uv-calendars/uv-calendars.vue";
 import { checkinApi, getAttendanceListApi, getAttendanceSettingApi, settingApi } from "@/api/erp/attend";
 import { PageEnums } from "@/utils/config";
 import PickerDate from "@/attend/components/PickerDate.vue";
-import { _deepCopy, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _isEmpty, _pick, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 const day = dayjs();
 
 export default {
   name: "attend",
-  components: {PickerDate, UniCalendar},
+  components: {PickerDate, UvCalendar},
   data() {
     return {
       date: {
@@ -39,6 +39,8 @@ export default {
       MyToday: {},
 
       list: [],
+
+      selectNode: {},
     };
   },
   onLoad() {
@@ -79,9 +81,15 @@ export default {
         .then(res => {
           console.log("考勤记录", res.data);
           const data = res.data;
-
           // 获取今天的记录
           this.MyToday = data.find(v => v.date ? dayjs().isSame(dayjs(v.date), "d") : false) || this.MyToday;
+
+          if (_isEmpty(this.selectNode)) {
+            this.selectNode = data.find(v => v.date ? dayjs().isSame(dayjs(v.date), "d") : false) || {};
+          } else {
+            this.selectNode = data.find(v => v.date ? dayjs(this.selectNode.date).isSame(dayjs(v.date), "d") : false) || {};
+          }
+
           this.list = data;
         });
     },
@@ -110,22 +118,8 @@ export default {
       const {morningCheckInTime, afternoonCheckOutTime} = _deepCopy(this.form) || {};
       if (morningCheckInTime && afternoonCheckOutTime) {
         if (dayjs(`2025-01-01 ${morningCheckInTime}`).isBefore(dayjs(`2025-01-01 ${afternoonCheckOutTime}`), "s")) {
-          // const s = (morningCheckInTime ? morningCheckInTime.split(":") : []).map(_toFinite);
-          // const e = (afternoonCheckOutTime ? afternoonCheckOutTime.split(":") : []).map(_toFinite);
           const params = {
             ..._pick(this.form, ["id", "morningCheckInTime", "afternoonCheckOutTime"]),
-            /*  morningCheckInTime: {
-               hour: s[0],
-               minute: s[1],
-               second: 0,
-               nano: 0,
-             },
-             afternoonCheckOutTime: {
-               hour: e[0],
-               minute: e[1],
-               second: 0,
-               nano: 0,
-             }, */
           };
 
           this.sLoading = true;
@@ -157,17 +151,13 @@ export default {
 
     // 处理打卡
     onCheckin() {
+      const _this = this;
       uni.scanCode({
         onlyFromCamera: true,
         success(res) {
-          // console.log("条码类型：" + res.scanType);
-          // console.log("条码内容：" + res.result);
-
-          console.log(res.result);
-
           checkinApi({sign: res.result})
-            .then(res => {
-              console.log(res);
+            .then(() => {
+              _this.getAttendList();
               CustomToast({
                 title: "打卡成功",
               });
@@ -192,6 +182,11 @@ export default {
         url: PageEnums.attendCheckIn,
       });
     },
+
+    // 处理点击日期
+    onChange(event) {
+      this.selectNode = this.list?.find(v => dayjs(event.fulldate).isSame(dayjs(v.date), "d")) || {};
+    },
   },
   onUnload() {
     clearTimeout(this.timeVM);
@@ -213,13 +208,17 @@ export default {
 
     // 标记是否打卡
     getSelected() {
-      return [
-        /* {
-          date: "2025-01-16",
-          info: "已打卡",
-          // badgeBgc: '#4177f6'
-        }, */
-      ];
+      return _deepCopy(this.list)
+        ?.map(item => {
+            const isVery = item.isLate || item.isLeaveEarly;
+            return {
+              date: item.date,
+              info: isVery ? "异常" : "正常",
+              badgeBgc: isVery ? "" : "#4177f6",
+              badge: isVery,
+            };
+          },
+        );
     },
 
     // 打卡描述
@@ -230,6 +229,27 @@ export default {
       } else {
         return `请在${this.form.afternoonCheckOutTime}后打卡`;
       }
+    },
+
+    // 获取打卡信息
+    getCommutingText() {
+      const today = this.MyToday || {};
+      return today.amSignInSuccess ? "下班打卡" : "上班打卡";
+    },
+
+    // 获取当前选中的打卡信息
+    getItemInfo() {
+      return this.list?.find(item => {
+        const d = this.fulldate || this.MyToday?.date || +new Date();
+        return dayjs(item.date).isSame(dayjs(d), d);
+      }) || {};
+    },
+
+    getTimeHHmm() {
+      return (time) => {
+        if (!time) return "";
+        return time?.split(".")?.[0] || "";
+      };
     },
   },
 };
@@ -246,7 +266,7 @@ export default {
 
     <view class="ko-attend__check-in">
       <view class="ko-attend__check" :class="[getCheckInStatus]" @click="onCheckin">
-        <view class="ko-attend__check--title">上班打卡</view>
+        <view class="ko-attend__check--title">{{ getCommutingText }}</view>
         <view class="ko-attend__check--time">
           {{ date.h }}
           <text class="ko-attend__check--time__parting">:</text>
@@ -255,32 +275,57 @@ export default {
         <view class="ko-attend__check--desc">{{ getDescText }}</view>
       </view>
 
-      <button class="ko-basic-button__card" @click="onCheckin">上班打卡</button>
+      <button class="ko-basic-button__card" @click="onCheckin">{{ getCommutingText }}</button>
     </view>
 
     <view class="ko-attend__calendar">
-      <UniCalendar
+      <UvCalendar
         :insert="true"
         :lunar="true"
         @monthSwitch="onMonthSwitch"
         :selected="getSelected"
+        @change="onChange"
       />
     </view>
 
     <view class="ko-attend__footer">
       <view class="ko-attend__in">
         <view class="ko-attend__in--item">
-          <view class="ko-attend__in--item--time">09:00</view>
-          <view class="ko-attend__in--item--info">
+          <view class="ko-attend__in--item--time">{{ form.morningCheckInTime }}</view>
+          <view class="ko-attend__in--item--info" :class="{'is-error': selectNode.isLate}">
             <view>上班</view>
-            <view style="font-size: 12px;color: #c7c9ce;">08:34</view>
+            <view
+              v-if="selectNode.amSignInSuccess"
+              class="ko-attend__in--item--desc"
+            >
+              <block v-if="selectNode.isLate">
+                迟到 ({{ getTimeHHmm(selectNode.signInTime) }})
+              </block>
+              <block v-else>
+                {{ getTimeHHmm(selectNode.signInTime) }}
+              </block>
+            </view>
           </view>
         </view>
         <view class="ko-attend__in--item">
-          <view class="ko-attend__in--item--time">09:00</view>
-          <view class="ko-attend__in--item--info" style="border-bottom: none;">
+          <view class="ko-attend__in--item--time">{{ form.afternoonCheckOutTime }}</view>
+          <view
+            class="ko-attend__in--item--info"
+            style="border-bottom: none;"
+            :class="{'is-error': selectNode.isLeaveEarly}"
+          >
             <view>下班</view>
-            <view style="font-size: 12px;color: #c7c9ce;">16:34</view>
+            <view
+              v-if="selectNode.pmSignInSuccess"
+              class="ko-attend__in--item--desc"
+            >
+              <block v-if="selectNode.isLeaveEarly">
+                早退 ({{ getTimeHHmm(selectNode.signOutTime) }})
+              </block>
+              <block v-else>
+                {{ getTimeHHmm(selectNode.signOutTime) }}
+              </block>
+            </view>
           </view>
         </view>
       </view>
@@ -439,6 +484,19 @@ export default {
         flex: 1;
         border-bottom: 1px solid #e9e9eb;
         padding: 20px 0;
+
+        &.is-error {
+          color: #e43d33;
+
+          .ko-attend__in--item--desc {
+            color: inherit;
+          }
+        }
+      }
+
+      &--desc {
+        color: #c7c9ce;
+        font-size: 12px;
       }
     }
   }

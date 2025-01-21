@@ -80,6 +80,9 @@ export default {
       // 选择类型 purchase: 采购；sale: 销售
       type: null,
 
+      // 生产工单
+      isWork: false,
+
       // 是否是客户
       isClient: false,
       // 是否隐藏价格
@@ -124,6 +127,7 @@ export default {
       const list = _deepCopy(data?.list || []);
       this.type = data?.type;
       this.isClient = data?.isClient;
+      this.isWork = data?.isWork;
       this.hidePrices = data?.hidePrices;
       this.takeOverName = data?.takeOverName;
       this.EXList = list;
@@ -557,6 +561,7 @@ export default {
         @number-change="onItemNumberChange"
         :is-judge="isJudge"
         v20241216
+        :is-work="isWork"
 
         @lower="onLower"
         :no-more="noMore"

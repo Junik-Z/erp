@@ -1,6 +1,16 @@
 <script>
 import KoMovable from "@/components/Movable/index.vue";
-import { _deepCopy, _generateUUID, _get, _isEqual, _omit, _toFinite, CustomToast, getRect } from "@/utils";
+import {
+  _deepCopy,
+  _flattenDeep,
+  _generateUUID,
+  _get,
+  _isEqual,
+  _omit,
+  _toFinite,
+  CustomToast,
+  getRect,
+} from "@/utils";
 import { getRandomColor, repositionRectangles } from "./calculate";
 import GridTable from "../components/GridTable/GridTable.vue";
 import { customizedCalculateApi } from "@/api/erp/produce";
@@ -517,13 +527,25 @@ export default {
       const host = _deepCopy(this.formData);
       const {drillWidth, edgeWidth} = host;
 
-      const packers = [host, ...this.residue]
+      const residue = _flattenDeep(_deepCopy(this.residue).map(item => {
+        const rest = [];
+        if (item.quantity > 1) {
+          for (let i = 1; i < item.quantity; i++) {
+            rest.push(item);
+          }
+        }
+        return [item, ...rest];
+      }));
+
+      const packers = [host, ...residue]
         .map(v => ({
           ...v,
           width: _toFinite(v.width) + drillWidth, // 添加刀距
           height: _toFinite(v.height) + drillWidth, // 添加刀距
         }));
 
+      // 其余数量的材料
+      const rest = [];
 
       let items = _deepCopy(this.rectangles);
       items = items.map(item => {
@@ -533,7 +555,7 @@ export default {
 
         const [width, height] = item.rotate ? [item.height, item.width] : [item.width, item.height];
 
-        return {
+        const obj = {
           rid: item.rid,
           width: width + drillWidth - (LR * edgeWidth),
           height: height + drillWidth - (WH * edgeWidth),
@@ -541,10 +563,18 @@ export default {
           x: item.x,
           y: item.y,
         };
+
+        if (item.quantity > 1) {
+          for (let i = 1; i < item.quantity; i++) {
+            rest.push(obj);
+          }
+        }
+
+        return obj;
       });
 
       this.sLoading = true;
-      customizedCalculateApi({packers, items})
+      customizedCalculateApi({packers, items: [...items, ...rest]})
         .then(res => {
           const data = res.data;
           this.boardRecord = data;

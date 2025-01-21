@@ -1,6 +1,4 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import {
   cancelInboundApi,
@@ -34,8 +32,6 @@ export default {
     UniCol,
     UniRow,
     BasicCard,
-    UniListItem,
-    UniList,
   },
   mixins: [mixins],
   data() {
@@ -259,7 +255,7 @@ export default {
 
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
-this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.SearchRef.onShowSearch(false);
       this.getList(true);
     },
   },

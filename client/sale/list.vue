@@ -1,16 +1,13 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import KoMovable from "@/components/Movable/index.vue";
 
 export default {
   name: "List",
-  components: {KoMovable, UniListItem, BasicCard, UniCol, UniRow, UniList},
-  data: () => ({
-  }),
+  components: {KoMovable, BasicCard, UniCol, UniRow},
+  data: () => ({}),
   methods: {
     onFabClick() {
       uni.navigateTo({
@@ -25,37 +22,31 @@ export default {
 
 <template>
   <view class="ko-sale-list">
-    <UniList>
-      <UniListItem>
-        <template #body>
-          <BasicCard>
-            <view class="ko-sale-list__info">
-              <view class="ko-sale-list__info--name">订单名称</view>
-              <UniRow>
-                <UniCol :span="12">
-                  客户名称：哇哈哈哈
-                </UniCol>
-                <UniCol :span="12">
-                  客户电话：哇哈哈哈
-                </UniCol>
-                <UniCol :span="12">
-                  订单总额：哇哈哈哈
-                </UniCol>
-                <UniCol :span="12">
-                  申请时间：哇哈哈哈
-                </UniCol>
-              </UniRow>
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                v-if="false"
-              >
-                <button class="ko-basic-button__card" @click="onJump">申请出库</button>
-              </view>
-            </view>
-          </BasicCard>
-        </template>
-      </UniListItem>
-    </UniList>
+    <BasicCard>
+      <view class="ko-sale-list__info">
+        <view class="ko-sale-list__info--name">订单名称</view>
+        <UniRow>
+          <UniCol :span="12">
+            客户名称：哇哈哈哈
+          </UniCol>
+          <UniCol :span="12">
+            客户电话：哇哈哈哈
+          </UniCol>
+          <UniCol :span="12">
+            订单总额：哇哈哈哈
+          </UniCol>
+          <UniCol :span="12">
+            申请时间：哇哈哈哈
+          </UniCol>
+        </UniRow>
+        <view
+          style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+          v-if="false"
+        >
+          <button class="ko-basic-button__card" @click="onJump">申请出库</button>
+        </view>
+      </view>
+    </BasicCard>
 
     <KoMovable
       @click="onFabClick('')"

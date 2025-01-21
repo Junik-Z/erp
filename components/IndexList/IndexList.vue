@@ -93,7 +93,11 @@ export default {
     // 隐藏入库价格
     isHideStockPrice: Boolean,
 
+    // 员工
     isStaff: Boolean,
+
+    // 生产工单
+    isWork: Boolean,
   },
   watch: {
     data: {
@@ -383,6 +387,7 @@ export default {
                     :hide-prices="hidePrices"
                     :type="extra.type"
                     :is-judge="isJudge"
+                    :is-work="isWork"
                   />
                 </view>
               </block>

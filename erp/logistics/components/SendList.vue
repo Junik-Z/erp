@@ -1,8 +1,6 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import {
@@ -41,10 +39,8 @@ export default {
     OrderCard,
     LoadMore,
     HistoryBar,
-    UniListItem,
     UniCol,
     UniRow,
-    UniList,
   },
   mixins: [mixins],
   data() {

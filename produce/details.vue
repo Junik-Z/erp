@@ -19,6 +19,11 @@ export default {
   components: {CustomTable, BinPacking, FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection, CraftProcesses},
   onLoad(option) {
     this.option = option;
+    const isSale = _isEqual(this.option.FORM, "SALE");
+
+    if (isSale) {
+      uni.setNavigationBarTitle({title: "定制工单详情"});
+    }
 
     this.getFieldList();
     this.getList();
@@ -189,7 +194,7 @@ export default {
       </view>
     </UniSection>
 
-    <UniSection title="生产工艺" type="line" v-if="!isEmpty(GET_FUNC(node, 'craftProcesses.0'))">
+    <UniSection title="生产流程" type="line" v-if="!isEmpty(GET_FUNC(node, 'craftProcesses.0'))">
       <view class="ko-details__item">
         <CraftProcesses :value="node.craftProcesses" readonly />
       </view>

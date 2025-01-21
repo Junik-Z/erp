@@ -1,8 +1,6 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { getUserListApi } from "@/api/admin";
 import mixins from "@/mixins/mixins";
@@ -14,7 +12,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import IndexList from "../IndexList/IndexList.vue";
 import { getLogisticsListApi } from "@/api/erp/logistics";
-import { getStaffListApi } from "@/api/erp/product";
+import { getNotBindInfoApi, getStaffListApi } from "@/api/erp/product";
 
 export default {
   name: "PickerUser",
@@ -24,10 +22,8 @@ export default {
     UniSection,
     UniEasyinput,
     BasicPopup,
-    UniListItem,
     UvAvatar,
     BasicCard,
-    UniList,
   },
   data() {
     return {
@@ -70,7 +66,7 @@ export default {
 
     type: {
       type: String,
-      default: "default", // client: 选择客户, supplier: 供应商, logistics: 物流商
+      default: "default", // client: 选择客户, supplier: 供应商, logistics: 物流商, staff: 员工, noBindStaff: 没有被绑定的员工
     },
     isInput: Boolean,
     placeholder: {
@@ -111,17 +107,13 @@ export default {
         logistics: getLogisticsListApi,
         // 员工
         staff: getStaffListApi,
+        // 没有被绑定系统的员工
+        noBindStaff: getNotBindInfoApi,
       }[this.type];
 
-      const vKey = {default: "userId", client: "id", supplier: "id", logistics: "id", staff: "id"}[this.type];
-      const lKey = {default: "nickName", client: "name", supplier: "name", logistics: "name", staff: "name"}[this.type];
-      const logoKey = {
-        default: "avatar",
-        client: "logo",
-        supplier: "logo",
-        logistics: "logo",
-        staff: "logo",
-      }[this.type];
+      const vKey = {default: "userId", "noBindStaff": "userId"}[this.type] || "id";
+      const lKey = {default: "nickName", "noBindStaff": "nickName"}[this.type] || "name";
+      const logoKey = {default: "avatar", "noBindStaff": "avatar"}[this.type] || "logo";
 
       Func(this.queryList)
         .then(res => {
@@ -156,7 +148,7 @@ export default {
           this.$emit("input", this.checked[0]);
           this.modelVisible = false;
 
-          this.$emit('check-node', this.checkNode)
+          this.$emit("check-node", this.checkNode);
         }
         return false;
       }
@@ -182,7 +174,7 @@ export default {
         this.$emit("input", value);
         this.checkNode = this.multiple ? this.checked.map(this.getUserInfo) : this.getUserInfo(this.checked[0]);
         this.modelVisible = false;
-        this.$emit('check-node', this.checkNode)
+        this.$emit("check-node", this.checkNode);
       }
     },
     onClick() {
@@ -309,6 +301,8 @@ export default {
           :disabled="disabled"
           :is-receipt-list="type === 'logistics'"
           :safe-area-inset-bottom="false"
+
+          :is-staff="isEqual('staff', type)"
 
           @lower="onLower"
           :no-more="noMore"

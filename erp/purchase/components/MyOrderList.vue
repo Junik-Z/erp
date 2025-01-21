@@ -10,7 +10,6 @@ import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import {
   getMyPurchaseListApi,
   getMyStatisticsPurchaseApi,
@@ -26,7 +25,7 @@ import PurchaseMixins from "../PurchaseMixins";
 
 export default {
   name: "MyOrderList",
-  components: {KoMovable, UvActionSheet, UniListItem, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo},
+  components: {KoMovable, UvActionSheet, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo},
   mixins: [mixins, PurchaseMixins],
   data() {
     const _this = this;

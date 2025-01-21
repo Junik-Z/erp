@@ -13,6 +13,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    noMoreText: {
+      type: String,
+      default: '没有更多数据了'
+    }
   },
   methods: {
     // 滚动到底部了
@@ -42,7 +46,7 @@ export default {
 
       <block v-if="!hideTips">
         <view class="ko-list__no-more" v-if="noMore && !loading && !noData">
-          没有更多数据了
+          {{ noMoreText }}
         </view>
 
         <view class="ko-list__no-data" v-if="!loading && noData">
@@ -76,6 +80,7 @@ export default {
     padding: 20px 10px 30px;
     text-align: center;
     color: #c7c9ce;
+    font-size: 12px;
   }
 
   &__no-more {

@@ -177,6 +177,17 @@ export function getMySettledListApi(data) {
 }
 
 /**
+ * @description 获取我的本月金额统计
+ */
+export function getMyMonthListApi(data) {
+  return request({
+    url: "/craft/myMonth",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取待结算
  */
 export function getWaitConfirmListApi(data) {
@@ -243,7 +254,7 @@ export function confirmSettleApi(data) {
 }
 
 /**
- * @description 更新生产工艺
+ * @description 更新生产流程
  */
 export function craftUpdateApi(data) {
   return request({
@@ -354,7 +365,7 @@ export function detailCraftApi(data) {
   });
 }
 
-// -------------------
+/** ———————————————————— 销售工单相关 —————————————————————————— */
 
 /**
  * @description 获取生产工单详情
@@ -378,7 +389,6 @@ export function getProduceOrderDetailApi(data) {
   });
 }
 
-
 /**
  * @description 新增销售工单
  */
@@ -396,6 +406,19 @@ export function addedSaleProduceApi(data) {
 export function updateSaleProduceApi(data) {
   return request({
     url: "/sale/produce/update",
+    method: "post",
+    data,
+  });
+}
+
+/** ———————————————————— 修改生产中的工单 —————————————————————— */
+
+/**
+ * @description 修改生产中的流程
+ */
+export function updateCraftProcessApi(data) {
+  return request({
+    url: "/produce/updateCraftProcess",
     method: "post",
     data,
   });

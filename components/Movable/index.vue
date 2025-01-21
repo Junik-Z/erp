@@ -111,10 +111,12 @@ export default {
               :data-params="item.params"
             >
               <image
+                v-if="item.iconPath"
                 :src="item.iconPath"
                 class="ko-movable__list--item--image"
                 mode="aspectFit"
               />
+              <i v-if="item.iconfont" class="iconfont ko-movable__list--item--iconfont" :class="[item.iconfont]"></i>
               <text class="ko-movable__list--item--text">
                 {{ item.text }}
               </text>
@@ -210,8 +212,17 @@ $uni-shadow-base: 0 1px 5px 2px rgba($color: #000000, $alpha: 0.3) !default;
       padding: 2px 10px;
 
       &--image {
-        width: 30px;
-        height: 30px;
+        width: 25px;
+        height: 25px;
+      }
+
+      &--iconfont {
+        font-size: 25px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 25px;
+        height: 25px;
       }
 
       &--text {

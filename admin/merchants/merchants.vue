@@ -1,8 +1,6 @@
 <script>
 import { MENU_LIST, PageEnums, ROLE_LIST_ENUMS } from "@/utils/config";
 import mixins from "@/mixins/mixins";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UvAvatarGroup from "@/uni_modules/uv-avatar/components/uv-avatar-group/uv-avatar-group.vue";
 import { getPermissionsApi, setUserRoleApi } from "@/api/admin";
@@ -13,7 +11,7 @@ import PickerUser from "@/components/PickerUser/PickerUser.vue";
 
 export default {
   name: "SetRole",
-  components: {PickerUser, UvAvatar, BasicPopup, UvAvatarGroup, BasicCard, UniListItem, UniList},
+  components: {PickerUser, UvAvatar, BasicPopup, UvAvatarGroup, BasicCard},
   mixins: [mixins],
   data() {
     return {
@@ -125,89 +123,84 @@ export default {
 
 <template>
   <view class="ko-role ko-basic-added-form">
-    <UniList>
-      <UniListItem v-for="(item, index) of getMenuList" :key="index">
-        <template #body>
-          <BasicCard>
-            <view class="ko-role__item">
-              <view class="ko-role__item--header">
-                <view class="ko-role__item--header--info">
-                  <i class="iconfont" :class="[item.icon]"></i>
-                  <view class="ko-basic-label">{{ item.label }}</view>
-                </view>
-              </view>
+    <BasicCard :spacing="10" v-for="(item, index) of getMenuList" :key="index">
+      <view class="ko-role__item">
+        <view class="ko-role__item--header">
+          <view class="ko-role__item--header--info">
+            <i class="iconfont" :class="[item.icon]"></i>
+            <view class="ko-basic-label">{{ item.label }}</view>
+          </view>
+        </view>
 
-              <view class="ko-role__item--user">
-                <view class="ko-role__item--read" v-if="item.isMember">
-                  <label class="ko-basic-label">{{ item.memberLabel || "会员" }}：</label>
-                  <UvAvatarGroup
-                    size="52"
-                    gap="0.4"
-                    :max-count="8"
-                    :urls="getAvatarList('Member', item)"
-                    :names="getNameList('Member', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onJumpMember('Member', item)"
-                  >
-                    +
-                  </button>
-                </view>
-                <view class="ko-role__item--read" v-if="item.role.includes('Stock_Taking')">
-                  <label class="ko-basic-label">盘点：</label>
-                  <UvAvatarGroup
-                    size="52"
-                    gap="0.4"
-                    :max-count="8"
-                    :urls="getAvatarList('Taking', item)"
-                    :names="getNameList('Taking', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onSetRole('Taking', item)"
-                  >
-                    +
-                  </button>
-                </view>
-                <view class="ko-role__item--read">
-                  <label class="ko-basic-label">查看：</label>
-                  <UvAvatarGroup
-                    size="52"
-                    gap="0.4"
-                    :max-count="8"
-                    :urls="getAvatarList('Read', item)"
-                    :names="getNameList('Read', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onSetRole('Read', item)"
-                  >
-                    +
-                  </button>
-                </view>
-                <view class="ko-role__item--read">
-                  <label class="ko-basic-label">管理：</label>
-                  <UvAvatarGroup
-                    :max-count="8"
-                    size="52"
-                    gap="0.4"
-                    :urls="getAvatarList('Write', item)"
-                    :names="getNameList('Write', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onSetRole('Write', item)"
-                  >
-                    +
-                  </button>
-                </view>
-              </view>
-            </view>
-          </BasicCard>
-        </template>
-      </UniListItem>
-    </UniList>
+        <view class="ko-role__item--user">
+          <view class="ko-role__item--read" v-if="item.isMember">
+            <label class="ko-basic-label">{{ item.memberLabel || "会员" }}：</label>
+            <UvAvatarGroup
+              size="52"
+              gap="0.4"
+              :max-count="8"
+              :urls="getAvatarList('Member', item)"
+              :names="getNameList('Member', item)"
+            />
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onJumpMember('Member', item)"
+            >
+              +
+            </button>
+          </view>
+          <view class="ko-role__item--read" v-if="item.role.includes('Stock_Taking')">
+            <label class="ko-basic-label">盘点：</label>
+            <UvAvatarGroup
+              size="52"
+              gap="0.4"
+              :max-count="8"
+              :urls="getAvatarList('Taking', item)"
+              :names="getNameList('Taking', item)"
+            />
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onSetRole('Taking', item)"
+            >
+              +
+            </button>
+          </view>
+          <view class="ko-role__item--read">
+            <label class="ko-basic-label">查看：</label>
+            <UvAvatarGroup
+              size="52"
+              gap="0.4"
+              :max-count="8"
+              :urls="getAvatarList('Read', item)"
+              :names="getNameList('Read', item)"
+            />
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onSetRole('Read', item)"
+            >
+              +
+            </button>
+          </view>
+          <view class="ko-role__item--read">
+            <label class="ko-basic-label">管理：</label>
+            <UvAvatarGroup
+              :max-count="8"
+              size="52"
+              gap="0.4"
+              :urls="getAvatarList('Write', item)"
+              :names="getNameList('Write', item)"
+            />
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onSetRole('Write', item)"
+            >
+              +
+            </button>
+          </view>
+        </view>
+      </view>
+    </BasicCard>
+
 
     <PickerUser
       ref="PickerUserRef"

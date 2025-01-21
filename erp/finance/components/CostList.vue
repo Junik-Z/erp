@@ -3,11 +3,9 @@
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 // #endif
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
@@ -47,11 +45,9 @@ export default {
     UvAvatar,
     LoadMore,
     UniSegmentedControl,
-    UniListItem,
     BasicCard,
     UniCol,
     UniRow,
-    UniList,
     UvCountTo,
     ClassifyList,
   },
@@ -473,6 +469,20 @@ export default {
                 is-input
                 type="logistics"
                 placeholder="请选择物流商"
+              />
+            </UniFormsItem>
+            <UniFormsItem
+              v-if="getClassId === 'wages'" label="员工："
+              required
+              name="personId"
+              :rules="[{required: true, errorMessage: '请选择员工'}]"
+            >
+              <PickerUser
+                style="width: 100%;"
+                v-model="form.personId"
+                is-input
+                type="staff"
+                placeholder="请选择员工"
               />
             </UniFormsItem>
             <UniFormsItem label="凭证：" name="voucher">

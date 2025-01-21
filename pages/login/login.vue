@@ -73,7 +73,7 @@ export default {
     <div class="ko-login__wrap">
       <image
         class="ko-login__logo"
-        src="@/static/images/login-logo.png"
+        src="./login-logo.png"
         alt="login"
         mode="aspectFill"
       />
@@ -110,37 +110,6 @@ export default {
 </template>
 
 <style scoped lang="scss">
-// #ifdef MP
-.ko-login {
-  box-sizing: border-box;
-  height: 100vh;
-  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  &__logo {
-    width: calc(100vw - 16px * 2);
-    margin-bottom: 30px;
-  }
-
-  /deep/ .uni-card {
-    .uni-card__header .uni-card__header-content {
-      text-align: center;
-    }
-  }
-
-  /deep/ .uni-card__actions {
-    padding: 0 10px 16px;
-  }
-
-  .ko-basic-button {
-    margin-bottom: 20px;
-  }
-}
-
-// #endif
-
 // #ifdef H5
 .ko-login {
   height: 100vh;

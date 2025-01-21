@@ -245,6 +245,14 @@ export function getStaffListApi(data) {
   return request({url: "/staff/list", method: "get", data});
 }
 
+
+/**
+ * @description 获取未被绑定的员工
+ */
+export function getNotBindInfoApi(data) {
+  return request({url: "/staff/getNotBindInfo", method: "get", data});
+}
+
 /**
  * @description 添加员工
  */

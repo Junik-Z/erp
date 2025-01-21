@@ -17,7 +17,6 @@ import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import { CONFIG } from "@/utils/config";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
@@ -27,7 +26,7 @@ import SaleMixins from "../SaleMixins";
 export default {
   name: "MyOrderList",
   components: {
-    KoMovable, UvActionSheet, UniListItem, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo,
+    KoMovable, UvActionSheet, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo,
   },
   mixins: [mixins, SaleMixins],
 

@@ -15,8 +15,6 @@ import {
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
@@ -32,8 +30,6 @@ export default {
   components: {
     OrderCard,
     LoadMore,
-    UniList,
-    UniListItem,
     FeesList,
     PickerUser,
     UniSegmentedControl,

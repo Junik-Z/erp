@@ -7,12 +7,10 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { _deepCopy, _get } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
@@ -23,12 +21,10 @@ export default {
   components: {
     PrintList, UvActionSheet,
     UniSection,
-    UniListItem,
     OrderCard,
     UniForms,
     FilePicker,
     UniFormsItem,
-    UniList,
     UniEasyinput,
     UniRow,
     UniCol,

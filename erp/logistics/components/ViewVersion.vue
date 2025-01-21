@@ -1,9 +1,7 @@
 <script>
-import UniList from "@/uni_modules/uni-list/components/uni-list/uni-list.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniListItem from "@/uni_modules/uni-list/components/uni-list-item/uni-list-item.vue";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import {
   cancelDeliveryApi,
@@ -36,11 +34,9 @@ export default {
     UvActionSheet,
     OrderCard,
     UvCountTo,
-    UniListItem,
     BasicCard,
     UniCol,
     UniRow,
-    UniList,
   },
   mixins: [mixins],
   data() {
@@ -366,61 +362,55 @@ export default {
     </view>
 
     <view class="ko-view-version__row">
-      <UniList>
-        <!-- #ifdef MP -->
-        <UniListItem v-for="item of list" :key="item.id">
-          <template #body>
-            <OrderCard :item="item" is-logistics @click="onJumpDetails(item, 'logistics')">
-              <template #operate v-if="['CREATED'].includes(item.status)">
-                <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
-                  <button
-                    class="ko-basic-button__card"
-                    @click.stop="onConfirm(item)"
-                  >
-                    完成配送
-                  </button>
-                  <!-- <button
-                     class="ko-basic-button__card"
-                     @click.stop="onActionClick(item)"
-                     v-if="['CREATED'].includes(item.status)"
-                   >
-                     更多
-                   </button>-->
-                </view>
-              </template>
-            </OrderCard>
-          </template>
-        </UniListItem>
-        <LoadMore :loading="loading" />
-        <!-- #endif -->
+      <!-- #ifdef MP -->
+      <OrderCard :spacing="10" :item="item" is-logistics @click="onJumpDetails(item, 'logistics')">
+        <template #operate v-if="['CREATED'].includes(item.status)">
+          <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onConfirm(item)"
+            >
+              完成配送
+            </button>
+            <!-- <button
+               class="ko-basic-button__card"
+               @click.stop="onActionClick(item)"
+               v-if="['CREATED'].includes(item.status)"
+             >
+               更多
+             </button>-->
+          </view>
+        </template>
+      </OrderCard>
+      <LoadMore :loading="loading" />
+      <!-- #endif -->
 
-        <!-- #ifdef H5 -->
-        <view style="padding: 10px;">
-          <KoTable
-            :loading="loading"
-            :columns="columns"
-            :data="list"
-            empty-text="暂无数据"
-            stripe
-            @row-click="onJumpDetails($event, 'logistics')"
-          >
-            <!--
-            @row-click="onJumpDetails($event, 'receivable')"
-            -->
-            <template #operate="{item}">
-              <view style="display: flex; align-items: center; justify-content: center;">
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onConfirm(item)"
-                >
-                  完成配送
-                </button>
-              </view>
-            </template>
-          </KoTable>
-        </view>
-        <!-- #endif -->
-      </UniList>
+      <!-- #ifdef H5 -->
+      <view style="padding: 10px;">
+        <KoTable
+          :loading="loading"
+          :columns="columns"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+          @row-click="onJumpDetails($event, 'logistics')"
+        >
+          <!--
+          @row-click="onJumpDetails($event, 'receivable')"
+          -->
+          <template #operate="{item}">
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onConfirm(item)"
+              >
+                完成配送
+              </button>
+            </view>
+          </template>
+        </KoTable>
+      </view>
+      <!-- #endif -->
     </view>
 
 

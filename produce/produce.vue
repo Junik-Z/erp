@@ -6,7 +6,6 @@ import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { TabList } from "./define";
-import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
 import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import { _flattenDeep, _get, _groupBy, _keys } from "@/utils";
 import TopMenus from "./components/TopMenus.vue";
@@ -21,7 +20,6 @@ export default {
     UvCountTo,
     UniRow,
     QiunDataCharts,
-    UniGridItem,
     UniGrid,
     TopMenus,
   },
@@ -81,9 +79,12 @@ export default {
       warningTrend: {},
     };
   },
-  onShow() {
+  onLoad() {
     this.getList();
   },
+ /*  onShow() {
+    this.getList();
+  }, */
   methods: {
     getList() {
       this.loading = true;

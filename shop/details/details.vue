@@ -292,7 +292,7 @@ export default {
         </view>
       </UniSection>
 
-      <UniSection title="生产工艺" type="line" v-if="!isEmpty(node.craftProcesses)">
+      <UniSection title="生产流程" type="line" v-if="!isEmpty(node.craftProcesses)">
         <view class="ko-details__item">
           <CraftProcesses />
         </view>

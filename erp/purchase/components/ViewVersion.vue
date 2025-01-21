@@ -1,6 +1,5 @@
 <script>
 import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
-import UniGridItem from "@/uni_modules/uni-grid/components/uni-grid-item/uni-grid-item.vue";
 import QiunDataCharts from "@/erp/components/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
@@ -13,7 +12,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 export default {
   name: "ViewVersion",
   mixins: [mixins],
-  components: {UniSection, UniCol, UvCountTo, UniRow, QiunDataCharts, UniGridItem, UniGrid},
+  components: {UniSection, UniCol, UvCountTo, UniRow, QiunDataCharts, UniGrid},
   data: () => ({
     loading: false,
     data: {
