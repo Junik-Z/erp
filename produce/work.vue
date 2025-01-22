@@ -27,6 +27,7 @@ import BinPacking from "./pages/BinPacking.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
 import KoMovable from "@/components/Movable/index.vue";
+import { getMyInfoApi } from "@/api/user";
 
 export default {
   name: "Work",
@@ -67,7 +68,132 @@ export default {
         // 生产流程
         "craftProcesses": [],
         // 定制板材
-        "customizedBoards": [],
+        "customizedBoards": [
+          /* {
+            "rid": "f13cdb02-0d75-4e23-9aff-3d85d41ebc98",
+            "drillWidth": 6,
+            "edgeWidth": 1.2,
+            "color": "黑色",
+            "boards": [
+              {
+                "rid": "3e9ca1b5-4346-4858-b198-b7b16de9c01e",
+                "width": 0,
+                "height": 0,
+                "packers": [
+                  {
+                    "rid": "f13cdb02-0d75-4e23-9aff-3d85d41ebc98",
+                    "drillWidth": 6,
+                    "edgeWidth": 1.2,
+                    "width": 1220,
+                    "height": 2440,
+                    "color": "黑色",
+                  },
+                  {
+                    "name": "余料1",
+                    "rid": "a2edf408-33cb-4592-9852-c2dd1a6de914",
+                    "width": 1000,
+                    "height": 600,
+                    "x": null,
+                    "y": null,
+                    "quantity": 2,
+                    "weight": 9,
+                    "color": "绿色",
+                  },
+                ],
+                "items": [
+                  {
+                    "name": "柜面1",
+                    "rid": "100d5e05-e67d-4a16-bf72-a7e35b2ae504",
+                    "width": 500,
+                    "height": 600,
+                    "x": 0,
+                    "y": 0,
+                    "radius": [0, 0, 0, 0],
+                    "edges": [1, 1, 1, 1],
+                    "weight": 9,
+                    "texture": true,
+                    "rotate": false,
+                    "quantity": 2,
+                    "color": "绿色",
+                  },
+                  {
+                    "name": "柜面1",
+                    "rid": "7a61a157-eb94-461b-883d-0be3424f28d7",
+                    "width": 500,
+                    "height": 600,
+                    "x": 0,
+                    "y": 0,
+                    "radius": [0, 0, 0, 0],
+                    "edges": [0, 0, 0, 0],
+                    "weight": 9,
+                    "texture": true,
+                    "rotate": false,
+                    "quantity": 2,
+                    "color": "绿色",
+                  },
+                ],
+              },
+            ],
+            "boardRecord": [
+              {
+                "width": 1006,
+                "height": 606,
+                "weight": 9,
+                "color": "绿色",
+                "items": [
+                  {
+                    "rid": "7a61a157-eb94-461b-883d-0be3424f28d7",
+                    "width": 506,
+                    "height": 606,
+                    "color": "绿色",
+                    "x": 0,
+                    "y": 0,
+                  },
+                ],
+              },
+              {
+                "width": 1006,
+                "height": 606,
+                "weight": 9,
+                "color": "绿色",
+                "items": [
+                  {
+                    "rid": "7a61a157-eb94-461b-883d-0be3424f28d7",
+                    "width": 506,
+                    "height": 606,
+                    "color": "绿色",
+                    "x": 0,
+                    "y": 0,
+                  },
+                ],
+              },
+              {
+                "width": 1226,
+                "height": 2446,
+                "weight": 9,
+                "color": "绿色",
+                "items": [
+                  {
+                    "rid": "100d5e05-e67d-4a16-bf72-a7e35b2ae504",
+                    "width": 503,
+                    "height": 603,
+                    "color": "绿色",
+                    "x": 0,
+                    "y": 0,
+                  },
+                  {
+                    "rid": "100d5e05-e67d-4a16-bf72-a7e35b2ae504",
+                    "width": 503,
+                    "height": 603,
+                    "color": "绿色",
+                    "x": 503,
+                    "y": 0,
+                  },
+                ],
+              },
+            ],
+          }, */
+        ],
       },
       rules: {
         planFinishDate: {
@@ -105,6 +231,8 @@ export default {
       isCustomized: false,
       isSale: false, // 是否是销售过来
       isTechnology: false, // 单独修改工艺
+
+      TimeVM: null,
     };
   },
   onLoad(option) {
@@ -139,6 +267,8 @@ export default {
     }
 
     if (this.isEdit) this.getInfo();
+
+    this.onKeepAlive();
   },
   methods: {
     // 获取详情
@@ -296,6 +426,18 @@ export default {
     onFast() {
       this.$refs.FPRef.open("quick");
     },
+
+    // 点击了
+    onSetSteps(index) {
+      this.current = index;
+    },
+
+    // 处理保活
+    onKeepAlive() {
+      this.TimeVM = setTimeout(() => {
+        getMyInfoApi();
+      }, 10 * 60 * 1000);
+    },
   },
   computed: {
     getStartDate() {
@@ -326,6 +468,9 @@ export default {
       return _get(this.getStepsList, this.current + ".value");
     },
   },
+  onUnload() {
+    clearTimeout(this.TimeVM);
+  },
 };
 </script>
 
@@ -333,7 +478,12 @@ export default {
   <view class="ko-work ko-basic-added-form">
     <view class="ko-work__steps" v-if="getStepsList.length > 1 && !isTechnology">
       <UvSteps :current="current">
-        <UvStepsItem v-for="item of getStepsList" :title="item.label" :key="item.value" />
+        <UvStepsItem
+          @click-step="onSetSteps(index)"
+          v-for="(item, index) of getStepsList"
+          :title="item.label"
+          :key="item.value"
+        />
       </UvSteps>
     </view>
     <UniForms
@@ -410,7 +560,6 @@ export default {
               v-model="form.supplierId"
               type="client"
               ref="UserRef"
-              :disabled="readonly"
               @input="onSupplierId"
             />
           </uni-forms-item>
@@ -475,11 +624,13 @@ export default {
         </block>
       </view>
     </UniForms>
-    <view class="ko-work__footer ko-basic-box-shadow__top">
+
+    <view class="ko-work__footer">
       <block v-if="!isTechnology">
         <button
           class="ko-basic-button__card"
           @click="onPrev"
+          v-if="current !== 0"
         >
           {{ current === 0 ? "取消" : "上一步" }}
         </button>
@@ -514,7 +665,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-work {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 70px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 60px);
 
   /* #ifdef H5 */
   .ko-basic-button {
@@ -532,17 +683,23 @@ export default {
     align-items: flex-start;
     justify-content: space-around;
 
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    background: #fff;
+    /* position: fixed;
+     bottom: 0;
+     left: 0;
+     right: 0;
+     z-index: 10;*/
 
-    height: 70px;
-    padding-top: 20rpx;
+
+    //background: #fff;
+
+    //height: 70px;
+
+    margin-top: 70px;
+
+    border-top: 1px solid #e9e9eb;
+    padding-top: 14px;
     padding-left: 40px;
-    padding-right: 40rpx;
+    padding-right: 40px;
 
     .ko-basic-button__card {
       width: 100px;

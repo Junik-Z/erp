@@ -298,7 +298,7 @@ export default {
     },
     cursorSpacing: {
       type: Number,
-      default: 0,
+      default: 100,
     },
     passwordIcon: {
       type: Boolean,

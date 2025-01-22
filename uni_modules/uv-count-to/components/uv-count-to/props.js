@@ -43,7 +43,7 @@ export default {
 		// 字体大小
 		fontSize: {
 			type: [String, Number],
-			default: 22
+			default: 20
 		},
 		// 是否加粗字体
 		bold: {

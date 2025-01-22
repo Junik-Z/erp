@@ -58,7 +58,7 @@ export default {
           width: 80,
         },
         {
-          label: "员工Logo",
+          label: "Logo",
           prop: "logo",
           width: 100,
           render: (h, {row}) => {
@@ -80,28 +80,30 @@ export default {
           prop: "name",
         },
         {
-          label: "联系电话",
-          prop: "phone",
+          label: "绑定用户",
+          prop: "name",
+          render: (h, {row}) => {
+            console.log(row);
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: _this.getImageUrl(_get(row, "users.0.avatar")),
+                  size: 64,
+                  text: _get(row, "users.0.nickName"),
+                },
+              })],
+            );
+          },
         },
+        // {
+        //   label: "联系电话",
+        //   prop: "phone",
+        // },
         {
           label: "地址",
           prop: "address",
-        },
-        {
-          label: "发票抬头",
-          prop: "invoiceTitle",
-        },
-        {
-          label: "纳税人识别号",
-          prop: "taxNumber",
-        },
-        {
-          label: "开票类型",
-          prop: "invoiceType",
-        },
-        {
-          label: "税率",
-          prop: "taxRate",
         },
         {
           label: "开户行",
@@ -388,7 +390,7 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px;">
+      <view style="padding: 10px; height: calc(100vh - 114px)">
         <KoTable
           :loading="loading"
           :columns="getColumns"
@@ -396,11 +398,28 @@ export default {
           empty-text="暂无数据"
           stripe
           @row-click="onJumpInfo($event)"
+
+          @next-load="onLower"
+          :no-more="noMore || loading"
+
+          :no-refresh="noRefresh"
         >
           <template #operate="{item, index}" v-if="isPerm('Produce_Write')">
             <view style="display: flex; align-items: center; justify-content: center;">
-              <button @click.stop="onBindPopup(item, true, index)" class="ko-basic-button__user">绑定员工</button>
-              <button @click.stop="onBindPopup(item, false, index)" class="ko-basic-button__user">解绑员工</button>
+              <button
+                v-if="item._no_bind_"
+                @click.stop="onBindPopup(item, true, index)"
+                class="ko-basic-button__user"
+              >
+                绑定员工
+              </button>
+              <button
+                v-else
+                @click.stop="onUnbind(item, index)"
+                class="ko-basic-button__user"
+              >
+                解绑员工
+              </button>
               <button class="ko-basic-button__user" @click.stop="onJump(item, index)">编辑</button>
               <button class="ko-basic-button__user" @click.stop="onRemove(item, index)">删除</button>
             </view>
@@ -445,7 +464,9 @@ export default {
 .ko-staff {
   display: flex;
   flex-direction: column;
+  // #ifdef MP
   height: 100vh;
+  // #endif
 
   &__content {
     flex: 1;

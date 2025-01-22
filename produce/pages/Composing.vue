@@ -1,9 +1,9 @@
 <script>
-import { _deepCopy, _flattenDeep, _get, _isEqual, _round, getRect } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEqual, _round, _sum, getRect } from "@/utils";
 import { getRandomColor } from "@/produce/pages/calculate";
 
 const systemInfo = uni.getSystemInfoSync();
-const screenWidth = systemInfo.screenWidth;
+const screenWidth = systemInfo.screenWidth - 26;
 
 export default {
   name: "Composing",
@@ -26,13 +26,19 @@ export default {
         return {};
       },
     },
-
     winWidth: Number,
+    residue: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
   },
   watch: {
-    data: {
+    // 数据变化触发
+    watchData: {
       handler() {
-        this.getWidth();
+        this.handleList();
       },
       immediate: true,
       deep: true,
@@ -41,6 +47,15 @@ export default {
   data() {
     return {
       WinWidth: screenWidth,
+
+      // 已经加载的颜色
+      colors: [],
+
+      // 统计
+      count: [],
+      // 渲染
+      list: [],
+      allEdgeLength: 0,
     };
   },
   methods: {
@@ -90,75 +105,155 @@ export default {
     getWidth() {
       getRect(".ko-composing", this)
         .then(res => {
-          this.WinWidth = res?.width || screenWidth;
+          this.WinWidth = (res?.width ? res?.width - 26 : screenWidth) || screenWidth;
         });
+
     },
 
     onClose() {
       this.$emit("close");
     },
-  },
-  computed: {
-    // 获取容器的样式
-    getVesselStyle() {
-      return (vss) => {
-        const scale = (_round(vss.scale, 2) || _round(this.winWidth / vss.width, 2)) ?? 1;
+
+    // 处理要显示的元素信息
+    handleList() {
+      const precision = 6;
+      this.colors = [];
+
+      // 计算后的数据
+      const data = _deepCopy(this.data) || [];
+      // 机械设置
+      const {drillWidth, edgeWidth} = _deepCopy(this.form) || {};
+      // 所有材料
+      const rectangles = _deepCopy(this.rectangles);
+      // 视图宽度
+      const winWidth = _deepCopy(this.getWinWidth);
+
+      const w = [];
+
+      // 板材
+      this.list = data.map(board => {
+        const scale = _round(winWidth / board.width, 2);
+
+        // 要渲宽高
+        const rWidth = _round(board.width * scale, precision);
+        const rHeight = _round(board.height * scale, precision);
+        // 处理材料
+        const rItems = this.handleItems(_deepCopy(board.items), rectangles, scale, precision, drillWidth);
 
         return {
-          height: (vss.height + 2) * scale + "px",
-          width: (vss.width + 2) * scale + "px",
+          ...board,
+          rGroup: `${board.width - drillWidth}×${board.height - drillWidth}×${board.weight || ""} (${board.color || ""})`,
+          rEdgeLength: _sum(rItems.map(v => v.edgeLength)),
+          rHeight,
+          rWidth,
+          sWidth: (board.width - drillWidth),
+          sHeight: (board.height - drillWidth),
+          scale,
+          rItems,
+        };
+      });
+
+      // 按板材分组
+      const group = _groupBy(_deepCopy(this.list), (item) => item.rGroup);
+
+      this.count = [];
+      this.allEdgeLength = 0;
+
+      for (const key in group) {
+        const item = group[key];
+        const obj = {
+          norm: key,
+          count: item.length,
+          edgeLength: _sum(item.map(v => v.rEdgeLength)),
+        };
+
+        this.allEdgeLength += obj.edgeLength;
+
+        this.count.push(obj);
+      }
+    },
+
+    // 处理材料
+    handleItems(items, list, scale, precision, drillWidth) {
+      const gColor = () => {
+        let color = getRandomColor();
+        if (this.colors.includes(color)) {
+          color = gColor();
+        }
+
+        this.colors.push(color);
+        return color;
+      };
+      return items?.map(item => {
+        // 材料初始设置的信息
+        const node = list.find(v => _isEqual(v.rid, item.rid)) || {};
+
+        const [sWidth, sHeight] = node.rotate ? [node.height, node.width] : [node.width, node.height];
+
+        let edgeLength = 0;
+
+        // 计算封边
+        ;(node.edges || [])
+          .forEach((edge, index) => {
+            if (edge) {
+              // 封边的左右前背
+              const w = [node.height, node.height, node.width, node.width][index];
+              const len = (w) + drillWidth + 6;
+              edgeLength += len;
+            }
+          });
+
+        return {
+          name: node.name,
+          rid: item.rid,
+          rWidth: _round(item.width * scale, precision),
+          rHeight: _round(item.height * scale, precision),
+          rX: _round(item.x * scale, precision),
+          rY: _round(item.y * scale, precision),
+          rDrillWidth: (drillWidth / 2) * scale,
+          rRadius: node.radius ? node.radius.map(v => v * scale + "px").join(" ") : 0,
+          sWidth,
+          sHeight,
+          sWeight: node.weight,
+          sColor: gColor(),
+          edgeLength,
+        };
+      }) || [];
+    },
+  },
+  computed: {
+    // 监听数据改变
+    watchData() {
+      return [this.getWinWidth, ...this.data];
+    },
+    // 获取视图宽度
+    getWinWidth() {
+      return this.WinWidth || this.winWidth || (screenWidth);
+    },
+
+    // 获取容器的样式
+    getBoardStyle() {
+      return (board) => {
+        return {
+          width: board.rWidth + "px",
+          height: board.rHeight + "px",
           transformOrigin: `0 0`,
         };
       };
     },
 
-    // 获取所有的子级
-    getVChildList() {
-      return (node) => {
-        return node.items;
-      };
-    },
-
     // 处理子元素的样式
     getVItemStyle() {
-      return (item, vss) => {
-        const gColor = () => {
-          const color = getRandomColor();
-          if (_flattenDeep(this.data.map(v => v.items)).some(v => _isEqual(v.color, color))) {
-            return gColor();
-          }
-          return color;
-        };
-
-        const {drillWidth} = _deepCopy(this.form) || {drillWidth: 0};
-        const bSize = (drillWidth || 0) / 2;
-        const scale = vss.scale ?? 1;
-        return {
-          width: (item.width + (drillWidth || 0)) * scale + "px",
-          height: (item.height + (drillWidth || 0)) * scale + "px",
-          background: `radial-gradient(#eeeeee -30%, ${gColor()} 100%)`,
-          transform: `translate(${item.x * scale}px, ${item.y * scale}px) rotate(${item.rotation || 0}deg)`,
-          border: `${bSize * scale}px solid #000`,
-          color: "#1f3ba0",
-          borderRadius: item.radius ? item.radius.map(v => v * scale + "px").join(" ") : 0,
-        };
-      };
-    },
-
-    // 获取处理后的数据
-    getDataList() {
-      return _deepCopy(this.data).map(v => {
-        return {
-          scale: _round(((this.winWidth || this.WinWidth) - 6) / v.width, 2),
-          ...v,
-        };
-      });
-    },
-
-    getRectanglesItem() {
       return (item) => {
-        const node = this.rectangles.find(v => _isEqual(v.rid, item.rid));
-        return node || {};
+        return {
+          width: item.rWidth + "px",
+          height: item.rHeight + "px",
+          background: `radial-gradient(#eeeeee -30%, ${item.sColor} 100%)`,
+          transform: `translate(${item.rX}px, ${item.rY}px)`,
+          border: `${item.rDrillWidth}px solid #000`,
+          color: "#1f3ba0",
+          borderRadius: item.rRadius,
+        };
       };
     },
   },
@@ -178,42 +273,64 @@ export default {
     >
       <i class="iconfont icon-cha"></i>
     </button>
-
     <scroll-view scroll-y="true" class="ko-composing__content">
+      <view class="ko-composing__count">
+        <uni-row :gutter="10">
+          <block v-for="(item, index) of count" :key="index">
+            <uni-col :span="16">
+              <label class="ko-basic-label">规格：</label>
+              <text>{{ item.norm }}</text>
+            </uni-col>
+            <uni-col :span="8">
+              <label class="ko-basic-label">共计：</label>
+              <text>{{ item.count }}</text>
+            </uni-col>
+          </block>
 
-      <view class="ko-composing__no-data" v-if="!getDataList.length">
+          <uni-col :span="16">
+            <label class="ko-basic-label">封边：</label>
+            <text>{{ allEdgeLength }}mm</text>
+          </uni-col>
+
+        </uni-row>
+      </view>
+
+      <view class="ko-composing__no-data" v-if="!list.length">
         未生成任何结果，请确认数据是否正确。
       </view>
 
       <!-- 计算结果 -->
-      <view class="ko-composing__wrap" v-for="(vss, index) of getDataList" :key="index">
+      <view class="ko-composing__wrap" v-for="(board, index) of list" :key="index">
         <scroll-view
           scroll-x="true"
           class="ko-composing__scroll"
         >
           <view class="ko-composing__scroll--center">
-            <view class="ko-composing__width">{{ vss.width }}</view>
-            <view class="ko-composing__height">{{ vss.height }}</view>
+            <view class="ko-composing__width">{{ board.sWidth }}</view>
+            <view class="ko-composing__height">{{ board.sHeight }}</view>
 
             <view
               class="ko-composing__box"
-              :style="[getVesselStyle(vss)]"
+              :style="[getBoardStyle(board)]"
               @touchstart="onTouchStart"
               @touchmove="onTouchMove"
               @touchend="onTouchEnd"
-              :data-params="vss"
+              :data-params="board"
             >
               <view
                 class="ko-composing__item"
-                v-for="(item) of getVChildList(vss)"
+                v-for="(item) of board.rItems"
                 :key="item.rid"
-                :style="[getVItemStyle(item, vss)]"
+                :style="[getVItemStyle(item)]"
               >
                 <view
                   class="ko-composing__item--info"
-                  :style="{transform: `rotate(${item.width < item.height ? '90' : 0}deg)`}"
+                  :style="{transform: `rotate(${item.sWidth < item.sHeight ? '90' : 0}deg)`}"
                 >
-                  {{ `(${item.width}x${item.height}x${getRectanglesItem(item).weight || 0})` }}
+                  <view>{{ item.name }}</view>
+                  <view>
+                    {{ `(${item.sWidth}x${item.sHeight}x${item.sWeight})` }}
+                  </view>
                 </view>
                 <view class="ko-composing__item--angle LT" @click.stop="onAngle('angle', item)"></view>
                 <view class="ko-composing__item--angle RT" @click.stop="onAngle('angle', item)"></view>
@@ -230,10 +347,17 @@ export default {
 
 <style scoped lang="scss">
 .ko-composing {
+  // #ifdef H5
+  width: 100%;
+  // #endif
+
   height: 100%;
-  width: 100vw;
   position: relative;
-  padding-top: 30px;
+  //padding-top: 40px;
+
+  // #ifndef H5
+  width: 100vw;
+  // #endif
 
   &__close {
     position: absolute;
@@ -314,6 +438,7 @@ export default {
 
     &--info {
       font-size: 10px;
+      text-align: center;
     }
   }
 
@@ -343,6 +468,11 @@ export default {
     padding: 50px 20px 50px 10px;
     color: #c7c9ce;
     text-align: center;
+  }
+
+  &__count {
+    padding: 50px 10px 10px;
+    font-size: 14px;
   }
 }
 </style>

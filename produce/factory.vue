@@ -72,6 +72,8 @@ export default {
       settlementQuantity: 1,
 
       groupList: {},
+
+      tableKey: +new Date(),
     };
   },
   mixins: [mixins],
@@ -94,7 +96,13 @@ export default {
         this.queryList.pageNum = 0;
         this.list = [];
         this.groupList = {};
+        this.tableKey = +new Date();
+        this.noMore = false;
       }
+
+      // #ifdef H5
+      const top = _deepCopy(this.$refs?.WrapRef?.scrollTop);
+      // #endif
 
       this.loading = true;
       const Func = [getWorkingListApi, getWaitConfirmListApi, getSettledListApi][this.tab];
@@ -110,6 +118,12 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+
+          // #ifdef H5
+          this.$nextTick(() => {
+            this.$refs.WrapRef.scrollTop = top;
+          });
+          // #endif
         });
     },
 
@@ -208,14 +222,7 @@ export default {
             confirmSettleApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-
-                // #ifdef H5
-                this.list.splice(index, 1);
-                // #endif
-
-                // #ifndef H5
                 this.groupList[key].splice(index, 1);
-                // #endif
               });
           }
         },
@@ -233,13 +240,7 @@ export default {
             cancelSettleApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                // #ifdef H5
-                this.list.splice(index, 1);
-                // #endif
-
-                // #ifndef H5
                 this.groupList[key].splice(index, 1);
-                // #endif
               });
           }
         },
@@ -375,15 +376,15 @@ export default {
         },
         ...(_this.tab >= 1 ? [
           {
+            label: "数量",
+            prop: "quantity",
+          },
+          {
             label: "结算",
             prop: "finalAmount",
             render(h, {row}) {
               return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.finalAmount)]);
             },
-          },
-          {
-            label: "数量",
-            prop: "quantity",
           },
           {
             label: "时间",
@@ -399,6 +400,8 @@ export default {
                   flex: 1,
                   display: "flex",
                   flexWrap: "wrap",
+                  "align-items": "center",
+                  "justify-content": "center",
                 },
               },
               _this.getStaffListLogo(row)
@@ -569,47 +572,65 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
-      <KoTable
-        :loading="loading"
-        :columns="getColumns"
-        :data="list"
-        empty-text="暂无数据"
-        stripe
-      >
-        <template #operate="{item, index}">
-          <view style="display: flex; align-items: center; justify-content: center;">
-            <button
-              class="ko-basic-button__card"
-              @click.stop="onSettlement(item, index)"
-              v-if="tab === 0"
-            >
-              结算
-            </button>
-            <button
-              class="ko-basic-button__card"
-              @click.stop="onEditor(item, index)"
-              v-if="[0].includes(tab)"
-            >
-              编辑
-            </button>
-            <button
-              class="ko-basic-button__card"
-              @click.stop="onCancel(item, index)"
-              v-if="[1].includes(tab)"
-            >
-              取消结算
-            </button>
-            <button
-              class="ko-basic-button__card"
-              @click.stop="onFinish(item, index)"
-              v-if="[1].includes(tab)"
-            >
-              确认结算
-            </button>
-          </view>
-        </template>
-      </KoTable>
+    <view
+      class="ko-factory__table-wrap"
+      v-infinite-scroll="onRequestNextPage"
+      infinite-scroll-immediate
+      :infinite-scroll-delay="200"
+      :infinite-scroll-disabled="noMore"
+      :infinite-scroll-distance="200"
+      :key="tableKey"
+      ref="WrapRef"
+    >
+      <block v-for="(child, key) of groupList" :key="key">
+        <uni-section :title="key" type="line">
+          <KoTable
+            :loading="loading"
+            :columns="getColumns"
+            :data="child"
+            stripe
+          >
+            <template #operate="{item, index}">
+              <view style="display: flex; align-items: center; justify-content: center;">
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onSettlement(item, index)"
+                  v-if="tab === 0"
+                >
+                  结算
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onEditor(item, index)"
+                  v-if="[0].includes(tab)"
+                >
+                  编辑
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onCancel(item, index, key)"
+                  v-if="[1].includes(tab)"
+                >
+                  取消
+                </button>
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onFinish(item, index, key)"
+                  v-if="[1].includes(tab)"
+                >
+                  确认
+                </button>
+              </view>
+            </template>
+          </KoTable>
+        </uni-section>
+      </block>
+
+
+      <view v-if="!list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">暂无数据</view>
+      <view v-if="noMore && list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">
+        没有更多数据了
+      </view>
     </view>
     <!-- #endif -->
 
@@ -758,5 +779,14 @@ export default {
       }
     }
   }
+
+  // #ifdef H5
+  &__table-wrap {
+    height: calc(100vh - 164px);
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  // #endif
 }
 </style>

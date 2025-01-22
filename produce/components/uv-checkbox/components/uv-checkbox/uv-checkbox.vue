@@ -69,7 +69,7 @@ export default {
   mixins: [mpMixin, mixin, props],
   props: {
     isAlone: Boolean,
-    value: Boolean,
+    value: [Boolean, String, Number],
     readonly: Boolean,
   },
   data() {

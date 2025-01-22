@@ -17,7 +17,9 @@
 				'uv-steps-item__wrapper',
 				`uv-steps-item__wrapper--${parentData.direction}`,
 				parentData.dot && `uv-steps-item__wrapper--${parentData.direction}--dot`
-			]">
+			]"
+      @click="$emit('click-step')"
+    >
       <slot name="icon">
         <view
           class="uv-steps-item__wrapper__dot"
@@ -68,6 +70,8 @@
 				`uv-steps-item__content--${parentData.direction}`
 			]"
       :style="[contentStyle]"
+
+      @click="$emit('click-step')"
     >
       <slot name="title">
         <view class="ko-steps-item__title">

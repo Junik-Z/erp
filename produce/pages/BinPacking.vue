@@ -1,17 +1,22 @@
 <script>
+// #ifdef H5
+import { Checkbox } from "@/uni_modules/element-ui/element.min";
+// #endif
 import KoMovable from "@/components/Movable/index.vue";
 import {
   _deepCopy,
   _flattenDeep,
   _generateUUID,
   _get,
+  _isEmpty,
   _isEqual,
   _omit,
+  _round,
   _toFinite,
   CustomToast,
   getRect,
 } from "@/utils";
-import { getRandomColor, repositionRectangles } from "./calculate";
+import { repositionRectangles } from "./calculate";
 import GridTable from "../components/GridTable/GridTable.vue";
 import { customizedCalculateApi } from "@/api/erp/produce";
 import PickerSheet from "@/produce/components/PickerSheet.vue";
@@ -25,7 +30,13 @@ const screenWidth = systemInfo.screenWidth;
 
 export default {
   name: "BinPacking",
-  components: {Composing, PickerSheet, KoMovable, GridTable, UvCheckbox},
+  components: {
+    Composing,
+    PickerSheet,
+    KoMovable,
+    GridTable,
+    UvCheckbox,
+  },
   mixins: [mixins],
   data() {
     return {
@@ -36,6 +47,16 @@ export default {
       form: {
         height: null,
         width: null,
+        rid: "",
+        x: 0,
+        y: 0,
+        radius: [0, 0, 0, 0],
+        edges: [0, 0, 0, 0],
+        weight: 9,
+        texture: false, // 纹理
+        rotate: false, // 转90度
+        quantity: 1,
+        color: "",
       },
 
       // 容器
@@ -55,7 +76,7 @@ export default {
       initialDistance: 0,
       initialScale: 0,
 
-      winWidth: screenWidth - 20 - 2, // 容器宽度
+      winWidth: screenWidth - 26, // 容器宽度
 
       // 动作面板的类型
       asType: "",
@@ -67,6 +88,7 @@ export default {
         edgeWidth: 1.2, // 封边宽度
         width: 1220, // 板材宽度
         height: 2440, // 板材高度
+        color: "黑色",
       },
       // 板材下的材料
       itemsForm: {
@@ -79,9 +101,10 @@ export default {
         radius: [0, 0, 0, 0],
         edges: [0, 0, 0, 0],
         weight: 9,
-        texture: false, // 纹理
+        texture: true, // 纹理
         rotate: false, // 转90度
         quantity: 1,
+        color: "",
       },
 
       // 材料表头
@@ -122,11 +145,24 @@ export default {
           // #endif
         },
         {
+          label: "颜色",
+          prop: "color",
+          // #ifndef H5
+          width: 50,
+          // #endif
+        },
+        {
           label: "封边(左)",
           prop: "edges.0",
           type: "number",
           // #ifndef H5
           width: 70,
+          // #endif
+
+          // #ifdef H5
+          render(h, {row}) {
+            return h("span", [_get(row, "edges.0")]);
+          },
           // #endif
         },
         {
@@ -136,6 +172,12 @@ export default {
           // #ifndef H5
           width: 70,
           // #endif
+
+          // #ifdef H5
+          render(h, {row}) {
+            return h("span", [_get(row, "edges.1")]);
+          },
+          // #endif
         },
         {
           label: "封边(前)",
@@ -143,6 +185,12 @@ export default {
           type: "number",
           // #ifndef H5
           width: 70,
+          // #endif
+
+          // #ifdef H5
+          render(h, {row}) {
+            return h("span", [_get(row, "edges.2")]);
+          },
           // #endif
         },
         {
@@ -152,6 +200,11 @@ export default {
           // #ifndef H5
           width: 70,
           // #endif
+          // #ifdef H5
+          render(h, {row}) {
+            return h("span", [_get(row, "edges.3")]);
+          },
+          // #endif
         },
         {
           label: "纹理",
@@ -159,6 +212,11 @@ export default {
           type: "checkbox",
           // #ifndef H5
           width: 50,
+          // #endif
+          // #ifdef H5
+          render(h, {row}) {
+            return h(Checkbox, {props: {disabled: true, value: row.texture}});
+          },
           // #endif
         },
         {
@@ -168,6 +226,11 @@ export default {
           // #ifndef H5
           width: 70,
           // #endif
+          // #ifdef H5
+          render(h, {row}) {
+            return h(Checkbox, {props: {disabled: true, value: row.rotate}});
+          },
+          // #endif
         },
         {
           label: "操作",
@@ -175,6 +238,7 @@ export default {
           prop: "More",
           // #ifdef H5
           slot: "operate",
+          width: 130,
           // #endif
 
           // #ifndef H5
@@ -206,9 +270,16 @@ export default {
           prop: "quantity",
         },
         {
+          label: "颜色",
+          prop: "color",
+        },
+        {
           label: "操作",
           type: "more",
           prop: "More",
+          // #ifdef H5
+          slot: "operate",
+          // #endif
         },
       ],
       residue: [],
@@ -221,6 +292,7 @@ export default {
         y: null,
         quantity: 1,
         weight: 9,
+        color: "",
       },
 
       // 所有的材料
@@ -231,7 +303,7 @@ export default {
       sLoading: false,
 
       tab: 0,
-      values: ["原料尺寸", "余料尺寸"],
+      values: ["原料尺寸", "余料尺寸", "设置"],
 
       weightList: [
         {name: "9", value: 9},
@@ -240,53 +312,7 @@ export default {
       ],
 
       // 排版记录
-      boardRecord: [
-        /* {
-          "width": 1006,
-          "height": 906,
-          "items": [{"rid": "27dceb78-39c9-47d7-8225-ca19ef787a3b", "width": 504, "height": 604, "x": 0, "y": 0}],
-        },
-        {
-          "width": 1006,
-          "height": 906,
-          "items": [{"rid": "465ec943-4012-4a08-ae2c-d85a5f30a785", "width": 504, "height": 604, "x": 0, "y": 0}],
-        },
-        {
-          "width": 1226,
-          "height": 2446,
-          "items": [
-            {
-              "rid": "97c8b17e-2347-4cfe-b237-3e09cbd6a640",
-              "width": 504,
-              "height": 604,
-              "x": 0,
-              "y": 0,
-            },
-            {
-              "rid": "a706f6ff-47f8-456a-9c0e-3ed84b56abeb",
-              "width": 504,
-              "height": 604,
-              "x": 504,
-              "y": 0,
-            },
-            {
-              "rid": "b15aa67c-4a8c-4e95-a283-1a5fe6ca934f",
-              "width": 504,
-              "height": 604,
-              "x": 0,
-              "y": 604,
-            },
-            {
-              "rid": "08c98f67-dfeb-4f63-88ff-22f2aee4a8e8",
-              "width": 504,
-              "height": 604,
-              "x": 504,
-              "y": 604,
-            },
-            {"rid": "ea4067c1-8716-492d-899c-b1555f9f47bb", "width": 504, "height": 604, "x": 0, "y": 1208},
-          ],
-        }, */
-      ],
+      boardRecord: [],
 
       // 外部更新的阀门
       isExternalUpdatesFlag: false,
@@ -304,7 +330,6 @@ export default {
     computedChange: {
       handler() {
         if (this.isExternalUpdatesFlag) return false;
-
         this.isToOutsideFlag = true;
 
         this.getRectByRoot();
@@ -312,7 +337,6 @@ export default {
         this.$emit("update:is-customized", true);
       },
     },
-
     value: {
       handler(to, form) {
         if (!_isEqual(to, form) && !this.isToOutsideFlag) {
@@ -320,6 +344,7 @@ export default {
           this.setTakeValue(this.value);
         }
       },
+      deep: true,
       immediate: true,
     },
   },
@@ -344,8 +369,10 @@ export default {
     // 添加板材
     onClickPopupButton() {
       const F = _deepCopy(this.form);
+      const pType = this.pType;
+
       // 添加板材
-      if (_isEqual(this.pType, "vessel")) {
+      if (_isEqual(pType, "vessel")) {
         if (_toFinite(F.width) > 0 && _toFinite(F.height) > 0) {
           this.vessel.push({
             height: _toFinite(F.height),
@@ -363,11 +390,21 @@ export default {
       }
 
       // 设置圆角 或 修改材料信息
-      if (_isEqual(this.pType, "angle") || _isEqual(this.pType, "editor")) {
-        const index = this.node.index;
+      if (_isEqual(pType, "angle") || _isEqual(pType, "editor")) {
+        let index = null;
+
+        // #ifndef H5
+        index = this.node.index;
+        // #endif
+
+        // #ifdef H5
+        index = this.nodeIndex;
+        // #endif
+
         if (index > -1) {
           this.$set(this.rectangles, index, {
             ...F,
+            edges: F.edges?.map?.(_toFinite),
             width: _toFinite(F.width),
             height: _toFinite(F.height),
             weight: _toFinite(F.weight),
@@ -383,9 +420,97 @@ export default {
         }
       }
 
+      // 添加材料
+      if (_isEqual(pType, "addedStuff")) {
+        const wrap = _deepCopy(this.formData);
+
+        if (!F.color) {
+          CustomToast({
+            title: "请输入材料颜色",
+            icon: "none",
+          });
+          return false;
+        }
+
+        if (_toFinite(F.width) > 0 && _toFinite(F.height) > 0) {
+          if (F.width > wrap.width || F.height > wrap.height) {
+            CustomToast({
+              title: "添加的板块过大，请修改宽高。",
+              icon: "none",
+            });
+            return false;
+          }
+
+          const obj = {
+            ...F,
+            width: _toFinite(F.width),
+            height: _toFinite(F.height),
+            weight: _toFinite(F.weight),
+            quantity: _toFinite(F.quantity),
+            edges: F.edges?.map?.(_toFinite),
+            radius: F.radius?.map(_toFinite) || [],
+            rid: _generateUUID(),
+          };
+
+          this.rectangles.push(obj);
+
+          CustomToast({
+            title: "材料添加成功",
+            icon: "none",
+          });
+        } else {
+          CustomToast({
+            title: "请检查输入的宽高",
+            icon: "none",
+          });
+        }
+      }
+
+      // 添加余料
+      if (_isEqual(pType, "addedResidue")) {
+
+        console.log(pType, F);
+
+        if (!F.color) {
+          CustomToast({
+            title: "请输入余料颜色",
+            icon: "none",
+          });
+          return false;
+        }
+
+        if (_toFinite(F.width) > 0 && _toFinite(F.height) > 0) {
+          this.residue.push({
+            ...F,
+            height: _toFinite(F.height),
+            width: _toFinite(F.width),
+            weight: _toFinite(F.weight),
+            quantity: _toFinite(F.quantity),
+            rid: _generateUUID(),
+          });
+          CustomToast({
+            title: "余料添加成功",
+            icon: "none",
+          });
+        } else {
+          CustomToast({
+            title: "请检查输入的余料宽高",
+            icon: "none",
+          });
+        }
+      }
+
       // 编辑余料
-      if (_isEqual(this.pType, "residueEditor")) {
-        const index = this.node.index;
+      if (_isEqual(pType, "editResidue")) {
+        let index = null;
+
+        // #ifndef H5
+        index = this.node.index;
+        // #endif
+
+        // #ifdef H5
+        index = this.nodeIndex;
+        // #endif
 
         if (index > -1) {
           this.$set(
@@ -411,45 +536,13 @@ export default {
 
     // 添加材料
     onAddedRectangle() {
-      const F = _deepCopy(this.itemsForm);
-      const wrap = _deepCopy(this.formData);
-      if (_toFinite(F.width) > 0 && _toFinite(F.height) > 0) {
-        if (F.width > wrap.width || F.height > wrap.height) {
-          CustomToast({
-            title: "添加的板块过大，请修改宽高。",
-            icon: "none",
-          });
-          return false;
-        }
+      this.pType = "addedStuff";
+      this.form = {..._deepCopy(this.itemsForm)};
+      this.visible = true;
 
-        const gColor = () => {
-          const color = getRandomColor();
-          if (this.rectangles.some(v => _isEqual(v.color, color))) {
-            return gColor();
-          }
-          return color;
-        };
-
-        const obj = {
-          ...F,
-          width: _toFinite(F.width),
-          height: _toFinite(F.height),
-          weight: _toFinite(F.weight),
-          quantity: _toFinite(F.quantity),
-          radius: F.radius?.map(_toFinite) || [],
-          rid: _generateUUID(),
-          // color: gColor(),
-        };
-
-        this.rectangles.push(obj);
-
-        // this.updateView([...this.rectangles, obj]);
-      } else {
-        CustomToast({
-          title: "请检查输入的宽高",
-          icon: "none",
-        });
-      }
+      // #ifdef MP
+      this.$refs.FormRef.clearValidate();
+      // #endif
     },
 
     // 更新视图
@@ -471,11 +564,19 @@ export default {
     },
 
     // 编辑材料
-    editRectangle() {
+    editRectangle(item, index) {
       this.pType = "editor";
       const node = _deepCopy(this.node);
       this.visible = true;
+
+      // #ifdef H5
+      this.form = _deepCopy(item);
+      this.nodeIndex = index;
+      // #endif
+
+      // #ifndef H5
       this.form = {...node.item};
+      // #endif
 
       // #ifdef MP
       this.$refs.FormRef.clearValidate();
@@ -483,9 +584,19 @@ export default {
     },
 
     // 删除材料
-    removeRectangle() {
+    removeRectangle(item, ind) {
+      let index = null;
+      // #ifndef H5
       const node = _deepCopy(this.node);
-      const index = node.index;
+      index = node.index;
+      // #endif
+
+      // #ifdef H5
+      this.node = _deepCopy(item);
+      this.nodeIndex = ind;
+      index = ind;
+      // #endif
+
       if (index > -1) {
         this.rectangles.splice(index, 1);
       } else {
@@ -556,12 +667,14 @@ export default {
         const [width, height] = item.rotate ? [item.height, item.width] : [item.width, item.height];
 
         const obj = {
+          ...item,
           rid: item.rid,
           width: width + drillWidth - (LR * edgeWidth),
           height: height + drillWidth - (WH * edgeWidth),
           weight: item.weight,
           x: item.x,
           y: item.y,
+          color: item.color,
         };
 
         if (item.quantity > 1) {
@@ -628,7 +741,6 @@ export default {
     // 将数据传入外部
     emitValue() {
       try {
-
         // 主板材的数据
         const host = _deepCopy(this.formData);
         const {drillWidth, edgeWidth} = host;
@@ -687,7 +799,7 @@ export default {
         this.formData = {...this.formData, ..._omit(obj, ["boardRecord", "boards"]), ..._get(packers, "0")};
 
         this.residue = packers?.filter((v, i) => i !== 0) || [];
-        this.rectangles = items;
+        this.rectangles = items || [];
       } catch (e) {
         console.error("[板材定制外部传入的数据解析出错了]", e);
       }
@@ -711,31 +823,29 @@ export default {
 
     // 添加余料
     onAddedResidue() {
-      const F = _deepCopy(this.residueForm);
+      this.pType = "addedResidue";
+      this.form = {..._deepCopy(this.residueForm)};
+      this.visible = true;
 
-      if (_toFinite(F.width) > 0 && _toFinite(F.height) > 0) {
-        this.residue.push({
-          ...F,
-          height: _toFinite(F.height),
-          width: _toFinite(F.width),
-          weight: _toFinite(F.weight),
-          quantity: _toFinite(F.quantity),
-          rid: _generateUUID(),
-        });
-      } else {
-        CustomToast({
-          title: "请检查输入的余料宽高",
-          icon: "none",
-        });
-      }
+      // #ifdef MP
+      this.$refs.FormRef.clearValidate();
+      // #endif
     },
 
     // 修改余料
-    editResidue() {
-      this.pType = "residueEditor";
+    editResidue(item, index) {
+      this.pType = "editResidue";
       const node = _deepCopy(this.node);
       this.visible = true;
+
+      // #ifdef H5
+      this.nodeIndex = index;
+      this.form = {...item};
+      // #endif
+
+      // #ifndef H5
       this.form = {...node.item};
+      // #endif
 
       // #ifdef MP
       this.$refs.FormRef.clearValidate();
@@ -743,10 +853,19 @@ export default {
     },
 
     // 删除余料
-    removeResidue() {
-      const index = this.node.index;
-      if (index > -1) {
-        this.residue.splice(index, 1);
+    removeResidue(node, index) {
+      let i = null;
+
+      // #ifdef H5
+      i = index;
+      // #endif
+
+      // #ifndef H5
+      i = this.node.index;
+      // #endif
+
+      if (i > -1) {
+        this.residue.splice(i, 1);
       } else {
         CustomToast({
           title: "找不到要删除的余料",
@@ -764,9 +883,15 @@ export default {
     onViewLayout() {
       this.$refs.PRef.open();
     },
+
+    // 设置封边
+    setEdges(item, index) {
+      this.$set(item, index, item[index] ? 0 : 1);
+    },
   },
   mounted() {
     this.getRectByRoot();
+
     // this.$refs.PRef.open();
   },
   computed: {
@@ -777,7 +902,9 @@ export default {
         addedChild: "添加子节点",
         editor: "编辑",
         angle: "设置材料圆角",
-        residueEditor: "编辑余料",
+        editResidue: "编辑余料",
+        addedStuff: "添加材料",
+        addedResidue: "添加余料",
       }[this.pType];
     },
     // 获取弹窗底部按钮文本
@@ -785,10 +912,56 @@ export default {
       return {
         vessel: "添加",
         addedChild: "添加",
+        addedStuff: "添加",
         editor: "确定",
         angle: "确定",
-        residueEditor: "确定",
+        editResidue: "确定",
+        addedResidue: "添加",
       }[this.pType];
+    },
+    // 获取弹窗类型
+    getPopupType() {
+      let type = ["editor", "addedStuff", "addedResidue", "editResidue"].includes(this.pType) ? "bottom" : "center";
+
+      // #ifdef H5
+      type = "center";
+      // #endif
+      return type;
+    },
+
+    // 获取封边元素的样式
+    getEdgeStyle() {
+      return (form, vss) => {
+        const F = _deepCopy(form);
+        if (_isEmpty(F)) return {};
+        const scale = _round(300 / (vss?.width || 300), 2);
+        const style = {};
+
+        const [l, r, t, b] = F.edges || [];
+
+        const bigBd = "3px solid #000";
+
+        if (t) {
+          style["border-top"] = bigBd;
+        }
+
+        if (r) {
+          style["border-right"] = bigBd;
+        }
+
+        if (b) {
+          style["border-bottom"] = bigBd;
+        }
+
+        if (l) {
+          style["border-left"] = bigBd;
+        }
+
+        return {
+          ...style,
+          borderRadius: F.radius ? F.radius.map(v => v * scale + "px").join(" ") : 0,
+        };
+      };
     },
 
     // 动作面板展示列表
@@ -850,37 +1023,23 @@ export default {
 
       <!-- 添加下料 -->
       <block v-if="isEqual(tab, 0)">
-        <uni-row :gutter="10">
-          <uni-col :span="24">
-            <view class="ko-bin__vessel--info">
-              <label class="ko-basic-label">刀头宽度：</label>
-              <uni-number-box v-if="!readonly" type="digit" v-model="formData.drillWidth" />
-              <text v-else>{{ formData.drillWidth }}</text>
-              <text style="padding-left: 10px;">mm</text>
-            </view>
-          </uni-col>
-          <uni-col :span="24">
-            <view class="ko-bin__vessel--info">
-              <label class="ko-basic-label">厚封边(>=)：</label>
-              <uni-number-box v-if="!readonly" type="digit" :step="0.1" v-model="formData.edgeWidth" />
-              <text v-else>{{ formData.edgeWidth }}</text>
-              <text style="padding-left: 10px;">mm</text>
-            </view>
-          </uni-col>
-          <uni-col :span="24">
-            <view class="ko-bin__vessel--info">
-              <label class="ko-basic-label">板材规格：</label>
-              <PickerSheet
-                :options="getPSEnums"
-                :value="`${formData.width}×${formData.height}`"
-                @input="updatePlate"
-                v-if="!readonly"
-              />
-              <text v-else>{{ `${formData.width}×${formData.height}` }}</text>
-              <text style="padding-left: 10px;">mm</text>
-            </view>
-          </uni-col>
-        </uni-row>
+        <view class="ko-basic__content">
+          <uni-row :gutter="10">
+            <uni-col :span="24">
+              <view class="ko-bin__vessel--info">
+                <label class="ko-basic-label">板材规格：</label>
+                <PickerSheet
+                  :options="getPSEnums"
+                  :value="`${formData.width}×${formData.height}`"
+                  @input="updatePlate"
+                  v-if="!readonly"
+                />
+                <text v-else>{{ `${formData.width}×${formData.height}` }}</text>
+                <text style="padding-left: 10px;">mm</text>
+              </view>
+            </uni-col>
+          </uni-row>
+        </view>
 
         <uni-section title="下料尺寸" type="line">
           <view class="ko-bin__vessel--table">
@@ -893,6 +1052,7 @@ export default {
               :no-more="!rectangles.length"
             />
             <!-- #endif -->
+
             <!-- #ifdef H5 -->
             <KoTable
               :columns="getColumns"
@@ -901,13 +1061,10 @@ export default {
               not-edit
               :no-more="!rectangles.length"
             >
-              <template #operate="{item}">
-                <view
-                  style="display: flex; align-items: center;
-                   justify-content: center;"
-                >
-                  <button class="ko-basic-button__card" @click.stop="onEdit(item)">修改</button>
-                  <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+              <template #operate="{item, index}">
+                <view style="display: flex; align-items: center;justify-content: center;">
+                  <button class="ko-basic-button__card" @click.stop="editRectangle(item, index)">修改</button>
+                  <button class="ko-basic-button__card" @click.stop="removeRectangle(item, index)">删除</button>
                 </view>
               </template>
             </KoTable>
@@ -915,87 +1072,19 @@ export default {
           </view>
         </uni-section>
 
-        <uni-section title="添加材料" type="line" v-if="!readonly">
-          <uni-forms
-            :label-width="50"
-            label-align="right"
-            :model="itemsForm"
+        <view class="ko-bin__added" v-if="!readonly">
+          <button
+            class="ko-basic-button__card"
+            @click="onSubmitCustomized"
+            :disabled="sLoading"
+            :loading="sLoading"
           >
-            <uni-row :gutter="0">
-              <uni-col :span="24">
-                <uni-forms-item label="名称" label-width="70" name="name">
-                  <uni-easyinput v-model="itemsForm.name" placeholder="请输入" />
-                </uni-forms-item>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: space-between;">
-                  <uni-forms-item label="封边左" label-width="70" name="itemsForm.edges.0">
-                    <UvCheckbox is-alone v-model="itemsForm.edges[0]" />
-                  </uni-forms-item>
-                  <uni-forms-item label="封边右" label-width="70" name="itemsForm.edges.1">
-                    <UvCheckbox is-alone v-model="itemsForm.edges[1]" />
-                  </uni-forms-item>
-                  <uni-forms-item label="封边前" label-width="70" name="itemsForm.edges.2">
-                    <UvCheckbox is-alone v-model="itemsForm.edges[2]" />
-                  </uni-forms-item>
-                  <uni-forms-item label="封边背" label-width="70" name="itemsForm.edges.3">
-                    <UvCheckbox is-alone v-model="itemsForm.edges[3]" />
-                  </uni-forms-item>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: space-between;">
-                  <uni-forms-item label="数量" label-width="70" name="quantity">
-                    <uni-number-box :min="1" v-model="itemsForm.quantity" />
-                  </uni-forms-item>
-                  <uni-forms-item label="纹理" label-width="70" name="texture">
-                    <UvCheckbox is-alone v-model="itemsForm.texture" />
-                  </uni-forms-item>
-                  <uni-forms-item label="转90度" label-width="70" name="rotate">
-                    <UvCheckbox is-alone v-model="itemsForm.rotate" />
-                  </uni-forms-item>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: center;">
-                  <uni-forms-item label-width="0" name="width">
-                    <uni-easyinput type="digit" v-model="itemsForm.width" placeholder="请输入" />
-                  </uni-forms-item>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <uni-forms-item label-width="0" name="height">
-                    <uni-easyinput type="digit" v-model="itemsForm.height" placeholder="请输入" />
-                  </uni-forms-item>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <uni-forms-item label-width="0" name="weight">
-                    <PickerSheet
-                      :options="weightList"
-                      v-model="itemsForm.weight"
-                    />
-                  </uni-forms-item>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view class="ko-bin__added">
-                  <button
-                    class="ko-basic-button__card"
-                    @click="onSubmitCustomized"
-                    :disabled="sLoading"
-                    :loading="sLoading"
-                  >
-                    {{ sLoading ? "计算中..." : "开始计算" }}
-                  </button>
-                  <button class="ko-basic-button__card" @click="onAddedRectangle">
-                    添加
-                  </button>
-                </view>
-              </uni-col>
-            </uni-row>
-          </uni-forms>
-        </uni-section>
+            {{ sLoading ? "计算中..." : "开始计算" }}
+          </button>
+          <button class="ko-basic-button__card" @click="onAddedRectangle">
+            添加
+          </button>
+        </view>
 
         <view v-if="readonly" style="padding: 20px 0; display: flex; justify-content: center;">
           <button
@@ -1011,6 +1100,7 @@ export default {
       <!-- 添加余料 -->
       <block v-if="isEqual(tab, 1)">
         <view class="ko-bin__vessel--table">
+          <!-- #ifndef H5 -->
           <GridTable
             :columns="getResidueColumns"
             :data="residue"
@@ -1018,65 +1108,62 @@ export default {
             not-edit
             :no-more="!residue.length"
           />
-        </view>
-        <uni-section title="添加余料" type="line" v-if="!readonly">
-          <uni-forms
-            :label-width="50"
-            label-align="right"
-            :model="residueForm"
-            ref="ResidueFormRef"
+          <!-- #endif -->
+          <!-- #ifdef H5 -->
+          <KoTable
+            :columns="getResidueColumns"
+            :data="residue"
           >
-            <uni-row>
-              <uni-col :span="24">
-                <view style="display: flex;align-items: center;">
-                  <uni-forms-item label="名称" label-width="70" name="name">
-                    <uni-easyinput v-model="residueForm.name" placeholder="请输入" />
-                  </uni-forms-item>
-                  <view style="width: 20rpx;"></view>
-                  <uni-forms-item label="数量" label-width="70" name="quantity">
-                    <uni-number-box type="digit" v-model="residueForm.quantity" />
-                  </uni-forms-item>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: center;">
-                  <uni-forms-item label-width="0" name="width">
-                    <uni-easyinput type="digit" v-model="residueForm.width" placeholder="请输入" />
-                  </uni-forms-item>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <uni-forms-item label-width="0" name="height">
-                    <uni-easyinput type="digit" v-model="residueForm.height" placeholder="请输入" />
-                  </uni-forms-item>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <uni-forms-item label-width="0" name="weight">
-                    <PickerSheet
-                      :options="weightList"
-                      v-model="residueForm.weight"
-                    />
-                  </uni-forms-item>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view class="ko-bin__added">
-                  <button class="ko-basic-button__card" @click="onAddedResidue">
-                    添加
-                  </button>
-                </view>
-              </uni-col>
-            </uni-row>
-          </uni-forms>
-        </uni-section>
+            <template #operate="{item, index}">
+              <view style="display: flex; align-items: center;justify-content: center;">
+                <button class="ko-basic-button__card" @click.stop="editResidue(item, index)">修改</button>
+                <button class="ko-basic-button__card" @click.stop="removeResidue(item, index)">删除</button>
+              </view>
+            </template>
+          </KoTable>
+          <!-- #endif -->
+        </view>
+
+        <view class="ko-bin__added" v-if="!readonly">
+          <button class="ko-basic-button__card" @click="onAddedResidue">
+            添加
+          </button>
+        </view>
+      </block>
+
+      <!-- 设置 -->
+      <block v-if="isEqual(tab, 2)">
+        <view class="ko-basic__content">
+          <uni-row :gutter="10">
+            <uni-col :span="24">
+              <view class="ko-bin__vessel--info">
+                <label class="ko-basic-label">刀头宽度：</label>
+                <uni-number-box v-if="!readonly" type="digit" v-model="formData.drillWidth" />
+                <text v-else>{{ formData.drillWidth }}</text>
+                <text style="padding-left: 10px;">mm</text>
+              </view>
+            </uni-col>
+            <uni-col :span="24">
+              <view class="ko-bin__vessel--info">
+                <label class="ko-basic-label">厚封边(>=)：</label>
+                <uni-number-box v-if="!readonly" type="digit" :step="0.1" v-model="formData.edgeWidth" />
+                <text v-else>{{ formData.edgeWidth }}</text>
+                <text style="padding-left: 10px;">mm</text>
+              </view>
+            </uni-col>
+          </uni-row>
+        </view>
       </block>
     </view>
 
     <KoMovable v-if="false" :y-axis="-60" @click="onAdded('vessel')" />
 
-    <BasicPopup :visible.sync="visible" :title="getPopupTitle">
-      <view class="ko-bin__popup">
+    <BasicPopup
+      :visible.sync="visible"
+      :title="getPopupTitle"
+      :type="getPopupType"
+    >
+      <view class="ko-bin__popup" :class="[getPopupType]">
         <uni-forms label-align="right" ref="FormRef" :model="form">
           <block v-if="pType === 'angle'">
             <uni-forms-item
@@ -1088,7 +1175,9 @@ export default {
               <uni-number-box :min="0" :width="100" type="digit" v-model="form.radius[index]" placeholder="请输入" />
             </uni-forms-item>
           </block>
-          <block v-else-if="pType === 'editor'">
+
+          <!-- 材料 -->
+          <block v-else-if="['editor', 'addedStuff'].includes(pType)">
             <uni-row :gutter="0">
               <uni-col :span="24">
                 <uni-forms-item label="名称" label-width="70" name="name">
@@ -1096,95 +1185,160 @@ export default {
                 </uni-forms-item>
               </uni-col>
               <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: space-between;">
-                  <uni-forms-item label="封边左" label-width="70" name="form.edges.0">
-                    <UvCheckbox is-alone v-model="form.edges[0]" />
-                  </uni-forms-item>
-                  <uni-forms-item label="封边右" label-width="70" name="form.edges.1">
-                    <UvCheckbox is-alone v-model="form.edges[1]" />
-                  </uni-forms-item>
-                  <uni-forms-item label="封边前" label-width="70" name="form.edges.2">
-                    <UvCheckbox is-alone v-model="form.edges[2]" />
-                  </uni-forms-item>
-                  <uni-forms-item label="封边背" label-width="70" name="form.edges.3">
-                    <UvCheckbox is-alone v-model="form.edges[3]" />
-                  </uni-forms-item>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: space-between;">
+                <view style="display:flex; align-items: center; justify-content: space-between; overflow: hidden;">
                   <uni-forms-item label="数量" label-width="70" name="quantity">
                     <uni-number-box type="digit" v-model="form.quantity" />
                   </uni-forms-item>
-                  <uni-forms-item label="纹理" label-width="70" name="texture">
-                    <UvCheckbox is-alone v-model="form.texture" />
-                  </uni-forms-item>
-                  <uni-forms-item label="转90度" label-width="70" name="rotate">
-                    <UvCheckbox is-alone v-model="form.rotate" />
-                  </uni-forms-item>
+                  <view style="width: 14px;"></view>
+                  <view style="flex: 1;">
+                    <uni-forms-item label="颜色" required label-width="70" name="color">
+                      <uni-easyinput v-model="form.color" placeholder="请输入" />
+                    </uni-forms-item>
+                  </view>
                 </view>
               </uni-col>
               <uni-col :span="24">
                 <view style="display:flex; align-items: center; justify-content: center;">
-                  <uni-forms-item label-width="0" name="width">
-                    <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
+                  <uni-forms-item label="纹理" label-width="100" name="texture">
+                    <UvCheckbox :size="28" is-alone v-model="form.texture" />
                   </uni-forms-item>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <uni-forms-item label-width="0" name="height">
-                    <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
-                  </uni-forms-item>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <uni-forms-item label-width="0" name="weight">
-                    <PickerSheet
-                      :options="weightList"
-                      v-model="form.weight"
-                    />
+                  <view style="width: 50px;"></view>
+                  <uni-forms-item label="转90度" label-width="100" name="rotate">
+                    <UvCheckbox :size="28" is-alone v-model="form.rotate" />
                   </uni-forms-item>
                 </view>
               </uni-col>
+              <uni-col :span="24">
+                <view style="display:flex; align-items: center; justify-content: center; overflow: hidden;">
+                  <view style="flex: 1;">
+                    <uni-forms-item label-width="0" required name="width">
+                      <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
+                    </uni-forms-item>
+                  </view>
+                  <view style="margin: 0 5px 20px">
+                    ×
+                  </view>
+                  <view style="flex: 1;">
+                    <uni-forms-item label-width="0" name="height">
+                      <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
+                    </uni-forms-item>
+                  </view>
+                  <view style="margin: 0 5px 20px">
+                    ×
+                  </view>
+                  <view style="flex: 1;">
+                    <uni-forms-item label-width="0" name="weight">
+                      <PickerSheet
+                        :options="weightList"
+                        v-model="form.weight"
+                      />
+                    </uni-forms-item>
+                  </view>
+                </view>
+              </uni-col>
             </uni-row>
+
+            <view class="ko-bin__edge--wrap">
+              <view class="ko-bin__edge" :style="[getEdgeStyle(form, formData)]">
+                <button
+                  class="ko-basic-button__card left"
+                  @click="setEdges(form.edges, 0)"
+                >
+                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                    <UvCheckbox is-alone readonly :value="form.edges[0]" />
+                    封边
+                  </view>
+                </button>
+
+                <button
+                  class="ko-basic-button__card right"
+                  @click="setEdges(form.edges, 1)"
+                >
+                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                    <UvCheckbox is-alone readonly :value="form.edges[1]" />
+                    封边
+                  </view>
+                </button>
+
+                <button
+                  class="ko-basic-button__card top"
+                  @click="setEdges(form.edges, 2)"
+                >
+                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                    <UvCheckbox is-alone readonly :value="form.edges[2]" />
+                    封边
+                  </view>
+                </button>
+
+
+                <button
+                  class="ko-basic-button__card bottom"
+                  @click="setEdges(form.edges, 3)"
+                >
+                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                    <UvCheckbox is-alone readonly :value="form.edges[3]" />
+                    封边
+                  </view>
+                </button>
+
+              </view>
+            </view>
           </block>
-          <block v-else-if="pType === 'residueEditor'">
+
+          <!-- 余料 -->
+          <block v-else-if="['editResidue', 'addedResidue'].includes(pType)">
             <uni-row :gutter="0">
               <uni-col :span="24">
-                <view style="display: flex;align-items: center;">
-                  <uni-forms-item label="名称" label-width="70" name="name">
-                    <uni-easyinput v-model="form.name" placeholder="请输入" />
-                  </uni-forms-item>
+                <uni-forms-item label="名称" label-width="70" name="name">
+                  <uni-easyinput v-model="form.name" placeholder="请输入" />
+                </uni-forms-item>
+              </uni-col>
+              <uni-col :span="24">
+                <view style="display: flex;align-items: center;overflow: hidden">
+                  <view style="flex: 1;">
+                    <uni-forms-item label="数量" label-width="70" name="quantity">
+                      <uni-number-box type="digit" v-model="form.quantity" />
+                    </uni-forms-item>
+                  </view>
                   <view style="width: 20rpx;"></view>
-                  <uni-forms-item label="数量" label-width="70" name="quantity">
-                    <uni-number-box type="digit" v-model="form.quantity" />
-                  </uni-forms-item>
+                  <view style="flex: 1;">
+                    <uni-forms-item label="颜色" label-width="70" name="color" required>
+                      <uni-easyinput v-model="form.color" placeholder="请输入" />
+                    </uni-forms-item>
+                  </view>
                 </view>
               </uni-col>
               <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: center;">
-                  <uni-forms-item label-width="0" name="width">
-                    <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
-                  </uni-forms-item>
+                <view style="display:flex; align-items: center; justify-content: center; overflow: hidden;">
+                  <view style="flex: 1;">
+                    <uni-forms-item label-width="0" required name="width">
+                      <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
+                    </uni-forms-item>
+                  </view>
                   <view style="margin: 0 5px 20px">
                     ×
                   </view>
-                  <uni-forms-item label-width="0" name="height">
-                    <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
-                  </uni-forms-item>
+                  <view style="flex: 1;">
+                    <uni-forms-item label-width="0" name="height">
+                      <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
+                    </uni-forms-item>
+                  </view>
                   <view style="margin: 0 5px 20px">
                     ×
                   </view>
-                  <uni-forms-item label-width="0" name="weight">
-                    <PickerSheet
-                      :options="weightList"
-                      v-model="form.weight"
-                    />
-                  </uni-forms-item>
+                  <view style="flex: 1;">
+                    <uni-forms-item label-width="0" name="weight">
+                      <PickerSheet
+                        :options="weightList"
+                        v-model="form.weight"
+                      />
+                    </uni-forms-item>
+                  </view>
                 </view>
               </uni-col>
             </uni-row>
           </block>
+
           <block v-else>
             <uni-forms-item label="宽" name="width">
               <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
@@ -1196,7 +1350,7 @@ export default {
         </uni-forms>
       </view>
       <template #footer>
-        <view class="ko-bin__popup--footer ko-basic-box-shadow__top">
+        <view class="ko-bin__popup--footer" :class="getPopupType">
           <button
             class="ko-basic-button__card"
             @click="onClickPopupButton"
@@ -1209,7 +1363,7 @@ export default {
       </template>
     </BasicPopup>
 
-    <uv-popup ref="PRef" mode="bottom" round="10" :close-on-click-overlay="false">
+    <uv-popup ref="PRef" mode="bottom" round="10" :close-on-click-overlay="false" :adjustPosition="false">
       <view class="ko-bin__com">
         <Composing
           :data="boardRecord"
@@ -1217,6 +1371,7 @@ export default {
           :win-width="winWidth"
           @close="onClose"
           :rectangles="rectangles"
+          :residue="residue"
         />
       </view>
     </uv-popup>
@@ -1245,6 +1400,13 @@ export default {
 
     &--table {
       padding-top: 10px;
+      // #ifdef H5
+      position: relative;
+      width: 70vw;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0 auto;
+      // #endif
     }
 
     &--info {
@@ -1271,29 +1433,125 @@ export default {
 
     // #ifndef H5
     width: 98vw;
+
+    &.bottom {
+      width: 100%;
+      min-height: 70vh;
+    }
+
     // #endif
 
     // #ifdef H5
     width: 600px;
+
+    /deep/ .uni-forms .uni-forms-item .uni-forms-item__content {
+      width: auto !important;
+    }
+
     // #endif
 
     &--footer {
       display: flex;
       align-items: center;
       justify-content: space-around;
-      padding: 10px;
+      padding: 10px 10px 16px;
 
       .ko-basic-button__card {
         width: 100px;
+      }
+
+      &.center {
+        box-shadow: 0 -1px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2);
+      }
+
+      &.bottom {
+        box-shadow: 0 -8px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2);
       }
     }
   }
 
   &__com {
-    width: 100vw;
-    // #ifdef MP
     height: 94vh;
+    // #ifdef MP
+    width: 100vw;
     // #endif
   }
+
+  // 封边样式
+  &__edge {
+    width: 180px;
+    height: 180px;
+    border: 3px dotted #000;
+    position: relative;
+    transition: border .3s;
+
+    .ko-basic-button__card {
+      position: absolute;
+      z-index: 9;
+
+      &.top {
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      &.bottom {
+        bottom: 0;
+        left: 50%;
+        transform: translate(-50%, 50%);
+      }
+
+      &.right {
+        top: 50%;
+        right: 0;
+        transform: translate(50%, -50%);
+      }
+
+      &.left {
+        top: 50%;
+        left: 0;
+        transform: translate(-50%, -50%);
+      }
+
+    }
+
+    &--wrap {
+      padding: 20px 0 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    &--button-content {
+      position: relative;
+
+      &:before {
+        content: " ";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9;
+      }
+    }
+  }
+
+
+  // #ifdef H5
+  .ko-basic__content {
+
+    .ko-basic-label {
+      white-space: nowrap;
+      margin-right: 10px;
+    }
+  }
+
+  /deep/ .uv-popup__content.bottom {
+    width: 1024px;
+    margin: 0 auto;
+  }
+
+  // #endif
 }
 </style>

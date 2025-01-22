@@ -197,7 +197,7 @@ export default {
   height: 100%;
   width: 100%;
   overflow-y: auto;
-
+  
   &__loading {
     height: 80px;
     display: flex;

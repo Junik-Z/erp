@@ -337,6 +337,11 @@ export default {
     changeData() {
       return [...this.columns, ...this.list];
     },
+
+    // 序号
+    getColumns() {
+      return [{label: "序号", type: "index", prop: "Index"}, ...this.columns];
+    },
   },
 };
 </script>
@@ -348,13 +353,14 @@ export default {
     <H5Table
       :columns.sync="columns"
       :data.sync="list"
+      :readonly="readonly"
     />
     <!-- #endif -->
 
 
     <!-- #ifndef H5 -->
     <GridTable
-      :columns="columns"
+      :columns="getColumns"
       :data="list"
       @long-press="onLongPress"
       @press="onPress"

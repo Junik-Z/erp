@@ -133,7 +133,7 @@ button::after {
 
   // 0 1px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2)
   &__top {
-    box-shadow: 0 -1px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2);
+    box-shadow: 0 -8px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2);
   }
 }
 
@@ -170,18 +170,24 @@ button::after {
   align-items: center;
 
   box-shadow: $uni-shadow-base;
-  padding: 10px 0;
+  padding: 6px 0;
 
   &__wrap {
-    padding: 10px;
+    padding: 4px;
   }
 
   &__label {
-    padding: 10px 0 0;
+    padding: 6px 0 0;
+    // #ifdef MP
+    font-size: 12px;
+    // #endif
   }
 
   &__info {
-    padding: 10px 0;
+    padding: 6px 0;
+    // #ifdef MP
+    font-size: 14px;
+    // #endif
 
     &--unit {
       margin-left: 2px;
@@ -242,10 +248,11 @@ $--ko-print-font-size: 11pt;
 .ko-basic-popup {
   max-width: 900px;
 
+  .uni-forms-item__content {
+    width: 300px;
+  }
+
   .ko-basic-popup__wrap {
-    .uni-forms-item__content {
-      width: 300px;
-    }
   }
 
   .ko-basic-button {
@@ -282,7 +289,7 @@ $--ko-print-font-size: 11pt;
 }
 
 .ko-basic-added-form {
-  width: 1000px;
+  width: 1024px;
   margin: 0 auto;
 }
 
@@ -300,6 +307,11 @@ $--ko-print-font-size: 11pt;
   font-family: "Microsoft YaHei", Arial, sans-serif;
   font-weight: bold;
   font-size: 18pt;
+}
+
+.ko-basic__content {
+  width: 1024px;
+  margin: 0 auto;
 }
 
 // #endif

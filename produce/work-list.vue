@@ -255,7 +255,8 @@ export default {
             applyMaterialProduceApi({id: item.id, produceType: item.produceType})
               .then(() => {
                 uni.showToast({title: "申请成功"});
-                this.$set(this.list[index], "status", "APPLY_MATERIAL");
+                // this.$set(this.list[index], "status", "APPLY_MATERIAL");
+                this.list.splice(index, 1);
               })
               .finally(() => {
                 this.$set(item, "__discharging_loading__", false);
@@ -523,7 +524,7 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+    <view class="ko-client__table">
       <KoTable
         :loading="loading"
         :columns="getColumns"
@@ -531,6 +532,9 @@ export default {
         empty-text="暂无数据"
         stripe
         @row-click="onJumpDetails($event, 'produce')"
+
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
       >
         <template #operate="{item, index}" v-if="isPerm('Produce_Write')">
           <view style="display: flex; align-items: center; justify-content: center;">
@@ -644,5 +648,13 @@ export default {
       }
     }
   }
+
+  // #ifdef H5
+  &__table {
+    height: calc(100vh - 64px - 90px);
+    padding: 10px;
+  }
+
+  // #endif
 }
 </style>

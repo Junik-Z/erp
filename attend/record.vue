@@ -6,7 +6,6 @@ import PickerDate from "./components/PickerDate.vue";
 import { _deepCopy, _get, _groupBy, _isEqual, _omit } from "@/utils";
 import dayjs from "@/utils/dayjs";
 
-
 export default {
   name: "record",
   components: {KoList, PickerDate},
@@ -74,9 +73,21 @@ export default {
     },
   },
   computed: {
+    // #ifdef H5
     getColumns() {
-      return [];
+      return [
+        {
+          label: "姓名",
+          prop: "staffName",
+        },
+        {
+          label: "",
+          prop: "",
+        },
+        ...(this.monthList.map(label => ({label, value: label}))),
+      ];
     },
+    // #endif
 
     // 获取员工姓名
     getStaffName() {
@@ -91,7 +102,6 @@ export default {
         "--ko-basic-table-grid-col": "auto ".repeat(10).trim(),
       };
     },
-
 
     getItemClass() {
       return (list, date) => {
@@ -120,7 +130,6 @@ export default {
       };
     },
 
-
     getTimeHHmm() {
       return (time) => {
         if (!time) return "";
@@ -142,7 +151,7 @@ export default {
         format="YYYY-MM"
       />
     </view>
-    <!-- #ifdef MP -->
+    <!-- #ifdef MP | H5 -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view :style="[getGridTemplateColumnsStyle]">
@@ -203,17 +212,19 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
+   <!-- <view style="padding: 10px;">
       <KoTable
         :loading="loading"
         :columns="getColumns"
         :data="list"
         empty-text="暂无数据"
         stripe
-      />
-    </view>
-    <!-- #endif -->
 
+        @next-load="onRequestNextPage"
+        :no-more="noMore || loading"
+      />
+    </view>-->
+    <!-- #endif -->
   </view>
 </template>
 

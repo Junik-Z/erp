@@ -55,6 +55,7 @@ export default {
     :safe-area-inset-bottom="false"
     :round="10"
     bg-color="transparent"
+    :adjustPosition="false"
   >
     <view
       class="ko-basic-popup"

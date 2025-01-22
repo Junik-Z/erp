@@ -35,9 +35,12 @@ function buildTree(data, parentId = null, parentKey = "parentId", idKey = "proce
   return tree;
 }
 
-
 const systemInfo = uni.getSystemInfoSync();
-const screenHeight = systemInfo.screenHeight - 100;
+let screenHeight = systemInfo.screenHeight - 100;
+
+// #ifdef H5
+screenHeight = 600;
+// #endif
 
 export default {
   name: "CraftProcesses",
@@ -211,12 +214,14 @@ export default {
       });
     }, 30);
 
+    // #ifdef MP
     setTimeout(() => {
       getRect(".ko-craft", this)
         .then(res => {
           this.wrapHeight = res?.height || screenHeight;
         });
     }, 80);
+    // #endif
   },
   methods: {
     initChart(canvas, width, height, canvasDpr) {
@@ -589,7 +594,7 @@ export default {
 <style scoped lang="scss">
 .ko-craft {
   height: 100%;
-  min-height: 80vh;
+  //min-height: 80vh;
 
   &__popup {
     padding: 10px;

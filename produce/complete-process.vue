@@ -1,6 +1,6 @@
 <script>
 import { getSettledListApi } from "@/api/erp/produce";
-import { _groupBy, _isEmpty } from "@/utils";
+import { _deepCopy, _groupBy, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -27,6 +27,8 @@ export default {
       noMore: false,
 
       groupList: {},
+
+      tableKey: +new Date(),
     };
   },
   mixins: [mixins],
@@ -35,9 +37,11 @@ export default {
 
     this.getList(true);
   },
+  // #ifdef MP
   onReachBottom() {
     this.onRequestNextPage();
   },
+  // #endif
   methods: {
     // 请求下一页数据
     onRequestNextPage() {
@@ -50,7 +54,12 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
+        this.tableKey = +new Date();
       }
+
+      // #ifdef H5
+      const top = _deepCopy(this.$refs?.WrapRef?.scrollTop) || 0;
+      // #endif
 
       this.loading = true;
       getSettledListApi(this.queryList)
@@ -65,6 +74,12 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+
+          // #ifdef H5
+          this.$nextTick(() => {
+            this.$refs.WrapRef && (this.$refs.WrapRef.scrollTop = top);
+          });
+          // #endif
         });
     },
   },
@@ -93,7 +108,6 @@ export default {
     // #ifdef H5
     getColumns() {
       const _this = this;
-
       return [
         {
           label: "序号",
@@ -131,23 +145,21 @@ export default {
             return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.price)]);
           },
         },
-        ...(_this.tab >= 1 ? [
-          {
-            label: "结算",
-            prop: "finalAmount",
-            render(h, {row}) {
-              return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.finalAmount)]);
-            },
+        {
+          label: "数量",
+          prop: "quantity",
+        },
+        {
+          label: "结算",
+          prop: "finalAmount",
+          render(h, {row}) {
+            return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.finalAmount)]);
           },
-          {
-            label: "数量",
-            prop: "quantity",
-          },
-          {
-            label: "时间",
-            prop: "updateTime",
-          },
-        ] : []),
+        },
+        {
+          label: "时间",
+          prop: "updateTime",
+        },
         {
           label: "员工",
           prop: "staffList",
@@ -197,12 +209,6 @@ export default {
             return h("span", [row.description]);
           },
         },
-        ...(_this.tab < 2 ?
-          [{
-            label: "操作",
-            slot: "operate",
-          }]
-          : []),
       ];
     },
     // #endif
@@ -250,14 +256,31 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
-      <KoTable
-        :loading="loading"
-        :columns="getColumns"
-        :data="list"
-        empty-text="暂无数据"
-        stripe
-      />
+    <view
+      style="padding: 10px;"
+      v-infinite-scroll="onRequestNextPage"
+      infinite-scroll-immediate
+      :infinite-scroll-delay="200"
+      :infinite-scroll-disabled="noMore"
+      :infinite-scroll-distance="200"
+      ref="WrapRef"
+      :key="tableKey"
+    >
+      <block v-for="(child, key) of groupList" :key="key">
+        <uni-section :title="key" type="line">
+          <KoTable
+            :loading="loading"
+            :columns="getColumns"
+            :data="child"
+            stripe
+          />
+        </uni-section>
+      </block>
+
+      <view v-if="!list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">暂无数据</view>
+      <view v-if="noMore && list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">
+        没有更多数据了
+      </view>
     </view>
     <!-- #endif -->
   </view>

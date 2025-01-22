@@ -20,7 +20,7 @@ export default {
     // 滑动方向
     direction: {
       type: String,
-      default: "vertical",
+      default: "all",
     },
     yAxis: {
       type: Number,

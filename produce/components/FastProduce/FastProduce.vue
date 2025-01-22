@@ -124,7 +124,7 @@ export default {
 
 <template>
   <view class="ko-fast">
-    <!-- #ifdef MP -->
+    <!-- #ifdef MP | H5 -->
     <view class="ko-fast__wrap">
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length" @lower="onRequestNextPage">
         <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
@@ -159,8 +159,8 @@ export default {
     </view>
     <!-- #endif -->
 
-    <!-- #ifdef H5 -->
-    <view class="ko-fast__wrap">
+    <!-- #ifdef APP -->
+    <!--<view class="ko-fast__wrap">
       <KoTable
         :key="tableKey"
         :loading="loading"
@@ -185,7 +185,7 @@ export default {
           </view>
         </template>
       </KoTable>
-    </view>
+    </view>-->
     <!-- #endif -->
 
   </view>
@@ -201,6 +201,10 @@ export default {
 
     font-size: 14px;
     color: #8f939c;
+
+    // #ifdef H5
+    padding: 20px;
+    // #endif
   }
 }
 </style>
