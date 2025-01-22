@@ -79,7 +79,6 @@ export default {
     getAttendList() {
       getAttendanceListApi(this.attendQuery)
         .then(res => {
-          console.log("考勤记录", res.data);
           const data = res.data;
           // 获取今天的记录
           this.MyToday = data.find(v => v.date ? dayjs().isSame(dayjs(v.date), "d") : false) || this.MyToday;
@@ -157,10 +156,11 @@ export default {
         success(res) {
           checkinApi({sign: res.result})
             .then(() => {
-              _this.getAttendList();
               CustomToast({
                 title: "打卡成功",
+                duration: 3000,
               });
+              _this.getAttendList();
             })
             .finally(() => {
             });
@@ -257,10 +257,10 @@ export default {
 
 <template>
   <view class="ko-attend">
-    <view class="ko-attend__set" v-if="isPerm('Product_Write')">
+    <view class="ko-attend__set" v-if="isPerm('Produce_Write')">
       <button class="ko-basic-button__card" @click="onJumpStaff">员工管理</button>
       <button class="ko-basic-button__card" @click="onJumpRecord">记录</button>
-      <button class="ko-basic-button__card" @click="onSetCheckIn">设置</button>
+      <button v-if="isAdmin || isBusiness" class="ko-basic-button__card" @click="onSetCheckIn">设置</button>
       <button class="ko-basic-button__card" @click="onJumpCheckIn">二维码</button>
     </view>
 

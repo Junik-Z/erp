@@ -24,7 +24,7 @@ export default function request(config, isLoading = false, whole = false) {
     // #ifdef H5
     const Token = uni.getStorageSync("AccessToken") || "";
     // #endif
-    
+
     uni.request({
       url: baseURl + config["url"],
       method: config["method"],
@@ -140,10 +140,7 @@ export default function request(config, isLoading = false, whole = false) {
           });
           reject(res);
         } else {
-          uni.showToast({
-            title: msg,
-            icon: "none",
-          });
+          uni.showToast({title: msg, icon: "none"});
           reject(res);
         }
       },

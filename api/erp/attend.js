@@ -41,7 +41,7 @@ export function checkinApi(data) {
     url: "/attendance/checkin",
     method: "post",
     data,
-  }, true);
+  }, false);
 }
 
 /**
