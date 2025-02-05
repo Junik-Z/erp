@@ -1,4 +1,7 @@
 <script>
+// #ifdef H5
+import CNC from "./components/CNC.vue";
+// #endif
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -24,10 +27,12 @@ import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "@/produce/define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
+import PrintLabels from "@/produce/components/PrintLabels.vue";
 
 export default {
   name: "WorkList",
   components: {
+    PrintLabels,
     FastPopup,
     TopMenus,
     KoList,
@@ -37,6 +42,9 @@ export default {
     UniCol,
     UniRow,
     BasicCard,
+    // #ifdef H5
+    CNC,
+    // #endif
   },
   data() {
     const _this = this;
@@ -382,6 +390,17 @@ export default {
     onTechnology(item, index) {
       this.onJump(item, index, true);
     },
+
+    // #ifdef H5
+    onCncClick(item, index) {
+      this.$refs.CncRef.open(item, index);
+    },
+
+    // 处理打印标签
+    onPrintLabel(obj) {
+      this.$refs.PLRef.open(obj);
+    },
+    // #endif
   },
   computed: {
     // #ifdef H5
@@ -590,12 +609,25 @@ export default {
             >
               删除
             </button>
+            <!-- #ifdef H5 -->
+            <button
+              class="ko-basic-button__card"
+              v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('')"
+              @click.stop="onCncClick(item, index)"
+            >
+              CNC
+            </button>
+            <!-- #endif -->
           </view>
         </template>
       </KoTable>
     </view>
-    <!-- #endif -->
 
+    <CNC ref="CncRef" @print-label="onPrintLabel" />
+
+    <PrintLabels ref="PLRef" />
+
+    <!-- #endif -->
     <KoMovable
       :content="MovableList"
       v-if="isPerm('Produce_Write')"

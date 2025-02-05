@@ -51,6 +51,8 @@ export default {
         x: 0,
         y: 0,
         radius: [0, 0, 0, 0],
+        // 夹角类型
+        angleType: [0, 0, 0, 0],
         edges: [0, 0, 0, 0],
         weight: 9,
         texture: false, // 纹理
@@ -99,6 +101,7 @@ export default {
         x: 0,
         y: 0,
         radius: [0, 0, 0, 0],
+        angleType: [0, 0, 0, 0],
         edges: [0, 0, 0, 0],
         weight: 9,
         texture: true, // 纹理
@@ -318,6 +321,14 @@ export default {
       isExternalUpdatesFlag: false,
       // 内部向外部更新数据的阀门
       isToOutsideFlag: false,
+
+      // 圆角设置
+      radiusVisible: false,
+      rsForm: {
+        angleType: 0,
+        radius: 0,
+      },
+      rsIndex: 0,
     };
   },
   watch: {
@@ -888,6 +899,37 @@ export default {
     setEdges(item, index) {
       this.$set(item, index, item[index] ? 0 : 1);
     },
+
+    // 切换圆角类型
+    onChangeAngleType(event) {
+      this.rsForm.angleType = +event.detail.value;
+    },
+
+    // 开启圆角设置
+    openAngleType(index) {
+      const {angleType, radius} = _deepCopy(this.form);
+      const T = angleType[index] || 0;
+      const R = radius[index] || 0;
+      this.rsForm.angleType = T;
+      this.rsForm.radius = R;
+      this.rsIndex = index;
+      this.radiusVisible = true;
+    },
+
+    // 保存设置的圆角
+    onSubmitAngle() {
+      const {angleType, radius} = _deepCopy(this.rsForm);
+      // const {width, height} = _deepCopy(this.form);
+      /* const len = width > height ? height : width;
+
+      if (_isEqual(angleType, 0)) {
+
+      } */
+
+      this.form.angleType[this.rsIndex] = angleType;
+      this.form.radius[this.rsIndex] = radius;
+      this.radiusVisible = false;
+    },
   },
   mounted() {
     this.getRectByRoot();
@@ -934,7 +976,7 @@ export default {
       return (form, vss) => {
         const F = _deepCopy(form);
         if (_isEmpty(F)) return {};
-        const scale = _round(300 / (vss?.width || 300), 2);
+        const scale = _round(180 / (vss?.width || 180), 2);
         const style = {};
 
         const [l, r, t, b] = F.edges || [];
@@ -1009,6 +1051,27 @@ export default {
     // 获取表头
     getColumns() {
       return _deepCopy(this.columns).filter(v => this.readonly ? v.prop !== "More" : true);
+    },
+
+    // 设置角度样式
+    getAngleStyle() {
+      return (index, form, data) => {
+        const F = _deepCopy(data);
+        if (_isEmpty(F)) return {};
+
+        const {angleType, radius} = _deepCopy(form);
+
+        const scale = _round(180 / (F?.width || 180), 2);
+
+        const T = angleType[index];
+        const R = radius[index];
+
+        return {
+          width: T ? R * scale + "px" : 0,
+          height: T ? R * scale + "px" : 0,
+          opacity: T,
+        };
+      };
     },
   },
 };
@@ -1240,47 +1303,69 @@ export default {
 
             <view class="ko-bin__edge--wrap">
               <view class="ko-bin__edge" :style="[getEdgeStyle(form, formData)]">
-                <button
-                  class="ko-basic-button__card left"
-                  @click="setEdges(form.edges, 0)"
-                >
-                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                    <UvCheckbox is-alone readonly :value="form.edges[0]" />
-                    封边
+                <!-- 封边设置 -->
+                <block>
+                  <button
+                    class="ko-basic-button__card edge left"
+                    @click="setEdges(form.edges, 0)"
+                  >
+                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                      <UvCheckbox is-alone readonly :value="form.edges[0]" />
+                      封边
+                    </view>
+                  </button>
+                  <button
+                    class="ko-basic-button__card edge right"
+                    @click="setEdges(form.edges, 1)"
+                  >
+                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                      <UvCheckbox is-alone readonly :value="form.edges[1]" />
+                      封边
+                    </view>
+                  </button>
+                  <button
+                    class="ko-basic-button__card edge top"
+                    @click="setEdges(form.edges, 2)"
+                  >
+                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                      <UvCheckbox is-alone readonly :value="form.edges[2]" />
+                      封边
+                    </view>
+                  </button>
+                  <button
+                    class="ko-basic-button__card edge bottom"
+                    @click="setEdges(form.edges, 3)"
+                  >
+                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                      <UvCheckbox is-alone readonly :value="form.edges[3]" />
+                      封边
+                    </view>
+                  </button>
+                </block>
+
+                <!-- 圆直角设置 -->
+                <block>
+                  <view class="ko-bin__edge--radius TL">
+                    <button class="ko-basic-button__card" @click.stop="openAngleType(0)">圆角</button>
                   </view>
-                </button>
-
-                <button
-                  class="ko-basic-button__card right"
-                  @click="setEdges(form.edges, 1)"
-                >
-                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                    <UvCheckbox is-alone readonly :value="form.edges[1]" />
-                    封边
+                  <view class="ko-bin__edge--radius TR">
+                    <button class="ko-basic-button__card" @click.stop="openAngleType(1)">圆角</button>
                   </view>
-                </button>
-
-                <button
-                  class="ko-basic-button__card top"
-                  @click="setEdges(form.edges, 2)"
-                >
-                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                    <UvCheckbox is-alone readonly :value="form.edges[2]" />
-                    封边
+                  <view class="ko-bin__edge--radius BR">
+                    <button class="ko-basic-button__card" @click.stop="openAngleType(2)">圆角</button>
                   </view>
-                </button>
-
-
-                <button
-                  class="ko-basic-button__card bottom"
-                  @click="setEdges(form.edges, 3)"
-                >
-                  <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                    <UvCheckbox is-alone readonly :value="form.edges[3]" />
-                    封边
+                  <view class="ko-bin__edge--radius BL">
+                    <button class="ko-basic-button__card" @click.stop="openAngleType(3)">圆角</button>
                   </view>
-                </button>
+                </block>
 
+                <!-- 直角显示 -->
+                <block>
+                  <view class="ko-bin__edge--angle TL" :style="[getAngleStyle(0, form, formData)]"></view>
+                  <view class="ko-bin__edge--angle TR" :style="[getAngleStyle(1, form, formData)]"></view>
+                  <view class="ko-bin__edge--angle BR" :style="[getAngleStyle(2, form, formData)]"></view>
+                  <view class="ko-bin__edge--angle BL" :style="[getAngleStyle(3, form, formData)]"></view>
+                </block>
               </view>
             </view>
           </block>
@@ -1375,6 +1460,27 @@ export default {
         />
       </view>
     </uv-popup>
+
+    <BasicPopup :visible.sync="radiusVisible" title="圆角设置">
+      <view class="ko-bin__radius-popup">
+        <uni-forms label-width="110px" label-align="right" ref="RSRef" :model="rsForm">
+          <uni-forms-item label="圆角类型：" name="angleType">
+            <radio-group @change="onChangeAngleType">
+              <radio color="#4177f6" value="0" :checked="rsForm.angleType == 0">圆角</radio>
+              <radio color="#4177f6" style="margin-left: 10px;" value="1" :checked="rsForm.angleType == 1">直角</radio>
+            </radio-group>
+          </uni-forms-item>
+          <uni-forms-item label="圆角大小：">
+            <uni-easyinput type="digit" v-model="rsForm.radius" placeholder="请输入" />
+          </uni-forms-item>
+        </uni-forms>
+      </view>
+      <template #footer>
+        <view style="display: flex; align-items: center; justify-content: center; padding: 10px;">
+          <button class="ko-basic-button__card" @click="onSubmitAngle">保存</button>
+        </view>
+      </template>
+    </BasicPopup>
 
     <uv-action-sheet
       ref="UASRef"
@@ -1485,7 +1591,7 @@ export default {
     position: relative;
     transition: border .3s;
 
-    .ko-basic-button__card {
+    .edge {
       position: absolute;
       z-index: 9;
 
@@ -1535,8 +1641,78 @@ export default {
         z-index: 9;
       }
     }
+
+    &--radius {
+      position: absolute;
+
+      &.TL {
+        top: 0;
+        left: 0;
+        transform: translate(-110%, -100%);
+      }
+
+      &.TR {
+        top: 0;
+        right: 0;
+        transform: translate(110%, -100%);
+      }
+
+      &.BR {
+        bottom: 0;
+        right: 0;
+        transform: translate(110%, 100%);
+      }
+
+      &.BL {
+        bottom: 0;
+        left: 0;
+        transform: translate(-110%, 100%);
+      }
+    }
+
+    &--angle {
+      position: absolute;
+      background: #fff;
+
+      &.TL {
+        top: -3px;
+        left: -3px;
+        border-bottom: 3px solid #000;
+        border-right: 3px solid #000;
+      }
+
+      &.TR {
+        top: -3px;
+        right: -3px;
+        border-bottom: 3px solid #000;
+        border-left: 3px solid #000;
+      }
+
+      &.BR {
+        bottom: -3px;
+        right: -3px;
+        border-top: 3px solid #000;
+        border-left: 3px solid #000;
+      }
+
+      &.BL {
+        bottom: -3px;
+        left: -3px;
+        border-top: 3px solid #000;
+        border-right: 3px solid #000;
+      }
+    }
   }
-  
+
+  &__radius-popup {
+    // #ifdef MP
+    width: 96vw;
+    // #endif
+    height: 40vh;
+    padding: 10px;
+  }
+
+
   // #ifdef H5
   .ko-basic__content {
 

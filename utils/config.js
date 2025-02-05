@@ -34,10 +34,14 @@ if (_isDev()) {
   // #ifdef MP
   const accountInfo = uni.getAccountInfoSync();
   type = accountInfo?.miniProgram?.envVersion;
+
+  if (type === "develop") {
+    type = "trial";
+  }
   // #endif
 
   // #ifdef H5
-  type = "trial";
+  type = "release";
   // #endif
 }
 

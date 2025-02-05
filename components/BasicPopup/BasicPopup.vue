@@ -76,7 +76,7 @@ export default {
         <slot></slot>
       </view>
 
-      <view class="ko-basic-popup__footer">
+      <view class="ko-basic-popup__footer" v-if="$slots.footer">
         <slot name="footer"></slot>
       </view>
     </view>
@@ -101,7 +101,7 @@ export default {
   // #endif
 
   &.close {
-    padding-top: 60px;
+    padding-top: 50px;
   }
 
   &.show-title {
@@ -113,7 +113,7 @@ export default {
   }
 
   &__header {
-    height: 60px;
+    height: 50px;
     font-size: 18px;
     font-weight: bold;
     padding: 15px 0;

@@ -423,3 +423,63 @@ export function updateCraftProcessApi(data) {
     data,
   });
 }
+
+/**
+ * @description 完成工艺
+ */
+export function completeCraftApi(data) {
+  return request({
+    url: "/craft/complete",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 恢复工艺
+ */
+export function recoverCraftApi(data) {
+  return request({
+    url: "/craft/recover",
+    method: "post",
+    data,
+  });
+}
+
+// —————————————————————— CNC加工 ——————————————————————————
+
+/**
+ * @description 获取CNC配置
+ */
+export function getCNCProperties(data) {
+  return request({
+    url: "/cnc/properties",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 更新CNC配置
+ */
+export function updateCNCProperties(data) {
+  return request({
+    url: "/cnc/updateProperties",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 生成NC程序
+ */
+export function generateCNCProperties(data) {
+  return request({
+      url: "/cnc/generateNcProgram",
+      method: "post",
+      responseType: "arraybuffer",
+      data,
+    },
+    false, true,
+  );
+}

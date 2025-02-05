@@ -140,6 +140,7 @@ export default {
         // 处理材料
         const rItems = this.handleItems(_deepCopy(board.items), rectangles, scale, precision, drillWidth);
 
+
         return {
           ...board,
           rGroup: `${board.width - drillWidth}×${board.height - drillWidth}×${board.weight || ""} (${board.color || ""})`,
@@ -203,6 +204,7 @@ export default {
             }
           });
 
+
         return {
           name: node.name,
           rid: item.rid,
@@ -217,6 +219,7 @@ export default {
           sWeight: node.weight,
           sColor: gColor(),
           edgeLength,
+          node,
         };
       }) || [];
     },
@@ -256,6 +259,20 @@ export default {
         };
       };
     },
+
+    getAngleStyle() {
+      return (item, index) => {
+        const A = _get(item, `node.angleType.${index}`);
+        const R = item.rRadius.split(" ")?.[index];
+
+        return {
+          "--angle-border-size": item.rDrillWidth + "px",
+          width: A ? R : 0,
+          height: A ? R : 0,
+          opacity: A,
+        };
+      };
+    },
   },
   mounted() {
     setTimeout(() => {
@@ -291,7 +308,6 @@ export default {
             <label class="ko-basic-label">封边：</label>
             <text>{{ allEdgeLength }}mm</text>
           </uni-col>
-
         </uni-row>
       </view>
 
@@ -323,6 +339,7 @@ export default {
                 :key="item.rid"
                 :style="[getVItemStyle(item)]"
               >
+
                 <view
                   class="ko-composing__item--info"
                   :style="{transform: `rotate(${item.sWidth < item.sHeight ? '90' : 0}deg)`}"
@@ -332,10 +349,19 @@ export default {
                     {{ `(${item.sWidth}x${item.sHeight}x${item.sWeight})` }}
                   </view>
                 </view>
-                <view class="ko-composing__item--angle LT" @click.stop="onAngle('angle', item)"></view>
-                <view class="ko-composing__item--angle RT" @click.stop="onAngle('angle', item)"></view>
-                <view class="ko-composing__item--angle LB" @click.stop="onAngle('angle', item)"></view>
-                <view class="ko-composing__item--angle RB" @click.stop="onAngle('angle', item)"></view>
+
+                <block>
+                  <view class="ko-composing__item--angle LT" @click.stop="onAngle('angle', item)"></view>
+                  <view class="ko-composing__item--angle RT" @click.stop="onAngle('angle', item)"></view>
+                  <view class="ko-composing__item--angle LB" @click.stop="onAngle('angle', item)"></view>
+                  <view class="ko-composing__item--angle RB" @click.stop="onAngle('angle', item)"></view>
+                </block>
+                <block>
+                  <view class="ko-composing__angle LT" :style="[getAngleStyle(item, 0)]"></view>
+                  <view class="ko-composing__angle RT" :style="[getAngleStyle(item, 1)]"></view>
+                  <view class="ko-composing__angle LB" :style="[getAngleStyle(item, 2)]"></view>
+                  <view class="ko-composing__angle RB" :style="[getAngleStyle(item, 3)]"></view>
+                </block>
               </view>
             </view>
           </view>
@@ -473,6 +499,43 @@ export default {
   &__count {
     padding: 50px 10px 10px;
     font-size: 14px;
+  }
+
+  &__angle {
+    position: absolute;
+    background: #fff;
+
+    &.LT {
+      border: var(--angle-border-size) solid #000;
+      top: calc(0px - var(--angle-border-size));
+      left: calc(0px - var(--angle-border-size));
+      border-top: none;
+      border-left: none;
+    }
+
+    &.RT {
+      border: var(--angle-border-size) solid #000;
+      top: calc(0px - var(--angle-border-size));
+      right: calc(0px - var(--angle-border-size));
+      border-top: none;
+      border-right: none;
+    }
+
+    &.LB {
+      border: var(--angle-border-size) solid #000;
+      bottom: calc(0px - var(--angle-border-size));
+      right: calc(0px - var(--angle-border-size));
+      border-bottom: none;
+      border-right: none;
+    }
+
+    &.RB {
+      border: var(--angle-border-size) solid #000;
+      bottom: calc(0px - var(--angle-border-size));
+      left: calc(0px - var(--angle-border-size));
+      border-bottom: none;
+      border-left: none;
+    }
   }
 }
 </style>

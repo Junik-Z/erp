@@ -228,7 +228,8 @@ button::after {
     border-right: 1px solid $border-color;
 
     .ko-basic-button__card {
-      padding: 5px 10px;
+      padding: 4px 8px;
+      font-size: 12px;
     }
   }
 }

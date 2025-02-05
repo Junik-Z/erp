@@ -166,6 +166,11 @@ export default {
       this.$emit("blur", event);
 
       let value = event.detail.value;
+
+      // #ifdef H5
+      value = value || this.inputValue;
+      // #endif
+
       if (isNaN(value)) {
         this.inputValue = this.value;
         return;

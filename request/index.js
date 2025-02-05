@@ -66,27 +66,30 @@ export default function request(config, isLoading = false, whole = false) {
         }
 
         if (res.statusCode === 200 && code === 200) {
+          // #ifdef H5
+          uni.$__IS_LOGOUT_FLAG__ = false;
+          // #endif
           resolve(res.data);
         } else if (code === 401) {
+
+          // #ifdef H5
+          uni.setStorageSync("__APP_SCENE__", "");
+          uni.setStorageSync("Cookie", "");
+
+          uni.reLaunch({
+            url: "/pages/login/login",
+          });
+
+          if ("true") return false;
+          // #endif
 
           if (uni.$__IS_LOGOUT_FLAG__) return false;
 
           if (!isFlag) {
             isFlag = true;
-
-            // #ifdef H5
-            uni.setStorageSync("__APP_SCENE__", "");
-            // #endif
-
             uni.setStorageSync("Cookie", "");
 
             try {
-              // #ifdef H5
-              uni.reLaunch({
-                url: "/pages/login/login",
-              });
-              // #endif
-
               // #ifdef MP
               await goLogin();
               console.log("重新登陆了");

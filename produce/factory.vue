@@ -2,11 +2,13 @@
 import {
   applySettleApi,
   cancelSettleApi,
+  completeCraftApi,
   confirmSettleApi,
   craftUpdateApi,
   getSettledListApi,
   getWaitConfirmListApi,
   getWorkingListApi,
+  recoverCraftApi,
 } from "@/api/erp/produce";
 import { _deepCopy, _get, _groupBy, _isEmpty, _isNotUnNil, _keys, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
@@ -291,6 +293,28 @@ export default {
           this.pLoading = false;
         });
     },
+
+    // 完成工艺
+    onComplete(item, index, key) {
+      completeCraftApi(item)
+        .then(() => {
+          this.$set(this.groupList[key][index], "status", "FINISHED");
+          CustomToast({
+            title: "操作成功",
+          });
+        });
+    },
+
+    // 恢复工艺
+    onRecover(item, index, key) {
+      recoverCraftApi(item)
+        .then(() => {
+          this.$set(this.groupList[key][index], "status", "CREATED");
+          CustomToast({
+            title: "操作成功",
+          });
+        });
+    },
   },
   computed: {
     actionList() {
@@ -532,20 +556,36 @@ export default {
                     <view
                       style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap;"
                     >
-                      <button
-                        class="ko-basic-button__card"
-                        @click.stop="onSettlement(item, index)"
-                        v-if="tab === 0"
-                      >
-                        结算
-                      </button>
-                      <button
-                        class="ko-basic-button__card"
-                        @click.stop="onEditor(item, index)"
-                        v-if="[0].includes(tab)"
-                      >
-                        编辑
-                      </button>
+                      <block v-if="tab === 0">
+                        <block v-if="['CREATED'].includes(item.status)">
+                          <button
+                            class="ko-basic-button__card"
+                            @click.stop="onComplete(item, index, key)"
+                          >
+                            完成
+                          </button>
+                          <button
+                            class="ko-basic-button__card"
+                            @click.stop="onSettlement(item, index)"
+                          >
+                            结算
+                          </button>
+                          <button
+                            class="ko-basic-button__card"
+                            @click.stop="onEditor(item, index)"
+                          >
+                            编辑
+                          </button>
+                        </block>
+
+                        <button
+                          class="ko-basic-button__card"
+                          @click.stop="onRecover(item, index, key)"
+                          v-if="['FINISHED'].includes(item.status)"
+                        >
+                          恢复
+                        </button>
+                      </block>
                       <button
                         class="ko-basic-button__card"
                         @click.stop="onCancel(item, index, key)"
@@ -592,20 +632,36 @@ export default {
           >
             <template #operate="{item, index}">
               <view style="display: flex; align-items: center; justify-content: center;">
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onSettlement(item, index)"
-                  v-if="tab === 0"
-                >
-                  结算
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onEditor(item, index)"
-                  v-if="[0].includes(tab)"
-                >
-                  编辑
-                </button>
+                <block v-if="tab === 0">
+                  <block v-if="['CREATED'].includes(item.status)">
+                    <button
+                      class="ko-basic-button__card"
+                      @click.stop="onComplete(item, index, key)"
+                    >
+                      完成
+                    </button>
+                    <button
+                      class="ko-basic-button__card"
+                      @click.stop="onSettlement(item, index)"
+                    >
+                      结算
+                    </button>
+                    <button
+                      class="ko-basic-button__card"
+                      @click.stop="onEditor(item, index)"
+                    >
+                      编辑
+                    </button>
+                  </block>
+
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onRecover(item, index, key)"
+                    v-if="['FINISHED'].includes(item.status)"
+                  >
+                    恢复
+                  </button>
+                </block>
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onCancel(item, index, key)"
@@ -625,7 +681,6 @@ export default {
           </KoTable>
         </uni-section>
       </block>
-
 
       <view v-if="!list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">暂无数据</view>
       <view v-if="noMore && list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">
