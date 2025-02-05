@@ -1,6 +1,8 @@
 <script>
 // #ifdef H5
 import CNC from "./components/CNC.vue";
+import PrintLabels from "@/produce/components/PrintLabels.vue";
+
 // #endif
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -27,12 +29,10 @@ import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "@/produce/define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
-import PrintLabels from "@/produce/components/PrintLabels.vue";
 
 export default {
   name: "WorkList",
   components: {
-    PrintLabels,
     FastPopup,
     TopMenus,
     KoList,
@@ -44,6 +44,7 @@ export default {
     BasicCard,
     // #ifdef H5
     CNC,
+    PrintLabels,
     // #endif
   },
   data() {
@@ -626,7 +627,6 @@ export default {
     <CNC ref="CncRef" @print-label="onPrintLabel" />
 
     <PrintLabels ref="PLRef" />
-
     <!-- #endif -->
     <KoMovable
       :content="MovableList"

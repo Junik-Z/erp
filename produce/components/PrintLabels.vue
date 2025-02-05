@@ -33,21 +33,20 @@ export default {
         .then(res => {
           this.order = res.data;
 
-          console.log(this.order);
-
           const obj = _get(_deepCopy(res.data), "customizedBoards.0") || {};
 
           if (_isEmpty(obj)) {
+            this.visible = false;
+            this.gLoading = false;
+
             CustomToast({
               title: "该工单不需要进行板材加工",
               icon: "none",
             });
-
-            this.gLoading = false;
             return false;
           }
-          const iList = _get(obj, "boards.0.items");
 
+          const iList = _get(obj, "boards.0.items");
           this.boardRecord = obj.boardRecord.map(parent => {
             parent.items = parent.items.map(item => {
               const original = iList.find((v) => _isEqual(v.rid, item.rid));
