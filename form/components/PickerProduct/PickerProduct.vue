@@ -39,6 +39,7 @@ export default {
     hidePrices: Boolean,
     // 实际付款金额
     isActual: Boolean,
+    readonly: Boolean,
   },
   data() {
     const _this = this;
@@ -83,7 +84,7 @@ export default {
           label: "单价(元)",
           prop: "price",
           render: (h, {row}) => {
-            if (_this.isClient) {
+            if (_this.isClient || _this.readonly) {
               return h(
                 "label",
                 {class: "ko-basic-money"},
@@ -116,6 +117,8 @@ export default {
           label: "数量",
           prop: "productQuantity",
           render: (h, {row}) => {
+            if (_this.readonly) return h("span", row.productQuantity);
+
             return h(
               InputNumber,
               {
@@ -322,7 +325,7 @@ export default {
       :data="list"
     >
       <template #operate="{item, index}">
-        <view style="display: flex;justify-content: center; align-items: center;">
+        <view v-if="!readonly" style="display: flex;justify-content: center; align-items: center;">
           <button class="ko-basic-button__card" @click="onRemove(index)">
             移除
           </button>
@@ -331,7 +334,7 @@ export default {
     </KoTable>
     <!-- #endif -->
 
-    <view style="display: flex; align-items: center; margin-top: 8px;" v-if="!isNotAdded">
+    <view style="display: flex; align-items: center; margin-top: 8px;" v-if="!isNotAdded && !readonly">
       <button class="ko-basic-button__card" @click="onAdded()">添加</button>
     </view>
 

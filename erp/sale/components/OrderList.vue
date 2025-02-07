@@ -73,7 +73,7 @@ export default {
         },
         {
           text: "新增",
-          iconfont: 'icon-tianjia',
+          iconfont: "icon-tianjia",
           path: PageEnums.editSale,
         },
       ],

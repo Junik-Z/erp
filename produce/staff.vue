@@ -80,6 +80,18 @@ export default {
           prop: "name",
         },
         {
+          label: "金额",
+          prop: "amount",
+          width: 100,
+          render: (h, {row}) => {
+            return h(
+              "span",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [_this.toYuan(Math.abs(row.amount || 0))],
+            );
+          },
+        },
+        {
           label: "绑定用户",
           prop: "name",
           render: (h, {row}) => {

@@ -128,8 +128,6 @@ export default {
       // 视图宽度
       const winWidth = _deepCopy(this.getWinWidth);
 
-      const w = [];
-
       // 板材
       this.list = data.map(board => {
         const scale = _round(winWidth / board.width, 2);
@@ -139,11 +137,12 @@ export default {
         const rHeight = _round(board.height * scale, precision);
         // 处理材料
         const rItems = this.handleItems(_deepCopy(board.items), rectangles, scale, precision, drillWidth);
-
+        // 获取板材下的第一块材料的信息
+        const sItem = rectangles.find(v => _isEqual(v.rid, _get(board, "items.0.rid")));
 
         return {
           ...board,
-          rGroup: `${board.width - drillWidth}×${board.height - drillWidth}×${board.weight || ""} (${board.color || ""})`,
+          rGroup: `${board.width - drillWidth}×${board.height - drillWidth}×${board.weight || sItem.weight || ""} (${board.color || sItem.color || ""})`,
           rEdgeLength: _sum(rItems.map(v => v.edgeLength)),
           rHeight,
           rWidth,
@@ -162,6 +161,7 @@ export default {
 
       for (const key in group) {
         const item = group[key];
+
         const obj = {
           norm: key,
           count: item.length,
@@ -260,6 +260,7 @@ export default {
       };
     },
 
+    // 获取圆角类型
     getAngleStyle() {
       return (item, index) => {
         const A = _get(item, `node.angleType.${index}`);
@@ -356,6 +357,8 @@ export default {
                   <view class="ko-composing__item--angle LB" @click.stop="onAngle('angle', item)"></view>
                   <view class="ko-composing__item--angle RB" @click.stop="onAngle('angle', item)"></view>
                 </block>
+
+                <!-- 圆角 -->
                 <block>
                   <view class="ko-composing__angle LT" :style="[getAngleStyle(item, 0)]"></view>
                   <view class="ko-composing__angle RT" :style="[getAngleStyle(item, 1)]"></view>

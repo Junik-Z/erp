@@ -1,8 +1,25 @@
 <!-- #ifdef H5 -->
 <script>
-import { generateCNCProperties, getCNCProperties, getProduceDetailApi, updateCNCProperties } from "@/api/erp/produce";
-import { Col, Form, FormItem, Input, InputNumber, Loading, Row } from "@/uni_modules/element-ui/element.min";
-import { _deepCopy, _get, _isEmpty, CustomToast } from "@/utils";
+import {
+  generateCNCProperties,
+  getCNCProperties,
+  getNCProgramsApi,
+  getProduceDetailApi,
+  removeNCProgramsApi,
+  updateCNCProperties,
+} from "@/api/erp/produce";
+import {
+  Col,
+  Form,
+  FormItem,
+  Input,
+  InputNumber,
+  Loading,
+  Row,
+  TabPane,
+  Tabs,
+} from "@/uni_modules/element-ui/element.min";
+import { _deepCopy, _get, _isEmpty, _isEqual, _omit, _toFinite, CustomToast } from "@/utils";
 import { CncCalculate } from "./cncCalculate";
 
 export default {
@@ -32,6 +49,9 @@ export default {
       CNC: {},
 
       cncLoading: false,
+
+      NCList: [],
+      editableTabsValue: null,
     };
   },
   directives: {
@@ -42,15 +62,18 @@ export default {
     Form,
     FormItem,
     InputNumber,
-    Row, Col,
+    Row,
+    Col,
+    Tabs,
+    TabPane,
   },
   created() {
     this.CNC = new CncCalculate({});
-
   },
   methods: {
     open(node) {
       this.node = node;
+      this.getAllNCPrograms();
       this.getConfig();
       this.visible = true;
     },
@@ -72,8 +95,7 @@ export default {
       this.$refs.FRef.validate((valid) => {
         if (valid) {
           updateCNCProperties(this.form)
-            .then(res => {
-              console.log(res);
+            .then(() => {
               CustomToast({
                 title: "更新成功",
               });
@@ -104,18 +126,9 @@ export default {
 
           const boards = this.CNC.getSvg(obj);
 
-          /*  if (obj) {
-             this.$refs.NCN.innerHTML = boards[0].svgContent;
-
-             this.gLoading = false;
-             return false;
-           } */
-
-          generateCNCProperties({boards})
-            .then(blob => {
-              console.log(blob);
+          generateCNCProperties({boards, propertiesId: this.editableTabsValue})
+            .then((blob) => {
               this.saveZipFile(blob, `${res.data.orderCode}`);
-
               CustomToast({
                 title: "生成成功",
               });
@@ -126,6 +139,17 @@ export default {
         })
         .catch(() => {
           this.gLoading = false;
+        })
+        .finally(() => {
+        });
+    },
+
+    // 获取所有NC设备
+    getAllNCPrograms() {
+      getNCProgramsApi({pageNum: 0, pageSize: 100})
+        .then(res => {
+          this.NCList = res.data.map(v => ({...v, __id__: v.id}));
+          this.editableTabsValue = this.NCList[0].__id__;
         })
         .finally(() => {
         });
@@ -165,6 +189,69 @@ export default {
     onPrintLabels() {
       this.$emit("print-label", _deepCopy(this.node));
     },
+
+    // 处理添加
+    onAddedTabs(targetName, action) {
+      if (_isEqual(action, "add")) {
+        const nextId = `${Math.max(...this.NCList.map(v => _toFinite(v.__id__))) + 1}`;
+        const F = {..._omit(_deepCopy(this.form), ["id", "__id__"]), __id__: nextId};
+        this.NCList.push(_deepCopy(F));
+        this.editableTabsValue = nextId;
+        this.form = _deepCopy(F);
+      }
+
+
+      if (_isEqual(action, "remove")) {
+
+        const index = this.getNCPIndex(targetName);
+        const id = this.NCList[index].id;
+
+        if (id == 1) {
+          CustomToast({
+            title: "默认配置不能删除",
+            icon: "none",
+          });
+          return false;
+        }
+
+        uni.showModal({
+          title: "温馨提示",
+          content: "您确定要删除该程序配置吗？",
+          success: (res) => {
+            if (res.confirm) {
+              const index = this.getNCPIndex(targetName);
+              const id = this.NCList[index].id;
+              if (id) {
+                removeNCProgramsApi({id})
+                  .then(() => {
+                    CustomToast({
+                      title: "删除成功",
+                    });
+                    this.getAllNCPrograms();
+                  });
+              } else {
+                this.NCList.splice(index, 1);
+                this.editableTabsValue = this.NCList.at(-1).__id__;
+              }
+            }
+          },
+        });
+      }
+    },
+
+    // 根据ID获取NC列表的下标
+    getNCPIndex(id) {
+      return this.NCList.findIndex(v => v.__id__ === id);
+    },
+
+    // 处理点击tab
+    onTabClick(tab) {
+      const index = this.getNCPIndex(tab.name);
+
+      console.log(index);
+
+      this.form = _deepCopy(this.NCList[index]);
+    },
   },
 };
 </script>
@@ -172,6 +259,22 @@ export default {
 <template>
   <BasicPopup :visible.sync="visible" title="NC配置">
     <view class="ko-cnc">
+      <Tabs
+        type="card"
+        editable
+        @edit="onAddedTabs"
+        v-model="editableTabsValue"
+        @tab-click="onTabClick"
+      >
+        <TabPane
+          v-for="(item, index) of NCList"
+          :name="item.__id__"
+          :key="item.__id__"
+          :label="`${index + 1}`"
+          :class="{'is-root': item.id == 1}"
+        />
+      </Tabs>
+
       <Form
         style="width: calc(100% - 20px);"
         :model="form"

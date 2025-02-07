@@ -104,7 +104,6 @@ export default {
     this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
 
     if (this.isClient) {
-
       if (this.option.SHARE_ID) {
         getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
           .then(res => {
@@ -307,6 +306,7 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
+                :readonly="isAgain"
               />
             </view>
           </UniFormsItem>

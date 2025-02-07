@@ -483,3 +483,28 @@ export function generateCNCProperties(data) {
     false, true,
   );
 }
+
+
+/**
+ * @description 获取所有CNC程序
+ */
+export function getNCProgramsApi(data) {
+  return request({
+      url: "/cnc/ncPrograms",
+      method: "get",
+      data,
+    },
+  );
+}
+
+/**
+ * @description 删除CNC程序
+ */
+export function removeNCProgramsApi(data) {
+  return request({
+      url: "/cnc/deleteNcProgram",
+      method: "post",
+      data,
+    },
+  );
+}

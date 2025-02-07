@@ -122,7 +122,7 @@ export default {
         return {
           width: item.width * M + "px",
           height: item.height * M + "px",
-          transform: `translate(${item.x * M - 1}px, ${(item.y + height - item.height) * M - 1}px)`,
+          transform: `translate(${item.x * M - 1}px, ${(height - item.y - item.height) * M - 1}px)`,
           backgroundColor: item.rid === pItem.rid ? "#000" : "",
         };
       };

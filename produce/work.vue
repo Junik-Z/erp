@@ -278,7 +278,6 @@ export default {
       Func({[this.isSale ? "orderCode" : "id"]: this.option.id})
         .then(res => {
           const params = res.data;
-
           if (_isNotUnNil(params.totalAmount)) {
             params.totalAmount = this.toYuan(params.totalAmount);
           }
@@ -291,8 +290,6 @@ export default {
                this.$refs.BPRef.setTakeValue(params.customizedBoards[0]);
              }, 200);
            } */
-
-          console.log(this.type);
 
           this.form = params;
         });
@@ -325,7 +322,9 @@ export default {
             params.totalAmount = this.toFen(params.totalAmount);
           }
 
-          params.planFinishDate = params.planFinishDate ? dayjs(params.planFinishDate).format("YYYY-MM-DD 23:59:59") : "";
+          if (params.planFinishDate) {
+            params.planFinishDate = params.planFinishDate ? dayjs(params.planFinishDate).format("YYYY-MM-DD 23:59:59") : null;
+          }
 
           this.loading = true;
           Func(params)

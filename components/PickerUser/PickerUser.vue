@@ -337,7 +337,7 @@ export default {
     }
 
     // #ifdef H5
-    width: 800px;
+    width: 100%;
     // #endif
 
   }

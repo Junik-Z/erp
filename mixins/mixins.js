@@ -115,7 +115,25 @@ export default {
     onJumpDetails(node, page_type) {
       uni.setStorageSync("TO_DETAILS", true);
 
-      const query = QS.stringify({page_type, ...(_pick(node, ["id"]))});
+      const query = QS.stringify({
+        page_type,
+        ...(_pick(node, ["id"])),
+      });
+
+      // 生产订单详情
+      if (_isEqual("PRODUCTION", node.orderType) && !_isEqual("produce", page_type)) {
+        uni.navigateTo({
+          url: PageEnums.produceDetails + `?${
+            QS.stringify({
+              page_type,
+              id: node.orderCode,
+              FORM: "SALE",
+            })
+          }`,
+        });
+        // page_type=outbound&id=C2025012117412171451&FORM=SALE
+        return false;
+      }
 
       if (_isEqual("produce", page_type)) {
         uni.navigateTo({
@@ -534,7 +552,7 @@ export default {
     },
 
     PageEnums() {
-      return PageEnums
-    }
+      return PageEnums;
+    },
   },
 };
