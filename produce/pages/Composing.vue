@@ -213,7 +213,12 @@ export default {
           rX: _round(item.x * scale, precision),
           rY: _round(item.y * scale, precision),
           rDrillWidth: (drillWidth / 2) * scale,
-          rRadius: node.radius ? node.radius.map(v => v * scale + "px").join(" ") : 0,
+          rRadius: node.radius ? node.radius.map((v, i) => {
+            const value = v * scale + "px";
+            const t = _get(node, `angleType.${i}`);
+            return t ? 0 : value;
+          }).join(" ") : 0,
+          rStraight: node.straight ? node.straight.map(v => v.map(x => x * scale + "px")) : [[0, 0], [0, 0], [0, 0], [0, 0]],
           sWidth,
           sHeight,
           sWeight: node.weight,
@@ -264,12 +269,12 @@ export default {
     getAngleStyle() {
       return (item, index) => {
         const A = _get(item, `node.angleType.${index}`);
-        const R = item.rRadius.split(" ")?.[index];
+        const S = item.rStraight?.[index];
 
         return {
           "--angle-border-size": item.rDrillWidth + "px",
-          width: A ? R : 0,
-          height: A ? R : 0,
+          width: A ? S[0] : 0,
+          height: A ? S[1] : 0,
           opacity: A,
         };
       };
@@ -293,7 +298,7 @@ export default {
     </button>
     <scroll-view scroll-y="true" class="ko-composing__content">
       <view class="ko-composing__count">
-        <uni-row :gutter="10">
+        <uni-row :gutter="10" v-if="true">
           <block v-for="(item, index) of count" :key="index">
             <uni-col :span="16">
               <label class="ko-basic-label">规格：</label>

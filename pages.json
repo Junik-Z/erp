@@ -130,7 +130,7 @@
         {
           "path": "qrcode/qrcode",
           "style": {
-            "navigationBarTitleText": "登陆确认"
+            "navigationBarTitleText": "登录确认"
           }
         }
       ]

@@ -1,9 +1,11 @@
 <script>
 // #ifdef H5
 import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
-// #endif
 import { CONFIG } from "@/utils/config";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
+import { getScanQrCodeApi } from "@/api/user";
+import { _isDev } from "@/utils";
+import dayjs from "@/utils/dayjs";
 
 export default {
   name: "KoLogin",
@@ -29,7 +31,7 @@ export default {
     this.getScan();
     uni.$on("$__login_success__", this.onSuccess);
     uni.$on("$__success_code_images__", this.getCodeImage);
-    document.title = `欢迎登陆 —— ${CONFIG.TITLE}`;
+    document.title = `欢迎登录 —— ${CONFIG.TITLE}`;
     // #endif
   },
   methods: {
@@ -45,7 +47,7 @@ export default {
     // 发起状态监听
     getScan() {
       this.loading = true;
-      uni.$emit("$__init_event_source__");
+      this.getEventSource();
     },
 
     // 接收到的消息
@@ -59,15 +61,60 @@ export default {
         },
       });
     },
+
+    // 开启长链接
+    getEventSource() {
+      const ESVm = new EventSource(getScanQrCodeApi() + `?X_MiniApp_Env=${CONFIG.SystemVersion}&X_MiniApp_ID=${CONFIG.APP_ID}`);
+
+      uni.$__EVENT_SOUECE_VM__ = ESVm;
+
+      ESVm.onopen = (event) => {
+        console.log(`EventSource 链接成功. ${dayjs().format("YYYY-MM-DD HH:mm:ss")}`, event);
+      };
+
+      ESVm.onerror = (event) => {
+        console.error("EventSource 链接错误:", event);
+      };
+
+      // 链接成功
+      ESVm.addEventListener("connect", (res) => {
+        console.log("EventSource 消息接收成功", res.data);
+      }, false);
+
+      // 表示登录成功
+      ESVm.addEventListener("X-Tenant-ID", (res) => {
+        const scene = res.data;
+        uni.setStorageSync("__APP_SCENE__", scene);
+        uni.$emit("$__login_success__", scene);
+        uni.setStorageSync("Cookie", scene);
+
+        ESVm?.close();
+      }, false);
+
+      // 表示登录成功
+      ESVm.addEventListener("AccessToken", (res) => {
+        const scene = res.data;
+        _isDev() && uni.setStorageSync("AccessToken", scene);
+      }, false);
+
+      // 获取到的二维码图片
+      ESVm.addEventListener("scanCode", (res) => {
+        const codeImage = res.data;
+        uni.$emit("$__success_code_images__", codeImage);
+      }, false);
+    },
+
   },
   onUnload() {
     // this.esVm && this.esVm.close();
   },
 };
 
+// #endif
 </script>
 
 <template>
+  <!-- #ifdef H5 -->
   <div class="ko-login">
     <!-- #ifdef H5 -->
     <div class="ko-login__wrap">
@@ -79,7 +126,7 @@ export default {
       />
 
       <UniCard
-        title="欢迎登陆"
+        title="欢迎登录"
         sub-title="高效、便捷"
       >
         <view
@@ -107,6 +154,7 @@ export default {
     </div>
     <!-- #endif -->
   </div>
+  <!-- #endif -->
 </template>
 
 <style scoped lang="scss">

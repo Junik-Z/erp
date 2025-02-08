@@ -2,14 +2,14 @@ import request from "@/request";
 import { CONFIG } from "@/utils/config";
 
 /**
- * @description 判断是不是已经登陆了
+ * @description 判断是不是已经登录了
  */
 export function isLogin() {
   return !!uni.getStorageSync("Cookie");
 }
 
 /**
- * @description 处理微信登陆
+ * @description 处理微信登录
  */
 export function goLogin(tenantId = "") {
   return new Promise((resolve, reject) => {
@@ -82,7 +82,7 @@ export function getSubscribeApi(data) {
 }
 
 /**
- * @description 处理登陆
+ * @description 处理登录
  */
 export function loginApi(data) {
   return request({

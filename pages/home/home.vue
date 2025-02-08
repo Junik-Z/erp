@@ -53,7 +53,7 @@ export default {
 
     // 处理 MP 的信息
     handleMPFunc() {
-      // 处理重新登陆
+      // 处理重新登录
       if (_isEqual(this.option?.PAGE_TYPE, "logout")) {
       }
 

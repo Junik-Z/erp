@@ -126,6 +126,10 @@ export default {
 
           const boards = this.CNC.getSvg(obj);
 
+          this.$refs.TRef.innerHTML = boards.map(v => v.svgContent).join("<br/>");
+          this.gLoading = false;
+          if ("true") return false;
+
           generateCNCProperties({boards, propertiesId: this.editableTabsValue})
             .then((blob) => {
               this.saveZipFile(blob, `${res.data.orderCode}`);
@@ -247,9 +251,6 @@ export default {
     // 处理点击tab
     onTabClick(tab) {
       const index = this.getNCPIndex(tab.name);
-
-      console.log(index);
-
       this.form = _deepCopy(this.NCList[index]);
     },
   },
@@ -259,6 +260,7 @@ export default {
 <template>
   <BasicPopup :visible.sync="visible" title="NC配置">
     <view class="ko-cnc">
+      <div ref="TRef" v-if="true" style="width: 100%; overflow: auto"></div>
       <Tabs
         type="card"
         editable

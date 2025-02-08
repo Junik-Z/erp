@@ -1,59 +1,63 @@
 <script>
-/* #ifdef H5 */
-import H5Table from "@/produce/components/H5Table.vue";
-/* #endif */
-import GridTable from "../components/GridTable/GridTable.vue";
-import KoMovable from "@/components/Movable/index.vue";
-import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
-import { _debounce, _deepCopy, _generateUUID, _get, _isEmpty, _isEqual, _pick, _set } from "@/utils";
+// #ifdef H5
 
-const PopupEnum = {
-  addedColumn: {
-    title: "添加列",
-    button: "添加",
-    func: "onNewColumn",
-  },
-  editColumn: {
-    title: "编辑表头",
-    button: "确定",
-    func: "onNewColumn",
-  },
-  editCell: {
-    title: "编辑单元格内容",
-    button: "确定",
-    func: "onNewCell",
-  },
-};
+const CSS = [
+  "/static/libs/LuckySheet/plugins/css/pluginsCss.css",
+  "/static/libs/LuckySheet/plugins/plugins.css",
+  "/static/libs/LuckySheet/css/luckysheet.css",
+  "/static/libs/LuckySheet/assets/iconfont/iconfont.css",
+];
 
-const columns = [];
+const JSList = [
+  "/static/libs/LuckySheet/plugins/js/plugin.js",
+  "/static/libs/LuckySheet/luckysheet.umd.js",
+];
 
-for (let i = 0; i < 6; i++) {
-  columns.push({
-    label: "",
-    prop: _generateUUID(),
-  });
+// 动态添加 js
+function loadScript(url, callback) {
+  const script = document.createElement("script");
+  script.type = "text/javascript";
+  script.src = url;
+
+  script.onload = () => {
+    console.log("Script loaded successfully");
+    if (callback) {
+      callback();
+    }
+  };
+
+  script.onerror = () => {
+    console.error("Script failed to load");
+  };
+
+  document.head.appendChild(script);
 }
 
-const DefaultList = [];
+// 动态添加 css
+function loadCss(url, callback) {
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = url;
 
-for (let i = 0; i < 10; i++) {
-  const obj = {};
-  DefaultList.push(obj);
+  link.onload = () => {
+    if (callback) {
+      callback();
+    }
+  };
+
+  link.onerror = () => {
+    console.error("Script failed to load");
+  };
+
+  document.head.appendChild(link);
 }
+
+let TVM = null;
+let TVM1 = null;
 
 export default {
   name: "CustomTable",
-  components: {
-    // #ifdef H5
-    H5Table,
-    // #endif
-
-    KoMovable,
-    GridTable,
-    UvActionSheet,
-    UniNumberBox,
-  },
+  components: {},
   props: {
     value: {
       type: String,
@@ -61,404 +65,193 @@ export default {
     },
     readonly: Boolean,
   },
-  data() {
-    return {
-      columns: _deepCopy(columns),
-      list: _deepCopy(DefaultList),
-
-      // 动作类型：added: 添加新组件；
-      sheetType: "added",
-
-      visible: false,
-      // 弹窗类型
-      popupType: "addedColumn",
-
-      pLoading: false,
-
-      // 表格点击事件的参数
-      pressParams: null,
-
-      form: {
-        label: "",
-        value: "",
-        colspan: 0,
-        rowspan: 0,
-      },
-
-      // 外部更新的阀门
-      isExternalUpdatesFlag: false,
-      // 内部向外部更新数据的阀门
-      isToOutsideFlag: false,
-    };
-  },
   watch: {
-    changeData: {
-      handler() {
-        if (this.isExternalUpdatesFlag) return false;
-        this.isToOutsideFlag = true;
-        this.emitValue();
-      },
-      deep: true,
-    },
-
     value: {
       handler() {
-        if (this.isToOutsideFlag) return false;
-        this.isExternalUpdatesFlag = true;
-        this.takeValue();
+        if (this.notUpdate) return false;
+        this.setList();
       },
-      deep: true,
       immediate: true,
+      deep: false,
     },
   },
-
+  data() {
+    return {
+      notUpdate: false,
+    };
+  },
   methods: {
-    // 开启动作面板
-    onOpenSheet(type) {
-      this.sheetType = type;
-      this.$refs.UASRef.open();
+    getList() {
+      try {
+        window?.luckysheet?.exitEditMode?.();
+        return JSON.stringify(window.luckysheet.getAllSheets() || []);
+      } catch (e) {
+        return "";
+      }
     },
+    setList() {
+      let data = [{"name": "Sheet1", "data": []}];
 
-    // 选中动作
-    onSelectSheet(item) {
-      this[item.func]?.(...(item.params || []));
-    },
+      try {
+        data = JSON.parse(this.value);
+      } catch (e) {
+      }
 
-    // 添加列
-    onAddedColumn() {
-      this.popupType = "addedColumn";
-      this.form = {label: ""};
-      this.visible = true;
-
-      // #ifdef MP
-      this.$nextTick(() => {
-        this.$refs.FormRef.clearValidate();
-      });
-      // #endif
-    },
-
-    // 添加行
-    onAddedRow() {
-      const obj = {};
-      this.columns.forEach(item => {
-        if (item.prop) {
-          obj[item.prop] = "";
-        }
-      });
-      console.log(obj);
-      // this.list.push(obj);
-    },
-
-    // 添加编辑列头
-    onNewColumn() {
-      const node = _pick(_deepCopy(this.form), ["label", "prop"]);
-
-      if (!node.label) {
-        this.visible = false;
+      if (!window?.luckysheet) {
+        TVM = setTimeout(() => {
+          this.setList();
+        }, 500);
         return false;
       }
 
-      // flag: 强制替换原有的 prop
-      const onReplace = (flag) => {
-        const prop = flag ? `column${this.columns.length}` : (node.prop || `column${this.columns.length}`);
+      TVM && clearTimeout(TVM);
 
-        // 修改
-        if (_isEqual("editColumn", this.popupType)) {
-          const {column, columnIndex} = this.pressParams;
-          this.$set(this.columns, columnIndex, {...column, ...node});
-        } else {
-          this.columns.push({
-            ...node,
-            prop,
-          });
-        }
+      window?.luckysheet?.destroy?.();
 
-        this.visible = false;
+      const opt = {
+        column: 26, // 列数
+        row: 30, // 行数
+
+        showtoolbar: true, // 工具栏
+        showinfobar: false, // 信息栏
+        showsheetbar: false, // 底部sheet页
+        sheetFormulaBar: false, // 是否显示公式栏
+
+        showtoolbarConfig: {
+          pivotTable: false,  //'数据透视表'
+          image: false, // '插入图片'
+          link: false, // '插入链接'
+          chart: false, // '图表'（图标隐藏，但是如果配置了chart插件，右击仍然可以新建图表）
+          screenshot: false, // '截图'
+          protection: false, // '工作表保护'
+          print: false, // '打印'
+          conditionalFormat: false, // '条件格式'
+        },
+
+        cellRightClickConfig: {
+          chart: false, // 图表生成
+          image: false, // 插入图片
+        },
       };
 
-      if (this.columns.some(v => _isEqual(v.label, node.label))) {
-        uni.showModal({
-          title: "温馨提示",
-          content: `表格已存在${node.label}，是否继续保存？`,
-          success: (res) => {
-            if (res.confirm) {
-              onReplace(true);
-            }
-          },
+      const readonly = {
+        allowCopy: false, // 是否允许拷贝
+        showtoolbar: false, // 是否显示工具栏
+        showinfobar: false, // 是否显示顶部信息栏
+        showsheetbar: false, // 是否显示底部sheet页按钮
+        showstatisticBar: false, // 是否显示底部计数栏
+        sheetBottomConfig: false, // sheet页下方的添加行按钮和回到顶部按钮配置
+        allowEdit: false, // 是否允许前台编辑
+        enableAddRow: false, // 允许增加行
+        enableAddCol: false, // 允许增加列
+        userInfo: false, // 右上角的用户信息展示样式
+        showRowBar: false, // 是否显示行号区域
+        showColumnBar: false, // 是否显示列号区域
+        sheetFormulaBar: false, // 是否显示公式栏
+        enableAddBackTop: false,//返回头部按钮
+        rowHeaderWidth: 0,//纵坐标
+        columnHeaderHeight: 0,//横坐标
+        showstatisticBarConfig: {
+          count: false,
+          view: false,
+          zoom: false,
+        },
+        showsheetbarConfig: {
+          add: false, //新增sheet
+          menu: false, //sheet管理菜单
+          sheet: false, //sheet页显示
+        },
+      };
+
+      try {
+        window?.luckysheet?.create?.({
+          container: "lucky-sheet",
+          data: data,
+
+          lang: "zh", // 设定表格语言
+          title: "", // 设定表格名称
+          forceCalculation: true,//强制计算公式
+          index: "0",
+          status: "1",
+          order: "0",
+          hide: "0",
+
+          ...(this.readonly ? readonly : opt),
+
+          /*  hook: {
+             updated: (data) => {
+               /!* console.log(data, this.getList());
+
+               this.notUpdate = true;
+               this.$emit("change", this.getList());
+
+               setTimeout(() => {
+                 this.notUpdate = false;
+               }, 800); *!/
+             },
+           }, */
         });
-      } else {
-        onReplace(false);
-        this.visible = false;
+      } catch (e) {
+        console.warn(e);
       }
-    },
-
-    // 确认单元格内容
-    onNewCell() {
-      const node = _pick(_deepCopy(this.form), ["colspan", "rowspan"]);
-      const {column, columnIndex, row, rowIndex} = this.pressParams;
-      const config = _get(row, `_config_.${column.prop}`);
-
-      _set(row, `_config_.${column.prop}`, {...config, ...node});
-
-      this.$set(this.list, rowIndex, row);
-      this.visible = false;
-    },
-
-    // 长按
-    onLongPress(event) {
-      if (this.readonly) return;
-
-      const p = _deepCopy(event.params);
-      this.pressParams = p;
-      const {type, column, columnIndex, row, rowIndex} = p;
-
-      // 点击表体时触发
-      if (_isEqual(type, "tbody")) {
-        this.popupType = "editCell";
-        const config = _get(row, `_config_.${column.prop}`);
-        this.form = {colspan: 0, rowspan: 0, ...(config || {})};
-        this.visible = true;
-        // #ifdef MP
-        this.$nextTick(() => {
-          this.$refs.FormRef.clearValidate();
-        });
-        // #endif
-      }
-    },
-    // 短按
-    onPress(event) {
-      if (event) return false;
-
-      const p = _deepCopy(event.params);
-      this.pressParams = p;
-
-      // 点击表头时触发
-      if (_isEqual(p.type, "thead")) {
-        this.popupType = "editColumn";
-        this.form = p.column;
-        this.visible = true;
-        // #ifdef MP
-        this.$nextTick(() => {
-          this.$refs.FormRef.clearValidate();
-        });
-        // #endif
-      }
-
-      // 点击表头时触发
-      if (_isEqual(p.type, "tbody")) {
-        this.popupType = "editCell";
-        this.form = {value: "", colspan: 0, rowspan: 0, ...(p.row[p.column.prop] || {})};
-        this.visible = true;
-        // #ifdef MP
-        this.$nextTick(() => {
-          this.$refs.FormRef.clearValidate();
-        });
-        // #endif
-      }
-    },
-
-    // 处理点击弹窗的确认按钮
-    onClickPopupButton() {
-      this[this.getPopupButtonFuncName]?.();
-    },
-
-    // 修改表头的值
-    onChangeThead({columnIndex, value}) {
-      if (this.readonly) return;
-      this.$set(this.columns[columnIndex], "label", value);
-    },
-
-    // 修改表体的值
-    onChangeTbody({column, value, row, index}) {
-      _set(row, column.prop, value);
-      this.$set(this.list, index, row);
-    },
-
-    watchChangeData: _debounce(function () {
-      this.emitValue();
-    }, 800),
-
-    // 处理更新数据
-    emitValue() {
-      this.$emit("input", JSON.stringify({columns: this.columns, list: this.list?.filter(item => !_isEmpty(item))}));
-      setTimeout(() => {
-        this.isToOutsideFlag = false;
-      }, 600);
-    },
-
-    // 处理接收数据
-    takeValue() {
-      if (this.value) {
-        try {
-          const {columns, list} = _deepCopy(JSON.parse(this.value));
-          this.list = DefaultList.map((v, i) => list[i] || {});
-          this.columns = columns;
-        } catch (e) {
-          console.log(e, "解析报错了");
-        }
-      }
-
-      setTimeout(() => {
-        this.isExternalUpdatesFlag = false;
-      }, 600);
     },
   },
-  computed: {
-    // 动作面板
-    ActionList() {
-      return {
-        added: [
-          {
-            name: "添加列",
-            func: "onAddedColumn",
-          },
-          {
-            name: "添加行",
-            disabled: !this.columns.length,
-            func: "onAddedRow",
-          },
-        ],
-      }[this.sheetType];
-    },
-    // 获取弹窗的title
-    getPopupTitle() {
-      return _get(PopupEnum, `${this.popupType}.title`);
-    },
-    // 获取弹窗确定按钮的文本
-    getPopupButtonText() {
-      return _get(PopupEnum, `${this.popupType}.button`);
-    },
-    // 获取弹窗确定按钮的方法
-    getPopupButtonFuncName() {
-      return _get(PopupEnum, `${this.popupType}.func`);
-    },
-
-    // 监听数据变化
-    changeData() {
-      return [...this.columns, ...this.list];
-    },
-
-    // 序号
-    getColumns() {
-      return [{label: "序号", type: "index", prop: "Index"}, ...this.columns];
-    },
+  computed: {},
+  created() {
+    Promise.all([
+      ...CSS.map(url => new Promise(resolve => loadCss(url, resolve))),
+      ...JSList.map(url => new Promise(resolve => loadScript(url, resolve))),
+    ])
+      .then(() => {
+        this.setList([{"name": "Sheet1", "data": []}]);
+      });
+  },
+  mounted() {
+  },
+  beforeDestroy() {
+    this.$emit("change", this.getList());
+    window.luckysheet?.destroy?.();
+  },
+  onUnload() {
   },
 };
+// #endif
 </script>
 
 <template>
-  <view class="ko-custom-table">
-
+  <view class="ko-lucky-sheet">
     <!-- #ifdef H5 -->
-    <H5Table
-      :columns.sync="columns"
-      :data.sync="list"
-      :readonly="readonly"
-    />
+    <button class="ko-basic-button__card" v-if="false" @click="getList">数据</button>
+    <div id="lucky-sheet" />
     <!-- #endif -->
-
 
     <!-- #ifndef H5 -->
-    <GridTable
-      :columns="getColumns"
-      :data="list"
-      @long-press="onLongPress"
-      @press="onPress"
-      @change-thead="onChangeThead"
-      @change-tbody="onChangeTbody"
-      :not-edit="readonly"
-    />
-    <!-- #endif -->
-
-    <view v-if="!columns.length || !list.length" class="ko-custom-table__not">
-      {{ !columns.length ? "请先添加列" : !list.length ? "请添加行" : "" }}
+    <view style="font-size: 12px; color: #999; text-align: center; padding: 30px 0;">
+      小程序暂不支持 xls 预览，请在电脑端查看。
     </view>
-
-    <KoMovable v-if="false" :y-axis="-60" @click="onOpenSheet('added')" />
-
-    <UvActionSheet
-      ref="UASRef"
-      :actions="ActionList"
-      safe-area-inset-bottom
-      round="10"
-      cancel-text="取消"
-      @select="onSelectSheet"
-      v-if="false"
-    />
-
-    <BasicPopup :visible.sync="visible" :title="getPopupTitle">
-      <view class="ko-ct__popup">
-        <uni-forms label-align="right" ref="FormRef" :model="form">
-          <block v-if="['addedColumn', 'editColumn'].includes(popupType)">
-            <uni-forms-item label="名称" required>
-              <uni-easyinput v-model.trim="form.label" placeholder="请输入列名称" />
-            </uni-forms-item>
-          </block>
-
-          <block v-if="['editCell'].includes(popupType)">
-            <uni-forms-item label="显示内容" v-if="false">
-              <uni-easyinput v-model.trim="form.value" placeholder="请输入显示内容" />
-            </uni-forms-item>
-            <uni-forms-item label="向下合并">
-              <UniNumberBox :width="100" v-model.trim="form.rowspan" placeholder="请输入" />
-            </uni-forms-item>
-            <uni-forms-item label="向右合并">
-              <UniNumberBox :width="100" v-model.trim="form.colspan" placeholder="请输入" />
-            </uni-forms-item>
-          </block>
-
-        </uni-forms>
-      </view>
-      <template #footer>
-        <view class="ko-ct__popup--footer ko-basic-box-shadow__top">
-          <button
-            class="ko-basic-button__card"
-            @click="onClickPopupButton"
-            :loading="pLoading"
-            :disabled="pLoading"
-          >
-            {{ getPopupButtonText }}
-          </button>
-        </view>
-      </template>
-    </BasicPopup>
+    <!-- #endif -->
   </view>
 </template>
 
 <style scoped lang="scss">
-.ko-custom-table {
-  width: 100%;
+// #ifdef H5
+.ko-basic-button__card {
+  position: absolute;
+  z-index: 999999999;
+}
 
-  &__not {
-    padding: 60px 0;
-    text-align: center;
-    font-size: 12px;
-    color: #c7c9ce;
+.ko-lucky-sheet {
+  position: relative;
+  height: calc(100vh - 56px - 300px);
+
+  #lucky-sheet {
+    position: absolute;
+    width: calc(100vw - 20px);
+    height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 
-.ko-ct {
-  &__popup {
-    padding: 10px;
-
-    // #ifndef H5
-    width: 98vw;
-    // #endif
-
-    // #ifdef H5
-    width: 600px;
-    // #endif
-
-    &--footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      padding: 10px;
-
-      .ko-basic-button__card {
-        width: 100px;
-      }
-    }
-  }
-}
+// #endif
 </style>

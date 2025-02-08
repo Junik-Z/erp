@@ -155,7 +155,7 @@ export default {
       });
     },
 
-    // 处理重新登陆
+    // 处理重新登录
     onLogout(params = {}, path, noJump = false) {
       let url = "/pages/home/home";
       // #ifdef H5
@@ -210,7 +210,7 @@ export default {
       });
     },
 
-    // 根据传入的参数进行重新登陆
+    // 根据传入的参数进行重新登录
     onLogInAgain(option, flag = false) {
       return new Promise((resolve) => {
         if (option?.scene || flag) {

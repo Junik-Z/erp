@@ -91,11 +91,24 @@ export default {
       };
     },
 
-    // 获取封边指示
-    getEdges() {
+    /*  // 获取封边指示
+     getEdges() {
+       return node => {
+         const {edges} = _get(node, "original") || {};
+         return ["←", "→", "↑", "↓"].map((item, index) => `${item}${edges[index] || 0}`).join(" ");
+       };
+     }, */
+
+    // 获取封边指示样式
+    getEdgesStyle() {
       return node => {
         const {edges} = _get(node, "original") || {};
-        return ["←", "→", "↑", "↓"].map((item, index) => `${item}${edges[index] || 0}`).join(" ");
+        return {
+          "border-left": edges[0] ? "2px solid #000" : "1px dashed #000",
+          "border-right": edges[1] ? "2px solid #000" : "1px dashed #000",
+          "border-top": edges[2] ? "2px solid #000" : "1px dashed #000",
+          "border-bottom": edges[3] ? "2px solid #000" : "1px dashed #000",
+        };
       };
     },
 
@@ -115,7 +128,7 @@ export default {
 
     // 获取板材下的材料样式
     getPlateItemStyle() {
-      return (item, node, pItem) => {
+      return (item, node, pItem, iIndex, pIndex) => {
         const {width, height} = node;
         const M = _round(PlateWidth / width, 2);
 
@@ -123,7 +136,7 @@ export default {
           width: item.width * M + "px",
           height: item.height * M + "px",
           transform: `translate(${item.x * M - 1}px, ${(height - item.y - item.height) * M - 1}px)`,
-          backgroundColor: item.rid === pItem.rid ? "#000" : "",
+          backgroundColor: (item.rid === pItem.rid && iIndex === pIndex) ? "#000" : "",
         };
       };
     },
@@ -136,11 +149,15 @@ export default {
     <view class="ko-print-label">
       <div ref="LRef" class="ko-print-label__wrap">
         <block v-for="(wrap, wIndex) of boardRecord">
-          <div class="ko-print-label__item" v-for="item of wrap.items">
+          <div class="ko-print-label__item" v-for="(item, iIndex) of wrap.items" :key="item.rid + iIndex">
             <div style="font-size: 12px;">地址：{{ order.orderAddress || "-" }}</div>
             <div style="font-size: 12px;">名称：{{ item.original.name || "-" }}</div>
             <div style="font-size: 12px;">尺寸：{{ getSize(item) }}</div>
-            <div style="font-size: 12px;">封边：{{ getEdges(item) }}</div>
+            <div style="font-size: 12px; display: flex; align-items: center;">
+              封边：
+              <!--{{ getEdges(item) }}-->
+              <div :style="getEdgesStyle(item)" class="ko-print-label__item--edges"></div>
+            </div>
             <div class="ko-print-label__item--no">{{ wIndex + 1 }}</div>
 
             <div class="ko-print-label__item--code">{{ order.orderCode }}</div>
@@ -148,11 +165,12 @@ export default {
             <div class="ko-print-label__plate" :style="getPlateStyle(wrap)">
               <div
                 class="ko-print-label__plate--item"
-                v-for="plate of wrap.items"
-                :style="getPlateItemStyle(plate, wrap, item)"
-                :class="{active: plate.rid === item.rid}"
+                v-for="(plate, pIndex) of wrap.items"
+                :style="getPlateItemStyle(plate, wrap, item, iIndex, pIndex)"
+                :class="{active: (plate.rid === item.rid && iIndex === pIndex)}"
+                :key="item.rid + iIndex + pIndex"
               >
-                {{ plate.rid === item.rid ? "X" : "" }}
+                {{ (plate.rid === item.rid && iIndex === pIndex) ? "X" : "" }}
               </div>
             </div>
           </div>
@@ -216,10 +234,16 @@ export default {
 
     &--no {
       position: absolute;
-      left: 60%;
+      left: 40%;
       top: 25mm;
-      font-size: 18px;
+      font-size: 22px;
       z-index: 9;
+    }
+
+    &--edges {
+      width: 30px;
+      height: 20px;
+      //border: 1px dashed #000;
     }
   }
 

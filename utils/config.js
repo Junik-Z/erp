@@ -306,7 +306,7 @@ export const MENU_LIST = [
  * @type {{logout: string}}
  */
 export const HOME_PAGE_TYPE_ENUMS = {
-  logout: "退出登陆",
+  logout: "退出登录",
   reselect: "重新选择商户",
   ADDED_SALE: "分享出去添加销售单",
   ADDED_PURCHASE: "分享出去添加采购单",

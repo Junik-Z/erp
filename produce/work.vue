@@ -4,7 +4,7 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _isObject, _keys, _pick, _set, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _isObject, _keys, _pick, CustomToast, _set } from "@/utils";
 import {
   addedProduceApi,
   addedSaleProduceApi,
@@ -21,17 +21,19 @@ import UvSteps from "./components/uv-steps/components/uv-steps/uv-steps.vue";
 import UvStepsItem from "./components/uv-steps/components/uv-steps-item/uv-steps-item.vue";
 import GridTable from "./components/GridTable/GridTable.vue";
 import KoRadioGroup from "./components/RadioGroup.vue";
-import CustomTable from "@/produce/pages/CustomTable.vue";
+import CustomTable from "./pages/CustomTable.vue";
 import CraftProcesses from "./pages/CraftProcesses.vue";
 import BinPacking from "./pages/BinPacking.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { getMyInfoApi } from "@/api/user";
+import BinCount from "./components/BinCount.vue";
 
 export default {
   name: "Work",
   components: {
+    BinCount,
     KoMovable,
     BinPacking,
     CustomTable,
@@ -233,6 +235,9 @@ export default {
       isTechnology: false, // 单独修改工艺
 
       TimeVM: null,
+
+      clientTabs: ["客户", "其它客户"],
+      clientType: 0,
     };
   },
   onLoad(option) {
@@ -278,11 +283,13 @@ export default {
       Func({[this.isSale ? "orderCode" : "id"]: this.option.id})
         .then(res => {
           const params = res.data;
+
           if (_isNotUnNil(params.totalAmount)) {
             params.totalAmount = this.toYuan(params.totalAmount);
           }
 
           this.customizedMaterials = _get(params, "customizedMaterials.0.customTable") || "";
+
           this.type = !_isEmpty(params.customizedMaterials) ? "xlsx" : !_isEmpty(params.customizedBoards) ? "packing" : "common";
 
           /*  if (!_isEmpty(params.customizedBoards)) {
@@ -306,14 +313,12 @@ export default {
 
           const params = _deepCopy(this.form);
 
-          const customTable = _deepCopy(this.customizedMaterials);
-
-          if (customTable) {
+          if (_isEqual(this.type, "xlsx")) {
             _set(params, "customizedMaterials.0",
               {
                 sequence: 1,
                 ...(_get(params, "customizedMaterials.0") || {}),
-                customTable: customTable,
+                customTable: this.customizedMaterials,
               },
             );
           }
@@ -347,6 +352,30 @@ export default {
           });
         }
       });
+    },
+
+    // 更新表格数据
+    onUpdateXlsx(data) {
+      // console.log("数据更新了", data);
+      this.customizedMaterials = data;
+      /*  if (_isEqual(this.type, "xlsx") && this.$refs.CTRef) {
+         const params = _deepCopy(this.form);
+         const customTable = this.$refs.CTRef.getList() || "[]";
+
+         _set(params, "customizedMaterials.0",
+           {
+             sequence: 1,
+             ...(_get(params, "customizedMaterials.0") || {}),
+             customTable: customTable,
+           },
+         );
+
+         this.customizedMaterials = customTable;
+
+         console.log(customTable);
+
+         this.form = params;
+       } */
     },
 
     // 下一步
@@ -437,6 +466,18 @@ export default {
         getMyInfoApi();
       }, 10 * 60 * 1000);
     },
+
+    // 处理 tab 切换
+    onTabItem() {
+      if (this.clientType === 0) {
+        this.form.otherSupplier = "";
+        this.form.otherSupplierPhone = "";
+      }
+
+      if (this.clientType === 1) {
+        this.form.supplierId = "";
+      }
+    },
   },
   computed: {
     getStartDate() {
@@ -524,7 +565,7 @@ export default {
           </UniSection>
 
           <block v-if="isEqual(type, 'xlsx')">
-            <CustomTable v-model="customizedMaterials" />
+            <CustomTable :value="customizedMaterials" ref="CTRef" @change="onUpdateXlsx" />
           </block>
 
           <block v-if="isEqual(type, 'packing')">
@@ -542,16 +583,16 @@ export default {
         </block>
 
         <block v-if="isEqual(getCurrentValue, 'other')">
-          <UniFormsItem label="计划完成时间：" name="planFinishDate">
-            <UniDatetimePicker
-              v-model="form.planFinishDate"
-              placeholder="请选择"
-              type="date"
-              :start="getStartDate"
+          <view style="margin: 0 10px 10px;">
+            <uni-segmented-control
+              :current.sync="clientType"
+              :values="clientTabs"
+              style-type="text"
+              @clickItem="onTabItem"
             />
-          </UniFormsItem>
+          </view>
 
-          <uni-forms-item label="客户：" name="supplierId">
+          <uni-forms-item v-if="clientType === 0" label="客户：" name="supplierId">
             <PickerUser
               style="width: 100%;"
               is-input
@@ -562,6 +603,23 @@ export default {
               @input="onSupplierId"
             />
           </uni-forms-item>
+
+          <UniFormsItem v-if="clientType === 1" label="姓名" name="otherSupplier">
+            <UniEasyinput
+              v-model="form.otherSupplier"
+              style="width: 100%;"
+              placeholder="请输入"
+            />
+          </UniFormsItem>
+
+          <UniFormsItem label="计划完成时间：" name="planFinishDate">
+            <UniDatetimePicker
+              v-model="form.planFinishDate"
+              placeholder="请选择"
+              type="date"
+              :start="getStartDate"
+            />
+          </UniFormsItem>
 
           <uni-forms-item label="联系电话：" name="orderPhone">
             <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
@@ -588,6 +646,10 @@ export default {
 
           <UniSection title="工单总价" type="line">
             <view style="padding: 10px;">
+              <block v-if="isEqual(type, 'packing')">
+                <BinCount :value="form.customizedBoards[0]" />
+              </block>
+
               <UniFormsItem label-width="0" name="totalAmount">
                 <view style="width: 100%;">
                   <uni-easyinput type="digit" v-model="form.totalAmount" placeholder="请输入" />

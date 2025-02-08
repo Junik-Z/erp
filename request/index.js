@@ -36,11 +36,13 @@ export default function request(config, isLoading = false, whole = false) {
         "Content-Type": "application/json",
         // #ifndef H5
         ...(Cookie ? {Cookie} : {}),
-        "X-MiniApp-Env": CONFIG.SystemVersion,
         // #endif
+
         // #ifdef H5
         ...(Token && false && _isDev() ? {Authorization: Token} : {}),
         // #endif
+
+        "X-MiniApp-Env": CONFIG.SystemVersion,
         "X-MiniApp-ID": CONFIG.APP_ID,
         "X-Tenant-ID": scene || "",
       },
@@ -92,7 +94,7 @@ export default function request(config, isLoading = false, whole = false) {
             try {
               // #ifdef MP
               await goLogin();
-              console.log("重新登陆了");
+              console.log("重新登录了");
               query?.scene && (uni.__FLAG__ = false);
 
               uni.$emit("$__get_all_info__");
@@ -104,7 +106,7 @@ export default function request(config, isLoading = false, whole = false) {
                }); */
 
             } catch (e) {
-              console.log("登陆报错", e);
+              console.log("登录报错", e);
               isFlag = true;
               uni.showModal({
                 title: "温馨提示",

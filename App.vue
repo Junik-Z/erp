@@ -12,7 +12,7 @@ export default {
     console.log("App.vue", _query, option, option.path);
 
     let query = _deepCopy(_query);
-    // 是要进入扫码登陆页面
+    // 是要进入扫码登录页面
     const isQrcodePage = _isEqual(option.path, "erp/qrcode/qrcode");
 
     if (isQrcodePage) {
@@ -32,8 +32,6 @@ export default {
     }
 
     uni.$on("$__get_all_info__", this.getInfo);
-
-    uni.$on("$__init_event_source__", this.getEventSource);
 
     uni.$on("$__init_web_socket__", this.initiateWebSocket);
 
@@ -163,55 +161,6 @@ export default {
             },
           });
         });
-    },
-
-    // 开启长链接
-    getEventSource() {
-      const ESVm = new EventSource(getScanQrCodeApi());
-
-      console.log("触发调用了");
-
-      uni.$__EVENT_SOUECE_VM__ = ESVm;
-
-      /*  ESVm.onmessage = function (res) {
-         console.log("接收到消息了:", res);
-         uni.$emit("$_on_message", res);
-       }; */
-
-      ESVm.onopen = (event) => {
-        console.log(`EventSource 链接成功. ${dayjs().format("YYYY-MM-DD HH:mm:ss")}`, event);
-      };
-
-      ESVm.onerror = (event) => {
-        console.error("EventSource 链接错误:", event);
-      };
-
-      // 链接成功
-      ESVm.addEventListener("connect", (res) => {
-        console.log("EventSource 消息接收成功", res.data);
-      }, false);
-
-      // 表示登陆成功
-      ESVm.addEventListener("X-Tenant-ID", (res) => {
-        const scene = res.data;
-        uni.setStorageSync("__APP_SCENE__", scene);
-        uni.$emit("$__login_success__", scene);
-        uni.setStorageSync("Cookie", scene);
-
-        ESVm?.close();
-      }, false);
-
-      // 表示登陆成功
-      ESVm.addEventListener("AccessToken", (res) => {
-        const scene = res.data;
-        _isDev() && uni.setStorageSync("AccessToken", scene);
-      }, false);
-
-      // 获取到的二维码图片
-      ESVm.addEventListener("scanCode", (res) => {
-        const codeImage = res.data;
-        uni.$emit("$__success_code_images__", codeImage);
-      }, false);
     },
 
     // 发起 WebSocket

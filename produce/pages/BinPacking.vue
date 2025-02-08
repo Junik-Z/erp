@@ -54,6 +54,7 @@ export default {
         // 夹角类型
         angleType: [0, 0, 0, 0],
         edges: [0, 0, 0, 0],
+        straight: [[0, 0], [0, 0], [0, 0], [0, 0]],
         weight: 9,
         texture: false, // 纹理
         rotate: false, // 转90度
@@ -103,6 +104,7 @@ export default {
         radius: [0, 0, 0, 0],
         angleType: [0, 0, 0, 0],
         edges: [0, 0, 0, 0],
+        straight: [[0, 0], [0, 0], [0, 0], [0, 0]],
         weight: 9,
         texture: true, // 纹理
         rotate: false, // 转90度
@@ -326,7 +328,9 @@ export default {
       radiusVisible: false,
       rsForm: {
         angleType: 0,
-        radius: 0,
+        radius: null,
+        width: null,
+        height: null,
       },
       rsIndex: 0,
     };
@@ -907,27 +911,39 @@ export default {
 
     // 开启圆角设置
     openAngleType(index) {
-      const {angleType, radius} = _deepCopy(this.form);
+      const {angleType, radius, straight} = _deepCopy(this.form);
       const T = angleType[index] || 0;
       const R = radius[index] || 0;
-      this.rsForm.angleType = T;
-      this.rsForm.radius = R;
+      const S = (straight || [])[index] || [0, 0];
+      this.rsForm = {
+        angleType: T,
+        radius: R,
+        width: S[0] || 0,
+        height: S[1] || 0,
+      };
       this.rsIndex = index;
       this.radiusVisible = true;
     },
 
     // 保存设置的圆角
     onSubmitAngle() {
-      const {angleType, radius} = _deepCopy(this.rsForm);
+      const {angleType, radius, width, height} = _deepCopy(this.rsForm);
       // const {width, height} = _deepCopy(this.form);
       /* const len = width > height ? height : width;
 
       if (_isEqual(angleType, 0)) {
-
       } */
 
       this.form.angleType[this.rsIndex] = angleType;
-      this.form.radius[this.rsIndex] = radius;
+      if (angleType == 0) {
+        this.form.straight[this.rsIndex] = [0, 0];
+        this.form.radius[this.rsIndex] = radius;
+      }
+      if (angleType == 1) {
+        if (!this.form.straight) this.form.straight = [[0, 0], [0, 0], [0, 0], [0, 0]];
+        this.form.radius[this.rsIndex] = 0;
+        this.form.straight[this.rsIndex] = [width || 0, height || 0];
+      }
       this.radiusVisible = false;
     },
   },
@@ -1001,7 +1017,13 @@ export default {
 
         return {
           ...style,
-          borderRadius: F.radius ? F.radius.map(v => v * scale + "px").join(" ") : 0,
+          borderRadius: F.radius ?
+            F.radius.map((v, i) => {
+              const value = v * scale + "px";
+              const us = F.angleType?.[i] || 0;
+              return us ? 0 : value;
+            }).join(" ")
+            : 0,
         };
       };
     },
@@ -1059,11 +1081,22 @@ export default {
         const F = _deepCopy(data);
         if (_isEmpty(F)) return {};
 
-        const {angleType, radius} = _deepCopy(form);
+        const {angleType, radius, straight} = _deepCopy(form);
 
         const scale = _round(180 / (F?.width || 180), 2);
 
         const T = angleType[index];
+
+        // 直角
+        if (T) {
+          const S = (straight || [])[index] || [];
+          return {
+            width: `${(S[0] || 0) * scale}px`,
+            height: `${(S[1] || 0) * scale}px`,
+            opacity: T,
+          };
+        }
+
         const R = radius[index];
 
         return {
@@ -1256,6 +1289,7 @@ export default {
                   <view style="flex: 1;">
                     <uni-forms-item label="颜色" required label-width="70" name="color">
                       <uni-easyinput v-model="form.color" placeholder="请输入" />
+                      <button v-if="false" style="margin-left: 8px;" class="ko-basic-button__card">选择</button>
                     </uni-forms-item>
                   </view>
                 </view>
@@ -1470,9 +1504,19 @@ export default {
               <radio color="#4177f6" style="margin-left: 10px;" value="1" :checked="rsForm.angleType == 1">直角</radio>
             </radio-group>
           </uni-forms-item>
-          <uni-forms-item label="圆角大小：">
-            <uni-easyinput type="digit" v-model="rsForm.radius" placeholder="请输入" />
-          </uni-forms-item>
+          <block v-if="rsForm.angleType == 0">
+            <uni-forms-item label="圆角大小：">
+              <uni-easyinput type="digit" v-model="rsForm.radius" placeholder="请输入" />
+            </uni-forms-item>
+          </block>
+          <block v-if="rsForm.angleType == 1">
+            <uni-forms-item label="宽：">
+              <uni-easyinput type="digit" v-model="rsForm.width" placeholder="请输入" />
+            </uni-forms-item>
+            <uni-forms-item label="高：">
+              <uni-easyinput type="digit" v-model="rsForm.height" placeholder="请输入" />
+            </uni-forms-item>
+          </block>
         </uni-forms>
       </view>
       <template #footer>

@@ -1,4 +1,8 @@
 <script>
+// #ifdef H5
+import { InputNumber } from "@/uni_modules/element-ui/element.min";
+
+// #endif
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -8,11 +12,6 @@ import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-
-// #ifdef H5
-import { InputNumber } from "@/uni_modules/element-ui/element.min";
-
-// #endif
 
 export default {
   name: "PickerProduct",

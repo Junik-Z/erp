@@ -53,10 +53,10 @@ export default {
 
     <view class="ko-qrcode__icon">
       <i class="iconfont icon-menhu-diannaoduandenglu"></i>
-      <view class="ko-qrcode__icon--text">登陆 PC 系统</view>
+      <view class="ko-qrcode__icon--text">登录 PC 系统</view>
     </view>
 
-    <button class="ko-basic-button" @click="getSuccess">授权登陆</button>
+    <button class="ko-basic-button" @click="getSuccess">授权登录</button>
   </view>
 </template>
 
