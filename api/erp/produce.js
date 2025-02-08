@@ -365,7 +365,7 @@ export function detailCraftApi(data) {
   });
 }
 
-/** ———————————————————— 销售工单相关 —————————————————————————— */
+//** ———————————————————— 销售工单相关 —————————————————————————— */
 
 /**
  * @description 获取生产工单详情
@@ -373,6 +373,17 @@ export function detailCraftApi(data) {
 export function getOrderCodeDetailApi(data) {
   return request({
     url: "/sale/produce/produceConvertSaleOrder",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取生产工单详情
+ */
+export function getProduceOrderCodeDetailApi(data) {
+  return request({
+    url: "/produce/detail/orderCode",
     method: "get",
     data,
   });
@@ -411,7 +422,7 @@ export function updateSaleProduceApi(data) {
   });
 }
 
-/** ———————————————————— 修改生产中的工单 —————————————————————— */
+// ———————————————————— 修改生产中的工单 —————————————————————— */
 
 /**
  * @description 修改生产中的流程

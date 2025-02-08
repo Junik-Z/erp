@@ -2,6 +2,7 @@
 // #ifdef H5
 import { Checkbox } from "@/uni_modules/element-ui/element.min";
 // #endif
+
 import KoMovable from "@/components/Movable/index.vue";
 import {
   _deepCopy,
@@ -1536,7 +1537,7 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .ko-bin {
   height: 100%;
   width: 100%;

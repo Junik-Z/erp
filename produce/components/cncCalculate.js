@@ -39,7 +39,7 @@ export class CncCalculate {
   renderSvg() {
     const list = this.boardRecord;
     return list.map(item => {
-      const items = this.getLine(item.items, item);
+      const items = this.getLeftTopLine(item.items, item);
       const node = _get(item, "items.0.original");
       return {
         name: `${node.color || ""}_${item.width - (this.drillWidth || 0)}_${item.height - (this.drillWidth || 0)}_${node.weight}`,
@@ -125,7 +125,7 @@ export class CncCalculate {
           y2: Y,
         },
       ];
-      
+
       // 绘制圆角
       const radius = [
         {
@@ -170,6 +170,105 @@ export class CncCalculate {
     });
 
     return _flattenDeep(path).join("\n");
+  }
+
+  // 绘制所有的线条
+  getLeftTopLine(list, board) {
+    const LTPath = list.map(item => {
+      // 圆角类型
+      const [T1, T2, T3, T4] = _get(item, "original.angleType") || [];
+      // 圆角大小
+      const [R1, R2, R3, R4] = _get(item, "original.radius") || [];
+      // 长短角样式
+      const [S1, S2, S3, S4] = _get(item, "original.straight") || [];
+
+
+      // 获取Y坐标
+      let Y = item.y;
+      let X = item.x;
+
+      console.log(item);
+
+      const H = item.height;
+      const W = item.width;
+
+      // 左下角开始
+      const lines = [
+        {
+          x1: X + (T1 ? S1?.[0] || 0 : R1),
+          y1: Y,
+          x2: X + W - (T2 ? S2?.[0] || 0 : R2),
+          y2: Y,
+        },
+        {
+          x1: X + W,
+          y1: Y + (T2 ? S2?.[1] || 0 : R2),
+          x2: X + W,
+          y2: Y + H - (T3 ? S3?.[1] || 0 : R3),
+        },
+        {
+          x1: X + W - (T3 ? S3?.[0] || 0 : R3),
+          y1: Y + H,
+          x2: X + (T4 ? S4?.[0] || 0 : R4),
+          y2: Y + H,
+        },
+        {
+          x1: X,
+          y1: Y + H - (T4 ? S4?.[1] || 0 : (R4 || 0)),
+
+          x2: X,
+          // 左下的位置 如果是直角 Y - 第4个角度的高度
+          y2: Y + (T1 ? S1?.[1] || 0 : (R1 || 0)),
+        },
+      ];
+
+      // 绘制圆角
+      const radius = [
+        {
+          path: T1
+            ? this.getAngle(_get(lines, "3.x2"), _get(lines, "3.y2"), _get(lines, "0.x1"), _get(lines, "0.y1"), S1?.[0] || 0, "T1")
+            : `<path d="M ${_get(lines, "3.x2")} ${_get(lines, "3.y2")} A ${R1} ${R1} 0 0 1 ${_get(lines, "0.x1")} ${_get(lines, "0.y1")}" stroke="red" fill="none"/>`,
+          show: !!(R1 || S1?.[0] || S1?.[1]),
+        },
+        {
+          path: T2
+            ? this.getAngle(_get(lines, "0.x2"), _get(lines, "0.y2"), _get(lines, "1.x1"), _get(lines, "1.y1"), S2?.[1] || 0, "T2")
+            : `<path d="M ${_get(lines, "0.x2")} ${_get(lines, "0.y2")} A ${R2} ${R2} 0 0 1 ${_get(lines, "1.x1")} ${_get(lines, "1.y1")}" stroke="red" fill="none"/>`,
+          show: !!(R2 || S2?.[0] || S2?.[1]),
+        },
+        {
+          path: T3
+            ? this.getAngle(_get(lines, "1.x2"), _get(lines, "1.y2"), _get(lines, "2.x1"), _get(lines, "2.y1"), S3?.[0] || 0, "T3")
+            : `<path d="M ${_get(lines, "1.x2")} ${_get(lines, "1.y2")} A ${R3} ${R3} 0 0 1 ${_get(lines, "2.x1")} ${_get(lines, "2.y1")}" stroke="red" fill="none"/>`,
+          show: !!(R3 || S3?.[0] || S3?.[1]),
+        },
+        {
+         path: T4 ?
+           this.getAngle(_get(lines, "2.x2"), _get(lines, "2.y2"), _get(lines, "3.x1"), _get(lines, "3.y1"), S4?.[1] || 0, "T4")
+           : `<path d="M ${_get(lines, "2.x2")} ${_get(lines, "2.y2")} A ${R4} ${R4} 0 0 1 ${_get(lines, "3.x1")} ${_get(lines, "3.y1")}" stroke="red" fill="none"/>`,
+         show: !!(R4 || S4?.[0] || S4?.[1]),
+       },
+      ];
+
+      // 绘制线条
+      const p = lines.map((child, index) => {
+        const L = [];
+        const is = radius?.[index] || [];
+
+        if (is.show) {
+          L.push(is.path);
+        }
+
+        L.push(`<line x1="${child.x1}" y1="${child.y1}" x2="${child.x2}" y2="${child.y2}" stroke="#000" fill="none"/>`);
+        return L;
+      });
+
+      return [
+        `<g>${_flattenDeep(p).join("\n")}</g>`,
+      ];
+    });
+
+    return _flattenDeep(LTPath).join("\n");
   }
 }
 

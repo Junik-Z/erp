@@ -6,7 +6,7 @@ import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { getProduceDetailApi, getProduceOrderDetailApi } from "@/api/erp/produce";
+import { getProduceDetailApi, getProduceOrderCodeDetailApi, getProduceOrderDetailApi } from "@/api/erp/produce";
 import { getProductFieldApi } from "@/api/erp/product";
 import FeesList from "../components/FeesList/FeesList.vue";
 import CraftProcesses from "./pages/CraftProcesses.vue";
@@ -45,7 +45,16 @@ export default {
       this.loading = true;
       const isSale = _isEqual(this.option.FORM, "SALE");
 
-      const Func = isSale ? getProduceOrderDetailApi : getProduceDetailApi;
+      // 判断库存或财务查看详情
+      const isStockAndFinance = [
+        "inbound",
+        "outbound",
+        "receivable",
+        "payable",
+        "logistics",
+      ].includes(this.option.page_type);
+
+      const Func = isSale ? isStockAndFinance ? getProduceOrderCodeDetailApi : getProduceOrderDetailApi : getProduceDetailApi;
 
       Func({[isSale ? "orderCode" : "id"]: this.option.id})
         .then(res => {

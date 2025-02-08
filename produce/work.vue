@@ -4,7 +4,7 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _isObject, _keys, _pick, CustomToast, _set } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _isObject, _keys, _pick, _set, CustomToast } from "@/utils";
 import {
   addedProduceApi,
   addedSaleProduceApi,
@@ -724,7 +724,7 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .ko-work {
   padding-bottom: calc(env(safe-area-inset-bottom) + 60px);
 

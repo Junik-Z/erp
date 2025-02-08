@@ -126,9 +126,9 @@ export default {
 
           const boards = this.CNC.getSvg(obj);
 
-          this.$refs.TRef.innerHTML = boards.map(v => v.svgContent).join("<br/>");
+          /* this.$refs.TRef.innerHTML = boards.map(v => v.svgContent).join("<br/>");
           this.gLoading = false;
-          if ("true") return false;
+          if ("true") return false; */
 
           generateCNCProperties({boards, propertiesId: this.editableTabsValue})
             .then((blob) => {
@@ -260,7 +260,7 @@ export default {
 <template>
   <BasicPopup :visible.sync="visible" title="NC配置">
     <view class="ko-cnc">
-      <div ref="TRef" v-if="true" style="width: 100%; overflow: auto"></div>
+      <div ref="TRef" v-if="false" style="width: 100%; overflow: auto"></div>
       <Tabs
         type="card"
         editable
@@ -395,7 +395,7 @@ export default {
   </BasicPopup>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .ko-cnc {
   width: 900px;
   height: 76vh;
