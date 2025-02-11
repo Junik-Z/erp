@@ -201,6 +201,8 @@ export default {
           const obj = _pick(_deepCopy(this.option), ["supplierId", "orderType", "purchaserId", "orderCode"]);
           params.totalAmount = yuanToPoints(params.totalAmount);
 
+          console.log(obj, this.option);
+
           Func({...params, ...obj})
             .then(() => {
               uni.showToast({title: "操作成功"});

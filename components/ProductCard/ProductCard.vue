@@ -234,6 +234,13 @@ export default {
                 </view>
               </UniCol>
 
+              <UniCol :span="12" v-if="isWork">
+                <view class="ko-product-card__item">
+                  <label class="ko-basic-label">单价：</label>
+                  <text class="ko-basic-money"> {{ toYuan(node.price) }}元</text>
+                </view>
+              </UniCol>
+
               <UniCol :span="12">
                 <view class="ko-product-card__item">
                   <label class="ko-basic-label">数量：</label>
@@ -334,7 +341,7 @@ export default {
           </UniCol>
           <UniCol :span="24" v-if="isWork">
             <label class="ko-basic-label">单价：</label>
-            <text class="ko-basic-money"> {{ toYuan(node.salePrice) }}元</text>
+            <text class="ko-basic-money"> {{ toYuan(getPrice(node)) }}元</text>
           </UniCol>
           <UniCol :span="24">
             <UniNumberBox

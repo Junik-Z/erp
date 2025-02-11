@@ -1,7 +1,6 @@
 <script>
 import { getInboundDetailApi, getOutboundDetailApi } from "@/api/erp/stock";
 import { _get, _isEmpty, _isEqual, _sum } from "@/utils";
-import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
@@ -57,7 +56,7 @@ const SummaryText = {
 export default {
   name: "DetailsOrder",
   mixins: [mixins],
-  components: {FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection, },
+  components: {FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection},
   onLoad(option) {
     this.option = option;
 
@@ -320,12 +319,12 @@ export default {
               stripe
             />
           </view>
-          <!-- #endif -->
 
           <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
             <label class="ko-basic-label">共计：</label>
-            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalProductAmount) }}元</text>
+            <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
           </view>
+          <!-- #endif -->
         </view>
       </UniSection>
     </template>

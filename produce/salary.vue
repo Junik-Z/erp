@@ -254,7 +254,7 @@ export default {
     // 获取单元格的分配
     getGridTemplateColumnsStyle() {
       return {
-        "--ko-basic-table-grid-col": "auto ".repeat([5, 5, 6][this.tab]).trim(),
+        "--ko-basic-table-grid-col": "auto ".repeat([4, 5, 6][this.tab]).trim(),
       };
     },
   },
@@ -326,14 +326,17 @@ export default {
                   <view class="ko-basic-table--th">名称</view>
                   <view class="ko-basic-table--th">计价方式</view>
                   <view class="ko-basic-table--th">价格</view>
-                  <view class="ko-basic-table--th">数量</view>
-                  <view class="ko-basic-table--th">结算</view>
+
+                  <block v-if="tab !== 0">
+                    <view class="ko-basic-table--th">数量</view>
+                    <view class="ko-basic-table--th">结算</view>
+                  </block>
 
                   <block v-if="tab > 1">
                     <view class="ko-basic-table--th">时间</view>
                   </block>
 
-                  <view class="ko-basic-table--th" v-if="false">员工</view>
+                  <view class="ko-basic-table--th" v-if="tab === 0">员工</view>
 
                   <block v-for="item of child" :key="item.id">
                     <view class="ko-basic-table--cell">
@@ -346,16 +349,19 @@ export default {
                       {{ toYuan(item.price) }}
                     </view>
 
-                    <view class="ko-basic-table--cell">{{ item.quantity }}</view>
-                    <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
+                    <block v-if="tab !== 0">
+                      <view class="ko-basic-table--cell">{{ item.quantity }}</view>
+                      <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
+                    </block>
 
                     <block v-if="tab > 1">
                       <view class="ko-basic-table--cell">{{ item.updateTime }}</view>
                     </block>
 
-                    <view class="ko-basic-table--cell" v-if="false">
+                    <view class="ko-basic-table--cell" v-if="tab === 0">
                       <view
-                        style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+                        style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;"
+                      >
                         <view
                           style="padding: 2px; display: flex; flex-direction: column; justify-content: center;align-items: center;"
                           v-for="staff of getStaffListLogo(item)"

@@ -8,6 +8,7 @@ import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import {PageEnums} from '@/utils/config'
 
 // #ifdef H5
 import { InputNumber } from "@/uni_modules/element-ui/element.min";
@@ -77,15 +78,11 @@ export default {
           label: "产品名称",
           prop: "name",
         },
-        /* {
-          label: "产品分类",
-          prop: "className",
-        }, */
         {
-          label: "单价(元)",
+          label: "单价",
           prop: "price",
           render: (h, {row}) => {
-            if (_this.isClient) {
+            if (_this.isClient || (_this.isWork && _this.type !== 'sale')) {
               return h(
                 "label",
                 {class: "ko-basic-money"},
@@ -157,7 +154,7 @@ export default {
   methods: {
     onAdded() {
       uni.navigateTo({
-        url: "/shop/list/list",
+        url: PageEnums.pickerProduct,
         // #ifdef MP
         events: {
           // 为指定事件添加一个监听器，获取被打开页面传送到当前页面的数据
@@ -248,7 +245,9 @@ export default {
 
     // #ifdef H5
     getTableColumns() {
-      return this.columns?.filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
+      return this.columns?.filter(item => {
+        return this.isWork || !(this.hidePrices && _isEqual(item.prop, "price"));
+      });
     },
     // #endif
   },
@@ -278,7 +277,7 @@ export default {
             <UniCol :span="24" v-if="item.price !== 0 && !hidePrices || isWork">
               <view style="display: flex; align-items: center;">
                 <label class="ko-basic-label">单价：</label>
-                <text class="ko-basic-money" v-if="isClient || isWork">{{ toYuan(item.price) }} 元</text>
+                <text class="ko-basic-money" v-if="isClient || (isWork && type !== 'sale')">{{ toYuan(item.price) }} 元</text>
                 <view v-else class="ko-basic-money" style="display: flex; align-items: center;">
                   <view style="margin-right: 5px">
                     <UniNumberBox

@@ -43,7 +43,6 @@ export default {
     },
 
     onSubmit() {
-
       this.$emit("submit", {...this.params, sessionId: this.sessionId, printerName: this.printerName});
       this.visible = false;
     },

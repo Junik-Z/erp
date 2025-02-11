@@ -2,7 +2,6 @@
 // #ifdef H5
 import { Checkbox } from "@/uni_modules/element-ui/element.min";
 // #endif
-
 import KoMovable from "@/components/Movable/index.vue";
 import {
   _deepCopy,
@@ -21,7 +20,7 @@ import { repositionRectangles } from "./calculate";
 import GridTable from "../components/GridTable/GridTable.vue";
 import { customizedCalculateApi } from "@/api/erp/produce";
 import PickerSheet from "@/produce/components/PickerSheet.vue";
-import { PLATE_SPECIF_ENUMS } from "@/utils/config";
+import { PageEnums, PLATE_SPECIF_ENUMS } from "@/utils/config";
 import mixins from "@/mixins/mixins";
 import UvCheckbox from "../components/uv-checkbox/components/uv-checkbox/uv-checkbox.vue";
 import Composing from "./Composing.vue";
@@ -947,6 +946,33 @@ export default {
       }
       this.radiusVisible = false;
     },
+
+    // 跳转到产品选择页面
+    onJumpPickerProduct() {
+      uni.navigateTo({
+        url: PageEnums.pickerProduct,
+        // #ifdef MP
+        events: {
+          // 为指定事件添加一个监听器，获取被打开页面传送到当前页面的数据
+          on_take_over: (obj) => {
+            // this.getTakList(obj);
+          },
+        },
+        // #endif
+        success: (res) => {
+          // 通过eventChannel向被打开页面传送数据
+          res.eventChannel.emit("on_to_take_over", {
+            isSelect: true, // 选择模式
+            // list: this.list,
+            // type: this.type,
+            // isClient: this.isClient,
+            // hidePrices: this.hidePrices,
+            // takeOverName: this.takeOverName,
+            // isWork: this.isWork,
+          });
+        },
+      });
+    },
   },
   mounted() {
     this.getRectByRoot();
@@ -1290,7 +1316,14 @@ export default {
                   <view style="flex: 1;">
                     <uni-forms-item label="颜色" required label-width="70" name="color">
                       <uni-easyinput v-model="form.color" placeholder="请输入" />
-                      <button v-if="false" style="margin-left: 8px;" class="ko-basic-button__card">选择</button>
+                      <button
+                        @click="onJumpPickerProduct"
+                        v-if="false"
+                        style="margin-left: 8px;"
+                        class="ko-basic-button__card"
+                      >
+                        选择
+                      </button>
                     </uni-forms-item>
                   </view>
                 </view>

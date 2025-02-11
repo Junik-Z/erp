@@ -338,6 +338,7 @@ export default {
 
     // #ifdef H5
     width: 100%;
+    min-width: 600px;
     // #endif
 
   }

@@ -195,6 +195,9 @@ export const PageEnums = {
   attendRecord: "/attend/record",
   // 打卡二维码
   attendCheckIn: "/attend/check-in",
+
+  // 选择产品页面
+  pickerProduct: "/shop/list/list",
 };
 
 /**

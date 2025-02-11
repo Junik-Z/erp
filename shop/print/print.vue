@@ -25,7 +25,9 @@ const UpperAndLowerClearance = cmToPx(2);
 
 const PageType = {
   inbound: "入库单",
+  inbound3: "入库单",
   outbound: "出库单",
+  outbound3: "出库单",
   sale: "销售单",
   saleReturn: "销售退货单",
   purchase: "采购单",
@@ -36,6 +38,8 @@ const PageType = {
 };
 
 const SummaryText = {
+  inbound3: "实收",
+  outbound3: "实收",
   inbound: "实收",
   outbound: "实收",
   sale: "实收",
@@ -49,7 +53,9 @@ const SummaryText = {
 
 const Func = {
   inbound: getInboundDetailApi,
+  inbound3: getInboundDetailApi,
   outbound: getOutboundDetailApi,
+  outbound3: getOutboundDetailApi,
   sale: getSaleDetailApi,
   saleReturn: getSaleReturnDetailApi,
   purchase: getPurchaseDetailApi,

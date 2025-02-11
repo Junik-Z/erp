@@ -1,3 +1,7 @@
+.icon-shengchan:before {
+  content: "\e61e";
+}
+
 .icon-zt-01-02:before {
   content: "\e705";
 }

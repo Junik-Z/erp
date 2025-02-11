@@ -12,6 +12,7 @@ import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import { PageEnums } from "@/utils/config";
 
 export default {
   name: "PickerProduct",
@@ -157,7 +158,7 @@ export default {
   methods: {
     onAdded() {
       uni.navigateTo({
-        url: "/shop/list/list",
+        url: PageEnums.pickerProduct,
         // #ifdef MP
         events: {
           // 为指定事件添加一个监听器，获取被打开页面传送到当前页面的数据
@@ -277,7 +278,7 @@ export default {
             <UniCol :span="24" v-if="item.price !== 0 && !hidePrices">
               <view style="display: flex; align-items: center;">
                 <label class="ko-basic-label">单价：</label>
-                <text class="ko-basic-money" v-if="isClient">{{ toYuan(item.price) }} 元</text>
+                <text class="ko-basic-money" v-if="isClient || readonly">{{ toYuan(item.price) }} 元</text>
                 <view v-else class="ko-basic-money" style="display: flex; align-items: center;">
                   <view style="margin-right: 5px">
                     <UniNumberBox
@@ -296,14 +297,16 @@ export default {
               <view style="display: flex; align-items: center;">
                 <label class="ko-basic-label">数量：</label>
                 <UniNumberBox
+                  v-if="!readonly"
                   type="digit"
                   width="60"
                   v-model="item.productQuantity"
                   @change="onFocus"
                 />
+                <text v-else>{{ item.productQuantity }}</text>
               </view>
             </UniCol>
-            <UniCol :span="24" v-if="!isNotAdded">
+            <UniCol :span="24" v-if="!isNotAdded && !readonly">
               <view style="display: flex;justify-content: flex-end; align-items: center; margin-top: 8px;">
                 <button class="ko-basic-button__card" @click="onRemove(index)">
                   移除

@@ -373,6 +373,12 @@ export default {
               打印出库单(A4)
             </button>
             <button
+              class="ko-basic-button__card"
+              @click.stop="onJumpPrint(item, 'outbound3')"
+            >
+              打印单据
+            </button>
+            <button
               v-if="['CREATED'].includes(item.status) && false"
               class="ko-basic-button__card"
               @click.stop="onCancel(item, index)"

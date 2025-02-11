@@ -60,7 +60,6 @@ export default {
         "totalRawMaterialAmount": null,
         "totalAmount": null,
         "totalProfit": null,
-        "remark": "",
         // 材料明细
         "materialDetails": [],
         // 定制生产
@@ -196,6 +195,7 @@ export default {
             ],
           }, */
         ],
+        "remark": "",
       },
       rules: {
         planFinishDate: {
@@ -238,6 +238,8 @@ export default {
 
       clientTabs: ["客户", "其它客户"],
       clientType: 0,
+
+      isEdit: false,
     };
   },
   onLoad(option) {
@@ -304,6 +306,8 @@ export default {
     // 提交
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
+        console.log(valid);
+
         if (!valid) {
           const Func =
             this.isTechnology ? updateCraftProcessApi :
@@ -421,7 +425,6 @@ export default {
 
     // 快捷生产
     onApplyFast(data, type) {
-      console.log(data, type);
       if (_isEqual(type, "quick")) {
         this.form = {...this.form, ..._pick(data, _keys(this.form))};
       }
@@ -526,6 +529,7 @@ export default {
         />
       </UvSteps>
     </view>
+
     <UniForms
       :model="form"
       label-width="120px"
@@ -537,16 +541,17 @@ export default {
         <block v-if="isEqual(getCurrentValue, 'type')">
           <UniSection title="所需物料" type="line" v-if="isEqual(type, 'common')">
             <view style="padding: 10px;">
-              <UniFormsItem label-width="0" name="materialDetails">
+              <uni-forms-item label-width="0" name="materialDetails">
                 <view style="width: 100%;">
                   <PickerProduct
                     v-model="form.materialDetails"
                     :total.sync="form.totalRawMaterialAmount"
                     type="purchase"
+                    is-work
                     hide-prices
                   />
                 </view>
-              </UniFormsItem>
+              </uni-forms-item>
             </view>
 
             <KoMovable
@@ -592,34 +597,38 @@ export default {
             />
           </view>
 
-          <uni-forms-item v-if="clientType === 0" label="客户：" name="supplierId">
-            <PickerUser
-              style="width: 100%;"
-              is-input
-              title="选择客户"
-              v-model="form.supplierId"
-              type="client"
-              ref="UserRef"
-              @input="onSupplierId"
-            />
-          </uni-forms-item>
+          <block v-if="clientType === 0">
+            <uni-forms-item label="客户：" name="supplierId">
+              <PickerUser
+                style="width: 100%;"
+                is-input
+                title="选择客户"
+                v-model="form.supplierId"
+                type="client"
+                ref="UserRef"
+                @input="onSupplierId"
+              />
+            </uni-forms-item>
+          </block>
 
-          <UniFormsItem v-if="clientType === 1" label="姓名" name="otherSupplier">
-            <UniEasyinput
-              v-model="form.otherSupplier"
-              style="width: 100%;"
-              placeholder="请输入"
-            />
-          </UniFormsItem>
+          <block v-if="clientType === 1">
+            <uni-forms-item label="姓名" name="otherSupplier">
+              <UniEasyinput
+                v-model="form.otherSupplier"
+                style="width: 100%;"
+                placeholder="请输入"
+              />
+            </uni-forms-item>
+          </block>
 
-          <UniFormsItem label="计划完成时间：" name="planFinishDate">
+          <uni-forms-item label="计划完成时间：" name="planFinishDate">
             <UniDatetimePicker
               v-model="form.planFinishDate"
               placeholder="请选择"
               type="date"
               :start="getStartDate"
             />
-          </UniFormsItem>
+          </uni-forms-item>
 
           <uni-forms-item label="联系电话：" name="orderPhone">
             <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
@@ -631,16 +640,17 @@ export default {
 
           <UniSection title="生产产品" type="line">
             <view style="padding: 10px;">
-              <UniFormsItem label-width="0" name="productDetails">
+              <uni-forms-item label-width="0" name="productDetails">
                 <view style="width: 100%;">
                   <PickerProduct
                     v-model="form.productDetails"
                     :total.sync="form.totalAmount"
+                    type="sale"
                     is-work
                     hide-prices
                   />
                 </view>
-              </UniFormsItem>
+              </uni-forms-item>
             </view>
           </UniSection>
 
@@ -650,22 +660,11 @@ export default {
                 <BinCount :value="form.customizedBoards[0]" />
               </block>
 
-              <UniFormsItem label-width="0" name="totalAmount">
+              <uni-forms-item label-width="0" name="totalAmount">
                 <view style="width: 100%;">
                   <uni-easyinput type="digit" v-model="form.totalAmount" placeholder="请输入" />
                 </view>
-              </UniFormsItem>
-            </view>
-          </UniSection>
-
-          <UniSection title="预计创造价值" type="line" v-if="false">
-            <view style="padding: 10px;">
-              <UniFormsItem label-width="30px" name="materialDetails">
-                <view>
-                  <view class="ko-basic-money"> {{ toYuan(getTotalAmount) }}元</view>
-                  <view style="margin-top: 10px;" class="ko-basic-money">{{ toBigMoney(toYuan(getTotalAmount)) }}</view>
-                </view>
-              </UniFormsItem>
+              </uni-forms-item>
             </view>
           </UniSection>
 
@@ -677,9 +676,9 @@ export default {
 
           <UniSection title="其它信息" type="line">
             <view style="padding: 10px;">
-              <UniFormsItem label="备注：" name="remark">
+              <uni-forms-item label="备注：" name="remark" key="remark">
                 <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
-              </UniFormsItem>
+              </uni-forms-item>
             </view>
           </UniSection>
         </block>

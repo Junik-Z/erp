@@ -151,10 +151,6 @@ export default {
     <!-- #endif -->
 
     <view class="ko-home__not-role" v-if="!getMenuList.length">
-      <image
-        src="/static/images/icons/no-role.png"
-        class="ko-home__not-role--image"
-      />
       您还没有任何权限，请联系管理员给您授权！
     </view>
   </view>

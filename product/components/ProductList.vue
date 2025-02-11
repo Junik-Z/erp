@@ -41,7 +41,7 @@ export default {
         // #ifdef MP
         {
           text: "分享",
-          iconPath: "/static/images/icons/share.png",
+          iconfont: "icon-icon-test",
           path: PageEnums.shareProduct,
           /* openType: "share",
           params: {
@@ -55,7 +55,7 @@ export default {
         // #endif
         {
           text: "新增",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-tianjia",
           path: PageEnums.addedProduct,
         },
       ],

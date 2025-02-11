@@ -47,7 +47,7 @@ export default {
         // #ifdef MP
         {
           text: "分享",
-          iconPath: "/static/images/icons/share.png",
+          iconfont: "icon-icon-test",
           path: "share",
           openType: "share",
           params: {
@@ -59,6 +59,11 @@ export default {
           },
         },
         // #endif
+        {
+          text: "生产",
+          iconfont: "icon-shengchan",
+          path: PageEnums.produceWork + "?ADDED_TYPE=common&FORM=SALE",
+        },
         // #ifdef H5
         {
           text: "定制",
@@ -549,7 +554,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2 && !isEqual(item.orderType, 'PRODUCTION')"
             >
               修改
             </button>

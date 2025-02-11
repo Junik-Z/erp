@@ -275,7 +275,6 @@ export function pauseProduceApi(data) {
   });
 }
 
-
 /**
  * @description 获取快捷生产列表
  */
@@ -319,7 +318,6 @@ export function detailQuickApi(data) {
     data,
   });
 }
-
 
 /**
  * @description 获取快捷工艺列表

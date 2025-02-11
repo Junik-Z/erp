@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import { InputNumber, Tree } from "@/uni_modules/element-ui/element.min";
+import { Checkbox, InputNumber, Tree } from "@/uni_modules/element-ui/element.min";
 // #endif
 import { getProductClassApi, getProductFieldApi, getProductListApi } from "@/api/erp/product";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
@@ -41,7 +41,6 @@ export default {
       this.setShopList(obj);
       // #endif
     });
-
 
     uni.setNavigationBarTitle({title: this.isJudge ? "库存盘点" : "选择产品"});
 
@@ -106,6 +105,10 @@ export default {
       sLoading: false,
 
       tableKey: +new Date().getTime(),
+
+      isSelect: false,
+
+      multiple: false,
     };
   },
   components: {
@@ -126,10 +129,14 @@ export default {
     setShopList(data = {}) {
       const list = _deepCopy(data?.list || []);
       this.type = data?.type;
+
       this.isClient = data?.isClient;
       this.isWork = data?.isWork;
       this.hidePrices = data?.hidePrices;
       this.takeOverName = data?.takeOverName;
+
+      this.isSelect = data?.isSelect;
+
       this.EXList = list;
       list.forEach(item => {
         this.$set(this.selected, item.productId, item);
@@ -388,10 +395,6 @@ export default {
 
     getTableColumns() {
       const before = [
-        // {
-        //   type: "selection",
-        //   width: 55,
-        // },
         {
           label: "序号",
           type: "index",
@@ -434,7 +437,7 @@ export default {
 
       const after = [
         {
-          label: "单价(元)",
+          label: "单价",
           prop: "price",
           fixed: "right",
           width: 220,
@@ -442,7 +445,7 @@ export default {
             const item = _get(this.selected, `${row.productId}`) || {};
             const price = item?.price || _get(row, this.getMoneyKey);
 
-            if (this.isClient) {
+            if (this.isClient || this.isWork) {
               return h(
                 "label",
                 {class: "ko-basic-money"},
@@ -511,7 +514,28 @@ export default {
         });
       }
 
-      return [...before, ...fieldList, ...judge, ...after];
+      return [
+        ...before,
+        ...fieldList,
+        ...judge,
+        ...(this.isSelect
+          ? [
+            {
+              label: "勾选",
+              width: 55,
+              render: (h, {row}) => {
+                return h(
+                  Checkbox,
+                  {
+                    class: `ko-table-checked ${!this.multiple ? "ko-table-checked__single" : ""}`,
+                    props: {},
+                  },
+                );
+              },
+            },
+          ]
+          : after),
+      ];
     },
     // #endif
   },
@@ -617,7 +641,7 @@ export default {
       <div style="display: flex;align-items: center; justify-content: center;">
         <p style="width: 100%; white-space: nowrap; margin-right: 40px" class="ko-basic-label" v-if="!isJudge">
           已选：{{ getSelectedList.length }}</p>
-        <p style="width: 100%; white-space: nowrap;" class="ko-basic-money" v-if="!hidePrices && !isJudge">
+        <p style="width: 100%; white-space: nowrap;" class="ko-basic-money" v-if="!hidePrices && !isJudge && !isSelect">
           共计：{{ toYuan(getTotalMoney) }}元</p>
       </div>
       <button class="ko-basic-button" @click="onSubmit()" :lodaing="sLoading" :disabled="sLoading">
@@ -883,6 +907,24 @@ export default {
       display: flex;
       align-items: center;
       justify-content: flex-end;
+    }
+  }
+}
+
+/deep/ .ko-table-checked {
+  font-size: 20px;
+
+  &__single {
+  }
+
+  .el-checkbox__inner {
+    width: 20px;
+    height: 20px;
+
+    &::after {
+      width: 5px;
+      height: 10px;
+      left: 6px;
     }
   }
 }

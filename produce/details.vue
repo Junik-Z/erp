@@ -110,7 +110,7 @@ export default {
           prop: `extend.${item.fieldCode}`,
         }))),
         {
-          label: "单价(元)",
+          label: "单价",
           prop: "price",
           width: 80,
           render: (h, {row}) => {
@@ -169,6 +169,8 @@ export default {
             :node="item"
             readonly
             hide-prices
+            is-work
+            type="purchase"
           />
         </view>
         <!-- #endif -->
@@ -176,7 +178,7 @@ export default {
         <!-- #ifdef H5 -->
         <view style="padding: 10px;">
           <KoTable
-            :columns="columnsList(true)"
+            :columns="columnsList(false)"
             :data="node.materialDetails"
             empty-text="暂无数据"
             stripe
@@ -217,6 +219,7 @@ export default {
             style="width: 100%;"
             :node="item"
             readonly
+            is-work
             hide-prices
           />
         </view>
@@ -225,7 +228,7 @@ export default {
         <!-- #ifdef H5 -->
         <view style="padding: 10px;">
           <KoTable
-            :columns="columnsList(true)"
+            :columns="columnsList(false)"
             :data="node.productDetails"
             empty-text="暂无数据"
             stripe

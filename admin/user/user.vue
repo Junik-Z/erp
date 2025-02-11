@@ -94,6 +94,11 @@ export default {
           this.gLoading = false;
         });
     },
+
+    // 清除头像
+    onRemoveAvatar() {
+      this.form.avatar = "";
+    },
   },
 };
 </script>
@@ -145,15 +150,25 @@ export default {
             <view class="ko-user__popup--avatar">
               <!-- #ifdef MP -->
               <button
+                v-if="form.avatar"
+                @click="onRemoveAvatar"
+                class="ko-user__popup--avatar--remove"
+              >
+                <i class="iconfont icon-cha"></i>
+              </button>
+
+              <button
                 @chooseavatar="getAvatarUrl"
                 :disabled="loading"
-                style="background-color: transparent;"
+                style="background-color: transparent;border: 1px solid #e9e9eb; border-radius: 50%"
                 open-type="chooseAvatar"
               >
                 <UvAvatar :size="120" :src="getImageUrl(form.avatar)" />
               </button>
 
-              <view style="width: 100%; text-align: center; font-size: 12px; color: #ccc;">点击可更换头像</view>
+              <view style="width: 100%; text-align: center; font-size: 12px; color: #ccc; margin-top: 10px;">
+                点击可更换头像
+              </view>
               <!-- #endif -->
 
               <!-- #ifdef H5 -->
@@ -244,12 +259,20 @@ export default {
     padding: 0 20px;
 
     &--avatar {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
       flex: 1;
       width: 100%;
+
+      &--remove {
+        position: absolute;
+        top: -10px;
+        right: 30%;
+
+      }
     }
 
     &--nickName {
@@ -294,11 +317,24 @@ export default {
 
   &__logout {
     padding: 100px 50px 50px;
-    /* #ifdef H5 */
     display: flex;
     align-items: center;
     justify-content: center;
 
+    /* #ifndef H5 */
+    flex-direction: column;
+
+    .ko-basic-button {
+      width: 260px;
+    }
+
+    /deep/ .ko-long-press-button {
+      width: 260px;
+    }
+
+    /* #endif */
+
+    /* #ifdef H5 */
     .ko-basic-button {
       width: 260px;
     }

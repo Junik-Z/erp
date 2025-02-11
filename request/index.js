@@ -62,6 +62,17 @@ export default function request(config, isLoading = false, whole = false) {
 
         isLoading && uni.hideLoading();
 
+        if (_isEqual(res.statusCode, 502)) {
+          uni.showModal({
+            title: "温馨提示",
+            content: "系统维护中，请稍后再试！",
+            showCancel: false,
+            confirmText: "确定",
+          });
+          reject("服务器维护中。请稍后再试！");
+          return false;
+        }
+
         if (whole) {
           resolve(res.data);
           return false;

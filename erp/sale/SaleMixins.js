@@ -29,7 +29,6 @@ export default {
     // 跳转到销售订单添加付款单据
     jumpSaleAddedDocuments(query) {
       this?.$refs?.TPRef?.open(query);
-
       /*  let q = this.getQueryString(query);
        uni.navigateTo({
          url: `${PageEnums.ticket}${q}`,

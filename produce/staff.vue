@@ -23,7 +23,7 @@ export default {
       content: [
         {
           text: "新增",
-          iconPath: "/static/images/icons/added.png",
+          iconfont: "icon-tianjia",
           path: "/erp/sale/client",
         },
       ],

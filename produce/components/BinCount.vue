@@ -7,6 +7,7 @@ export default {
     return {
       count: [],
       allEdgeLength: 0,
+      edgePrice: null,
     };
   },
   props: {
@@ -52,7 +53,7 @@ export default {
                 edgeLength += len;
               }
             });
-          return edgeLength
+          return edgeLength;
         }));
 
         return {
@@ -88,23 +89,41 @@ export default {
 
 <template>
   <view class="ko-bin-count">
-    <uni-row :gutter="10">
-      <block v-for="(item, index) of count" :key="index">
-        <uni-col :span="16">
+    <view style="display:block;">
+      <view
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;"
+        v-for="(item, index) of count"
+        :key="index"
+      >
+        <view style="display: flex; align-items: center">
           <label class="ko-basic-label">规格：</label>
           <text>{{ item.norm }}</text>
-        </uni-col>
-        <uni-col :span="8">
+        </view>
+        <view style="display: flex; align-items: center">
           <label class="ko-basic-label">共计：</label>
           <text>{{ item.count }}</text>
-        </uni-col>
-      </block>
-
-      <uni-col :span="16">
+        </view>
+        <view style="display: flex; align-items: center" v-if="false">
+          <label class="ko-basic-label">单价：</label>
+          <view style="width: 70px;">
+            <uni-easyinput type="digit" v-model="item.price" />
+          </view>
+        </view>
+      </view>
+    </view>
+    <view style="display: flex; align-items: center;justify-content: space-between;">
+      <view>
         <label class="ko-basic-label">封边：</label>
         <text>{{ allEdgeLength }}mm</text>
-      </uni-col>
-    </uni-row>
+      </view>
+
+      <view style="display: flex; align-items: center" v-if="false">
+        <label class="ko-basic-label">单价：</label>
+        <view style="width: 70px;">
+          <uni-easyinput type="digit" v-model="edgePrice" />
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 

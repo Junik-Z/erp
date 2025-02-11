@@ -49,6 +49,7 @@ export default {
     @touchmove="onTouchMove"
     :disabled="disabled || loading"
     :loading="loading"
+    class="ko-long-press-button"
   >
     <slot>
       <text>{{ label }}</text>
@@ -71,6 +72,6 @@ export default {
   <!-- #endif -->
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 
 </style>

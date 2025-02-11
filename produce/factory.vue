@@ -536,7 +536,8 @@ export default {
 
                   <view class="ko-basic-table--cell">
                     <view
-                      style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+                      style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;"
+                    >
                       <view
                         style="padding: 2px; display: flex; flex-direction: column; justify-content: center;align-items: center;"
                         v-for="staff of getStaffListLogo(item)"

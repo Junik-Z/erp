@@ -480,6 +480,9 @@ export default {
                               random-bg-color
                               :size="32"
                             />
+                            <view style="font-size: 10px;color: #999; text-align: center;">
+                              {{ GET_FUNC(item, "users.0.nickName") }}
+                            </view>
                           </view>
 
                           <UniRow :gutter="10">
