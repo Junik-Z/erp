@@ -333,6 +333,8 @@ export default {
         height: null,
       },
       rsIndex: 0,
+
+      takeOverName: "",
     };
   },
   watch: {
@@ -756,6 +758,8 @@ export default {
     // 将数据传入外部
     emitValue() {
       try {
+        const obj = _deepCopy(this.value) || {};
+
         // 主板材的数据
         const host = _deepCopy(this.formData);
         const {drillWidth, edgeWidth} = host;
@@ -783,6 +787,7 @@ export default {
         });
 
         this.$emit("change", {
+          ...obj,
           ..._omit(host, ["width", "height"]),
           drillWidth,
           edgeWidth,
@@ -955,7 +960,7 @@ export default {
         events: {
           // 为指定事件添加一个监听器，获取被打开页面传送到当前页面的数据
           on_take_over: (obj) => {
-            // this.getTakList(obj);
+            this.getTakList(obj);
           },
         },
         // #endif
@@ -963,15 +968,15 @@ export default {
           // 通过eventChannel向被打开页面传送数据
           res.eventChannel.emit("on_to_take_over", {
             isSelect: true, // 选择模式
-            // list: this.list,
-            // type: this.type,
-            // isClient: this.isClient,
-            // hidePrices: this.hidePrices,
-            // takeOverName: this.takeOverName,
-            // isWork: this.isWork,
+            takeOverName: this.takeOverName,
           });
         },
       });
+    },
+
+    // 外部传入的数据
+    getTakList(event) {
+      this.form.color = _get(event, "checked.0.name");
     },
   },
   mounted() {
@@ -1133,6 +1138,14 @@ export default {
         };
       };
     },
+  },
+  created() {
+    this.takeOverName = `$_on_tak_over_${this._uid}`;
+    uni.$on(this.takeOverName, this.getTakList);
+  },
+
+  beforeDestroy() {
+    uni.$off(this.takeOverName, this.getTakList);
   },
 };
 </script>
@@ -1318,7 +1331,6 @@ export default {
                       <uni-easyinput v-model="form.color" placeholder="请输入" />
                       <button
                         @click="onJumpPickerProduct"
-                        v-if="false"
                         style="margin-left: 8px;"
                         class="ko-basic-button__card"
                       >
@@ -1455,8 +1467,15 @@ export default {
                   </view>
                   <view style="width: 20rpx;"></view>
                   <view style="flex: 1;">
-                    <uni-forms-item label="颜色" label-width="70" name="color" required>
+                    <uni-forms-item label="颜色" required label-width="70" name="color">
                       <uni-easyinput v-model="form.color" placeholder="请输入" />
+                      <button
+                        @click="onJumpPickerProduct"
+                        style="margin-left: 8px;"
+                        class="ko-basic-button__card"
+                      >
+                        选择
+                      </button>
                     </uni-forms-item>
                   </view>
                 </view>

@@ -45,7 +45,7 @@ export default {
       },
     },
     showAmount: Boolean,
-    isChecked: Boolean,
+    isChecked: Boolean, // 显示选择
     value: [String, Array],
     disabled: [Boolean, Array],
     buttonPerm: String,
@@ -274,7 +274,7 @@ export default {
     isSelection() {
       return (node) => {
         const checked = Array.isArray(this.value) ? this.value : (this.value ? [this.value] : []);
-        return checked.indexOf(node.value) > -1;
+        return checked.indexOf(node.value || node.id) > -1;
       };
     },
     getDisabled() {
@@ -378,6 +378,11 @@ export default {
                   v-for="(item) in data"
                   :key="item.id"
                 >
+                  <view v-if="isChecked" class="ko-index-list__item--checked" @click.stop="onClick(item)">
+                    <view class="ko-index-list__item--checked--box">
+                      <checkbox :checked="isSelection(item)" :disabled="getDisabled(item)" />
+                    </view>
+                  </view>
                   <ProductCard
                     :node="item"
                     is-editor
@@ -388,6 +393,7 @@ export default {
                     :type="extra.type"
                     :is-judge="isJudge"
                     :is-work="isWork"
+                    :is-hide-quantity="isChecked"
                   />
                 </view>
               </block>

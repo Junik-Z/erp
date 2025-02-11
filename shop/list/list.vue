@@ -8,7 +8,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _sum, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEnv, _isEqual, _isObject, _sum, CustomToast } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
@@ -22,6 +22,10 @@ export default {
     this.isJudge = _isEqual(option.judge, "true");
 
     this.getFieldList();
+
+    if (_isEnv()) {
+      // this.setShopList({isSelect: true});
+    }
 
     if (this.isJudge) {
       this.type = "purchase";
@@ -52,7 +56,6 @@ export default {
         const list = JSON.parse(data);
         this.setShopList(list);
       } finally {
-
       }
     }, 200);
     // #endif
@@ -106,9 +109,12 @@ export default {
 
       tableKey: +new Date().getTime(),
 
+      // 选择模式
       isSelect: false,
-
+      // 是否多选
       multiple: false,
+
+      checked: [],
     };
   },
   components: {
@@ -136,6 +142,7 @@ export default {
       this.takeOverName = data?.takeOverName;
 
       this.isSelect = data?.isSelect;
+      this.multiple = data?.multiple;
 
       this.EXList = list;
       list.forEach(item => {
@@ -245,6 +252,7 @@ export default {
 
     // 点击选好了
     onSubmit() {
+
       const list = _deepCopy(Object.values(this.selected));
 
       if (this.isJudge) {
@@ -282,15 +290,19 @@ export default {
 
       const total = _deepCopy(this.getTotalMoney);
 
+      const params = {
+        list,
+        total,
+        checked: this.checked,
+      };
+
       // #ifndef H5
       const EC = this.getOpenerEventChannel();
-      EC?.emit?.("on_take_over", {list, total});
+      EC?.emit?.("on_take_over", params);
       // #endif
 
-      // console.log(this.takeOverName);
-
       // #ifdef H5
-      uni.$emit(this.takeOverName, {list, total});
+      uni.$emit(this.takeOverName, params);
       // #endif
 
       uni.navigateBack({
@@ -326,6 +338,19 @@ export default {
     onSearchToNameIndex(key) {
       this.queryList.nameIndex = key;
       this.getList(true);
+    },
+
+    // 点击行
+    onSelect(event) {
+      if (!this.isSelect) return false;
+
+      // 是否已经选中
+      const isCheck = this.isChecked(event);
+
+      if (this.multiple) {
+      } else {
+        this.$set(this, "checked", isCheck ? [] : [event]);
+      }
     },
 
     // #ifdef H5
@@ -386,6 +411,18 @@ export default {
       return (item) => {
         return _get(item, this.getMoneyKey) || 0;
       };
+    },
+
+    // 是否已经被选中
+    isChecked() {
+      return (it) => {
+        return this.checked?.some(item => _isEqual(_isObject(item) ? item.id : item, it.id));
+      };
+    },
+
+    // 获取索引列表选中的产品id
+    getIndexCheckedIds() {
+      return this.checked.map(v => v.id);
     },
 
     // #ifdef H5
@@ -521,16 +558,20 @@ export default {
         ...(this.isSelect
           ? [
             {
-              label: "勾选",
+              label: "选择",
               width: 55,
               render: (h, {row}) => {
-                return h(
-                  Checkbox,
-                  {
-                    class: `ko-table-checked ${!this.multiple ? "ko-table-checked__single" : ""}`,
-                    props: {},
-                  },
-                );
+                return h("span", {class: "ko-table-checked__warp"}, [
+                  h(
+                    Checkbox,
+                    {
+                      class: `ko-table-checked ${!this.multiple ? "ko-table-checked__single" : ""}`,
+                      props: {
+                        value: this.isChecked(row),
+                      },
+                    },
+                  ),
+                ]);
               },
             },
           ]
@@ -587,9 +628,14 @@ export default {
         v20241216
         :is-work="isWork"
 
+
         @lower="onLower"
         :no-more="noMore"
         @search="onSearchToNameIndex"
+
+        :value="getIndexCheckedIds"
+        :is-checked="isSelect"
+        @click="onSelect"
       >
         <!-- <template #cell="{node, selected, hidePrices, extra}">
            <view class="ko-shop-list__card">
@@ -630,6 +676,7 @@ export default {
             :data="list"
             @next-load="onLower"
             :no-more="noMore || loading"
+            @row-click="onSelect"
           />
         </div>
       </div>
@@ -640,7 +687,7 @@ export default {
     <div class="ko-shop-list__submit">
       <div style="display: flex;align-items: center; justify-content: center;">
         <p style="width: 100%; white-space: nowrap; margin-right: 40px" class="ko-basic-label" v-if="!isJudge">
-          已选：{{ getSelectedList.length }}</p>
+          已选：{{ isSelect ? checked.length : getSelectedList.length }}</p>
         <p style="width: 100%; white-space: nowrap;" class="ko-basic-money" v-if="!hidePrices && !isJudge && !isSelect">
           共计：{{ toYuan(getTotalMoney) }}元</p>
       </div>
@@ -653,7 +700,10 @@ export default {
     <!-- #ifdef MP -->
     <view class="ko-shop-list__footer ko-basic-footer">
       <view class="ko-shop-list__footer--info">
-        <!--<view><label class="ko-basic-label">已选：</label>10件</view>-->
+        <view v-if="isSelect">
+          <label class="ko-basic-label">已选：</label>
+          {{ isSelect ? checked.length : getSelectedList.length }}
+        </view>
         <view v-if="!hidePrices && getTotalMoney && !isJudge">
           <label class="ko-basic-label"> 共计：</label>
           <text style="color: #e43d33; font-weight: bold;"> {{ toYuan(getTotalMoney) }}元</text>
@@ -914,7 +964,24 @@ export default {
 /deep/ .ko-table-checked {
   font-size: 20px;
 
-  &__single {
+  &__warp {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 99;
+      cursor: pointer;
+    }
+
+  }
+
+  &__single .el-checkbox__inner {
+    border-radius: 50%;
   }
 
   .el-checkbox__inner {

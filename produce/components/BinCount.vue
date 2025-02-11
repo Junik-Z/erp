@@ -33,7 +33,8 @@ export default {
     // 处理统计
     onCount(value) {
       if (_isEmpty(value)) return false;
-      const {boards, boardRecord, drillWidth} = value;
+
+      const {boards, boardRecord, drillWidth, result} = value;
 
       const data = boardRecord.map(board => {
         // 获取板材下的第一块材料的信息
@@ -66,21 +67,31 @@ export default {
       // 按板材分组
       const group = _groupBy(_deepCopy(data), (item) => item.rGroup);
 
-      this.count = [];
-      this.allEdgeLength = 0;
+      const count = [];
+      let allEdgeLength = 0;
 
       for (const key in group) {
         const item = group[key];
-
-        const obj = {
-          norm: key,
-          count: item.length,
-          edgeLength: _sum(item.map(v => v.rEdgeLength)),
-        };
-
-        this.allEdgeLength += obj.edgeLength;
-        this.count.push(obj);
+        const obj = {name: key, quantity: item.length, edgeLength: _sum(item.map(v => v.rEdgeLength)), price: null};
+        allEdgeLength += obj.edgeLength;
+        count.push(obj);
       }
+
+      count.push({
+        name: "封边",
+        quantity: allEdgeLength,
+        price: null,
+        unit: "mm",
+      });
+
+      this.count = count.map(v => {
+        const price = (result || []).find(v => _isEqual(v.name, v.name))?.price || null;
+
+        return ({
+          ...v,
+          price,
+        });
+      });
 
     },
   },
@@ -95,32 +106,19 @@ export default {
         v-for="(item, index) of count"
         :key="index"
       >
-        <view style="display: flex; align-items: center">
-          <label class="ko-basic-label">规格：</label>
-          <text>{{ item.norm }}</text>
+        <view style="display: flex; align-items: center;" v-if="item.name">
+          <text>{{ item.name }}</text>
         </view>
-        <view style="display: flex; align-items: center">
+        <view style="display: flex; align-items: center;">
           <label class="ko-basic-label">共计：</label>
-          <text>{{ item.count }}</text>
+          <text>{{ item.quantity }}</text>
+          <block v-if="item.unit">{{ item.unit }}</block>
         </view>
-        <view style="display: flex; align-items: center" v-if="false">
+        <view style="display: flex; align-items: center">
           <label class="ko-basic-label">单价：</label>
           <view style="width: 70px;">
             <uni-easyinput type="digit" v-model="item.price" />
           </view>
-        </view>
-      </view>
-    </view>
-    <view style="display: flex; align-items: center;justify-content: space-between;">
-      <view>
-        <label class="ko-basic-label">封边：</label>
-        <text>{{ allEdgeLength }}mm</text>
-      </view>
-
-      <view style="display: flex; align-items: center" v-if="false">
-        <label class="ko-basic-label">单价：</label>
-        <view style="width: 70px;">
-          <uni-easyinput type="digit" v-model="edgePrice" />
         </view>
       </view>
     </view>

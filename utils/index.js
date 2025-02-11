@@ -641,3 +641,24 @@ export function _toFinite(value) {
   const finiteValue = Number(value);
   return isNaN(finiteValue) ? 0 : finiteValue; // 处理其他情况
 }
+
+export function _reverse(array) {
+  if (!Array.isArray(array)) {
+    throw new TypeError("Expected an array");
+  }
+
+  let start = 0;
+  let end = array.length - 1;
+
+  while (start < end) {
+    // 交换 start 和 end 的值
+    let temp = array[start];
+    array[start] = array[end];
+    array[end] = temp;
+
+    start++;
+    end--;
+  }
+
+  return array;
+}

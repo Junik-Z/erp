@@ -554,7 +554,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2 && !isEqual(item.orderType, 'PRODUCTION')"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2 && !(tab === 1 && isEqual(item.orderType, 'PRODUCTION'))"
             >
               修改
             </button>

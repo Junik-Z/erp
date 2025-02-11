@@ -69,132 +69,7 @@ export default {
         // 生产流程
         "craftProcesses": [],
         // 定制板材
-        "customizedBoards": [
-          /* {
-            "rid": "f13cdb02-0d75-4e23-9aff-3d85d41ebc98",
-            "drillWidth": 6,
-            "edgeWidth": 1.2,
-            "color": "黑色",
-            "boards": [
-              {
-                "rid": "3e9ca1b5-4346-4858-b198-b7b16de9c01e",
-                "width": 0,
-                "height": 0,
-                "packers": [
-                  {
-                    "rid": "f13cdb02-0d75-4e23-9aff-3d85d41ebc98",
-                    "drillWidth": 6,
-                    "edgeWidth": 1.2,
-                    "width": 1220,
-                    "height": 2440,
-                    "color": "黑色",
-                  },
-                  {
-                    "name": "余料1",
-                    "rid": "a2edf408-33cb-4592-9852-c2dd1a6de914",
-                    "width": 1000,
-                    "height": 600,
-                    "x": null,
-                    "y": null,
-                    "quantity": 2,
-                    "weight": 9,
-                    "color": "绿色",
-                  },
-                ],
-                "items": [
-                  {
-                    "name": "柜面1",
-                    "rid": "100d5e05-e67d-4a16-bf72-a7e35b2ae504",
-                    "width": 500,
-                    "height": 600,
-                    "x": 0,
-                    "y": 0,
-                    "radius": [0, 0, 0, 0],
-                    "edges": [1, 1, 1, 1],
-                    "weight": 9,
-                    "texture": true,
-                    "rotate": false,
-                    "quantity": 2,
-                    "color": "绿色",
-                  },
-                  {
-                    "name": "柜面1",
-                    "rid": "7a61a157-eb94-461b-883d-0be3424f28d7",
-                    "width": 500,
-                    "height": 600,
-                    "x": 0,
-                    "y": 0,
-                    "radius": [0, 0, 0, 0],
-                    "edges": [0, 0, 0, 0],
-                    "weight": 9,
-                    "texture": true,
-                    "rotate": false,
-                    "quantity": 2,
-                    "color": "绿色",
-                  },
-                ],
-              },
-            ],
-            "boardRecord": [
-              {
-                "width": 1006,
-                "height": 606,
-                "weight": 9,
-                "color": "绿色",
-                "items": [
-                  {
-                    "rid": "7a61a157-eb94-461b-883d-0be3424f28d7",
-                    "width": 506,
-                    "height": 606,
-                    "color": "绿色",
-                    "x": 0,
-                    "y": 0,
-                  },
-                ],
-              },
-              {
-                "width": 1006,
-                "height": 606,
-                "weight": 9,
-                "color": "绿色",
-                "items": [
-                  {
-                    "rid": "7a61a157-eb94-461b-883d-0be3424f28d7",
-                    "width": 506,
-                    "height": 606,
-                    "color": "绿色",
-                    "x": 0,
-                    "y": 0,
-                  },
-                ],
-              },
-              {
-                "width": 1226,
-                "height": 2446,
-                "weight": 9,
-                "color": "绿色",
-                "items": [
-                  {
-                    "rid": "100d5e05-e67d-4a16-bf72-a7e35b2ae504",
-                    "width": 503,
-                    "height": 603,
-                    "color": "绿色",
-                    "x": 0,
-                    "y": 0,
-                  },
-                  {
-                    "rid": "100d5e05-e67d-4a16-bf72-a7e35b2ae504",
-                    "width": 503,
-                    "height": 603,
-                    "color": "绿色",
-                    "x": 503,
-                    "y": 0,
-                  },
-                ],
-              },
-            ],
-          }, */
-        ],
+        "customizedBoards": [],
         "remark": "",
       },
       rules: {
@@ -657,7 +532,7 @@ export default {
           <UniSection title="工单总价" type="line">
             <view style="padding: 10px;">
               <block v-if="isEqual(type, 'packing')">
-                <BinCount :value="form.customizedBoards[0]" />
+                <BinCount v-model="form.customizedBoards[0]" />
               </block>
 
               <uni-forms-item label-width="0" name="totalAmount">

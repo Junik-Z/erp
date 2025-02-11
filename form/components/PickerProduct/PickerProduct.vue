@@ -255,6 +255,9 @@ export default {
   onUnload() {
     uni.$off(this.takeOverName, this.getTakList);
   },
+  beforeDestroy() {
+    uni.$off(this.takeOverName, this.getTakList);
+  },
 };
 </script>
 

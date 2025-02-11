@@ -1,5 +1,6 @@
 <script>
 // #ifdef H5
+import { _isEmpty, _pick, _deepCopy, _reverse } from "@/utils";
 
 const CSS = [
   "/static/libs/LuckySheet/plugins/css/pluginsCss.css",
@@ -55,6 +56,42 @@ function loadCss(url, callback) {
 let TVM = null;
 let TVM1 = null;
 
+function findLastTrueIndex(array) {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (array[i]) {
+      return i; // 返回最后一个为真的值的下标
+    }
+  }
+  return -1; // 如果没有找到，返回 -1
+}
+
+// 获取数据
+function getDataList(list) {
+  let bList = _deepCopy(list || []);
+  const cList = _reverse(bList);
+
+  let endRowIndex = cList?.findIndex(item => !item.every(_isEmpty));
+
+  if (endRowIndex > -1) {
+    endRowIndex = (list.length - endRowIndex);
+  } else {
+    endRowIndex = 0;
+  }
+
+  bList = _reverse(bList)?.slice(0, endRowIndex);
+  const maxCellIndex = Math.max(...bList.map(v => findLastTrueIndex(v)));
+
+  return bList.map(item => item.slice(0, maxCellIndex + 1));
+
+  /* return list.flatMap(item => {
+    if (item.every(_isEmpty)) {
+      return [];
+    } else {
+      return [item.filter(v => !_isEmpty(v))];
+    }
+  }); */
+}
+
 export default {
   name: "CustomTable",
   components: {},
@@ -84,8 +121,27 @@ export default {
     getList() {
       try {
         window?.luckysheet?.exitEditMode?.();
-        return JSON.stringify(window.luckysheet.getAllSheets() || []);
+
+        const list = (window.luckysheet.getAllSheets() || []).map(item => {
+          const node = _pick(item, [
+            "name",
+            "color",
+            "config",
+            "data",
+            "calcChain",
+            "frozen",
+            "freezen",
+          ]);
+
+          return {
+            ...node,
+            data: getDataList(node.data),
+          };
+        });
+
+        return JSON.stringify(list);
       } catch (e) {
+        console.log(e);
         return "";
       }
     },
@@ -195,6 +251,11 @@ export default {
         console.warn(e);
       }
     },
+
+    // 数据
+    getTest() {
+      console.log(this.getList());
+    },
   },
   computed: {},
   created() {
@@ -221,7 +282,7 @@ export default {
 <template>
   <view class="ko-lucky-sheet">
     <!-- #ifdef H5 -->
-    <button class="ko-basic-button__card" v-if="false" @click="getList">数据</button>
+    <button class="ko-basic-button__card" v-if="false" @click="getTest">数据</button>
     <div id="lucky-sheet" />
     <!-- #endif -->
 

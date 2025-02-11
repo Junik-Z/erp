@@ -1,5 +1,5 @@
 <script>
-import { _get, _isEqual } from "@/utils";
+import { _get, _isEqual, _sum } from "@/utils";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
@@ -128,6 +128,16 @@ export default {
       ].filter(item => !(flag && _isEqual(item.prop, "price")));
     },
     // #endif
+
+    // 获取生产出来的产品总共多少钱
+    getCountByProductDetails() {
+      return _sum(this.node.productDetails?.map(v => v.price));
+    },
+
+    // 获取所需要的材料总共多少钱
+    getCountByMaterialDetails() {
+      return _sum(this.node.materialDetails?.map(v => v.price));
+    },
   },
 };
 </script>
@@ -182,13 +192,14 @@ export default {
             :data="node.materialDetails"
             empty-text="暂无数据"
             stripe
+            no-padding-bottom
           />
         </view>
         <!-- #endif -->
 
-        <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
+        <view class="ko-details__cell" style="margin-top: 10px;">
           <label class="ko-basic-label">共计：</label>
-          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalRawMaterialAmount) }}元</text>
+          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getCountByMaterialDetails) }}元</text>
         </view>
       </view>
     </UniSection>
@@ -231,14 +242,19 @@ export default {
             :columns="columnsList(false)"
             :data="node.productDetails"
             empty-text="暂无数据"
+            no-padding-bottom
             stripe
           />
         </view>
         <!-- #endif -->
 
-        <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
+        <view class="ko-details__cell" style="margin-top: 10px;">
           <label class="ko-basic-label">共计：</label>
-          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalProductAmount) }}元</text>
+          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getCountByProductDetails) }}元</text>
+        </view>
+        <view class="ko-details__cell" style="margin-top: 10px;">
+          <label class="ko-basic-label">实收：</label>
+          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
         </view>
       </view>
     </UniSection>
