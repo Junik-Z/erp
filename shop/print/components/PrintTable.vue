@@ -1,5 +1,5 @@
 <script>
-import { _get, _isEmpty, _set } from "@/utils";
+import { _get, _isEmpty, _isObject, _set } from "@/utils";
 import { Col, Row } from "@/uni_modules/element-ui/element.min";
 import mixins from "@/mixins/mixins";
 
@@ -56,6 +56,8 @@ export default {
         return [];
       },
     },
+    isCustomTable: Boolean,
+    isCustomizedBoards: Boolean,
   },
 
   methods: {
@@ -78,22 +80,55 @@ export default {
       return list;
     },
   },
+
+  computed: {
+    getCustomTableBind() {
+      return (node) => {
+        const mc = _get(node, "mc");
+
+        const style = {
+          color: _get(node, "fc") || undefined,
+          background: _get(node, "bg") || undefined,
+        };
+
+        if (_isObject(node) && _isObject(mc)) {
+          const cs = _get(mc, "cs") || 0;
+          const rs = _get(mc, "rs") || 0;
+
+          return {
+            colspan: cs,
+            rowspan: rs,
+            style: {
+              ...style,
+              ...(!(cs || rs) ? {display: "none"} : {}),
+            },
+          };
+        }
+
+        return {
+          style,
+        };
+      };
+    },
+  },
 };
 </script>
 
 <template>
   <table class="ko-print-table" ref="TableRef">
-    <colgroup>
-      <col :width="column.width || 'auto'" v-for="(column, index) of columns" :key="index" />
-    </colgroup>
+    <block v-if="!isEmpty(columns)">
+      <colgroup>
+        <col :width="column.width || 'auto'" v-for="(column, index) of columns" :key="index" />
+      </colgroup>
+    </block>
 
     <thead>
     <tr v-if="$slots.thead" data-type="slotThead">
-      <th :colspan="columns.length" style="position: relative;">
+      <th :colspan="columns.length || 999" style="position: relative;">
         <slot name="thead"></slot>
       </th>
     </tr>
-    <tr data-type="thead">
+    <tr data-type="thead" v-if="!isEmpty(columns)">
       <th v-for="(column, index) of columns" :key="index">
         <div class="ko-print-table__cell">
           {{ column.label }}
@@ -101,21 +136,61 @@ export default {
       </th>
     </tr>
     </thead>
-
     <tbody>
-    <tr v-for="(item, index) of data" :key="`tr-td-${index}--${item.id}`" :data-type="item.id" :data-id="item.id">
-      <td v-for="(column, cIndex) of columns" :key="cIndex">
-        <div class="ko-print-table__cell">
-          <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
-          <template v-else>
-            {{ _get(item, column.prop) || "" }}
-          </template>
-        </div>
-      </td>
-    </tr>
+
+    <block v-if="isCustomTable">
+      <tr
+        v-for="(item, index) of data"
+        :key="`tr-${index}_${item.id || ''}`"
+        :data-type="index"
+        :data-id="index"
+      >
+        <td v-bind="getCustomTableBind(column)" v-for="(column, cIndex) of item" :key="`td-${index}` + cIndex">
+          <div class="ko-print-table__cell">
+            {{ _get(column || {}, "v") || "" }}
+          </div>
+        </td>
+      </tr>
+    </block>
+
+    <block v-else-if="isCustomizedBoards">
+      <tr
+        v-for="(item, index) of data"
+        :key="`tr-${index}_${item.id || ''}`"
+        :data-type="item.id"
+        :data-id="item.id"
+      >
+        <td v-for="(column, cIndex) of columns" :key="`td-${index}` + cIndex">
+          <div class="ko-print-table__cell">
+            <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
+            <template v-else>
+              {{ _get(item, column.prop) || "" }}
+            </template>
+          </div>
+        </td>
+      </tr>
+    </block>
+
+    <block v-else>
+      <tr
+        v-for="(item, index) of data"
+        :key="`tr-${index}_${item.id || ''}`"
+        :data-type="item.id"
+        :data-id="item.id"
+      >
+        <td v-for="(column, cIndex) of columns" :key="`td-${index}` + cIndex">
+          <div class="ko-print-table__cell">
+            <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
+            <template v-else>
+              {{ _get(item, column.prop) || "" }}
+            </template>
+          </div>
+        </td>
+      </tr>
+    </block>
 
     <tr v-if="isSummary && !_isEmpty(summary)" data-type="tfoot">
-      <td :colspan="(columns || []).length">
+      <td :colspan="(columns || []).length || 999">
         <div class="ko-print-table__tfoot">
           <div
             :style="item.style || {}"
@@ -126,7 +201,7 @@ export default {
           >
             <div class="ko-print-table__cell">
               {{ item.label }}
-              {{ index % 2 === 0 ? ":" : ""}}
+              {{ index % 2 === 0 ? ":" : "" }}
             </div>
           </div>
         </div>
@@ -144,7 +219,7 @@ export default {
     </tr>
 
     <tr v-if="isFees" data-type="fees" class="ko-foot__tr">
-      <td :colspan="(columns || []).length">
+      <td :colspan="(columns || []).length || 999">
         <div class="ko-foot">
           <div class="ko-foot__item" v-for="(item) of feesList" :key="item.label">
             <label>{{ item.label }}:</label>
@@ -155,7 +230,7 @@ export default {
     </tr>
 
     <tr v-if="!(data || []).length && false">
-      <td :colspan="(columns || []).length">
+      <td :colspan="(columns || []).length || 999">
         <div class="ko-print-table__cell not-data">
           暂无数据
         </div>
@@ -165,7 +240,7 @@ export default {
 
     <tfoot>
     <tr v-if="$slots.tfoot" data-type="slotTFoot">
-      <td :colspan="columns.length">
+      <td :colspan="columns.length || 999">
         <slot name="tfoot"></slot>
       </td>
     </tr>
@@ -203,6 +278,7 @@ export default {
   @include print-style();
   border-left: 1px solid #000;
   border-top: 1px solid #000;
+
 
   &__cell {
     min-height: 22px;

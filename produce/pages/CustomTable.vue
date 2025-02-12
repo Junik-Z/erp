@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import { _isEmpty, _pick, _deepCopy, _reverse } from "@/utils";
+import { _deepCopy, _isEmpty, _pick, _reverse } from "@/utils";
 
 const CSS = [
   "/static/libs/LuckySheet/plugins/css/pluginsCss.css",
@@ -68,6 +68,7 @@ function findLastTrueIndex(array) {
 // 获取数据
 function getDataList(list) {
   let bList = _deepCopy(list || []);
+
   const cList = _reverse(bList);
 
   let endRowIndex = cList?.findIndex(item => !item.every(_isEmpty));
@@ -125,12 +126,7 @@ export default {
         const list = (window.luckysheet.getAllSheets() || []).map(item => {
           const node = _pick(item, [
             "name",
-            "color",
-            "config",
             "data",
-            "calcChain",
-            "frozen",
-            "freezen",
           ]);
 
           return {
@@ -152,7 +148,7 @@ export default {
         data = JSON.parse(this.value);
       } catch (e) {
       }
-
+      
       if (!window?.luckysheet) {
         TVM = setTimeout(() => {
           this.setList();
@@ -271,6 +267,7 @@ export default {
   },
   beforeDestroy() {
     this.$emit("change", this.getList());
+    window.luckysheet = null;
     window.luckysheet?.destroy?.();
   },
   onUnload() {

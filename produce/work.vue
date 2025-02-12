@@ -4,7 +4,19 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isNotUnNil, _isObject, _keys, _pick, _set, CustomToast } from "@/utils";
+import {
+  _deepCopy,
+  _get,
+  _isEmpty,
+  _isEqual,
+  _isNotUnNil,
+  _isObject,
+  _keys,
+  _pick,
+  _set,
+  _sum,
+  CustomToast,
+} from "@/utils";
 import {
   addedProduceApi,
   addedSaleProduceApi,
@@ -181,8 +193,6 @@ export default {
     // 提交
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
-        console.log(valid);
-
         if (!valid) {
           const Func =
             this.isTechnology ? updateCraftProcessApi :
@@ -356,6 +366,15 @@ export default {
         this.form.supplierId = "";
       }
     },
+
+    // 计算总金额
+    countTotalAmount() {
+      setTimeout(() => {
+        const P = _sum((_get(this.form, "productDetails") || []).map(v => (v.price || 0) * (v.productQuantity || 0)));
+        const C = _sum((_get(this.form, "customizedBoards.0.result") || []).map(v => (v.price || 0) * (v.quantity || 0)));
+        this.form.totalAmount = this.toYuan(P + C);
+      }, 10);
+    },
   },
   computed: {
     getStartDate() {
@@ -519,7 +538,7 @@ export default {
                 <view style="width: 100%;">
                   <PickerProduct
                     v-model="form.productDetails"
-                    :total.sync="form.totalAmount"
+                    @update:total="countTotalAmount"
                     type="sale"
                     is-work
                     hide-prices
@@ -532,7 +551,7 @@ export default {
           <UniSection title="工单总价" type="line">
             <view style="padding: 10px;">
               <block v-if="isEqual(type, 'packing')">
-                <BinCount v-model="form.customizedBoards[0]" />
+                <BinCount v-model="form.customizedBoards[0]" @change-total="countTotalAmount" />
               </block>
 
               <uni-forms-item label-width="0" name="totalAmount">

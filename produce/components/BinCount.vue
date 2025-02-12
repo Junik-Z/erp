@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _sum } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _sum, _toFinite, absYuan, yuanToPoints } from "@/utils";
 
 export default {
   name: "BinCount",
@@ -84,15 +84,25 @@ export default {
         unit: "mm",
       });
 
-      this.count = count.map(v => {
-        const price = (result || []).find(v => _isEqual(v.name, v.name))?.price || null;
-
+      this.count = count.map(V => {
+        const price = absYuan((result || []).find(J => _isEqual(V.name, J.name))?.price || 0);
         return ({
-          ...v,
+          ...V,
           price,
         });
       });
+    },
 
+    // 处理价格改变了
+    onChangePrice() {
+      this.$emit("input",
+        {
+          ...this.value,
+          result: this.count.map(V => ({...V, price: yuanToPoints(_toFinite(V.price))})),
+        },
+      );
+
+      this.$emit("change-total", _sum(this.count.map(V => yuanToPoints(_toFinite(V.price)))));
     },
   },
 };
@@ -116,8 +126,8 @@ export default {
         </view>
         <view style="display: flex; align-items: center">
           <label class="ko-basic-label">单价：</label>
-          <view style="width: 70px;">
-            <uni-easyinput type="digit" v-model="item.price" />
+          <view class="ko-bin-count__input">
+            <uni-easyinput @change="onChangePrice" @clear="onChangePrice" type="digit" v-model="item.price" />
           </view>
         </view>
       </view>
@@ -125,9 +135,22 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .ko-bin-count {
   padding-bottom: 10px;
   font-size: 14px;
+  // #ifdef MP
+  &__input {
+    width: 70px;
+  }
+
+  // #endif
+
+  // #ifndef MP
+  &__input {
+    width: 120px;
+  }
+
+  // #endif
 }
 </style>

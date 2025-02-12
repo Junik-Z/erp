@@ -306,7 +306,6 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
-                :readonly="isAgain"
               />
             </view>
           </UniFormsItem>

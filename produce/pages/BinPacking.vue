@@ -11,6 +11,7 @@ import {
   _isEmpty,
   _isEqual,
   _omit,
+  _pick,
   _round,
   _toFinite,
   CustomToast,
@@ -114,6 +115,17 @@ export default {
 
       // 材料表头
       columns: [
+        {
+          label: "序号",
+          type: "index",
+          prop: "_index_",
+          // #ifndef H5
+          width: 60,
+          // #endif
+          // #ifdef H5
+          width: 60,
+          // #endif
+        },
         {
           label: "名称",
           prop: "name",
@@ -241,6 +253,7 @@ export default {
           label: "操作",
           type: "more",
           prop: "More",
+
           // #ifdef H5
           slot: "operate",
           width: 130,
@@ -470,6 +483,11 @@ export default {
           };
 
           this.rectangles.push(obj);
+
+          this.form = {
+            ...F,
+            ..._pick(_deepCopy(this.$options.data().itemsForm), ["radius", "angleType", "edges", "straight"]),
+          };
 
           CustomToast({
             title: "材料添加成功",
@@ -1024,7 +1042,7 @@ export default {
       return (form, vss) => {
         const F = _deepCopy(form);
         if (_isEmpty(F)) return {};
-        const scale = _round(180 / (vss?.width || 180), 2);
+        const scale = _round(130 / (vss?.width || 130), 2);
         const style = {};
 
         const [l, r, t, b] = F.edges || [];
@@ -1137,6 +1155,11 @@ export default {
           opacity: T,
         };
       };
+    },
+
+    // 获取弹窗的表格表头
+    getColumnsPopup() {
+      return _deepCopy(this.getColumns)?.slice(0, -1);
     },
   },
   created() {
@@ -1300,226 +1323,244 @@ export default {
       :type="getPopupType"
     >
       <view class="ko-bin__popup" :class="[getPopupType]">
-        <uni-forms label-align="right" ref="FormRef" :model="form">
-          <block v-if="pType === 'angle'">
-            <uni-forms-item
-              v-for="(item, index) of form.radius"
-              :label="['左上', '右上', '右下', '左下'][index] + '：'"
-              :name="`radius.${index}`"
-              :key="index"
-            >
-              <uni-number-box :min="0" :width="100" type="digit" v-model="form.radius[index]" placeholder="请输入" />
-            </uni-forms-item>
-          </block>
 
-          <!-- 材料 -->
-          <block v-else-if="['editor', 'addedStuff'].includes(pType)">
-            <uni-row :gutter="0">
-              <uni-col :span="24">
-                <uni-forms-item label="名称" label-width="70" name="name">
-                  <uni-easyinput v-model="form.name" placeholder="请输入" />
-                </uni-forms-item>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: space-between; overflow: hidden;">
-                  <uni-forms-item label="数量" label-width="70" name="quantity">
-                    <uni-number-box type="digit" v-model="form.quantity" />
+        <!-- #ifndef H5 -->
+        <block v-if="['editor', 'addedStuff'].includes(pType)">
+          <view style="padding-bottom: 10px; flex: 1; overflow-y: auto">
+            <GridTable
+              :columns="getColumnsPopup"
+              :data="rectangles"
+              @click-more="onClickMore"
+              not-edit
+              :no-more="!rectangles.length"
+            />
+          </view>
+        </block>
+        <!-- #endif -->
+
+
+        <view>
+          <uni-forms label-align="right" ref="FormRef" :model="form">
+            <block v-if="pType === 'angle'">
+              <uni-forms-item
+                v-for="(item, index) of form.radius"
+                :label="['左上', '右上', '右下', '左下'][index] + '：'"
+                :name="`radius.${index}`"
+                :key="index"
+              >
+                <uni-number-box :min="0" :width="100" type="digit" v-model="form.radius[index]" placeholder="请输入" />
+              </uni-forms-item>
+            </block>
+
+            <!-- 材料 -->
+            <block v-else-if="['editor', 'addedStuff'].includes(pType)">
+              <uni-row :gutter="0">
+                <uni-col :span="24">
+                  <uni-forms-item label="名称" label-width="70" name="name">
+                    <uni-easyinput v-model="form.name" placeholder="请输入" />
                   </uni-forms-item>
-                  <view style="width: 14px;"></view>
-                  <view style="flex: 1;">
-                    <uni-forms-item label="颜色" required label-width="70" name="color">
-                      <uni-easyinput v-model="form.color" placeholder="请输入" />
-                      <button
-                        @click="onJumpPickerProduct"
-                        style="margin-left: 8px;"
-                        class="ko-basic-button__card"
-                      >
-                        选择
-                      </button>
-                    </uni-forms-item>
-                  </view>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: center;">
-                  <uni-forms-item label="纹理" label-width="100" name="texture">
-                    <UvCheckbox :size="28" is-alone v-model="form.texture" />
-                  </uni-forms-item>
-                  <view style="width: 50px;"></view>
-                  <uni-forms-item label="转90度" label-width="100" name="rotate">
-                    <UvCheckbox :size="28" is-alone v-model="form.rotate" />
-                  </uni-forms-item>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: center; overflow: hidden;">
-                  <view style="flex: 1;">
-                    <uni-forms-item label-width="0" required name="width">
-                      <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
-                    </uni-forms-item>
-                  </view>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <view style="flex: 1;">
-                    <uni-forms-item label-width="0" name="height">
-                      <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
-                    </uni-forms-item>
-                  </view>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <view style="flex: 1;">
-                    <uni-forms-item label-width="0" name="weight">
-                      <PickerSheet
-                        :options="weightList"
-                        v-model="form.weight"
-                      />
-                    </uni-forms-item>
-                  </view>
-                </view>
-              </uni-col>
-            </uni-row>
-
-            <view class="ko-bin__edge--wrap">
-              <view class="ko-bin__edge" :style="[getEdgeStyle(form, formData)]">
-                <!-- 封边设置 -->
-                <block>
-                  <button
-                    class="ko-basic-button__card edge left"
-                    @click="setEdges(form.edges, 0)"
-                  >
-                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                      <UvCheckbox is-alone readonly :value="form.edges[0]" />
-                      封边
-                    </view>
-                  </button>
-                  <button
-                    class="ko-basic-button__card edge right"
-                    @click="setEdges(form.edges, 1)"
-                  >
-                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                      <UvCheckbox is-alone readonly :value="form.edges[1]" />
-                      封边
-                    </view>
-                  </button>
-                  <button
-                    class="ko-basic-button__card edge top"
-                    @click="setEdges(form.edges, 2)"
-                  >
-                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                      <UvCheckbox is-alone readonly :value="form.edges[2]" />
-                      封边
-                    </view>
-                  </button>
-                  <button
-                    class="ko-basic-button__card edge bottom"
-                    @click="setEdges(form.edges, 3)"
-                  >
-                    <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
-                      <UvCheckbox is-alone readonly :value="form.edges[3]" />
-                      封边
-                    </view>
-                  </button>
-                </block>
-
-                <!-- 圆直角设置 -->
-                <block>
-                  <view class="ko-bin__edge--radius TL">
-                    <button class="ko-basic-button__card" @click.stop="openAngleType(0)">圆角</button>
-                  </view>
-                  <view class="ko-bin__edge--radius TR">
-                    <button class="ko-basic-button__card" @click.stop="openAngleType(1)">圆角</button>
-                  </view>
-                  <view class="ko-bin__edge--radius BR">
-                    <button class="ko-basic-button__card" @click.stop="openAngleType(2)">圆角</button>
-                  </view>
-                  <view class="ko-bin__edge--radius BL">
-                    <button class="ko-basic-button__card" @click.stop="openAngleType(3)">圆角</button>
-                  </view>
-                </block>
-
-                <!-- 直角显示 -->
-                <block>
-                  <view class="ko-bin__edge--angle TL" :style="[getAngleStyle(0, form, formData)]"></view>
-                  <view class="ko-bin__edge--angle TR" :style="[getAngleStyle(1, form, formData)]"></view>
-                  <view class="ko-bin__edge--angle BR" :style="[getAngleStyle(2, form, formData)]"></view>
-                  <view class="ko-bin__edge--angle BL" :style="[getAngleStyle(3, form, formData)]"></view>
-                </block>
-              </view>
-            </view>
-          </block>
-
-          <!-- 余料 -->
-          <block v-else-if="['editResidue', 'addedResidue'].includes(pType)">
-            <uni-row :gutter="0">
-              <uni-col :span="24">
-                <uni-forms-item label="名称" label-width="70" name="name">
-                  <uni-easyinput v-model="form.name" placeholder="请输入" />
-                </uni-forms-item>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display: flex;align-items: center;overflow: hidden">
-                  <view style="flex: 1;">
+                </uni-col>
+                <uni-col :span="24">
+                  <view style="display:flex; align-items: center; justify-content: space-between; overflow: hidden;">
                     <uni-forms-item label="数量" label-width="70" name="quantity">
                       <uni-number-box type="digit" v-model="form.quantity" />
                     </uni-forms-item>
+                    <view style="width: 14px;"></view>
+                    <view style="flex: 1;">
+                      <uni-forms-item label="颜色" required label-width="70" name="color">
+                        <uni-easyinput v-model="form.color" placeholder="请输入" />
+                        <button
+                          @click="onJumpPickerProduct"
+                          style="margin-left: 8px;"
+                          class="ko-basic-button__card"
+                        >
+                          选择
+                        </button>
+                      </uni-forms-item>
+                    </view>
                   </view>
-                  <view style="width: 20rpx;"></view>
-                  <view style="flex: 1;">
-                    <uni-forms-item label="颜色" required label-width="70" name="color">
-                      <uni-easyinput v-model="form.color" placeholder="请输入" />
-                      <button
-                        @click="onJumpPickerProduct"
-                        style="margin-left: 8px;"
-                        class="ko-basic-button__card"
-                      >
-                        选择
-                      </button>
+                </uni-col>
+                <uni-col :span="24">
+                  <view style="display:flex; align-items: center; justify-content: center;">
+                    <uni-forms-item label="纹理" label-width="100" name="texture">
+                      <UvCheckbox :size="28" is-alone v-model="form.texture" />
+                    </uni-forms-item>
+                    <view style="width: 50px;"></view>
+                    <uni-forms-item label="转90度" label-width="100" name="rotate">
+                      <UvCheckbox :size="28" is-alone v-model="form.rotate" />
                     </uni-forms-item>
                   </view>
-                </view>
-              </uni-col>
-              <uni-col :span="24">
-                <view style="display:flex; align-items: center; justify-content: center; overflow: hidden;">
-                  <view style="flex: 1;">
-                    <uni-forms-item label-width="0" required name="width">
-                      <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
-                    </uni-forms-item>
+                </uni-col>
+                <uni-col :span="24">
+                  <view style="display:flex; align-items: center; justify-content: center; overflow: hidden;">
+                    <view style="flex: 1;">
+                      <uni-forms-item label-width="0" required name="width">
+                        <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
+                      </uni-forms-item>
+                    </view>
+                    <view style="margin: 0 5px 20px">
+                      ×
+                    </view>
+                    <view style="flex: 1;">
+                      <uni-forms-item label-width="0" name="height">
+                        <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
+                      </uni-forms-item>
+                    </view>
+                    <view style="margin: 0 5px 20px">
+                      ×
+                    </view>
+                    <view style="flex: 1;">
+                      <uni-forms-item label-width="0" name="weight">
+                        <PickerSheet
+                          :options="weightList"
+                          v-model="form.weight"
+                        />
+                      </uni-forms-item>
+                    </view>
                   </view>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <view style="flex: 1;">
-                    <uni-forms-item label-width="0" name="height">
-                      <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
-                    </uni-forms-item>
-                  </view>
-                  <view style="margin: 0 5px 20px">
-                    ×
-                  </view>
-                  <view style="flex: 1;">
-                    <uni-forms-item label-width="0" name="weight">
-                      <PickerSheet
-                        :options="weightList"
-                        v-model="form.weight"
-                      />
-                    </uni-forms-item>
-                  </view>
-                </view>
-              </uni-col>
-            </uni-row>
-          </block>
+                </uni-col>
+              </uni-row>
 
-          <block v-else>
-            <uni-forms-item label="宽" name="width">
-              <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
-            </uni-forms-item>
-            <uni-forms-item label="高" name="height">
-              <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
-            </uni-forms-item>
-          </block>
-        </uni-forms>
+              <view class="ko-bin__edge--wrap">
+                <view class="ko-bin__edge" :style="[getEdgeStyle(form, formData)]">
+                  <!-- 封边设置 -->
+                  <block>
+                    <button
+                      class="ko-basic-button__card edge left"
+                      @click="setEdges(form.edges, 0)"
+                    >
+                      <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                        <UvCheckbox is-alone readonly :value="form.edges[0]" />
+                        封边
+                      </view>
+                    </button>
+                    <button
+                      class="ko-basic-button__card edge right"
+                      @click="setEdges(form.edges, 1)"
+                    >
+                      <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                        <UvCheckbox is-alone readonly :value="form.edges[1]" />
+                        封边
+                      </view>
+                    </button>
+                    <button
+                      class="ko-basic-button__card edge top"
+                      @click="setEdges(form.edges, 2)"
+                    >
+                      <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                        <UvCheckbox is-alone readonly :value="form.edges[2]" />
+                        封边
+                      </view>
+                    </button>
+                    <button
+                      class="ko-basic-button__card edge bottom"
+                      @click="setEdges(form.edges, 3)"
+                    >
+                      <view class="ko-bin__edge--button-content" style="display: flex; align-items: center;">
+                        <UvCheckbox is-alone readonly :value="form.edges[3]" />
+                        封边
+                      </view>
+                    </button>
+                  </block>
+
+                  <!-- 圆直角设置 -->
+                  <block>
+                    <view class="ko-bin__edge--radius TL">
+                      <button class="ko-basic-button__card" @click.stop="openAngleType(0)">圆角</button>
+                    </view>
+                    <view class="ko-bin__edge--radius TR">
+                      <button class="ko-basic-button__card" @click.stop="openAngleType(1)">圆角</button>
+                    </view>
+                    <view class="ko-bin__edge--radius BR">
+                      <button class="ko-basic-button__card" @click.stop="openAngleType(2)">圆角</button>
+                    </view>
+                    <view class="ko-bin__edge--radius BL">
+                      <button class="ko-basic-button__card" @click.stop="openAngleType(3)">圆角</button>
+                    </view>
+                  </block>
+
+                  <!-- 直角显示 -->
+                  <block>
+                    <view class="ko-bin__edge--angle TL" :style="[getAngleStyle(0, form, formData)]"></view>
+                    <view class="ko-bin__edge--angle TR" :style="[getAngleStyle(1, form, formData)]"></view>
+                    <view class="ko-bin__edge--angle BR" :style="[getAngleStyle(2, form, formData)]"></view>
+                    <view class="ko-bin__edge--angle BL" :style="[getAngleStyle(3, form, formData)]"></view>
+                  </block>
+                </view>
+              </view>
+            </block>
+
+            <!-- 余料 -->
+            <block v-else-if="['editResidue', 'addedResidue'].includes(pType)">
+              <uni-row :gutter="0">
+                <uni-col :span="24">
+                  <uni-forms-item label="名称" label-width="70" name="name">
+                    <uni-easyinput v-model="form.name" placeholder="请输入" />
+                  </uni-forms-item>
+                </uni-col>
+                <uni-col :span="24">
+                  <view style="display: flex;align-items: center;overflow: hidden">
+                    <view style="flex: 1;">
+                      <uni-forms-item label="数量" label-width="70" name="quantity">
+                        <uni-number-box type="digit" v-model="form.quantity" />
+                      </uni-forms-item>
+                    </view>
+                    <view style="width: 20rpx;"></view>
+                    <view style="flex: 1;">
+                      <uni-forms-item label="颜色" required label-width="70" name="color">
+                        <uni-easyinput v-model="form.color" placeholder="请输入" />
+                        <button
+                          @click="onJumpPickerProduct"
+                          style="margin-left: 8px;"
+                          class="ko-basic-button__card"
+                        >
+                          选择
+                        </button>
+                      </uni-forms-item>
+                    </view>
+                  </view>
+                </uni-col>
+                <uni-col :span="24">
+                  <view style="display:flex; align-items: center; justify-content: center; overflow: hidden;">
+                    <view style="flex: 1;">
+                      <uni-forms-item label-width="0" required name="width">
+                        <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
+                      </uni-forms-item>
+                    </view>
+                    <view style="margin: 0 5px 20px">
+                      ×
+                    </view>
+                    <view style="flex: 1;">
+                      <uni-forms-item label-width="0" name="height">
+                        <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
+                      </uni-forms-item>
+                    </view>
+                    <view style="margin: 0 5px 20px">
+                      ×
+                    </view>
+                    <view style="flex: 1;">
+                      <uni-forms-item label-width="0" name="weight">
+                        <PickerSheet
+                          :options="weightList"
+                          v-model="form.weight"
+                        />
+                      </uni-forms-item>
+                    </view>
+                  </view>
+                </uni-col>
+              </uni-row>
+            </block>
+
+            <block v-else>
+              <uni-forms-item label="宽" name="width">
+                <uni-easyinput type="digit" v-model="form.width" placeholder="请输入" />
+              </uni-forms-item>
+              <uni-forms-item label="高" name="height">
+                <uni-easyinput type="digit" v-model="form.height" placeholder="请输入" />
+              </uni-forms-item>
+            </block>
+          </uni-forms>
+        </view>
       </view>
       <template #footer>
         <view class="ko-bin__popup--footer" :class="getPopupType">
@@ -1635,11 +1676,14 @@ export default {
     padding: 10px;
 
     // #ifndef H5
-    width: 98vw;
+    width: 100vw;
 
     &.bottom {
       width: 100%;
-      min-height: 70vh;
+      height: 78vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     // #endif
@@ -1657,7 +1701,7 @@ export default {
       display: flex;
       align-items: center;
       justify-content: space-around;
-      padding: 10px 10px 16px;
+      padding: 10px 10px 12px;
 
       .ko-basic-button__card {
         width: 100px;
@@ -1682,8 +1726,8 @@ export default {
 
   // 封边样式
   &__edge {
-    width: 180px;
-    height: 180px;
+    width: 130px;
+    height: 100px;
     border: 3px dotted #000;
     position: relative;
     transition: border .3s;

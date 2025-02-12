@@ -1,5 +1,5 @@
 <script>
-import { _get, _isEqual, _sum } from "@/utils";
+import { _get, _isEmpty, _isEqual, _sum } from "@/utils";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
@@ -131,12 +131,16 @@ export default {
 
     // 获取生产出来的产品总共多少钱
     getCountByProductDetails() {
-      return _sum(this.node.productDetails?.map(v => v.price));
+      return _sum(this.node.productDetails?.map(v => (v.price || 0) * v.productQuantity));
     },
 
     // 获取所需要的材料总共多少钱
     getCountByMaterialDetails() {
-      return _sum(this.node.materialDetails?.map(v => v.price));
+      return _sum(this.node.materialDetails?.map(v => (v.price || 0) * v.productQuantity));
+    },
+
+    ifFees() {
+      return !_isEmpty(this.node.fees);
     },
   },
 };
@@ -258,6 +262,13 @@ export default {
         </view>
       </view>
     </UniSection>
+
+    <UniSection title="其它费用" type="line" v-if="ifFees">
+      <view style="padding: 10px;">
+        <FeesList v-model="node.fees" />
+      </view>
+    </UniSection>
+
 
     <UniSection title="提单用户" type="line">
       <view class="ko-details__item">

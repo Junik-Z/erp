@@ -151,7 +151,7 @@ export default {
     onJumpPrint(node, page_type, params = {}) {
       uni.setStorageSync("TO_DETAILS", true);
       uni.navigateTo({
-        url: `/shop/print/print?${QS.stringify({page_type, ...(_pick(node, ["id"])), ...params})}`,
+        url: `/shop/print/print?${QS.stringify({page_type, ...(_pick(node, ["id", "orderType", "orderCode"])), ...params})}`,
       });
     },
 
