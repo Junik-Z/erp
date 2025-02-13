@@ -138,6 +138,9 @@ export default {
               try {
                 const list = JSON.parse(_get(data, "customizedMaterials.0.customTable"));
                 data.CustomTable = _get(list, "0.data") || [];
+                data.CustomTableConfig = _get(list, "0.config") || {};
+
+                console.log(data.CustomTableConfig);
               } catch (e) {
                 console.error(e);
               }
@@ -339,6 +342,7 @@ export default {
       :root-style="rootStyle"
       :node="node"
       :header="header"
+      :config="node.CustomTableConfig"
     />
 
     <CustomizedBoards

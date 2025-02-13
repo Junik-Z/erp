@@ -538,6 +538,7 @@ export default {
         SALE_RETURN: "已付",
         PURCHASE: "已付",
         PURCHASE_RETURN: "已收",
+        PRODUCTION: "已收",
       }, name);
     },
 
@@ -548,6 +549,7 @@ export default {
         SALE_RETURN: "剩余未付",
         PURCHASE: "剩余未付",
         PURCHASE_RETURN: "剩余未收",
+        PRODUCTION: "剩余未收",
       }, name);
     },
 

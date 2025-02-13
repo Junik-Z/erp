@@ -164,9 +164,7 @@ export default {
         {
           label: "颜色",
           prop: "color",
-          // #ifndef H5
-          width: 50,
-          // #endif
+          width: 130,
         },
         {
           label: "封边(左)",
@@ -348,6 +346,7 @@ export default {
       rsIndex: 0,
 
       takeOverName: "",
+      ScrollTop: 0,
     };
   },
   watch: {
@@ -489,6 +488,8 @@ export default {
             ..._pick(_deepCopy(this.$options.data().itemsForm), ["radius", "angleType", "edges", "straight"]),
           };
 
+          this.ScrollTop = (this.rectangles.length * 40) + 99;
+
           CustomToast({
             title: "材料添加成功",
             icon: "none",
@@ -503,8 +504,6 @@ export default {
 
       // 添加余料
       if (_isEqual(pType, "addedResidue")) {
-
-        console.log(pType, F);
 
         if (!F.color) {
           CustomToast({
@@ -1157,9 +1156,11 @@ export default {
       };
     },
 
-    // 获取弹窗的表格表头
-    getColumnsPopup() {
-      return _deepCopy(this.getColumns)?.slice(0, -1);
+    // 获取单元格的分配
+    getGridTemplateColumnsStyle() {
+      return {
+        "--ko-basic-table-grid-col": "30px auto auto auto 40px 40px",
+      };
     },
   },
   created() {
@@ -1325,19 +1326,38 @@ export default {
       <view class="ko-bin__popup" :class="[getPopupType]">
 
         <!-- #ifndef H5 -->
-        <block v-if="['editor', 'addedStuff'].includes(pType)">
-          <view style="padding-bottom: 10px; flex: 1; overflow-y: auto">
-            <GridTable
-              :columns="getColumnsPopup"
-              :data="rectangles"
-              @click-more="onClickMore"
-              not-edit
-              :no-more="!rectangles.length"
-            />
-          </view>
+        <block v-if="['addedStuff'].includes(pType)">
+          <scroll-view
+            scroll-y="true"
+            :style="[getGridTemplateColumnsStyle]"
+            class="ko-bin__popup--table"
+            :scroll-top="ScrollTop"
+          >
+            <view class="ko-basic-table">
+              <block v-for="(item, index) of rectangles" :key="item.rid">
+                <view class="ko-basic-table--cell">
+                  {{ index + 1 }}
+                </view>
+                <view class="ko-basic-table--cell">
+                  {{ item.name }}
+                </view>
+                <view class="ko-basic-table--cell">
+                  {{ item.width }}
+                </view>
+                <view class="ko-basic-table--cell">
+                  {{ item.height }}
+                </view>
+                <view class="ko-basic-table--cell">
+                  {{ item.weight }}
+                </view>
+                <view class="ko-basic-table--cell">
+                  {{ item.quantity }}
+                </view>
+              </block>
+            </view>
+          </scroll-view>
         </block>
         <!-- #endif -->
-
 
         <view>
           <uni-forms label-align="right" ref="FormRef" :model="form">
@@ -1365,9 +1385,18 @@ export default {
                     <uni-forms-item label="数量" label-width="70" name="quantity">
                       <uni-number-box type="digit" v-model="form.quantity" />
                     </uni-forms-item>
-                    <view style="width: 14px;"></view>
-                    <view style="flex: 1;">
-                      <uni-forms-item label="颜色" required label-width="70" name="color">
+                    <uni-forms-item label="纹理" label-width="70" name="texture">
+                      <UvCheckbox :size="28" is-alone v-model="form.texture" />
+                    </uni-forms-item>
+                    <uni-forms-item label="转90度" label-width="70" name="rotate">
+                      <UvCheckbox :size="28" is-alone v-model="form.rotate" />
+                    </uni-forms-item>
+                  </view>
+                </uni-col>
+                <uni-col :span="24">
+                  <view style="display:flex; align-items: center; justify-content: center;">
+                    <uni-forms-item label="颜色" required label-width="70" name="color">
+                      <view style="display: flex; align-items: center; overflow: hidden; width: 100%">
                         <uni-easyinput v-model="form.color" placeholder="请输入" />
                         <button
                           @click="onJumpPickerProduct"
@@ -1376,18 +1405,7 @@ export default {
                         >
                           选择
                         </button>
-                      </uni-forms-item>
-                    </view>
-                  </view>
-                </uni-col>
-                <uni-col :span="24">
-                  <view style="display:flex; align-items: center; justify-content: center;">
-                    <uni-forms-item label="纹理" label-width="100" name="texture">
-                      <UvCheckbox :size="28" is-alone v-model="form.texture" />
-                    </uni-forms-item>
-                    <view style="width: 50px;"></view>
-                    <uni-forms-item label="转90度" label-width="100" name="rotate">
-                      <UvCheckbox :size="28" is-alone v-model="form.rotate" />
+                      </view>
                     </uni-forms-item>
                   </view>
                 </uni-col>
@@ -1684,6 +1702,16 @@ export default {
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+    }
+
+    &--table {
+      flex: 1;
+      margin-bottom: 10px;
+      overflow-y: auto;
+
+      /deep/ .ko-basic-table--cell {
+        padding: 4px 4px;
+      }
     }
 
     // #endif

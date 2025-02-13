@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import { _deepCopy, _get, _isEmpty, _pick, _reverse } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _omit, _pick, _reverse } from "@/utils";
 
 const CSS = [
   "/static/libs/LuckySheet/plugins/css/pluginsCss.css",
@@ -104,6 +104,10 @@ const defaultOptions = {
   sheetFormulaBar: false, // 是否显示公式栏
 
   showtoolbarConfig: {
+    border: false, // '边框'
+    textRotateMode: false, // '文本旋转方式'
+    postil:  false, //'批注'
+
     pivotTable: false,  //'数据透视表'
     image: false, // '插入图片'
     link: false, // '插入链接'
@@ -184,6 +188,7 @@ export default {
           const node = _pick(item, [
             "name",
             "data",
+            "config",
           ]);
 
           return {
@@ -204,6 +209,7 @@ export default {
       try {
         const D = JSON.parse(this.value);
         const C = _get(D, "0.data");
+        const I = _get(D, "0");
         let newData = [];
         // 列数量
         const cellLength = _get(C, "0.length");
@@ -219,7 +225,8 @@ export default {
           newData.push(cells);
         }
 
-        data = [{...D, data: _deepCopy(newData)}];
+        data = [{...{...I, config: _omit(I.config, ["borderInfo"])}, data: _deepCopy(newData)}];
+
       } catch (e) {
         console.log(e);
       }
@@ -302,7 +309,7 @@ export default {
 <template>
   <view class="ko-lucky-sheet">
     <!-- #ifdef H5 -->
-    <button class="ko-basic-button__card" v-if="false" @click="getTest">数据</button>
+    <!--<button class="ko-basic-button__card" @click="getTest">数据</button>-->
     <div id="lucky-sheet" />
     <!-- #endif -->
 
@@ -327,7 +334,8 @@ export default {
 
   #lucky-sheet {
     position: absolute;
-    width: calc(1366px);
+    width: calc(70vw);
+    max-width: 1024px;
     height: 100%;
     left: 50%;
     transform: translateX(-50%);

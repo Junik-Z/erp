@@ -57,6 +57,12 @@ export default {
       },
     },
     header: String,
+    config: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
   },
   data() {
     return {
@@ -68,6 +74,7 @@ export default {
     getGroupList() {
       // 获取表格每行的高度
       const rect = this.$refs.PTableRef.getListSize();
+
 
       // 表头总高度
       const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
@@ -131,12 +138,12 @@ export default {
       if ((count + footerHeight + (rect.fees || 0)) <= maxHeight) {
         pages.push(vessel);
       } else {
-        const foot = pageNumberSize - 2;
-        const li = [];
-        for (let i = 0; i < foot; i++) {
+        // const foot = pageNumberSize - 2;
+        // const li = [];
+       /*  for (let i = 0; i < foot; i++) {
           li.push(evLength);
-        }
-        pages.push(vessel, li);
+        } */
+        pages.push(vessel);
       }
 
       this.maxHeight = maxHeight;
@@ -199,6 +206,7 @@ export default {
           :is-fees="!!feesList.length"
           :fees-list="feesList"
           is-custom-table
+          :config="config"
         >
           <template #thead>
             <PrintHeader ref="HeaderRef" :title="GET_SHOP_NAME + header" :node="node" />
@@ -219,6 +227,7 @@ export default {
               is-custom-table
               :is-fees="!!feesList.length"
               :fees-list="feesList"
+              :config="config"
             >
               <template #thead>
                 <PrintHeader :title="GET_SHOP_NAME + header" :node="node" />

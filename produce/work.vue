@@ -584,12 +584,12 @@ export default {
           </UniSection>
 
           <UniSection title="工单总价" type="line">
-            <view style="padding: 10px;">
-              <block v-if="isEqual(type, 'packing')">
-                <BinCount v-model="form.customizedBoards[0]" @change-total="countTotalAmount" />
-              </block>
+            <block v-if="isEqual(type, 'packing')">
+              <BinCount v-model="form.customizedBoards[0]" @change-total="countTotalAmount" />
+            </block>
 
-              <uni-forms-item label-width="0" name="totalAmount">
+            <view style="padding: 10px;">
+              <uni-forms-item label-width="90px" label="实收总价：" name="totalAmount">
                 <view style="width: 100%;">
                   <uni-easyinput type="digit" v-model="form.totalAmount" placeholder="请输入" />
                 </view>
@@ -605,7 +605,7 @@ export default {
 
           <UniSection title="其它信息" type="line">
             <view style="padding: 10px;">
-              <uni-forms-item label="备注：" name="remark" key="remark">
+              <uni-forms-item label-width="60px" label="备注：" name="remark" key="remark">
                 <UniEasyinput v-model="form.remark" type="textarea" placeholder="备注(选填)" />
               </uni-forms-item>
             </view>

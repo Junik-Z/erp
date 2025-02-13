@@ -109,28 +109,29 @@ export default {
 </script>
 
 <template>
-  <view class="ko-bin-count">
-    <view style="display:block;">
-      <view
-        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;"
-        v-for="(item, index) of count"
-        :key="index"
-      >
-        <view style="display: flex; align-items: center;" v-if="item.name">
-          <text>{{ item.name }}</text>
-        </view>
-        <view style="display: flex; align-items: center;">
-          <label class="ko-basic-label">共计：</label>
-          <text>{{ item.quantity }}</text>
-          <block v-if="item.unit">{{ item.unit }}</block>
-        </view>
-        <view style="display: flex; align-items: center">
-          <label class="ko-basic-label">单价：</label>
-          <view class="ko-bin-count__input">
-            <uni-easyinput @change="onChangePrice" @clear="onChangePrice" type="digit" v-model="item.price" />
-          </view>
-        </view>
+  <view class="ko-bin-count" :style='{"--ko-basic-table-grid-col": "auto auto 70px"}'>
+    <view class="ko-basic-table">
+      <view class="ko-basic-table--th">
+        名称
       </view>
+      <view class="ko-basic-table--th">
+        数量
+      </view>
+      <view class="ko-basic-table--th">
+        单价
+      </view>
+      <block v-for="(item, index) of count" :key="index">
+        <view class="ko-basic-table--cell">
+          {{ item.name }}
+        </view>
+        <view class="ko-basic-table--cell">
+          {{ item.quantity }}
+          <!--<block v-if="item.unit">{{ item.unit }}</block>-->
+        </view>
+        <view class="ko-basic-table--cell">
+          <uni-easyinput @change="onChangePrice" @clear="onChangePrice" type="digit" v-model="item.price" />
+        </view>
+      </block>
     </view>
   </view>
 </template>

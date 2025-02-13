@@ -556,64 +556,66 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item, index}" v-if="isPerm('Produce_Write')">
+        <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
-            <button
-              class="ko-basic-button__card"
-              v-if="['CREATED'].includes(item.status)"
-              @click.stop="onDischarging(item, index)"
-              :loading="item.__discharging_loading__"
-              :disabled="item.__discharging_loading__"
-            >
-              进入生产
-            </button>
-            <button
-              class="ko-basic-button__card"
-              v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
-              @click.stop="onPause(item, index)"
-              :loading="item.__pause_loading__"
-              :disabled="item.__pause_loading__"
-            >
-              {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
-            </button>
-            <button
-              class="ko-basic-button__card"
-              v-if="['APPLY_MATERIAL'].includes(item.status)"
-              @click.stop="onFinish(item, index)"
-              :loading="item.__finish_loading__"
-              :disabled="item.__finish_loading__"
-            >
-              完成生产
-            </button>
-            <button
-              class="ko-basic-button__card"
-              v-if="['CREATED'].includes(item.status)"
-              @click.stop="onCancel(item, index)"
-              :loading="item.__cancel_loading__"
-              :disabled="item.__cancel_loading__"
-            >
-              取消工单
-            </button>
-            <button
-              class="ko-basic-button__card"
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-              @click.stop="onJump(item, index)"
-            >
-              编辑
-            </button>
-            <button
-              class="ko-basic-button__card"
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
-              @click.stop="onRemove(item, index)"
-              :loading="item.__r_loading__"
-              :disabled="item.__r_loading__"
-            >
-              删除
-            </button>
+            <block v-if="isPerm('Produce_Write')">
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED'].includes(item.status)"
+                @click.stop="onDischarging(item, index)"
+                :loading="item.__discharging_loading__"
+                :disabled="item.__discharging_loading__"
+              >
+                进入生产
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+                @click.stop="onPause(item, index)"
+                :loading="item.__pause_loading__"
+                :disabled="item.__pause_loading__"
+              >
+                {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['APPLY_MATERIAL'].includes(item.status)"
+                @click.stop="onFinish(item, index)"
+                :loading="item.__finish_loading__"
+                :disabled="item.__finish_loading__"
+              >
+                完成生产
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED'].includes(item.status)"
+                @click.stop="onCancel(item, index)"
+                :loading="item.__cancel_loading__"
+                :disabled="item.__cancel_loading__"
+              >
+                取消工单
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                @click.stop="onJump(item, index)"
+              >
+                编辑
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                @click.stop="onRemove(item, index)"
+                :loading="item.__r_loading__"
+                :disabled="item.__r_loading__"
+              >
+                删除
+              </button>
+            </block>
             <!-- #ifdef H5 -->
             <button
               class="ko-basic-button__card"
-              v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('')"
+              v-if="['APPLY_MATERIAL'].includes(item.status) && (isPerm('Produce_Read') || isPerm('Produce_Write'))"
               @click.stop="onCncClick(item, index)"
             >
               CNC

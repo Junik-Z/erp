@@ -58,6 +58,12 @@ export default {
     },
     isCustomTable: Boolean,
     isCustomizedBoards: Boolean,
+    config: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
   },
 
   methods: {
@@ -82,13 +88,45 @@ export default {
   },
 
   computed: {
+    // 获取表格项
     getCustomTableBind() {
+      console.log(this.data);
       return (node) => {
         const mc = _get(node, "mc");
-
         const style = {
           color: _get(node, "fc") || undefined,
           background: _get(node, "bg") || undefined,
+          fontWeight: ["normal", "bold"][_get(node, "bl")],
+          fontStyle: ["normal", "italic"][_get(node, "it")],
+          fontFamily: ["Times New Roman", "Arial", "Tahoma", "Verdana", "微软雅黑", "宋体", "黑体（ST Heiti）", "楷体（ST Kaiti）", "仿宋（ST FangSong）", "新宋体（ST Song）", "华文新魏", "华文行楷", "华文隶书"][_get(node, "ff")],
+
+          ...(_get(node, "fs") ? {fontSize: _get(node, "fs") + "px"} : {}),
+          textDecoration: `${["normal", "underline"][_get(node, "un")]} ${["normal", "line-through"][_get(node, "cl")]}`,
+          "text-align": ["center", "left", "right"][_get(node, "ht")],
+          "vertical-align": ["middle", "top", "bottom"][_get(node, "vt")] || "middle",
+
+          ...(_get(node, "tr") == 3
+            ? {
+              "writing-mode": "vertical-rl", /* 从右到左竖排 */
+              "text-orientation": "upright", /* 文字方向保持直立 */
+            } : {}),
+
+          ...({
+            0: {
+              "white-space": "nowrap", /* 防止自动换行 */
+              overflow: "hidden", /* 隐藏超出部分 */
+              "text-overflow": "ellipsis", /* 显示省略号 */
+            },
+            1: {
+              "white-space": "nowrap", /* 防止自动换行 */
+              overflow: "visible", /* 允许内容溢出 */
+            },
+            2: {
+              "white-space": "normal", /* 允许内容自动换行 */
+              "word-wrap": "break-word", /* 在单词内换行 */
+            },
+          }[_get(node, "tb")]),
+          padding: "2px",
         };
 
         if (_isObject(node) && _isObject(mc)) {
@@ -107,6 +145,23 @@ export default {
 
         return {
           style,
+        };
+      };
+    },
+
+    // 获取 table 行的高度
+    getTableRowStyle() {
+      return (index) => {
+        const height = _get(this.config, `rowlen.${index}`);
+
+        if (height) {
+          return {
+            height: height + "px",
+          };
+        }
+
+        return {
+          height: "23px",
         };
       };
     },
@@ -144,11 +199,14 @@ export default {
         :key="`tr-${index}_${item.id || ''}`"
         :data-type="index"
         :data-id="index"
+        :style="[getTableRowStyle(index)]"
       >
-        <td v-bind="getCustomTableBind(column)" v-for="(column, cIndex) of item" :key="`td-${index}` + cIndex">
-          <div class="ko-print-table__cell">
-            {{ _get(column || {}, "v") || "" }}
-          </div>
+        <td
+          v-bind="getCustomTableBind(column)"
+          v-for="(column, cIndex) of item"
+          :key="`td-${index}` + cIndex"
+        >
+          {{ _get(column || {}, "v") || "" }}
         </td>
       </tr>
     </block>
