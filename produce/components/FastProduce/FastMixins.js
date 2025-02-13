@@ -1,4 +1,11 @@
-import { addedCraftApi, addedQuickApi, detailCraftApi, detailQuickApi } from "@/api/erp/produce";
+import {
+  addedCraftApi,
+  addedQuickApi,
+  addedTableApi,
+  detailCraftApi,
+  detailQuickApi,
+  detailTableApi,
+} from "@/api/erp/produce";
 
 export default {
   methods: {
@@ -12,11 +19,17 @@ export default {
       return addedCraftApi(data);
     },
 
+    // 添加快捷表格
+    addedTable(data) {
+      return addedTableApi(data);
+    },
+
     // 获取快捷详情
     getDetails(query, type) {
       const Func = {
         quick: detailQuickApi,
         craft: detailCraftApi,
+        table: detailTableApi,
       }[type];
       return Func(query);
     },

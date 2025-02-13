@@ -318,6 +318,20 @@ export default {
         this.$set(this.form, "craftProcesses", _deepCopy(data.processDetails));
       }
 
+      if (_isEqual(type, "table")) {
+        try {
+          this.customizedMaterials = _deepCopy(data.customTable);
+
+          this.$set(this.form.customizedMaterials, "0", {
+            sequence: 1,
+            ...(_get(this.form, "customizedMaterials.0") || {}),
+            customTable: _deepCopy(data.processDetails),
+          });
+        } catch (e) {
+        }
+        // this.$set(this.form, "craftProcesses", _deepCopy(data.processDetails));
+      }
+
       this.$refs.FPRef.close();
     },
 
@@ -331,6 +345,12 @@ export default {
       this.$refs.FPRef.open("quick", true, this.form);
     },
 
+    // 另存为快捷生产
+    onSubmitTable() {
+      // console.log(this.$refs.CTRef.getList() || "");
+      this.$refs.FPRef.open("table", true, {customTable: this.$refs.CTRef.getList() || ""});
+    },
+
     // 选中客户回填电话及地址
     onSupplierId(val) {
       const node = this.$refs.UserRef.getUserInfo(val) || {};
@@ -339,8 +359,8 @@ export default {
     },
 
     // 开启快捷生产
-    onFast() {
-      this.$refs.FPRef.open("quick");
+    onFast(type) {
+      this.$refs.FPRef.open(type);
     },
 
     // 点击了
@@ -450,7 +470,7 @@ export default {
 
             <KoMovable
               :y-axis="-60"
-              @click="onFast('')"
+              @click="onFast('quick')"
             >
               <view style="line-height: 1.3">
                 <view style="font-size: 12px;">
@@ -465,6 +485,21 @@ export default {
 
           <block v-if="isEqual(type, 'xlsx')">
             <CustomTable :value="customizedMaterials" ref="CTRef" @change="onUpdateXlsx" />
+            <!-- #ifdef H5 -->
+            <KoMovable
+              :y-axis="-60"
+              @click="onFast('table')"
+            >
+              <view style="line-height: 1.3">
+                <view style="font-size: 12px;">
+                  快捷
+                </view>
+                <view style="font-size: 12px;">
+                  表格
+                </view>
+              </view>
+            </KoMovable>
+            <!-- #endif -->
           </block>
 
           <block v-if="isEqual(type, 'packing')">
@@ -601,6 +636,13 @@ export default {
           @click.stop="onSubmitQuick"
         >
           存为快捷生产
+        </button>
+        <button
+          class="ko-basic-button__card"
+          v-if="isEqual(getCurrentValue, 'type') && isEqual(type, 'xlsx')"
+          @click.stop="onSubmitTable"
+        >
+          存为快捷表格
         </button>
       </block>
       <button

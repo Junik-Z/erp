@@ -77,6 +77,7 @@ export default {
     // #ifdef H5
     columnsList() {
       const _this = this;
+
       return (flag) => [
         {
           label: "序号",
@@ -131,12 +132,12 @@ export default {
 
     // 获取生产出来的产品总共多少钱
     getCountByProductDetails() {
-      return _sum(this.node.productDetails?.map(v => (v.price || 0) * v.productQuantity));
+      return _sum(this.node?.productDetails?.map(v => (v.price || 0) * v.productQuantity) || []);
     },
 
     // 获取所需要的材料总共多少钱
     getCountByMaterialDetails() {
-      return _sum(this.node.materialDetails?.map(v => (v.price || 0) * v.productQuantity));
+      return _sum(this.node?.materialDetails?.map(v => (v.price || 0) * v.productQuantity) || []);
     },
 
     ifFees() {
@@ -268,7 +269,6 @@ export default {
         <FeesList v-model="node.fees" />
       </view>
     </UniSection>
-
 
     <UniSection title="提单用户" type="line">
       <view class="ko-details__item">

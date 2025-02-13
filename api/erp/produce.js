@@ -363,6 +363,50 @@ export function detailCraftApi(data) {
   });
 }
 
+/**
+ * @description 获取快捷表格列表
+ */
+export function getTableListApi(data) {
+  return request({
+    url: "/quick/table/list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除快捷表格
+ */
+export function removeTableApi(data) {
+  return request({
+    url: "/quick/table/delete",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 添加快捷表格
+ */
+export function addedTableApi(data) {
+  return request({
+    url: "/quick/table/add",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 快捷表格详情
+ */
+export function detailTableApi(data) {
+  return request({
+    url: "/quick/table/detail",
+    method: "get",
+    data,
+  });
+}
+
 //** ———————————————————— 销售工单相关 —————————————————————————— */
 
 /**

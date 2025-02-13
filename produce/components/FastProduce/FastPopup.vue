@@ -25,7 +25,7 @@ export default {
   },
   methods: {
     open(type, isNew = false, data = {}) {
-      const T = {quick: "生产", craft: "工艺"}[type];
+      const T = {quick: "生产", craft: "工艺", table: "表格"}[type];
       this.title = isNew ? `新增快捷${T}` : `选择快捷${T}`;
       this.type = type;
       this.isNew = isNew;
@@ -71,8 +71,8 @@ export default {
         return false;
       }
 
-      const Func = {quick: this.addedQuick, craft: this.addedCraft}[this.type];
-      const name = {quick: "produceName", craft: "processName"}[this.type];
+      const Func = {quick: this.addedQuick, craft: this.addedCraft, table: this.addedTable}[this.type];
+      const name = {quick: "produceName", craft: "processName", table: "name"}[this.type];
       params[name] = this.from.name;
 
       this.loading = true;

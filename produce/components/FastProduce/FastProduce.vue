@@ -1,7 +1,14 @@
 <script>
 import KoList from "@/components/List/List.vue";
 import mixins from "@/mixins/mixins";
-import { getCraftListApi, getQuickListApi, removeCraftApi, removeQuickApi } from "@/api/erp/produce";
+import {
+  getCraftListApi,
+  getQuickListApi,
+  getTableListApi,
+  removeCraftApi,
+  removeQuickApi,
+  removeTableApi,
+} from "@/api/erp/produce";
 import { CONFIG } from "@/utils/config";
 import { _get, _isEmpty, CustomToast } from "@/utils";
 import FastMixins from "./FastMixins";
@@ -62,6 +69,7 @@ export default {
       const Func = {
         quick: getQuickListApi,
         craft: getCraftListApi,
+        table: getTableListApi,
       }[this.type];
 
       Func(this.queryList)
@@ -84,6 +92,7 @@ export default {
             const Func = {
               quick: removeQuickApi,
               craft: removeCraftApi,
+              table: removeTableApi,
             }[this.type];
 
             this.$set(this.list[index], "__r_loading__", true);
@@ -116,7 +125,7 @@ export default {
 
   computed: {
     getProcessName() {
-      return (item) => _get(item, {quick: "produceName", craft: "processName"}[this.type]);
+      return (item) => _get(item, {quick: "produceName", craft: "processName", table: "name"}[this.type]);
     },
   },
 };
