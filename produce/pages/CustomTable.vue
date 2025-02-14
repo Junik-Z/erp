@@ -1,7 +1,7 @@
 <script>
-// #ifdef H5
 import { _deepCopy, _get, _isEmpty, _omit, _pick, _reverse } from "@/utils";
 
+// #ifdef H5
 const CSS = [
   "/static/libs/LuckySheet/plugins/css/pluginsCss.css",
   "/static/libs/LuckySheet/plugins/plugins.css",
@@ -106,7 +106,9 @@ const defaultOptions = {
   showtoolbarConfig: {
     border: false, // '边框'
     textRotateMode: false, // '文本旋转方式'
-    postil:  false, //'批注'
+    postil: false, //'批注'
+
+    frozenMode: false, // '冻结方式'
 
     pivotTable: false,  //'数据透视表'
     image: false, // '插入图片'
@@ -154,6 +156,8 @@ const readonlyOptions = {
   },
 };
 
+// #endif
+
 export default {
   name: "CustomTable",
   components: {},
@@ -168,7 +172,15 @@ export default {
     value: {
       handler() {
         if (this.notUpdate) return false;
+        // #ifdef H5
         this.setList();
+        // #endif
+
+        // #ifdef MP
+        this.node = _get(this.getTableList(), "0");
+
+        console.log(this.node);
+        // #endif
       },
       immediate: true,
       deep: false,
@@ -177,14 +189,52 @@ export default {
   data() {
     return {
       notUpdate: false,
+
+      node: {},
     };
   },
   methods: {
+    getTableList() {
+      try {
+        const D = JSON.parse(this.value);
+        const C = _get(D, "0.data");
+        const I = _get(D, "0");
+        let newData = [];
+        // #ifdef H5
+        // 列数量
+        const cellLength = _get(C, "0.length");
+        // 行数量
+        const rowsLength = _get(C, "length");
+
+        for (let i = 0; i < (defaultOptions.row >= rowsLength ? defaultOptions.row : rowsLength); i++) {
+          const row = C[i] || [];
+          let cells = [];
+          for (let j = 0; j < (defaultOptions.column >= cellLength ? defaultOptions.column : cellLength); j++) {
+            cells.push(row[j] || null);
+          }
+          newData.push(cells);
+        }
+        // #endif
+
+        // #ifdef MP
+        newData = C;
+        // #endif
+
+        return [{...{...I, config: _omit(I.config, ["borderInfo"])}, data: _deepCopy(newData)}];
+      } catch (e) {
+        console.log(e);
+
+        return [{"name": "Sheet1", "data": []}];
+      }
+    },
+
+    // #ifdef H5
     getList() {
       try {
         window?.luckysheet?.exitEditMode?.();
 
         const list = (window.luckysheet.getAllSheets() || []).map(item => {
+          console.log(item);
           const node = _pick(item, [
             "name",
             "data",
@@ -204,32 +254,7 @@ export default {
       }
     },
     setList() {
-      let data = [{"name": "Sheet1", "data": []}];
-
-      try {
-        const D = JSON.parse(this.value);
-        const C = _get(D, "0.data");
-        const I = _get(D, "0");
-        let newData = [];
-        // 列数量
-        const cellLength = _get(C, "0.length");
-        // 行数量
-        const rowsLength = _get(C, "length");
-
-        for (let i = 0; i < (defaultOptions.row >= rowsLength ? defaultOptions.row : rowsLength); i++) {
-          const row = C[i] || [];
-          let cells = [];
-          for (let j = 0; j < (defaultOptions.column >= cellLength ? defaultOptions.column : cellLength); j++) {
-            cells.push(row[j] || null);
-          }
-          newData.push(cells);
-        }
-
-        data = [{...{...I, config: _omit(I.config, ["borderInfo"])}, data: _deepCopy(newData)}];
-
-      } catch (e) {
-        console.log(e);
-      }
+      const data = this.getTableList();
 
       if (!window?.luckysheet) {
         TVM = setTimeout(() => {
@@ -241,7 +266,6 @@ export default {
       TVM && clearTimeout(TVM);
 
       window?.luckysheet?.destroy?.();
-
 
       try {
         window?.luckysheet?.create?.({
@@ -277,14 +301,15 @@ export default {
         console.warn(e);
       }
     },
-
     // 数据
     getTest() {
       console.log(this.getList());
     },
+    // #endif
   },
   computed: {},
   created() {
+    // #ifdef H5
     Promise.all([
       ...CSS.map(url => new Promise(resolve => loadCss(url, resolve))),
       ...JSList.map(url => new Promise(resolve => loadScript(url, resolve))),
@@ -292,18 +317,21 @@ export default {
       .then(() => {
         this.setList([{"name": "Sheet1", "data": []}]);
       });
+    // #endif
   },
   mounted() {
   },
   beforeDestroy() {
+    // #ifdef H5
     this.$emit("change", this.getList());
-    window.luckysheet = null;
     window.luckysheet?.destroy?.();
+    window.luckysheet = null;
+    // #endif
+
   },
   onUnload() {
   },
 };
-// #endif
 </script>
 
 <template>
@@ -314,16 +342,48 @@ export default {
     <!-- #endif -->
 
     <!-- #ifndef H5 -->
-    <view style="font-size: 12px; color: #999; text-align: center; padding: 30px 0;">
-      小程序暂不支持 xls 预览，请在电脑端查看。
+    <view class="ko-lucky-sheet__table">
+     <!-- <scroll-view
+        scroll-y="true"
+        :style="[getGridTemplateColumnsStyle]"
+        class="ko-bin__popup&#45;&#45;table"
+        :scroll-top="ScrollTop"
+      >
+        <view class="ko-basic-table">
+          <block v-for="(item, index) of rectangles" :key="item.rid">
+            <view class="ko-basic-table&#45;&#45;cell">
+              {{ index + 1 }}
+            </view>
+            <view class="ko-basic-table&#45;&#45;cell">
+              {{ item.name }}
+            </view>
+            <view class="ko-basic-table&#45;&#45;cell">
+              {{ item.width }}
+            </view>
+            <view class="ko-basic-table&#45;&#45;cell">
+              {{ item.height }}
+            </view>
+            <view class="ko-basic-table&#45;&#45;cell">
+              {{ item.weight }}
+            </view>
+            <view class="ko-basic-table&#45;&#45;cell">
+              {{ item.quantity }}
+            </view>
+          </block>
+        </view>
+      </scroll-view>-->
+    </view>
+
+    <view style="font-size: 12px; color: #999; text-align: center; padding: 20px 0;">
+      定制表格，请在电脑端查看。
     </view>
     <!-- #endif -->
   </view>
 </template>
 
 <style lang="scss">
-// #ifdef H5
 .ko-lucky-sheet {
+  // #ifdef H5
   .ko-basic-button__card {
     position: absolute;
     z-index: 999999999;
@@ -340,7 +400,7 @@ export default {
     left: 50%;
     transform: translateX(-50%);
   }
-}
 
-// #endif
+  // #endif
+}
 </style>

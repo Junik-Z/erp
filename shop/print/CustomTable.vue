@@ -67,6 +67,7 @@ export default {
   data() {
     return {
       groupList: [],
+      rect: {},
     };
   },
   methods: {
@@ -74,7 +75,6 @@ export default {
     getGroupList() {
       // 获取表格每行的高度
       const rect = this.$refs.PTableRef.getListSize();
-
 
       // 表头总高度
       const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
@@ -140,14 +140,15 @@ export default {
       } else {
         // const foot = pageNumberSize - 2;
         // const li = [];
-       /*  for (let i = 0; i < foot; i++) {
-          li.push(evLength);
-        } */
+        /*  for (let i = 0; i < foot; i++) {
+           li.push(evLength);
+         } */
         pages.push(vessel);
       }
 
       this.maxHeight = maxHeight;
       this.groupList = pages;
+      this.rect = rect;
     },
     onPrint() {
       const el = this.isA4 ? this.$refs.A4Ref : this.$refs.PrintRef;
@@ -163,6 +164,29 @@ export default {
           height: "140mm",
         },
       });
+    },
+
+    // 设置打印的表格高度
+    setRowHeight(page, index, item) {
+      const groupList = this.groupList;
+      let pNum = 0;
+
+      for (let i = 0; i < page; i++) {
+        pNum += groupList[i].length;
+      }
+
+      const rIndex = pNum + index;
+      const height = this.rect[rIndex];
+
+      if (height) {
+        return {
+          height: `${height}px`,
+        };
+      }
+
+      return {
+        height: "23px",
+      };
     },
   },
   watch: {
@@ -228,6 +252,7 @@ export default {
               :is-fees="!!feesList.length"
               :fees-list="feesList"
               :config="config"
+              :set-row-height="setRowHeight.bind(this, index)"
             >
               <template #thead>
                 <PrintHeader :title="GET_SHOP_NAME + header" :node="node" />
@@ -247,11 +272,6 @@ export default {
 
 <style lang="scss">
 // #ifdef H5
-@page A4 {
-  size: A4 landscape;
-  margin: 0;
-}
-
 @page Triple {
   size: 216mm 140mm;
   margin: 0;
@@ -297,12 +317,7 @@ export default {
     /deep/ .ko-print-footer {
       border: none;
     }
-
-    &.is-a4 {
-      page: A4;
-    }
   }
-
 
   &__pages {
     page: Triple;

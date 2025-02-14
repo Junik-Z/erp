@@ -97,13 +97,13 @@ export default {
 </script>
 
 <template>
-  <view class="ko-check">
-    <view class="ko-check__title">考勤二维码</view>
-    <view class="ko-check__shop">{{ GET_SHOP_NAME }}</view>
-    <view class="ko-check__time">{{ time }}</view>
+  <view class="ko-check-in">
+    <view class="ko-check-in__title">考勤二维码</view>
+    <view class="ko-check-in__shop">{{ GET_SHOP_NAME }}</view>
+    <view class="ko-check-in__time">{{ time }}</view>
 
-    <view class="ko-check__content">
-      <view class="ko-check__wrap">
+    <view class="ko-check-in__content">
+      <view class="ko-check-in__wrap">
         <AyQrcode
           ref="qrcode"
           :modal="modal_qr"
@@ -113,12 +113,12 @@ export default {
           @hideQrcode="hideQrcode"
         />
       </view>
-      <view class="ko-check__wrap--line"></view>
+      <view class="ko-check-in__wrap--line"></view>
     </view>
   </view>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 $borderRadius: 30rpx;
 
 @keyframes ClipPath {
@@ -137,7 +137,7 @@ $borderRadius: 30rpx;
   }
 }
 
-.ko-check {
+.ko-check-in {
   height: 100vh;
   width: 100vw;
   display: flex;

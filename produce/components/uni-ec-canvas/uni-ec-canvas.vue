@@ -130,7 +130,6 @@ export default {
     // #endif
   },
   methods: {
-
     init(callback) {
       // #ifdef H5
       const canvas = document.getElementById(this.canvasId);
@@ -186,7 +185,6 @@ export default {
     },
 
     // #ifndef H5
-
     initByOldWay(callback) {
       // 1.9.91 <= version < 2.9.0：原来的方式初始化
       ctx = wx.createCanvasContext(this.canvasId, this);
@@ -230,7 +228,8 @@ export default {
 
           const canvasDpr = wx.getSystemInfoSync().pixelRatio;
           const canvasWidth = res[0].width;
-          const canvasHeight = res[0].height;
+
+          const canvasHeight = res[0].height - 140;
 
           const ctx = canvasNode.getContext("2d");
 

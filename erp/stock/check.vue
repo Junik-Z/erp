@@ -188,9 +188,9 @@ export default {
 </script>
 
 <template>
-  <view class="ko-check">
+  <view class="ko-stock-check">
     <KoNotice />
-    <view class="ko-check__tabs" style="padding: 10px;">
+    <view class="ko-stock-check__tabs" style="padding: 10px;">
       <UniSegmentedControl :values="tabList" :current.sync="current" @clickItem="getList" />
     </view>
 
@@ -215,8 +215,8 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
-.ko-check {
+<style lang="scss">
+.ko-stock-check {
   width: 100%;
 
   // #ifdef H5

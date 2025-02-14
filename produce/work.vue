@@ -400,6 +400,7 @@ export default {
     getStartDate() {
       return +new Date();
     },
+
     getTotalAmount() {
       return (this.form.totalProductAmount || 0) - (this.form.totalRawMaterialAmount || 0);
     },
@@ -567,7 +568,7 @@ export default {
             <uni-easyinput v-model="form.orderAddress" placeholder="请输入" />
           </uni-forms-item>
 
-          <UniSection title="生产产品" type="line">
+          <UniSection title="生产产品" type="line" v-if="['common'].includes(type)">
             <view style="padding: 10px;">
               <uni-forms-item label-width="0" name="productDetails">
                 <view style="width: 100%;">

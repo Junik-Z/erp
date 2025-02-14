@@ -135,12 +135,13 @@ export default {
             data.isCustomizedMaterials = !_isEmpty(data.customizedMaterials);
 
             if (data.isCustomizedMaterials) {
+              this.TabValue = "CustomTable";
               try {
                 const list = JSON.parse(_get(data, "customizedMaterials.0.customTable"));
                 data.CustomTable = _get(list, "0.data") || [];
                 data.CustomTableConfig = _get(list, "0.config") || {};
 
-                console.log(data.CustomTableConfig);
+                // console.log(data.CustomTable);
               } catch (e) {
                 console.error(e);
               }
@@ -149,6 +150,8 @@ export default {
             data.isCustomizedBoards = !_isEmpty(data.customizedBoards);
 
             if (data.isCustomizedBoards) {
+              this.TabValue = "CustomizedBoards";
+
               try {
                 const list = _get(data, "customizedBoards.0");
                 data.CustomizedBoards = _get(list, "boards.0.items")?.map((v, index) => ({
@@ -156,6 +159,9 @@ export default {
                   id: v.rid,
                   __index__: index + 1,
                 }));
+
+                data._result_ = _get(list, "result");
+
               } catch (e) {
                 console.error(e);
               }
@@ -166,6 +172,8 @@ export default {
 
         return false;
       }
+
+      this.TabValue = "default";
 
       Func[this.option.page_type]?.({id: this.option.id})
         .then(res => {
@@ -304,7 +312,7 @@ export default {
     },
 
     showTabs() {
-      return this.node.isCustomizedMaterials || this.node.isCustomizedBoards;
+      return (this.node.isCustomizedMaterials || this.node.isCustomizedBoards) && false;
     },
   },
 };

@@ -96,7 +96,7 @@ export default {
     // 获取各个元素的大小
     getGroupList() {
       // 获取表格每行的高度
-      const rect = this.$refs.PTableRef.getListSize();
+      const rect = this.$refs.PTableRef?.getListSize?.() || {};
 
       // 表头总高度
       const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
@@ -316,16 +316,10 @@ export default {
 
 <style lang="scss">
 // #ifdef H5
-@page A4 {
-  size: A4 landscape;
-  margin: 0;
-}
-
 @page Triple {
   size: 216mm 140mm;
   margin: 0;
 }
-
 
 .ko-print {
   padding-top: 120px;
@@ -369,10 +363,6 @@ export default {
 
     /deep/ .ko-print-footer {
       border: none;
-    }
-
-    &.is-a4 {
-      page: A4;
     }
   }
 

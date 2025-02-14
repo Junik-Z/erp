@@ -165,7 +165,7 @@ export default {
         const obj = {
           norm: key,
           count: item.length,
-          edgeLength: _sum(item.map(v => v.rEdgeLength)),
+          edgeLength: _sum(item.map(v => v.rEdgeLength)) / 100,
         };
 
         this.allEdgeLength += obj.edgeLength;
@@ -312,7 +312,7 @@ export default {
 
           <uni-col :span="16">
             <label class="ko-basic-label">封边：</label>
-            <text>{{ allEdgeLength }}mm</text>
+            <text>{{ allEdgeLength }}m</text>
           </uni-col>
         </uni-row>
       </view>

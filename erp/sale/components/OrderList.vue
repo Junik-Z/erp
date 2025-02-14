@@ -59,11 +59,11 @@ export default {
           },
         },
         // #endif
-        {
+       /*  {
           text: "生产",
           iconfont: "icon-shengchan",
           path: PageEnums.produceWork + "?ADDED_TYPE=common&FORM=SALE",
-        },
+        }, */
         // #ifdef H5
         {
           text: "定制",

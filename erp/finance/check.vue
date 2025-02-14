@@ -22,6 +22,7 @@ import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import CheckPopup from './CheckPopup.vue'
 
 export default {
   name: "check",
@@ -39,6 +40,7 @@ export default {
     KoNotice,
     UniSegmentedControl,
     UniEasyinput,
+    CheckPopup,
   },
   data() {
     const _this = this;
@@ -262,7 +264,6 @@ export default {
   },
   onLoad(option) {
     this.option = option;
-
     this.getShowTabList();
   },
   methods: {
@@ -348,12 +349,11 @@ export default {
     async onSubmit() {
       if (!this.checked.length) {
         uni.showToast({
-          title: "请先选择要清帐的订单",
+          title: "请先选择订单",
           icon: "none",
         });
         return false;
       }
-
 
       const list = this.checked.map(item => {
         const obj = _pick(_deepCopy(item), ["supplierId", "orderType", "purchaserId", "orderCode"]);
@@ -437,6 +437,19 @@ export default {
       this.queryList.pageNum += 1;
       this.getList();
     },
+
+    // 打开对账单
+    openStatement() {
+      if (!this.checked.length) {
+        uni.showToast({
+          title: "请先选择订单",
+          icon: "none",
+        });
+        return false;
+      }
+
+      this.$refs.CPRef.open(this.checked);
+    },
   },
   computed: {
     getPageType() {
@@ -462,7 +475,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-check" :class="{'not-footer': !isShowFooter}">
+  <view class="ko-check" :class="{'not-footer': isShowFooter && isShowCheck}">
     <KoNotice />
     <view class="ko-check__tabs" v-if="!isLogistics">
 
@@ -533,6 +546,7 @@ export default {
               @click.stop="onJumpDet(item, getPageType)"
               is-finished
               is-finance
+              is-hide-status
             />
 
             <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
@@ -682,7 +696,11 @@ export default {
 
         <view style="display: flex; align-items: center;">
           <button class="ko-basic-button__card" @click.stop="onBatchClearing">
-            {{ isShowCheck ? "取消批量清帐" : "批量清帐" }}
+            {{ isShowCheck ? "取消" : "批量清帐" }}
+          </button>
+
+          <button class="ko-basic-button__card" @click.stop="openStatement">
+            对账单
           </button>
 
           <button
@@ -710,11 +728,15 @@ export default {
       />
     </view>
     <!-- #endif -->
+
+    <CheckPopup ref="CPRef"/>
   </view>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .ko-check {
+  padding-bottom: 40px;
+
   &__tabs {
     padding: 10px;
 
@@ -748,7 +770,7 @@ export default {
   }
 
   &.not-footer {
-    padding-bottom: 40px;
+    padding-bottom: 80px;
   }
 
   &__footer {

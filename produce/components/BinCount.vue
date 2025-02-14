@@ -79,9 +79,9 @@ export default {
 
       count.push({
         name: "封边",
-        quantity: allEdgeLength,
+        quantity: allEdgeLength / 100,
         price: null,
-        unit: "mm",
+        unit: "m",
       });
 
       this.count = count.map(V => {
@@ -105,11 +105,23 @@ export default {
       this.$emit("change-total", _sum(this.count.map(V => yuanToPoints(_toFinite(V.price)))));
     },
   },
+
+  computed: {
+    getRootStyle() {
+      let gridCol = "auto auto 100px";
+
+      // #ifdef H5
+      gridCol = "auto auto 120px";
+      // #endif
+
+      return {"--ko-basic-table-grid-col": gridCol};
+    },
+  },
 };
 </script>
 
 <template>
-  <view class="ko-bin-count" :style='{"--ko-basic-table-grid-col": "auto auto 70px"}'>
+  <view class="ko-bin-count" :style='[getRootStyle]'>
     <view class="ko-basic-table">
       <view class="ko-basic-table--th">
         名称
@@ -126,7 +138,7 @@ export default {
         </view>
         <view class="ko-basic-table--cell">
           {{ item.quantity }}
-          <!--<block v-if="item.unit">{{ item.unit }}</block>-->
+          <block v-if="item.unit">{{ item.unit }}</block>
         </view>
         <view class="ko-basic-table--cell">
           <uni-easyinput @change="onChangePrice" @clear="onChangePrice" type="digit" v-model="item.price" />

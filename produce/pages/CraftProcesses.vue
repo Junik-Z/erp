@@ -181,7 +181,7 @@ export default {
                 textBorderWidth: 0,
               },
             },
-            animationDurationUpdate: 750,
+            // animationDurationUpdate: 300,
           },
         ],
       },
@@ -492,7 +492,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-craft" :style="[{'--wrap-height': wrapHeight + 'px'}]">
+  <view class="ko-craft" :style="[{'--wrap-height': (wrapHeight - 140) + 'px'}]">
     <UniEcCanvas
       ref="canvas"
       :ec="ec"
@@ -594,7 +594,6 @@ export default {
 <style scoped lang="scss">
 .ko-craft {
   height: 100%;
-  //min-height: 80vh;
 
   &__popup {
     padding: 10px;
@@ -622,7 +621,7 @@ export default {
 
 /deep/ .uni-ec-canvas {
   width: 100%;
-  height: var(--wrap-height, 500px);
+  height: var(--wrap-height, 400px);
   display: block;
   position: relative;
   z-index: 9;

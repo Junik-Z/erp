@@ -40,7 +40,10 @@ export default {
     spacing: Number,
 
     // 强制显示订单总额
-    isShowTotalAmount: Boolean
+    isShowTotalAmount: Boolean,
+
+    // 隐藏状态
+    isHideStatus: Boolean
   },
   methods: {
     onClickOperate(child, item) {
@@ -80,7 +83,7 @@ export default {
 <template>
   <BasicCard :spacing="spacing" custom-class="ko-order-card" @click="$emit('click')">
     <view class="ko-order-card__wrap">
-      <view class="ko-order-card__finished">
+      <view class="ko-order-card__finished" v-if="!isHideStatus">
         <view class="ko-order-card__finished--text" v-if="!isFinance">
           {{ ORDER_STATUS_ENUMS(item.status) }}
         </view>

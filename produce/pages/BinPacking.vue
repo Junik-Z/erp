@@ -56,7 +56,7 @@ export default {
         angleType: [0, 0, 0, 0],
         edges: [0, 0, 0, 0],
         straight: [[0, 0], [0, 0], [0, 0], [0, 0]],
-        weight: 9,
+        weight: 18,
         texture: false, // 纹理
         rotate: false, // 转90度
         quantity: 1,
@@ -89,7 +89,7 @@ export default {
       formData: {
         rid: _generateUUID(),
         drillWidth: 6, // 刀头宽度
-        edgeWidth: 1.2, // 封边宽度
+        edgeWidth: 1, // 封边宽度
         width: 1220, // 板材宽度
         height: 2440, // 板材高度
         color: "黑色",
@@ -106,7 +106,7 @@ export default {
         angleType: [0, 0, 0, 0],
         edges: [0, 0, 0, 0],
         straight: [[0, 0], [0, 0], [0, 0], [0, 0]],
-        weight: 9,
+        weight: 18,
         texture: true, // 纹理
         rotate: false, // 转90度
         quantity: 1,
@@ -307,7 +307,7 @@ export default {
         x: null,
         y: null,
         quantity: 1,
-        weight: 9,
+        weight: 18,
         color: "",
       },
 
@@ -995,6 +995,16 @@ export default {
     getTakList(event) {
       this.form.color = _get(event, "checked.0.name");
     },
+
+    // 开启选择名称
+    onPickName() {
+      this.$refs.NRef.open();
+    },
+
+    // 选中材料的名称
+    onSelectName(item) {
+      this.form.name = _deepCopy(item.name);
+    },
   },
   mounted() {
     this.getRectByRoot();
@@ -1161,6 +1171,11 @@ export default {
       return {
         "--ko-basic-table-grid-col": "30px auto auto auto 40px 40px",
       };
+    },
+
+    // 快捷名称
+    getNameList() {
+      return `主卧衣柜，次卧衣柜，酒柜，鞋柜，儿童房衣柜，长辈房衣柜`.split("，").map(name => ({name}));
     },
   },
   created() {
@@ -1378,6 +1393,9 @@ export default {
                 <uni-col :span="24">
                   <uni-forms-item label="名称" label-width="70" name="name">
                     <uni-easyinput v-model="form.name" placeholder="请输入" />
+                    <button style="margin-left: 10px;" class="ko-basic-button__card" @click.stop="onPickName">
+                      选择
+                    </button>
                   </uni-forms-item>
                 </uni-col>
                 <uni-col :span="24">
@@ -1642,6 +1660,14 @@ export default {
       ref="UASRef"
       :actions="getNodeSheet"
       @select="onSelect"
+      round="10"
+      cancel-text="取消"
+    />
+
+    <uv-action-sheet
+      ref="NRef"
+      :actions="getNameList"
+      @select="onSelectName"
       round="10"
       cancel-text="取消"
     />

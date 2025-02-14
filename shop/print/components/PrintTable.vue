@@ -1,5 +1,5 @@
 <script>
-import { _get, _isEmpty, _isObject, _set } from "@/utils";
+import { _get, _isEmpty, _isObject, _isUndefined, _set } from "@/utils";
 import { Col, Row } from "@/uni_modules/element-ui/element.min";
 import mixins from "@/mixins/mixins";
 
@@ -64,6 +64,11 @@ export default {
         return {};
       },
     },
+    setRowHeight: {
+      type: Function,
+    },
+    isResult: Boolean,
+    result: Array,
   },
 
   methods: {
@@ -90,27 +95,33 @@ export default {
   computed: {
     // 获取表格项
     getCustomTableBind() {
-      console.log(this.data);
-      return (node) => {
+      return (node, index) => {
         const mc = _get(node, "mc");
+
+        const textDecoration = [];
+
+        if (_get(node, "un")) textDecoration.push("underline");
+        if (_get(node, "cl")) textDecoration.push("line-through");
+
         const style = {
           color: _get(node, "fc") || undefined,
           background: _get(node, "bg") || undefined,
           fontWeight: ["normal", "bold"][_get(node, "bl")],
           fontStyle: ["normal", "italic"][_get(node, "it")],
-          fontFamily: ["Times New Roman", "Arial", "Tahoma", "Verdana", "微软雅黑", "宋体", "黑体（ST Heiti）", "楷体（ST Kaiti）", "仿宋（ST FangSong）", "新宋体（ST Song）", "华文新魏", "华文行楷", "华文隶书"][_get(node, "ff")],
+          fontFamily: _get(node, "ff"),// ["Times New Roman", "Arial", "Tahoma", "Verdana", "微软雅黑", "宋体", "黑体（ST Heiti）", "楷体（ST Kaiti）", "仿宋（ST FangSong）", "新宋体（ST Song）", "华文新魏", "华文行楷", "华文隶书"][_get(node, "ff")],
 
-          ...(_get(node, "fs") ? {fontSize: _get(node, "fs") + "px"} : {}),
-          textDecoration: `${["normal", "underline"][_get(node, "un")]} ${["normal", "line-through"][_get(node, "cl")]}`,
-          "text-align": ["center", "left", "right"][_get(node, "ht")],
+          fontSize: (_get(node, "fs") || 10) + "pt",
+
+          "text-align": ["center", "left", "right"][_get(node, "ht")] || "left",
           "vertical-align": ["middle", "top", "bottom"][_get(node, "vt")] || "middle",
+          "textDecoration": textDecoration.join(" "),
 
-          ...(_get(node, "tr") == 3
-            ? {
-              "writing-mode": "vertical-rl", /* 从右到左竖排 */
-              "text-orientation": "upright", /* 文字方向保持直立 */
-            } : {}),
-
+          /*  ...(_get(node, "tr") == 3
+             ? {
+               "writing-mode": "vertical-rl", /!* 从右到左竖排 *!/
+               "text-orientation": "upright", /!* 文字方向保持直立 *!/
+             } : {}),
+  */
           ...({
             0: {
               "white-space": "nowrap", /* 防止自动换行 */
@@ -126,6 +137,7 @@ export default {
               "word-wrap": "break-word", /* 在单词内换行 */
             },
           }[_get(node, "tb")]),
+
           padding: "2px",
         };
 
@@ -143,6 +155,12 @@ export default {
           };
         }
 
+        const width = _get(this.config, `columnlen.${index}`);
+
+        if (width) {
+          style.width = width + "px";
+        }
+
         return {
           style,
         };
@@ -151,18 +169,38 @@ export default {
 
     // 获取 table 行的高度
     getTableRowStyle() {
-      return (index) => {
+      return (index, item) => {
         const height = _get(this.config, `rowlen.${index}`);
 
-        if (height) {
+        if (height && !this.setRowHeight) {
           return {
             height: height + "px",
           };
         }
 
+        if (this.setRowHeight) return this.setRowHeight(index, item);
+
+
         return {
           height: "23px",
         };
+      };
+    },
+
+    // 获取合并表格的数据
+    getCBStyle() {
+      return (item, column) => {
+        const conf = _get(item, `_config_.${column.prop}`);
+        if (!_isUndefined(conf)) {
+
+          if (conf === 0) return {style: {display: "none"}};
+
+          return {
+            colspan: conf,
+          };
+        }
+
+        return {};
       };
     },
   },
@@ -191,6 +229,7 @@ export default {
       </th>
     </tr>
     </thead>
+
     <tbody>
 
     <block v-if="isCustomTable">
@@ -199,10 +238,10 @@ export default {
         :key="`tr-${index}_${item.id || ''}`"
         :data-type="index"
         :data-id="index"
-        :style="[getTableRowStyle(index)]"
+        :style="[getTableRowStyle(index, item)]"
       >
         <td
-          v-bind="getCustomTableBind(column)"
+          v-bind="getCustomTableBind(column, cIndex)"
           v-for="(column, cIndex) of item"
           :key="`td-${index}` + cIndex"
         >
@@ -218,7 +257,7 @@ export default {
         :data-type="item.id"
         :data-id="item.id"
       >
-        <td v-for="(column, cIndex) of columns" :key="`td-${index}` + cIndex">
+        <td v-bind="getCBStyle(item, column)" v-for="(column, cIndex) of columns" :key="`td-${index}` + cIndex">
           <div class="ko-print-table__cell">
             <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
             <template v-else>
@@ -282,6 +321,20 @@ export default {
           <div class="ko-foot__item" v-for="(item) of feesList" :key="item.label">
             <label>{{ item.label }}:</label>
             <span>{{ toYuan(item.value) }}元</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <tr v-if="isResult && result" data-type="result" class="ko-foot__tr">
+      <td :colspan="(columns || []).length || 999">
+        <div class="ko-result">
+          <div class="ko-result__item" v-for="(item) of result" :key="item.label">
+            (<label>{{ item.name }}</label>)
+            *
+            (<span>{{ item.quantity }}</span>)
+            *
+            (<span>{{ toYuan(item.price) }}</span>)
           </div>
         </div>
       </td>
@@ -409,6 +462,30 @@ export default {
         max-width: 100px;
         min-width: 80px;
       }
+    }
+  }
+
+  .ko-result {
+    min-height: 23px;
+    display: flex;
+    align-items: center;
+    padding: 8px 10px 0;
+    justify-content: space-around;
+    flex-wrap: wrap;
+
+    &__tr {
+      border-bottom: none !important;
+
+      td {
+        border-bottom: none !important;
+      }
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #000;
+
     }
   }
 }

@@ -8,12 +8,12 @@ import { Button } from "@/uni_modules/element-ui/element.min";
 import { VuePrintLast } from "./vue-print-last";
 import mixins from "@/mixins/mixins";
 import { cmToPx } from "@/shop/print/utils";
-import { _get, _isEmpty } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
 // 设置纸张的上下间隙的和
 const UpperAndLowerClearance = cmToPx(2);
+let TimeVm = null;
 
 export default {
   name: "CustomizedBoards",
@@ -59,7 +59,7 @@ export default {
         {
           label: "序号",
           prop: "__index__",
-          width: 50
+          width: 50,
         },
         {
           label: "名称",
@@ -85,6 +85,7 @@ export default {
           label: "颜色",
           prop: "color",
         },
+        /*
         {
           label: "封边",
           prop: "edges",
@@ -107,7 +108,7 @@ export default {
               },
             );
           },
-        },
+        }, */
       ],
     };
   },
@@ -135,7 +136,9 @@ export default {
       let count = 0;
       let pageNumberSize = 0;
 
-      ;(this.data || []).forEach((row) => {
+      console.log(this.getTableList);
+
+      ;(this.getTableList || []).forEach((row) => {
         const h = rect[row.id] || 0;
 
         const obj = {...row, __height__: h};
@@ -165,7 +168,7 @@ export default {
       }
 
       // 当最后一页小于最大高度时直接渲染 否则就新开一页
-      if ((count + footerHeight + (rect.fees || 0)) <= maxHeight) {
+      if ((count + footerHeight + (rect.fees || 0) + (rect.result || 0)) <= maxHeight) {
         pages.push(vessel);
       } else {
         const foot = pageNumberSize - 2;
@@ -200,10 +203,9 @@ export default {
     watchSize: {
       handler() {
         if (!this.isA4) {
-          setTimeout(() => {
-            this.$nextTick(() => {
-              this.getGroupList();
-            });
+          TimeVm && clearTimeout(TimeVm);
+          TimeVm = setTimeout(() => {
+            this.getGroupList();
           }, 300);
         }
       },
@@ -214,6 +216,33 @@ export default {
   computed: {
     watchSize() {
       return [...this.data, ...this.feesList];
+    },
+    // 表格列表
+    getTableList() {
+      return [
+        ...this.data,
+        /* ...(_get(this.node, "_result_") || [])
+          .map(item => {
+            return {
+              __index__: `名称：${item.name}`,
+              name: "",
+              width: "",
+              height: "",
+              weight: "",
+              quantity: `${item.quantity}`,
+              color: `单价：${this.toYuan(item.price)}`,
+
+              _config_: {
+                __index__: 5,
+                name: 0,
+                width: 0,
+                height: 0,
+                weight: 0,
+                quantity: 1,
+              },
+            };
+          }), */
+      ];
     },
   },
 };
@@ -234,10 +263,12 @@ export default {
         <PrintTable
           ref="PTableRef"
           :columns="columns"
-          :data="data || []"
+          :data="getTableList || []"
           :is-fees="!!feesList.length"
           :fees-list="feesList"
           is-customized-boards
+          is-result
+          :result="GET_FUNC(node, '_result_')"
         >
           <template #thead>
             <PrintHeader ref="HeaderRef" :title="GET_SHOP_NAME + header" :node="node" />
@@ -259,6 +290,8 @@ export default {
               is-customized-boards
               :is-fees="!!feesList.length"
               :fees-list="feesList"
+              :is-result="index === (groupList.length - 1)"
+              :result="GET_FUNC(node, '_result_')"
             >
               <template #thead>
                 <PrintHeader :title="GET_SHOP_NAME + header" :node="node" />
@@ -271,18 +304,12 @@ export default {
         </div>
       </div>
     </div>
-
   </div>
   <!-- #endif -->
 </template>
 
 <style lang="scss">
 // #ifdef H5
-@page A4 {
-  size: A4 landscape;
-  margin: 0;
-}
-
 @page Triple {
   size: 216mm 140mm;
   margin: 0;
@@ -328,12 +355,7 @@ export default {
     /deep/ .ko-print-footer {
       border: none;
     }
-
-    &.is-a4 {
-      page: A4;
-    }
   }
-
 
   &__pages {
     page: Triple;
