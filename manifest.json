@@ -93,10 +93,6 @@
             "treeShaking" : {
                 "enable" : true
             }
-        },
-        "template" : "index.html",
-        "sdkConfigs" : {
-            "maps" : {}
         }
     }
 }
