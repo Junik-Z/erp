@@ -60,6 +60,15 @@ export default {
           },
         },
         // #endif
+
+        // #ifdef H5
+        {
+          text: "定制",
+          iconfont: "icon-dingzhishengchan",
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=PURCHASE",
+        },
+        // #endif
+
         {
           text: "新增",
           iconfont: "icon-tianjia",
@@ -189,7 +198,6 @@ export default {
       // #endif
       tableKey: +new Date(),
 
-
       node: {},
       nodeIndex: null,
 
@@ -254,7 +262,24 @@ export default {
       // #endif
 
       this.noRefresh = true;
-      this.jumpAddedPurchase({id: item.id});
+
+      if (_isEqual(item.orderType, "CUSTOMIZED")) {
+        // #ifdef MP
+        uni.showModal({
+          title: "温馨提示",
+          content: "定制表格，请在电脑端进行编辑。",
+          showCancel: false,
+        });
+
+        this.noRefresh = false;
+        // #endif
+
+        // #ifndef MP
+        uni.navigateTo({url: PageEnums.produceWork + `?ADDED_TYPE=xlsx&FORM=PURCHASE&id=${item.orderCode}`});
+        // #endif
+      } else {
+        this.jumpAddedPurchase({id: item.id});
+      }
     },
 
     onTrigger(event) {
@@ -326,9 +351,9 @@ export default {
             });
           });
       }
-
     },
 
+    // 重置数据
     onResetList() {
       this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
@@ -351,6 +376,13 @@ export default {
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
+
+    // #ifdef H5
+    // 生成销售单
+    onGenerateSale(item) {
+      uni.navigateTo({url: PageEnums.produceWork + `?ADDED_TYPE=xlsx&FORM=PURCHASE&id=${item.orderCode}&isGenerateSales=true`});
+    },
+    // #endif
   },
   computed: {
     actionList() {
@@ -384,6 +416,10 @@ export default {
         },
       ]
         .filter(li => {
+          if (_isEqual(li.func, "onPrint") && _isEqual(node.orderType, "CUSTOMIZED")) {
+            return false;
+          }
+
           if (li.func === "onPrint") return true;
 
           if (li.name === "编辑") {
@@ -441,7 +477,7 @@ export default {
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   class="ko-basic-button__card"
-                  v-if="['FINISHED', 'CREATED'].includes(item.status)"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status) && item.orderType !== 'CUSTOMIZED'"
                   @click.stop="onPrint(item, index)"
                 >
                   打印单据
@@ -518,20 +554,31 @@ export default {
             >
               提交订单
             </button>
+
             <button
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchase', {isA4: 'true'})"
+              v-if="!['CUSTOMIZED'].includes(item.orderType)"
             >
               打印采购单(A4)
             </button>
 
             <button
-              v-if="['FINISHED'].includes(item.status)"
+              class="ko-basic-button__card"
+              @click.stop="onGenerateSale(item)"
+              v-if="['CUSTOMIZED'].includes(item.orderType) && !['CANCELLED'].includes(item.status)"
+            >
+              生成销售单
+            </button>
+
+            <button
+              v-if="['FINISHED'].includes(item.status) && !['CUSTOMIZED'].includes(item.orderType)"
               class="ko-basic-button__card"
               @click.stop="onReturn(item, index)"
             >
               申请退货
             </button>
+
             <button
               v-if="['CREATED'].includes(item.status)"
               class="ko-basic-button__card"

@@ -132,6 +132,8 @@ export default {
       <view class="ko-basic-table--th">
         单价
       </view>
+
+      <!-- 表格内容 -->
       <block v-for="(item, index) of count" :key="index">
         <view class="ko-basic-table--cell">
           {{ item.name }}
@@ -141,7 +143,14 @@ export default {
           <block v-if="item.unit">{{ item.unit }}</block>
         </view>
         <view class="ko-basic-table--cell">
-          <uni-easyinput @change="onChangePrice" @clear="onChangePrice" type="digit" v-model="item.price" />
+          <uni-easyinput
+            v-if="!readonly"
+            @change="onChangePrice"
+            @clear="onChangePrice"
+            type="digit"
+            v-model="item.price"
+          />
+          <block v-else>{{ item.price }}</block>
         </view>
       </block>
     </view>
@@ -152,18 +161,5 @@ export default {
 .ko-bin-count {
   padding-bottom: 10px;
   font-size: 14px;
-  // #ifdef MP
-  &__input {
-    width: 70px;
-  }
-
-  // #endif
-
-  // #ifndef MP
-  &__input {
-    width: 120px;
-  }
-
-  // #endif
 }
 </style>

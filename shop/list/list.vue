@@ -961,6 +961,7 @@ export default {
   }
 }
 
+// #ifdef H5
 /deep/ .ko-table-checked {
   font-size: 20px;
 
@@ -995,4 +996,5 @@ export default {
     }
   }
 }
+// #endif
 </style>

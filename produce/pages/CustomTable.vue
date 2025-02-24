@@ -1,5 +1,6 @@
 <script>
-import { _deepCopy, _get, _isEmpty, _omit, _pick, _reverse } from "@/utils";
+import { _deepCopy, _get, _omit, _pick, _reverse, xlsxCellStyle } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 // #ifdef H5
 const CSS = [
@@ -58,7 +59,11 @@ let TVM1 = null;
 
 function findLastTrueIndex(array) {
   for (let i = array.length - 1; i >= 0; i--) {
-    if (array[i]) {
+    const item = array[i] || {};
+
+    const isV = "v" in (item || {}) || "v" in (_get(item, "ct.s.0") || {});
+
+    if (isV) {
       return i; // 返回最后一个为真的值的下标
     }
   }
@@ -69,9 +74,13 @@ function findLastTrueIndex(array) {
 function getDataList(list) {
   let bList = _deepCopy(list || []);
 
-  const cList = _reverse(bList);
+  const cList = _reverse(_deepCopy(bList));
 
-  let endRowIndex = cList?.findIndex(item => !item.every(_isEmpty));
+  let endRowIndex = cList?.findIndex(item => {
+    return item.some((cell) => {
+      return "v" in (cell || {}) || "v" in (_get(cell, "ct.s.0") || {});
+    });
+  });
 
   if (endRowIndex > -1) {
     endRowIndex = (list.length - endRowIndex);
@@ -79,10 +88,11 @@ function getDataList(list) {
     endRowIndex = 0;
   }
 
-  bList = _reverse(bList)?.slice(0, endRowIndex);
+  bList = bList?.slice(0, endRowIndex);
+
   const maxCellIndex = Math.max(...bList.map(v => findLastTrueIndex(v)));
 
-  return bList.map(item => item.slice(0, maxCellIndex + 1));
+  return bList.map(item => item.slice(0, maxCellIndex + 1).map(v => v || ""));
 
   /* return list.flatMap(item => {
     if (item.every(_isEmpty)) {
@@ -93,17 +103,48 @@ function getDataList(list) {
   }); */
 }
 
+const systemInfo = uni.getSystemInfoSync();
+
+const MaxColumn = Math.ceil((systemInfo.windowWidth - 40) / 76);
+const MaxRow = Math.ceil((systemInfo.windowHeight * 0.7) / 24);
+
 // 默认配置
 const defaultOptions = {
-  column: 18, // 列数
-  row: 20, // 行数
+  column: MaxColumn, // 列数
+  row: MaxRow, // 行数
 
-  showtoolbar: true, // 工具栏
+  showtoolbar: false, // 工具栏
   showinfobar: false, // 信息栏
   showsheetbar: false, // 底部sheet页
   sheetFormulaBar: false, // 是否显示公式栏
 
+
   showtoolbarConfig: {
+    undoRedo: true, //撤销重做，注意撤消重做是两个按钮，由这一个配置决定显示还是隐藏
+    paintFormat: true, //格式刷
+    currencyFormat: true, //货币格式
+    percentageFormat: true, //百分比格式
+    numberDecrease: true, // '减少小数位数'
+    numberIncrease: true, // '增加小数位数
+    moreFormats: true, // '更多格式'
+    font: true, // '字体'
+    fontSize: true, // '字号大小'
+    bold: true, // '粗体 (Ctrl+B)'
+    italic: true, // '斜体 (Ctrl+I)'
+    strikethrough: true, // '删除线 (Alt+Shift+5)'
+    underline: true, // '下划线 (Alt+Shift+6)'
+    textColor: true, // '文本颜色'
+    fillColor: true, // '单元格颜色'
+    mergeCell: true, // '合并单元格'
+    horizontalAlignMode: true, // '水平对齐方式'
+    verticalAlignMode: true, // '垂直对齐方式'
+    textWrapMode: true, // '换行方式'
+    function: true, // '公式'
+    sortAndFilter: true, // '排序和筛选'
+    dataVerification: true, // '数据验证'
+    splitColumn: true, // '分列'
+
+
     border: false, // '边框'
     textRotateMode: false, // '文本旋转方式'
     postil: false, //'批注'
@@ -121,9 +162,16 @@ const defaultOptions = {
   },
 
   cellRightClickConfig: {
+    // copy: false, // 复制
+    // copyAs: false, // 复制为
+
     chart: false, // 图表生成
     image: false, // 插入图片
   },
+
+  enableAddBackTop: false, // 允许回到顶部
+  enableAddRow: false, // 允许添加行
+  addRowCount: 10, // 配置新增行处默认新增的行数目
 };
 
 // 只读配置
@@ -161,6 +209,7 @@ const readonlyOptions = {
 export default {
   name: "CustomTable",
   components: {},
+  mixins: [mixins],
   props: {
     value: {
       type: String,
@@ -195,35 +244,46 @@ export default {
   },
   methods: {
     getTableList() {
-      try {
-        const D = JSON.parse(this.value);
-        const C = _get(D, "0.data");
-        const I = _get(D, "0");
-        let newData = [];
-        // #ifdef H5
-        // 列数量
-        const cellLength = _get(C, "0.length");
-        // 行数量
-        const rowsLength = _get(C, "length");
+      if (this.value) {
+        try {
+          const D = JSON.parse(this.value);
+          const C = _get(D, "0.data");
+          const I = _get(D, "0");
+          let newData = [];
 
-        for (let i = 0; i < (defaultOptions.row >= rowsLength ? defaultOptions.row : rowsLength); i++) {
-          const row = C[i] || [];
-          let cells = [];
-          for (let j = 0; j < (defaultOptions.column >= cellLength ? defaultOptions.column : cellLength); j++) {
-            cells.push(row[j] || null);
+          // #ifdef H5
+          // 列数量
+          const cellLength = _get(C, "0.length");
+          // 行数量
+          const rowsLength = _get(C, "length");
+
+          // 最大行数
+          const maxRowLength = (defaultOptions.row >= (rowsLength || 0) ? defaultOptions.row : rowsLength);
+          // 最大列数
+          const maxCellLength = (defaultOptions.column >= (cellLength || 0) ? defaultOptions.column : cellLength);
+
+          for (let i = 0; i < maxRowLength; i++) {
+            const row = C[i] || [];
+            let cells = [];
+
+            for (let j = 0; j < maxCellLength; j++) {
+              cells.push(row[j] || null);
+            }
+
+            newData.push(cells);
           }
-          newData.push(cells);
+          // #endif
+
+          // #ifdef MP
+          newData = C;
+          // #endif
+
+          return [{...{...I, config: _omit(I.config, ["borderInfo"])}, data: _deepCopy(newData)}];
+        } catch (e) {
+          console.log(e);
+          return [{"name": "Sheet1", "data": []}];
         }
-        // #endif
-
-        // #ifdef MP
-        newData = C;
-        // #endif
-
-        return [{...{...I, config: _omit(I.config, ["borderInfo"])}, data: _deepCopy(newData)}];
-      } catch (e) {
-        console.log(e);
-
+      } else {
         return [{"name": "Sheet1", "data": []}];
       }
     },
@@ -234,12 +294,13 @@ export default {
         window?.luckysheet?.exitEditMode?.();
 
         const list = (window.luckysheet.getAllSheets() || []).map(item => {
-          console.log(item);
           const node = _pick(item, [
             "name",
             "data",
             "config",
           ]);
+
+          console.log("获取要保存的数据信息", getDataList(node.data));
 
           return {
             ...node,
@@ -249,38 +310,33 @@ export default {
 
         return JSON.stringify(list);
       } catch (e) {
-        console.log(e);
+        console.log("【获取要保存的数据信息出错】=> ", e);
         return "";
       }
     },
     setList() {
       const data = this.getTableList();
 
-      if (!window?.luckysheet) {
+      if (!window.luckysheet) {
         TVM = setTimeout(() => {
           this.setList();
-        }, 500);
+        }, 800);
         return false;
       }
 
       TVM && clearTimeout(TVM);
 
-      window?.luckysheet?.destroy?.();
+      window.luckysheet && window.luckysheet?.destroy?.();
 
       try {
-        window?.luckysheet?.create?.({
+        window.luckysheet && window.luckysheet.create({
           container: "lucky-sheet",
-          data: data,
-
+          data: _deepCopy(data),
           lang: "zh", // 设定表格语言
           title: "", // 设定表格名称
+
           forceCalculation: true,//强制计算公式
-          index: "0",
-          status: "1",
-          order: "0",
-          hide: "0",
           defaultRowHeight: 24,
-          zoomRatio: 1.2,
 
           ...(this.readonly ? readonlyOptions : defaultOptions),
 
@@ -306,17 +362,51 @@ export default {
       console.log(this.getList());
     },
     // #endif
+
+    uninstall() {
+      // #ifdef H5
+      window.luckysheet && window.luckysheet.destroy();
+      console.log("销毁了吗");
+      window.luckysheet = null;
+      // #endif
+    },
   },
-  computed: {},
+  computed: {
+    getGridTemplateColumnsStyle() {
+      const cell = _get(this.node, "data.0") || [];
+      const columnlen = _get(this.node, "config.columnlen") || {};
+
+      const col = cell.map((v, index) => {
+        if (columnlen?.[index]) {
+          return columnlen[index] + "px";
+        } else {
+          return "72px";
+        }
+      });
+
+      return {
+        "--ko-basic-table-grid-col": col.join(" "),
+      };
+    },
+
+    // 获取表格项
+    getTdStyle() {
+      return (node, rIndex, cIndex, isChild) => {
+        return xlsxCellStyle(node, rIndex, cIndex, _get(this.node, "config"), isChild);
+      };
+    },
+  },
   created() {
     // #ifdef H5
-    Promise.all([
-      ...CSS.map(url => new Promise(resolve => loadCss(url, resolve))),
-      ...JSList.map(url => new Promise(resolve => loadScript(url, resolve))),
-    ])
-      .then(() => {
-        this.setList([{"name": "Sheet1", "data": []}]);
-      });
+    if (!window.luckysheet) {
+      Promise.all([
+        ...CSS.map(url => new Promise(resolve => loadCss(url, resolve))),
+        ...JSList.map(url => new Promise(resolve => loadScript(url, resolve))),
+      ])
+        .then(() => {
+          this.setList();
+        });
+    }
     // #endif
   },
   mounted() {
@@ -324,10 +414,8 @@ export default {
   beforeDestroy() {
     // #ifdef H5
     this.$emit("change", this.getList());
-    window.luckysheet?.destroy?.();
-    window.luckysheet = null;
+    this.uninstall();
     // #endif
-
   },
   onUnload() {
   },
@@ -343,39 +431,42 @@ export default {
 
     <!-- #ifndef H5 -->
     <view class="ko-lucky-sheet__table">
-     <!-- <scroll-view
+      <scroll-view
         scroll-y="true"
+        scroll-x="true"
         :style="[getGridTemplateColumnsStyle]"
-        class="ko-bin__popup&#45;&#45;table"
-        :scroll-top="ScrollTop"
       >
-        <view class="ko-basic-table">
-          <block v-for="(item, index) of rectangles" :key="item.rid">
-            <view class="ko-basic-table&#45;&#45;cell">
-              {{ index + 1 }}
-            </view>
-            <view class="ko-basic-table&#45;&#45;cell">
-              {{ item.name }}
-            </view>
-            <view class="ko-basic-table&#45;&#45;cell">
-              {{ item.width }}
-            </view>
-            <view class="ko-basic-table&#45;&#45;cell">
-              {{ item.height }}
-            </view>
-            <view class="ko-basic-table&#45;&#45;cell">
-              {{ item.weight }}
-            </view>
-            <view class="ko-basic-table&#45;&#45;cell">
-              {{ item.quantity }}
-            </view>
-          </block>
+        <view>
+          <view class="ko-basic-table">
+            <block v-for="(row, index) of node.data" :key="index">
+              <view
+                class="ko-basic-table__cell"
+                :class="[`ko-basic-table__cell--${index}`]"
+                v-for="(cell, cIndex) of row"
+                :style="[getTdStyle(cell || {}, index, cIndex, false)]"
+                :key="cIndex"
+              >
+                <block v-if="GET_FUNC(cell, 'ct.s')">
+                  <text
+                    :style="[getTdStyle(ci || {}, index, cIndex, true)]"
+                    v-for="(ci, ciIndex) of GET_FUNC(cell, 'ct.s')"
+                    :key="ciIndex"
+                  >
+                    {{ GET_FUNC(ci || {}, "v") || "" }}
+                  </text>
+                </block>
+                <block v-else>
+                  {{ GET_FUNC(cell || {}, "v") || "" }}
+                </block>
+              </view>
+            </block>
+          </view>
         </view>
-      </scroll-view>-->
+      </scroll-view>
     </view>
 
-    <view style="font-size: 12px; color: #999; text-align: center; padding: 20px 0;">
-      定制表格，请在电脑端查看。
+    <view v-if="isEmpty(node.data)" style="font-size: 12px; color: #999; text-align: center; padding: 20px 0;">
+      定制表格，请在电脑端{{ readonly ? "查看" : "编辑" }}。
     </view>
     <!-- #endif -->
   </view>
@@ -384,21 +475,47 @@ export default {
 <style lang="scss">
 .ko-lucky-sheet {
   // #ifdef H5
+  /deep/ #luckysheet-copy-content {
+    padding-left: 0 !important;
+  }
+
   .ko-basic-button__card {
     position: absolute;
     z-index: 999999999;
   }
 
+
   position: relative;
-  height: calc(600px);
+  height: calc(100vh - 26vh);
 
   #lucky-sheet {
     position: absolute;
-    width: calc(70vw);
-    max-width: 1024px;
+    width: calc(100vw - 20px);
+    max-width: 100vw;
     height: 100%;
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  // #endif
+
+  // #ifdef MP
+  &__table {
+    $border-color: #e9e9eb;
+
+    .ko-basic-table {
+      border-top: none;
+
+      &__cell {
+        display: flex;
+        border-bottom: 1px solid $border-color;
+        border-right: 1px solid $border-color;
+
+        &--0 {
+          border-top: 1px solid $border-color;
+        }
+      }
+    }
   }
 
   // #endif

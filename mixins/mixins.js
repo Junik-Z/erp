@@ -120,7 +120,21 @@ export default {
         ...(_pick(node, ["id"])),
       });
 
-      // 生产订单详情
+      // 采购定制订单详情
+      if (_isEqual("CUSTOMIZED", node.orderType)) {
+        uni.navigateTo({
+          url: PageEnums.produceDetails + `?${
+            QS.stringify({
+              page_type,
+              id: node.orderCode,
+              FORM: "PURCHASE",
+            })
+          }`,
+        });
+        return false;
+      }
+
+      // 销售生产订单详情
       if (_isEqual("PRODUCTION", node.orderType) && !_isEqual("produce", page_type)) {
         uni.navigateTo({
           url: PageEnums.produceDetails + `?${
@@ -318,9 +332,9 @@ export default {
       return _isEqual;
     },
 
-    // 判断用户是否可以刷新库存
-    isRefreshStock() {
-      return this.isPerm("Stock_Write");
+    // 判断空数据
+    isEmpty() {
+      return _isEmpty;
     },
 
     // 判断用户是否可以刷新用户款项
@@ -341,10 +355,6 @@ export default {
     // 根据传入的参数判断是否有权限
     isPerm() {
       return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin || this.isBusiness;
-    },
-
-    px2rem() {
-      return (px) => `${(px || 0) / CONFIG.H5_REM_SIZE}px`;
     },
 
     // 用户信息
@@ -425,6 +435,7 @@ export default {
           PURCHASE: "采购订单",
           PURCHASE_RETURN: "采购退货订单",
           CHECK_IN: "库存盘点",
+          CUSTOMIZED: "采购定制",
         };
         return _get(obj, type) || "-";
       };
@@ -501,11 +512,6 @@ export default {
       return _get;
     },
 
-    // 判断空数据
-    isEmpty() {
-      return _isEmpty;
-    },
-
     // 获取店铺名称
     GET_SHOP_NAME() {
       return _get(this.GET_CONFIG_INFO, "remark") || "";
@@ -539,6 +545,7 @@ export default {
         PURCHASE: "已付",
         PURCHASE_RETURN: "已收",
         PRODUCTION: "已收",
+        CUSTOMIZED: "已付",
       }, name);
     },
 
@@ -550,11 +557,20 @@ export default {
         PURCHASE: "剩余未付",
         PURCHASE_RETURN: "剩余未收",
         PRODUCTION: "剩余未收",
+        CUSTOMIZED: "剩余未付",
       }, name);
     },
 
+    // 页面路径枚举
     PageEnums() {
       return PageEnums;
+    },
+
+    // 财务确认情况
+    GET_PROOFS_STATUS_ENUMS() {
+      return (type) => ({
+        CREATED: "财务未确认",
+      })[type];
     },
   },
 };

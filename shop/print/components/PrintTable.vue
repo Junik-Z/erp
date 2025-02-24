@@ -1,5 +1,5 @@
 <script>
-import { _get, _isEmpty, _isObject, _isUndefined, _set } from "@/utils";
+import { _get, _isEmpty, _set } from "@/utils";
 import { Col, Row } from "@/uni_modules/element-ui/element.min";
 import mixins from "@/mixins/mixins";
 
@@ -56,19 +56,6 @@ export default {
         return [];
       },
     },
-    isCustomTable: Boolean,
-    isCustomizedBoards: Boolean,
-    config: {
-      type: Object,
-      default() {
-        return {};
-      },
-    },
-    setRowHeight: {
-      type: Function,
-    },
-    isResult: Boolean,
-    result: Array,
   },
 
   methods: {
@@ -91,137 +78,22 @@ export default {
       return list;
     },
   },
-
-  computed: {
-    // 获取表格项
-    getCustomTableBind() {
-      return (node, index) => {
-        const mc = _get(node, "mc");
-
-        const textDecoration = [];
-
-        if (_get(node, "un")) textDecoration.push("underline");
-        if (_get(node, "cl")) textDecoration.push("line-through");
-
-        const style = {
-          color: _get(node, "fc") || undefined,
-          background: _get(node, "bg") || undefined,
-          fontWeight: ["normal", "bold"][_get(node, "bl")],
-          fontStyle: ["normal", "italic"][_get(node, "it")],
-          fontFamily: _get(node, "ff"),// ["Times New Roman", "Arial", "Tahoma", "Verdana", "微软雅黑", "宋体", "黑体（ST Heiti）", "楷体（ST Kaiti）", "仿宋（ST FangSong）", "新宋体（ST Song）", "华文新魏", "华文行楷", "华文隶书"][_get(node, "ff")],
-
-          fontSize: (_get(node, "fs") || 10) + "pt",
-
-          "text-align": ["center", "left", "right"][_get(node, "ht")] || "left",
-          "vertical-align": ["middle", "top", "bottom"][_get(node, "vt")] || "middle",
-          "textDecoration": textDecoration.join(" "),
-
-          /*  ...(_get(node, "tr") == 3
-             ? {
-               "writing-mode": "vertical-rl", /!* 从右到左竖排 *!/
-               "text-orientation": "upright", /!* 文字方向保持直立 *!/
-             } : {}),
-  */
-          ...({
-            0: {
-              "white-space": "nowrap", /* 防止自动换行 */
-              overflow: "hidden", /* 隐藏超出部分 */
-              "text-overflow": "ellipsis", /* 显示省略号 */
-            },
-            1: {
-              "white-space": "nowrap", /* 防止自动换行 */
-              overflow: "visible", /* 允许内容溢出 */
-            },
-            2: {
-              "white-space": "normal", /* 允许内容自动换行 */
-              "word-wrap": "break-word", /* 在单词内换行 */
-            },
-          }[_get(node, "tb")]),
-
-          padding: "2px",
-        };
-
-        if (_isObject(node) && _isObject(mc)) {
-          const cs = _get(mc, "cs") || 0;
-          const rs = _get(mc, "rs") || 0;
-
-          return {
-            colspan: cs,
-            rowspan: rs,
-            style: {
-              ...style,
-              ...(!(cs || rs) ? {display: "none"} : {}),
-            },
-          };
-        }
-
-        const width = _get(this.config, `columnlen.${index}`);
-
-        if (width) {
-          style.width = width + "px";
-        }
-
-        return {
-          style,
-        };
-      };
-    },
-
-    // 获取 table 行的高度
-    getTableRowStyle() {
-      return (index, item) => {
-        const height = _get(this.config, `rowlen.${index}`);
-
-        if (height && !this.setRowHeight) {
-          return {
-            height: height + "px",
-          };
-        }
-
-        if (this.setRowHeight) return this.setRowHeight(index, item);
-
-
-        return {
-          height: "23px",
-        };
-      };
-    },
-
-    // 获取合并表格的数据
-    getCBStyle() {
-      return (item, column) => {
-        const conf = _get(item, `_config_.${column.prop}`);
-        if (!_isUndefined(conf)) {
-
-          if (conf === 0) return {style: {display: "none"}};
-
-          return {
-            colspan: conf,
-          };
-        }
-
-        return {};
-      };
-    },
-  },
 };
 </script>
 
 <template>
   <table class="ko-print-table" ref="TableRef">
-    <block v-if="!isEmpty(columns)">
-      <colgroup>
-        <col :width="column.width || 'auto'" v-for="(column, index) of columns" :key="index" />
-      </colgroup>
-    </block>
+    <colgroup>
+      <col :width="column.width || 'auto'" v-for="(column, index) of columns" :key="index" />
+    </colgroup>
 
     <thead>
     <tr v-if="$slots.thead" data-type="slotThead">
-      <th :colspan="columns.length || 999" style="position: relative;">
+      <th :colspan="columns.length" style="position: relative;">
         <slot name="thead"></slot>
       </th>
     </tr>
-    <tr data-type="thead" v-if="!isEmpty(columns)">
+    <tr data-type="thead">
       <th v-for="(column, index) of columns" :key="index">
         <div class="ko-print-table__cell">
           {{ column.label }}
@@ -231,63 +103,19 @@ export default {
     </thead>
 
     <tbody>
-
-    <block v-if="isCustomTable">
-      <tr
-        v-for="(item, index) of data"
-        :key="`tr-${index}_${item.id || ''}`"
-        :data-type="index"
-        :data-id="index"
-        :style="[getTableRowStyle(index, item)]"
-      >
-        <td
-          v-bind="getCustomTableBind(column, cIndex)"
-          v-for="(column, cIndex) of item"
-          :key="`td-${index}` + cIndex"
-        >
-          {{ _get(column || {}, "v") || "" }}
-        </td>
-      </tr>
-    </block>
-
-    <block v-else-if="isCustomizedBoards">
-      <tr
-        v-for="(item, index) of data"
-        :key="`tr-${index}_${item.id || ''}`"
-        :data-type="item.id"
-        :data-id="item.id"
-      >
-        <td v-bind="getCBStyle(item, column)" v-for="(column, cIndex) of columns" :key="`td-${index}` + cIndex">
-          <div class="ko-print-table__cell">
-            <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
-            <template v-else>
-              {{ _get(item, column.prop) || "" }}
-            </template>
-          </div>
-        </td>
-      </tr>
-    </block>
-
-    <block v-else>
-      <tr
-        v-for="(item, index) of data"
-        :key="`tr-${index}_${item.id || ''}`"
-        :data-type="item.id"
-        :data-id="item.id"
-      >
-        <td v-for="(column, cIndex) of columns" :key="`td-${index}` + cIndex">
-          <div class="ko-print-table__cell">
-            <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
-            <template v-else>
-              {{ _get(item, column.prop) || "" }}
-            </template>
-          </div>
-        </td>
-      </tr>
-    </block>
+    <tr v-for="(item, index) of data" :key="`tr-td-${index}--${item.id}`" :data-type="item.id" :data-id="item.id">
+      <td v-for="(column, cIndex) of columns" :key="cIndex">
+        <div class="ko-print-table__cell">
+          <RenderDom v-if="column.render" :render="column.render" :column="column" :row="item" :index="index" />
+          <template v-else>
+            {{ _get(item, column.prop) || "" }}
+          </template>
+        </div>
+      </td>
+    </tr>
 
     <tr v-if="isSummary && !_isEmpty(summary)" data-type="tfoot">
-      <td :colspan="(columns || []).length || 999">
+      <td :colspan="(columns || []).length">
         <div class="ko-print-table__tfoot">
           <div
             :style="item.style || {}"
@@ -298,7 +126,7 @@ export default {
           >
             <div class="ko-print-table__cell">
               {{ item.label }}
-              {{ index % 2 === 0 ? ":" : "" }}
+              {{ index % 2 === 0 ? ":" : ""}}
             </div>
           </div>
         </div>
@@ -316,7 +144,7 @@ export default {
     </tr>
 
     <tr v-if="isFees" data-type="fees" class="ko-foot__tr">
-      <td :colspan="(columns || []).length || 999">
+      <td :colspan="(columns || []).length">
         <div class="ko-foot">
           <div class="ko-foot__item" v-for="(item) of feesList" :key="item.label">
             <label>{{ item.label }}:</label>
@@ -326,22 +154,8 @@ export default {
       </td>
     </tr>
 
-    <tr v-if="isResult && result" data-type="result" class="ko-foot__tr">
-      <td :colspan="(columns || []).length || 999">
-        <div class="ko-result">
-          <div class="ko-result__item" v-for="(item) of result" :key="item.label">
-            (<label>{{ item.name }}</label>)
-            *
-            (<span>{{ item.quantity }}</span>)
-            *
-            (<span>{{ toYuan(item.price) }}</span>)
-          </div>
-        </div>
-      </td>
-    </tr>
-
     <tr v-if="!(data || []).length && false">
-      <td :colspan="(columns || []).length || 999">
+      <td :colspan="(columns || []).length">
         <div class="ko-print-table__cell not-data">
           暂无数据
         </div>
@@ -351,7 +165,7 @@ export default {
 
     <tfoot>
     <tr v-if="$slots.tfoot" data-type="slotTFoot">
-      <td :colspan="columns.length || 999">
+      <td :colspan="columns.length">
         <slot name="tfoot"></slot>
       </td>
     </tr>
@@ -360,36 +174,12 @@ export default {
 </template>
 
 <style lang="scss">
-/*@media print {
-  body {
-    //@include print-style();
-  }
-
-  tbody {
-    //page-break-before: always;
-    //@include print-style();
-  }
-
-  tr {
-    td, th {
-      //@include print-style();
-    }
-  }
-
-  @page {
-    color: #000;
-    //size: 126mm 140mm;
-    //margin: 10mm; !* 可以根据需要设置边距 *!
-  }
-}*/
-
 .ko-print-table {
   width: 100%;
   border-collapse: collapse;
   @include print-style();
   border-left: 1px solid #000;
   border-top: 1px solid #000;
-
 
   &__cell {
     min-height: 22px;
@@ -462,30 +252,6 @@ export default {
         max-width: 100px;
         min-width: 80px;
       }
-    }
-  }
-
-  .ko-result {
-    min-height: 23px;
-    display: flex;
-    align-items: center;
-    padding: 8px 10px 0;
-    justify-content: space-around;
-    flex-wrap: wrap;
-
-    &__tr {
-      border-bottom: none !important;
-
-      td {
-        border-bottom: none !important;
-      }
-    }
-
-    &__item {
-      display: flex;
-      align-items: center;
-      border-bottom: 1px solid #000;
-
     }
   }
 }

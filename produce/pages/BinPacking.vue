@@ -986,6 +986,7 @@ export default {
           res.eventChannel.emit("on_to_take_over", {
             isSelect: true, // 选择模式
             takeOverName: this.takeOverName,
+            type: "null",
           });
         },
       });
@@ -1176,6 +1177,41 @@ export default {
     // 快捷名称
     getNameList() {
       return `主卧衣柜，次卧衣柜，酒柜，鞋柜，儿童房衣柜，长辈房衣柜`.split("，").map(name => ({name}));
+    },
+
+    // 是否要显示圆角参数
+    isShowRadius() {
+      return (index) => {
+        const {angleType, radius, straight} = _deepCopy(this.form);
+        const T = angleType?.[index];
+        if (T) {
+          const S = straight?.[index] || [];
+          return S.some(v => v > 0);
+        }
+        return (radius?.[index] || 0) > 0;
+      };
+    },
+
+    // 是否数直角
+    isAngle() {
+      return (index) => {
+        const {angleType} = _deepCopy(this.form);
+        const T = angleType?.[index];
+        return !!T;
+      };
+    },
+
+    // 获取指定圆角的数据
+    getRadiusType() {
+      return (index) => {
+        const {angleType, radius, straight} = _deepCopy(this.form);
+        const T = angleType?.[index];
+        if (T) {
+          const S = straight?.[index] || [];
+          return S.join("*");
+        }
+        return radius?.[index] || 0;
+      };
     },
   },
   created() {
@@ -1502,15 +1538,43 @@ export default {
                   <!-- 圆直角设置 -->
                   <block>
                     <view class="ko-bin__edge--radius TL">
+                      <view
+                        class="ko-bin__edge--radius--info"
+                        v-if="isShowRadius(0)"
+                        :class="{'is-angle': isAngle(0)}"
+                      >
+                        {{ getRadiusType(0) }}
+                      </view>
                       <button class="ko-basic-button__card" @click.stop="openAngleType(0)">圆角</button>
                     </view>
                     <view class="ko-bin__edge--radius TR">
                       <button class="ko-basic-button__card" @click.stop="openAngleType(1)">圆角</button>
+                      <view
+                        class="ko-bin__edge--radius--info"
+                        v-if="isShowRadius(1)"
+                        :class="{'is-angle': isAngle(1)}"
+                      >
+                        {{ getRadiusType(1) }}
+                      </view>
                     </view>
                     <view class="ko-bin__edge--radius BR">
                       <button class="ko-basic-button__card" @click.stop="openAngleType(2)">圆角</button>
+                      <view
+                        class="ko-bin__edge--radius--info"
+                        v-if="isShowRadius(2)"
+                        :class="{'is-angle': isAngle(2)}"
+                      >
+                        {{ getRadiusType(2) }}
+                      </view>
                     </view>
                     <view class="ko-bin__edge--radius BL">
+                      <view
+                        class="ko-bin__edge--radius--info"
+                        v-if="isShowRadius(3)"
+                        :class="{'is-angle': isAngle(3)}"
+                      >
+                        {{ getRadiusType(3) }}
+                      </view>
                       <button class="ko-basic-button__card" @click.stop="openAngleType(3)">圆角</button>
                     </view>
                   </block>
@@ -1786,6 +1850,11 @@ export default {
     position: relative;
     transition: border .3s;
 
+    .ko-basic-button__card {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
     .edge {
       position: absolute;
       z-index: 9;
@@ -1839,6 +1908,34 @@ export default {
 
     &--radius {
       position: absolute;
+      display: flex;
+      align-items: center;
+
+
+      &--info {
+        padding: 0 4px;
+        font-size: 11px;
+        color: #8f939c;
+        display: flex;
+        align-items: center;
+
+        &::before {
+          content: "";
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-left: 1px solid #8f939c;
+          border-bottom: 1px solid #8f939c;
+          border-bottom-left-radius: 7px;
+          margin-right: 2px;
+        }
+
+        &.is-angle {
+          &::before {
+            border-radius: 0;
+          }
+        }
+      }
 
       &.TL {
         top: 0;

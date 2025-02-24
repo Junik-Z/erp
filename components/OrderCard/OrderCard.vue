@@ -68,6 +68,7 @@ export default {
           SALE: "客户",
           SALE_RETURN: "客户",
           PURCHASE: "供应商",
+          CUSTOMIZED: "供应商",
           PURCHASE_RETURN: "供应商",
         }[item.orderType] || "-";
       };

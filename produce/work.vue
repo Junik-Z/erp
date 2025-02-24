@@ -41,6 +41,7 @@ import FastPopup from "./components/FastProduce/FastPopup.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { getMyInfoApi } from "@/api/user";
 import BinCount from "./components/BinCount.vue";
+import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
 
 export default {
   name: "Work",
@@ -68,7 +69,7 @@ export default {
     return {
       form: {
         produceType: "internal", // internal: 默认；customized: 自定义生产;
-        "planFinishDate": "",
+        "planFinishDate": null,
         "totalRawMaterialAmount": null,
         "totalAmount": null,
         "totalProfit": null,
@@ -127,19 +128,35 @@ export default {
       clientType: 0,
 
       isEdit: false,
+
+      // 采购订单
+      isPurchase: false,
+
+      // 采购定制生成销售定制
+      isGenerateSales: false,
     };
   },
   onLoad(option) {
     this.option = option;
     this.isEdit = !!option.id;
+    // 销售定制单
     this.isSale = _isEqual(option.FORM, "SALE");
+
+    // 采购定制单
+    this.isPurchase = _isEqual(option.FORM, "PURCHASE");
+
+    // 单独修改工艺
     this.isTechnology = _isEqual(option.isTechnology, "true");
+
+    // 生成销售订单
+    this.isGenerateSales = _isEqual(option.isGenerateSales, "true");
 
     this.fastId = option?.fastId;
 
     if (this.fastId) {
       this.$nextTick(() => {
         const info = this.$refs.FPRef.getDetails({id: this.fastId}, "quick");
+
         info
           .then(res => {
             this.form = {...this.form, ..._pick(res.data, _keys(this.form))};
@@ -152,6 +169,11 @@ export default {
       uni.setNavigationBarTitle({title: "定制工单"});
     }
 
+    if (this.isPurchase) {
+      this.form.produceType = "customized";
+      uni.setNavigationBarTitle({title: "定制采购"});
+    }
+
     if (this.isTechnology) {
       this.current = 1;
     }
@@ -162,14 +184,24 @@ export default {
 
     if (this.isEdit) this.getInfo();
 
+    // 采购生成销售订单
+    if (this.isGenerateSales) {
+      this.form.produceType = "customized";
+      this.isEdit = false;
+      this.isPurchase = false;
+
+      this.isSale = true;
+      uni.setNavigationBarTitle({title: "定制工单"});
+    }
+
     this.onKeepAlive();
   },
   methods: {
     // 获取详情
     getInfo() {
-      const Func = this.isSale ? getProduceOrderDetailApi : getProduceDetailApi;
+      const Func = this.isPurchase ? getPurchaseInfoApi : this.isSale ? getProduceOrderDetailApi : getProduceDetailApi;
 
-      Func({[this.isSale ? "orderCode" : "id"]: this.option.id})
+      Func({[this.isSale || this.isPurchase ? "orderCode" : "id"]: this.option.id})
         .then(res => {
           const params = res.data;
 
@@ -180,6 +212,10 @@ export default {
           this.customizedMaterials = _get(params, "customizedMaterials.0.customTable") || "";
 
           this.type = !_isEmpty(params.customizedMaterials) ? "xlsx" : !_isEmpty(params.customizedBoards) ? "packing" : "common";
+
+          if (this.isPurchase || this.isGenerateSales) {
+            this.type = "xlsx";
+          }
 
           /*  if (!_isEmpty(params.customizedBoards)) {
              setTimeout(() => {
@@ -195,19 +231,29 @@ export default {
       this.$refs.FormRef.validate((valid) => {
         if (!valid) {
           const Func =
-            this.isTechnology ? updateCraftProcessApi :
-              (this.isSale ?
-                this.isEdit ? updateSaleProduceApi : addedSaleProduceApi
-                : this.isEdit ? updateProduceApi : addedProduceApi);
+            this.isPurchase ?
+              this.isEdit ? updatePurchaseCustomizedApi : addedPurchaseCustomizedApi
+              : this.isTechnology ? updateCraftProcessApi :
+                (this.isSale ?
+                  this.isEdit ? updateSaleProduceApi : addedSaleProduceApi
+                  : this.isEdit ? updateProduceApi : addedProduceApi);
 
           const params = _deepCopy(this.form);
 
-          if (_isEqual(this.type, "xlsx")) {
+          if (this.isSale) {
+            params.produceType = "customized";
+          }
+
+          if (this.isPurchase) {
+            params.produceType = "customized";
+          }
+
+          if (_isEqual(this.type, "xlsx") && _isEqual(this.getCurrentValue, "type")) {
             _set(params, "customizedMaterials.0",
               {
                 sequence: 1,
                 ...(_get(params, "customizedMaterials.0") || {}),
-                customTable: this.customizedMaterials,
+                customTable: this.$refs?.CTRef?.getList?.() || this.customizedMaterials,
               },
             );
           }
@@ -223,7 +269,8 @@ export default {
           this.loading = true;
           Func(params)
             .then((res) => {
-              uni.setStorageSync("TENP_ORDER_INFO", _isObject(res.data) ? res.data : this.form);
+              uni.setStorageSync("TENP_ORDER_INFO", this.isGenerateSales ? null : _isObject(res.data) ? res.data : this.form);
+
               CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success() {
@@ -420,8 +467,23 @@ export default {
           label: "其它信息",
           value: "other",
         },
-      ].filter(item => this.isSale ? !_isEqual(item.value, "crafts") : item.value);
+      ].filter(item => {
+        if (this.isSale || this.isPurchase) {
+          return _isEqual(this.type, "xlsx")
+            ? _isEqual(item.value, "type")
+            : this.isSale
+              ? !_isEqual(item.value, "crafts")
+              : item.value;
+        } else {
+          return this.isSale
+            ? !_isEqual(item.value, "crafts")
+            : _isEqual(this.type, "xlsx")
+              ? !_isEqual(item.value, "other")
+              : item.value;
+        }
+      });
     },
+    // 当前选中的页面地址
     getCurrentValue() {
       return _get(this.getStepsList, this.current + ".value");
     },
@@ -435,7 +497,7 @@ export default {
 <template>
   <view class="ko-work ko-basic-added-form">
     <view class="ko-work__steps" v-if="getStepsList.length > 1 && !isTechnology">
-      <UvSteps :current="current">
+      <UvSteps :current="current" :key="getStepsList.length">
         <UvStepsItem
           @click-step="onSetSteps(index)"
           v-for="(item, index) of getStepsList"
@@ -486,6 +548,7 @@ export default {
 
           <block v-if="isEqual(type, 'xlsx')">
             <CustomTable :value="customizedMaterials" ref="CTRef" @change="onUpdateXlsx" />
+
             <!-- #ifdef H5 -->
             <KoMovable
               :y-axis="-60"
@@ -501,6 +564,61 @@ export default {
               </view>
             </KoMovable>
             <!-- #endif -->
+
+            <UniSection :title="`${isPurchase ? '供应商' : '客户'}信息`" type="line">
+              <view style="padding: 10px;">
+                <view style="margin: 0 10px 10px;">
+                  <uni-segmented-control
+                    :current.sync="clientType"
+                    :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
+                    style-type="text"
+                    @clickItem="onTabItem"
+                  />
+                </view>
+
+                <block v-if="clientType === 0">
+                  <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
+                    <PickerUser
+                      style="width: 100%;"
+                      is-input
+                      :title="`选择${isPurchase ? '供应商' : '客户'}`"
+                      v-model="form.supplierId"
+                      :type="isPurchase ? 'supplier' : 'client'"
+                      ref="UserRef"
+                      @input="onSupplierId"
+                    />
+                  </uni-forms-item>
+                </block>
+
+                <block v-if="clientType === 1">
+                  <uni-forms-item label="姓名" name="otherSupplier">
+                    <UniEasyinput
+                      v-model="form.otherSupplier"
+                      style="width: 100%;"
+                      placeholder="请输入"
+                    />
+                  </uni-forms-item>
+                </block>
+              </view>
+            </UniSection>
+
+            <uni-forms-item label="联系电话：" name="orderPhone">
+              <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
+            </uni-forms-item>
+
+            <uni-forms-item label="配送地址：" name="orderAddress">
+              <uni-easyinput v-model="form.orderAddress" placeholder="请输入" />
+            </uni-forms-item>
+
+            <UniSection title="工单总价" type="line">
+              <view style="padding: 10px;">
+                <uni-forms-item key="xlsx-total-amount" label-width="90px" label="实收总价：" name="totalAmount">
+                  <view style="width: 100%;">
+                    <uni-easyinput type="digit" v-model="form.totalAmount" placeholder="请输入" />
+                  </view>
+                </uni-forms-item>
+              </view>
+            </UniSection>
           </block>
 
           <block v-if="isEqual(type, 'packing')">
@@ -638,6 +756,7 @@ export default {
         >
           存为快捷生产
         </button>
+        <!-- #ifdef H5 -->
         <button
           class="ko-basic-button__card"
           v-if="isEqual(getCurrentValue, 'type') && isEqual(type, 'xlsx')"
@@ -645,6 +764,7 @@ export default {
         >
           存为快捷表格
         </button>
+        <!-- #endif -->
       </block>
       <button
         class="ko-basic-button__card"

@@ -15,6 +15,15 @@ export default {
       },
     },
   },
+  /* watch: {
+    node: {
+      handler() {
+        console.log('打印头部', this.node);
+      },
+      immediate: true,
+      deep: true
+    }
+  } */
 };
 </script>
 
@@ -32,7 +41,7 @@ export default {
       </Col>
       <Col :span="7" class="ko-print-header__info--item">
         <label>客户名称：</label>
-        <span>{{ GET_FUNC(node, "customer.name") }}</span>
+        <span>{{ GET_FUNC(node || {}, "customer.name") }}</span>
       </Col>
       <Col :span="9" class="ko-print-header__info--item">
         <label>联系电话：</label>

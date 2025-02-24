@@ -4,7 +4,7 @@ import { getInboundDetailApi, getOutboundDetailApi } from "@/api/erp/stock";
 import { _get, _isEmpty, _isEqual, _keys, _sum, addUnit } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { getOtherCostListApi, getSaleDetailApi, getSaleReturnDetailApi } from "@/api/erp/sale";
-import { getPurchaseDetailApi, getPurchaseReturnDetailApi } from "@/api/erp/purchase";
+import { getPurchaseDetailApi, getPurchaseInfoApi, getPurchaseReturnDetailApi } from "@/api/erp/purchase";
 import { getProduceDetailApi, getProduceOrderCodeDetailApi, getProduceOrderDetailApi } from "@/api/erp/produce";
 import { getPayableDetailApi, getReceivableDetailApi } from "@/api/erp/finance";
 import { getProductFieldApi } from "@/api/erp/product";
@@ -18,7 +18,7 @@ import { cmToPx, pointToPx } from "./utils";
 import { TabPane, Tabs } from "@/uni_modules/element-ui/element.min";
 
 // 纸张大小
-const PaperWidth = cmToPx(21.5);
+const PaperWidth = cmToPx(21);
 const PaperHeight = cmToPx(14);
 // 设置纸张的上下间隙的和
 const UpperAndLowerClearance = cmToPx(2);
@@ -87,6 +87,9 @@ export default {
 
       // 默认打印
       TabValue: "default",
+
+      // 判断是不是采购定制单
+      isPurchase: false,
     };
   },
   async onLoad(option) {
@@ -95,20 +98,49 @@ export default {
     // 生产订单
     this.isProductIon = _isEqual(option.orderType, "PRODUCTION");
 
+    // 采购定制单
+    this.isPurchase = _isEqual(option.orderType, "CUSTOMIZED");
+
     this.option = option;
     this.header = _get(PageType, option?.page_type);
 
     uni.setNavigationBarTitle({title: this.header});
 
-    await this.getFeesList();
-    this.getColumnList();
-    this.getExtendList();
+    if (!this.isPurchase) {
+      await this.getFeesList();
+      this.getColumnList();
+      this.getExtendList();
+    }
 
     this.getList();
   },
   methods: {
     getList() {
       this.loading = true;
+
+      if (this.isPurchase) {
+        getPurchaseInfoApi({orderCode: this.option.orderCode})
+          .then(res => {
+            const data = res.data;
+            this.TabValue = "CustomTable";
+
+            data.isCustomizedMaterials = !_isEmpty(data.customizedMaterials);
+
+            try {
+              const list = JSON.parse(_get(data, "customizedMaterials.0.customTable"));
+              data.CustomTable = _get(list, "0.data") || [];
+              data.CustomTableConfig = _get(list, "0.config") || {};
+            } catch (e) {
+              console.error(e);
+            }
+
+            this.node = data;
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+        return false;
+      }
 
       if (this.isProductIon) {
         // 判断是否是销售
@@ -305,7 +337,7 @@ export default {
       return {
         "--ko-paper-width": addUnit(PaperWidth),
         "--ko-paper-height": addUnit(PaperHeight),
-        "--ko-paper-max-height": addUnit(this.maxHeight),
+        // "--ko-paper-max-height": addUnit(this.maxHeight),
         "--ko-paper-title-font-size": pointToPx(18),
         "--ko-paper-font-size": pointToPx(11),
       };
@@ -344,7 +376,7 @@ export default {
 
     <CustomTable
       v-if="isEqual(TabValue, 'CustomTable')"
-      :is-a4="isA4"
+      :is-a4="isA4 || true"
       :data="node.CustomTable || []"
       :fees-list="feesList"
       :root-style="rootStyle"

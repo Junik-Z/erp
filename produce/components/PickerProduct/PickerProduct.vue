@@ -258,17 +258,17 @@ export default {
 </script>
 
 <template>
-  <view class="ko-picker">
+  <view class="ko-picker-product">
     <!-- #ifdef MP -->
     <BasicCard v-for="(item, index) of list" :key="index" :spacing="10">
-      <view class="ko-picker__node">
+      <view class="ko-picker-product__node">
         <image
           v-if="item.images"
           mode="scaleToFill"
-          class="ko-picker__node--image"
+          class="ko-picker-product__node--image"
           :src="getImageUrl(item.images)"
         />
-        <view class="ko-picker__item">
+        <view class="ko-picker-product__item">
           <UniRow :gutter="10">
             <UniCol :span="24">
               <label class="ko-basic-label">名称：</label>
@@ -362,8 +362,8 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
-.ko-picker {
+<style lang="scss">
+.ko-picker-product {
   width: 100%;
 
   &__item {
@@ -374,7 +374,7 @@ export default {
   &__node {
     display: flex;
     align-items: center;
-    overflow: hidden;
+    //overflow: hidden;
 
     &--image {
       height: 120px;

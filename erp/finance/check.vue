@@ -1,4 +1,8 @@
 <script>
+// #ifdef H5
+import { Checkbox } from "@/uni_modules/element-ui/element.min";
+// #endif
+
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import KoNotice from "@/components/Notice/Notice.vue";
@@ -22,7 +26,7 @@ import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import CheckPopup from './CheckPopup.vue'
+import CheckPopup from "./CheckPopup.vue";
 
 export default {
   name: "check",
@@ -116,6 +120,12 @@ export default {
 
       // #ifdef H5
       columns: [
+        {
+          label: "",
+          type: "expand",
+          width: 50,
+          slot: "expand",
+        },
         {
           label: "序号",
           type: "index",
@@ -270,8 +280,6 @@ export default {
     getShowTabList() {
       const key = this.option?.customer_type || "sale";
 
-      console.log(key);
-
       this.isLogistics = _isEqual(key, "logistics");
 
       if (this.isLogistics) {
@@ -315,9 +323,11 @@ export default {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
 
+          // #ifdef MP
           if (this.isLogistics) {
-            this.list = _groupBy(this.list, (it) => it.orderCode);
+            this.list = _groupBy(this.list || [], (it) => it.orderCode);
           }
+          // #endif
         })
         .finally(() => {
           this.loading = false;
@@ -325,6 +335,8 @@ export default {
     },
 
     onCheckboxItem(node) {
+      if (!(!["FINISHED"].includes(node.status) && !node.confirmable)) return false;
+
       if (this.isCheckbox(node)) {
         this.checked = this.checked.filter(v => v.id !== node.id);
       } else {
@@ -415,7 +427,10 @@ export default {
     },
 
     onJumpDet(item, getPageType) {
-      if (this.isShowCheck) return false;
+      if (this.isShowCheck) {
+        this.onCheckboxItem(item);
+        return false;
+      }
       this.onJumpDetails(item, getPageType);
     },
 
@@ -448,7 +463,7 @@ export default {
         return false;
       }
 
-      this.$refs.CPRef.open(this.checked);
+      this.$refs.CPRef.open(this.checked, this.option);
     },
   },
   computed: {
@@ -470,6 +485,38 @@ export default {
     calculationCompleted() {
       return (list) => _sum(list.map((v) => v.totalAmount || 0));
     },
+
+    // #ifdef H5
+
+    getCheckColumns() {
+      const columns = _deepCopy(this.columns);
+
+
+      if (this.isShowCheck) {
+        columns.push({
+          label: "选择",
+          width: 55,
+          render: (h, {row}) => {
+            return h("div",
+              {class: "ko-table-checked__warp"},
+              [
+                h(
+                  Checkbox,
+                  {
+                    class: `ko-table-checked`,
+                    props: {
+                      value: this.isCheckbox(row),
+                      disabled: !(!["FINISHED"].includes(row.status) && !row.confirmable),
+                    },
+                  },
+                ),
+              ]);
+          },
+        });
+      }
+      return columns;
+    },
+    // #endif
   },
 };
 </script>
@@ -478,7 +525,6 @@ export default {
   <view class="ko-check" :class="{'not-footer': isShowFooter && isShowCheck}">
     <KoNotice />
     <view class="ko-check__tabs" v-if="!isLogistics">
-
       <HistoryBar
         v-model="current"
         :values="showTabList"
@@ -558,6 +604,12 @@ export default {
                     <text class="ko-basic-money">
                       {{ toYuan(child.totalAmount) }}元
                     </text>
+                    <text
+                      style="font-size: 11px; padding-left: 6px;color: #c7c9ce;"
+                      v-if="['CREATED'].includes(child.orderStatus)"
+                    >
+                      {{ GET_PROOFS_STATUS_ENUMS(child.orderStatus) }}
+                    </text>
                   </view>
                 </UniCol>
               </UniRow>
@@ -568,7 +620,6 @@ export default {
 
               <BasicCard not-padding no-shadow>
                 <UniRow :gutter="4">
-
                   <UniCol :span="24">
                     <view
                       v-if="item.totalAmount || 0"
@@ -677,8 +728,96 @@ export default {
         </block>
       </view>
     </KoList>
+    <!-- #endif -->
 
-    <KoMovable v-if="!isShowCheck" @click="onBatchClearing('')">
+    <!-- #ifdef H5 -->
+    <view style="padding: 10px;">
+      <KoTable
+        :loading="loading"
+        :columns="current < 2 ? getCheckColumns : columns1"
+        :data="list"
+        empty-text="暂无数据"
+        stripe
+        @row-click="current < 2 ? onJumpDet($event, getPageType) : () => {}"
+        :no-more="noMore || loading"
+        @next-load="RequestNextPage"
+        :expand-row-keys="list.map(v => v.id)"
+        row-key="id"
+      >
+        <template #expand="{item}">
+          <div style="display: flex; justify-content: flex-end; align-items: flex-end; flex-direction: column;">
+            <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
+              <UniRow :gutter="4">
+                <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
+                  <view style="font-size: 13px; display: flex; align-items: center; justify-content: flex-end;">
+                    <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
+                    <text style="padding-right: 10px; font-size: 12px">{{ GET_PAYMENT_ENUMS(item.orderType) }}:</text>
+                    <text class="ko-basic-money">
+                      {{ toYuan(child.totalAmount) }}元
+                    </text>
+                    <text
+                      style="font-size: 11px; padding-left: 6px;color: #c7c9ce;"
+                      v-if="['CREATED'].includes(child.orderStatus)"
+                    >
+                      {{ GET_PROOFS_STATUS_ENUMS(child.orderStatus) }}
+                    </text>
+                  </view>
+                </UniCol>
+              </UniRow>
+            </BasicCard>
+
+            <block v-if="item.proofs && item.proofs.length">
+              <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
+              <BasicCard not-padding no-shadow>
+                <UniRow :gutter="4">
+                  <UniCol :span="24">
+                    <view
+                      v-if="item.totalAmount || 0"
+                      style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                    >
+                      <block v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) > 0">
+                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                          {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
+                        </text>
+                        <text class="ko-basic-money">
+                          {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
+                        </text>
+                      </block>
+                      <text style="color: #008000;" v-else>
+                        已结清
+                      </text>
+                    </view>
+                  </UniCol>
+
+                  <UniCol :span="12" v-if="false">
+                    <view
+                      style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                    >
+                      <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                        共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
+                      </text>
+                      <text class="ko-basic-money">
+                        {{ toYuan(calculationCompleted(item.proofs)) }}元
+                      </text>
+                    </view>
+                  </UniCol>
+                </UniRow>
+              </BasicCard>
+            </block>
+
+            <p
+              style="text-align: center; color: #c7c9ce; padding-right: 50px;"
+              v-if="!(item.proofs && item.proofs.length)"
+            >
+              暂无清帐记录
+            </p>
+          </div>
+        </template>
+      </KoTable>
+    </view>
+    <!-- #endif -->
+
+    <KoMovable v-if="!isShowCheck && current === 0" @click="onBatchClearing('')">
       <view style="line-height: 1.2; font-size: 12px;">
         <view>批量</view>
         清帐
@@ -699,7 +838,11 @@ export default {
             {{ isShowCheck ? "取消" : "批量清帐" }}
           </button>
 
-          <button class="ko-basic-button__card" @click.stop="openStatement">
+          <button
+            v-if="!isLogistics"
+            class="ko-basic-button__card"
+            @click.stop="openStatement"
+          >
             对账单
           </button>
 
@@ -712,24 +855,8 @@ export default {
         </view>
       </view>
     </view>
-    <!-- #endif -->
 
-    <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
-      <KoTable
-        :loading="loading"
-        :columns="current < 2 ? columns : columns1"
-        :data="list"
-        empty-text="暂无数据"
-        stripe
-        @row-click="current < 2 ? onJumpDetails($event, getPageType) : () => {}"
-        :no-more="noMore || loading"
-        @next-load="RequestNextPage"
-      />
-    </view>
-    <!-- #endif -->
-
-    <CheckPopup ref="CPRef"/>
+    <CheckPopup ref="CPRef" />
   </view>
 </template>
 
@@ -759,7 +886,7 @@ export default {
 
       &--checkbox {
         position: absolute;
-        bottom: -0px;
+        top: -0px;
         right: -0px;
 
         //&[disabled] {
@@ -790,6 +917,14 @@ export default {
       display: flex;
       align-items: center;
       justify-content: space-between;
+
+      // #ifdef H5
+      .ko-basic-button__card {
+        width: 100px;
+        margin: 0 10px;
+      }
+
+      // #endif
     }
   }
 
@@ -797,4 +932,42 @@ export default {
     padding: 10px;
   }
 }
+
+// #ifdef H5
+/deep/ .ko-table-checked {
+  font-size: 20px;
+
+  &__warp {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 99;
+      cursor: pointer;
+    }
+
+  }
+
+  &__single .el-checkbox__inner {
+    border-radius: 50%;
+  }
+
+  .el-checkbox__inner {
+    width: 20px;
+    height: 20px;
+
+    &::after {
+      width: 5px;
+      height: 10px;
+      left: 6px;
+    }
+  }
+}
+
+// #endif
 </style>

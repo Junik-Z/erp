@@ -356,12 +356,12 @@ export default {
             >
               打印入库单(A4)
             </button>
-            <button
+            <!--<button
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'inbound3')"
             >
               打印单据
-            </button>
+            </button>-->
             <button
               v-if="['CREATED'].includes(item.status) && false"
               class="ko-basic-button__card"

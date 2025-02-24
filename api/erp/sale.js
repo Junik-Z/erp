@@ -453,3 +453,14 @@ export function getSaleCheckShareIdApi(data) {
     data,
   });
 }
+
+/**
+ * @description 获取最近的销售价格
+ */
+export function getRecentPriceApi(data) {
+  return request({
+    url: "/sale/recentPrice",
+    method: "get",
+    data,
+  });
+}

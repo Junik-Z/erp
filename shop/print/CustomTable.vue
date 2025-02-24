@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import PrintTable from "./components/PrintTable.vue";
+import PrintTable from "./components/NewPrintTable.vue";
 import PrintFooter from "./components/PrintFooter.vue";
 import PrintHeader from "./components/PrintHeader.vue";
 import { Button } from "@/uni_modules/element-ui/element.min";
@@ -227,22 +227,22 @@ export default {
         <PrintTable
           ref="PTableRef"
           :data="data || []"
-          :is-fees="!!feesList.length"
+          :is-fees="!!feesList.length && false"
           :fees-list="feesList"
           is-custom-table
           :config="config"
         >
-          <template #thead>
+          <template #thead v-if="false">
             <PrintHeader ref="HeaderRef" :title="GET_SHOP_NAME + header" :node="node" />
           </template>
-          <template #tfoot>
+          <template #tfoot v-if="false">
             <PrintFooter ref="FooterRef" :out-name="GET_USER_INFO.nickName" :info="GET_CONFIG_INFO" />
           </template>
         </PrintTable>
       </div>
     </div>
 
-    <div class="ko-print-custom-table__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
+    <div v-if="!isA4" class="ko-print-custom-table__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
       <div ref="PrintRef">
         <div class="ko-print-custom-table__pages--item" v-for="(item, index) of groupList" :key="'print' + index">
           <div class="ko-print-custom-table__pages--center">
@@ -265,17 +265,16 @@ export default {
         </div>
       </div>
     </div>
-
   </div>
   <!-- #endif -->
 </template>
 
 <style lang="scss">
 // #ifdef H5
-@page Triple {
-  size: 216mm 140mm;
-  margin: 0;
-}
+//@page Triple {
+//  size: 216mm 140mm;
+//  margin: 0;
+//}
 
 .ko-print-custom-table {
   padding-top: 70px;
@@ -303,7 +302,6 @@ export default {
   &__wrap {
     width: var(--ko-paper-width);
     margin: 0 auto;
-    overflow-y: auto;
   }
 
   &__content {
@@ -320,7 +318,7 @@ export default {
   }
 
   &__pages {
-    page: Triple;
+    //page: Triple;
     //position: fixed;
     //z-index: -99;
     //top: 3000vh;

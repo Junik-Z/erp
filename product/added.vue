@@ -6,7 +6,6 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import UniDataPicker from "./components/uni-data-picker/components/uni-data-picker/uni-data-picker.vue";
 import {
   addedProductApi,
   checkDuplicateApi,
@@ -22,6 +21,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import KoList from "@/components/List/List.vue";
+import PickerClass from "@/components/PickerClass/PickerClass.vue";
 
 export default {
   name: "Added",
@@ -32,11 +32,13 @@ export default {
     BasicCard,
     BasicPopup,
     FilePicker,
-    UniDataPicker,
     UniEasyinput,
     UniFormsItem,
     UniForms,
     UniSection,
+
+    PickerClass,
+
     // #ifdef H5
     Cascader,
     // #endif
@@ -235,26 +237,9 @@ export default {
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
           <UniFormsItem label="产品分类：" name="classId" required>
-            <UniDataPicker
-              style="width: 100%;"
-              placeholder="请选择"
-              :localdata="classList"
-              v-model="form.classId"
-              :map="{text: 'name',value: 'id',}"
-            />
-            <!-- #ifdef H5 -->
-            <Cascader
-              :options="classList"
-              :props="{
-
-              }"
-            >
-              <template slot-scope="{ node, data }">
-                <span>{{ data.name }}</span>
-                <span v-if="!node.isLeaf"> ({{ data.children.length }}) </span>
-              </template>
-            </Cascader>
-            <!-- #endif -->
+            <view style="flex: 1;width: 100%">
+              <PickerClass v-model="form.classId" is-input />
+            </view>
           </UniFormsItem>
           <UniFormsItem label="产品名称：" name="name" required>
             <UniEasyinput v-model.trim="form.name" style="width: 100%;" placeholder="请输入" />
@@ -326,8 +311,8 @@ export default {
       <button
         class="ko-basic-button"
         @click="onPreprocessing"
-        :loading="loading"
-        :disabled="loading"
+        :loading="loading || sLoading"
+        :disabled="loading || sLoading"
       >
         保存
       </button>

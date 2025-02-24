@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import PrintTable from "./components/PrintTable.vue";
+import PrintTable from "./components/NewPrintTable.vue";
 import PrintFooter from "./components/PrintFooter.vue";
 import PrintHeader from "./components/PrintHeader.vue";
 import { Button } from "@/uni_modules/element-ui/element.min";
@@ -8,6 +8,7 @@ import { Button } from "@/uni_modules/element-ui/element.min";
 import { VuePrintLast } from "./vue-print-last";
 import mixins from "@/mixins/mixins";
 import { cmToPx } from "@/shop/print/utils";
+import { _get, _isEqual, _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
@@ -217,6 +218,18 @@ export default {
     watchSize() {
       return [...this.data, ...this.feesList];
     },
+
+    getSummary() {
+      return [
+        {label: "大写合计", colspan: 1},
+        {
+          label: this.toBigMoney(this.toYuan(this.node.totalAmount)),
+          colspan: 4 - 2,
+        },
+        {label: "合计", colspan: 1},
+        {label: this.toYuan(this.node.totalAmount), colspan: 1},
+      ];
+    },
     // 表格列表
     getTableList() {
       return [
@@ -265,10 +278,13 @@ export default {
           :columns="columns"
           :data="getTableList || []"
           :is-fees="!!feesList.length"
+
+          :summary="getSummary"
+          is-summary
           :fees-list="feesList"
           is-customized-boards
           is-result
-          :result="GET_FUNC(node, '_result_')"
+          :result="GET_FUNC(node || {}, '_result_')"
         >
           <template #thead>
             <PrintHeader ref="HeaderRef" :title="GET_SHOP_NAME + header" :node="node" />
@@ -291,7 +307,10 @@ export default {
               :is-fees="!!feesList.length"
               :fees-list="feesList"
               :is-result="index === (groupList.length - 1)"
-              :result="GET_FUNC(node, '_result_')"
+              :result="GET_FUNC(node || {}, '_result_')"
+
+              :summary="getSummary"
+              :is-summary="(groupList.length - 1) === index"
             >
               <template #thead>
                 <PrintHeader :title="GET_SHOP_NAME + header" :node="node" />
@@ -310,10 +329,10 @@ export default {
 
 <style lang="scss">
 // #ifdef H5
-@page Triple {
-  size: 216mm 140mm;
-  margin: 0;
-}
+//@page Triple {
+//  size: 216mm 140mm;
+//  margin: 0;
+//}
 
 .ko-print-customized-boards {
   padding-top: 70px;
@@ -341,7 +360,6 @@ export default {
   &__wrap {
     width: var(--ko-paper-width);
     margin: 0 auto;
-    overflow-y: auto;
   }
 
   &__content {
@@ -358,7 +376,7 @@ export default {
   }
 
   &__pages {
-    page: Triple;
+    //page: Triple;
     //position: fixed;
     //z-index: -99;
     //top: 3000vh;

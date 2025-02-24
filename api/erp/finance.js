@@ -388,3 +388,27 @@ export function getUnpaidSupplierApi(data) {
     data,
   });
 }
+
+
+// ——————————————— 查询对账单 ————————————————
+/**
+ * @description 获取销售客户对账单
+ */
+export function getReceivableCheckBillApi(data) {
+  return request({
+    url: "/finance/receivable/checkBill",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取采购供应商对账单
+ */
+export function getPayableCheckBillApi(data) {
+  return request({
+    url: "/finance/payable/checkBill",
+    method: "get",
+    data,
+  });
+}

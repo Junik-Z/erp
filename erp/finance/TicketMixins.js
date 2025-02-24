@@ -137,8 +137,8 @@ export default {
       this.noUnable = !!option.noUnable;
       this.isDetails = !!option.isDetails;
 
-      // 销售退货和采购的时候需要进行付款
-      this.isRefund = ["SALE_RETURN", "PURCHASE"].includes(option.orderType);
+      // 销售退货和采购和采购定制的时候需要进行付款
+      this.isRefund = ["SALE_RETURN", "PURCHASE", 'CUSTOMIZED'].includes(option.orderType);
 
       // 是否是应收模块
       this.isReceivable = !!option.isReceivable;
@@ -152,8 +152,11 @@ export default {
 
     getList() {
       this.loading = true;
+
+      const obj = _pick(_deepCopy(this.option), ["supplierId", "purchaserId", "orderCode"]);
+
       const Func = this.isRefund ? getReturnedOrderListApi : getPaidOrderListApi;
-      Func({...this.option, pageSize: 50, pageNum: 0})
+      Func({...obj, pageSize: 100, pageNum: 0})
         .then(res => {
           this.list = res.data;
         })
@@ -200,8 +203,6 @@ export default {
 
           const obj = _pick(_deepCopy(this.option), ["supplierId", "orderType", "purchaserId", "orderCode"]);
           params.totalAmount = yuanToPoints(params.totalAmount);
-
-          console.log(obj, this.option);
 
           Func({...params, ...obj})
             .then(() => {

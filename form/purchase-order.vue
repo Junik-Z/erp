@@ -309,6 +309,8 @@ export default {
                 :is-client="isClient"
                 is-actual
                 ref="PPRef"
+                :is-show-recent="isPerm('Purchase_Write')"
+                :supplier-id="form.supplierId"
               />
             </view>
           </UniFormsItem>

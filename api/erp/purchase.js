@@ -175,6 +175,7 @@ export function addedPurchaseApi(data) {
     data,
   });
 }
+
 /**
  * @description 重新下采购订单
  */
@@ -328,6 +329,7 @@ export function updatePurchaseReturnApi(data) {
     data,
   });
 }
+
 /**
  * @description 重新下退货采购订单
  */
@@ -438,13 +440,82 @@ export function getPurchaseShareIdApi(data) {
   });
 }
 
-
 /**
  * @description 校验分享出去的订单id
  */
 export function getPurchaseCheckShareIdApi(data) {
   return request({
     url: "/purchase/shareCheck",
+    method: "get",
+    data,
+  });
+}
+
+
+// ———————————————————————— 采购定制相关 ——————————————————————————————
+/**
+ * @description 获取采购定制单详情
+ */
+export function getPurchaseCustomizedInfoApi(data) {
+  return request({
+    url: "/purchase/customized/produceConvertProduceOrder",
+    method: "get",
+    data,
+  });
+}
+
+
+/**
+ * @description 获取采购定制单详情
+ */
+export function getPurchaseInfoApi(data) {
+  return request({
+    url: "/purchase/customized/detail",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 新增采购定制单
+ */
+export function addedPurchaseCustomizedApi(data) {
+  return request({
+    url: "/purchase/customized/add",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 生成销售订单
+ */
+export function purchaseConvertSaleOrderApi(data) {
+  return request({
+    url: "/purchase/customized/purchaseConvertSaleOrder",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 修改采购订单
+ */
+export function updatePurchaseCustomizedApi(data) {
+  return request({
+    url: "/purchase/customized/update",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 获取最近采购价格
+ */
+export function getPurchaseRecentPriceApi(data) {
+  return request({
+    url: "/purchase/recentPrice",
     method: "get",
     data,
   });

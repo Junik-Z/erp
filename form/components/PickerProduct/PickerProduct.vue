@@ -1,18 +1,22 @@
 <script>
 // #ifdef H5
-import { InputNumber } from "@/uni_modules/element-ui/element.min";
+import { InputNumber, Popover } from "@/uni_modules/element-ui/element.min";
 
 // #endif
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import { _deepCopy, _get, _isEqual, _sum } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _set, _sum, getRect } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { PageEnums } from "@/utils/config";
+import { getRecentPriceApi } from "@/api/erp/sale";
+import { getPurchaseRecentPriceApi } from "@/api/erp/purchase";
+import LatestPrice from "./LatestPrice";
+
 
 export default {
   name: "PickerProduct",
@@ -23,6 +27,7 @@ export default {
     BasicCard,
     UniCol,
     UniRow,
+    LatestPrice,
   },
   mixins: [mixins],
   props: {
@@ -40,12 +45,16 @@ export default {
     // 实际付款金额
     isActual: Boolean,
     readonly: Boolean,
+    // 显示最近的价格
+    isShowRecent: Boolean,
+    supplierId: String,
   },
   data() {
     const _this = this;
     return {
       list: [],
       loading: false,
+
       // #ifdef H5
       columns: [
         {
@@ -91,7 +100,52 @@ export default {
                 [_this.toYuan(row.price)],
               );
             } else {
-              return h(
+              return h(Popover, {
+                  props: {
+                    placement: "top",
+                    trigger: "manual",
+                    value: _get(_this.itemList, `${row.productId}.__show__`),
+                  },
+                },
+                [
+                  h(LatestPrice, {
+                    slot: "default",
+                    props: {
+                      type: _this.type,
+                      recentPrice: _get(_this.itemList, `${row.productId}.recentPrice`),
+                      userRecent: _get(_this.itemList, `${row.productId}.userRecent`),
+                    },
+                  }),
+                  h(
+                    InputNumber,
+                    {
+                      slot: "reference",
+                      class: "ko-basic-money",
+                      style: {cursor: "pointer", width: "100%"},
+                      props: {
+                        min: 0,
+                        value: _this.toYuan(row.price),
+                      },
+                      on: {
+                        change: (val) => {
+                          _this.$set(row, "price", _this.toFen(val));
+                          _this.$nextTick(() => {
+                            _this.onFocus();
+                          });
+                        },
+                        focus: () => {
+                          _this.onPriceFocus(row);
+                        },
+                        blur: () => {
+                          _this.onPriceBlur(row);
+                        },
+                      },
+                    },
+                  ),
+                ],
+              );
+
+              /* return h(
                 InputNumber,
                 {
                   class: "ko-basic-money",
@@ -109,7 +163,7 @@ export default {
                     },
                   },
                 },
-              );
+              ); */
             }
           },
         },
@@ -149,6 +203,11 @@ export default {
       // #endif
 
       takeOverName: "",
+
+      recentPrice: {},
+      userRecent: {},
+
+      itemList: {},
     };
   },
   created() {
@@ -216,6 +275,51 @@ export default {
         this.onFocus();
       }
     },
+
+    // 获取到的请求最近成交价格
+    onPriceFocus(item) {
+      const Func = {purchase: getPurchaseRecentPriceApi, sale: getRecentPriceApi}[this.type];
+
+      if (!Func) return false;
+
+      // #ifdef MP
+      getRect(`#P_${item.productId}`, this).then(rect => {
+        const maxWidth = (Math.min(rect.left, rect.right) - 20) + rect.width;
+        // #endif
+
+        Func({productId: item.productId, supplierId: this.supplierId})
+          .then(res => {
+            const data = res.data;
+
+            const obj = _deepCopy(this.itemList);
+            const show = !(_isEmpty(data.recentPrice) && _isEmpty(data.userRecent));
+
+            _set(obj, `${item.productId}.__show__`, show);
+            _set(obj, `${item.productId}.recentPrice`, data.recentPrice);
+            _set(obj, `${item.productId}.userRecent`, data.userRecent);
+
+            // #ifdef MP
+            _set(obj, `${item.productId}.__style__`, {
+              "--ko-picker-product-max-width": maxWidth + "px",
+            });
+            // #endif
+
+            this.itemList = obj;
+
+            console.log(obj);
+          });
+
+        // #ifdef MP
+      });
+      // #endif
+    },
+
+    // 隐藏
+    onPriceBlur(item) {
+      const obj = _deepCopy(this.itemList);
+      _set(obj, `${item.productId}.__show__`, false);
+      this.itemList = obj;
+    },
   },
   watch: {
     value: {
@@ -278,19 +382,38 @@ export default {
               <label class="ko-basic-label">名称：</label>
               {{ item.name }}
             </UniCol>
-            <UniCol :span="24" v-if="item.price !== 0 && !hidePrices">
-              <view style="display: flex; align-items: center;">
+            <UniCol :span="24" v-if="!hidePrices">
+              <view class="ko-picker__node--price">
                 <label class="ko-basic-label">单价：</label>
                 <text class="ko-basic-money" v-if="isClient || readonly">{{ toYuan(item.price) }} 元</text>
                 <view v-else class="ko-basic-money" style="display: flex; align-items: center;">
-                  <view style="margin-right: 5px">
-                    <UniNumberBox
-                      color="#e43d33"
-                      width="60"
-                      :value="toYuan(item.price)"
-                      @change="onChange(item, $event)"
-                      type="digit"
-                    />
+                  <view
+                    :style="[GET_FUNC(itemList, `${item.productId}.__style__`) || {}]"
+                    style="margin-right: 5px; position: relative;"
+                  >
+                    <view
+                      :class="{'is-show': GET_FUNC(itemList, `${item.productId}.__show__`)}"
+                      class="ko-picker__price ko-basic-box-shadow"
+                      v-if="isShowRecent"
+                    >
+                      <LatestPrice
+                        :type="type"
+                        :recent-price="GET_FUNC(itemList, `${item.productId}.recentPrice`)"
+                        :user-recent="GET_FUNC(itemList, `${item.productId}.userRecent`)"
+                      />
+                    </view>
+
+                    <view :id="`P_${item.productId}`">
+                      <UniNumberBox
+                        color="#e43d33"
+                        width="60"
+                        :value="toYuan(item.price)"
+                        @change="onChange(item, $event)"
+                        type="digit"
+                        @focus="onPriceFocus(item)"
+                        @blur="onPriceBlur(item)"
+                      />
+                    </view>
                   </view>
                   元
                 </view>
@@ -380,13 +503,57 @@ export default {
   &__node {
     display: flex;
     align-items: center;
-    overflow: hidden;
+    //overflow: hidden;
 
     &--image {
       height: 120px;
       width: 120px;
       border-radius: 6px;
       overflow: hidden;
+    }
+
+    &--price {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+  }
+
+  &__price {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    bottom: calc(100% + 5px);
+    color: #333;
+    width: var(--ko-picker-product-max-width);
+    border: 1px solid #e9e9eb;
+    opacity: 0;
+
+    transition: opacity .3s;
+    z-index: 99;
+    font-size: 11px;
+
+    &.is-show {
+      opacity: 1;
+    }
+
+    &::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border: 1px solid #e9e9eb;
+      border-top: none;
+      border-right: none;
+      transform: rotate(-45deg) translateX(-50%);
+
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      background: #fff;
     }
   }
 }

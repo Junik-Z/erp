@@ -341,7 +341,7 @@ export default {
             >
               <view
                 class="ko-composing__item"
-                v-for="(item) of board.rItems"
+                v-for="(item, rIndex) of board.rItems"
                 :key="item.rid"
                 :style="[getVItemStyle(item)]"
               >
@@ -351,6 +351,7 @@ export default {
                   :style="{transform: `rotate(${item.sWidth < item.sHeight ? '90' : 0}deg)`}"
                 >
                   <view>{{ item.name }}</view>
+                  <view style="line-height: 1.1;">{{ `${index} - ${rIndex}` }}</view>
                   <view>
                     {{ `(${item.sWidth}x${item.sHeight}x${item.sWeight})` }}
                   </view>

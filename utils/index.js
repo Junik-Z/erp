@@ -662,3 +662,85 @@ export function _reverse(array) {
 
   return array;
 }
+
+/**
+ * @description 获取定制表格的cell样式
+ */
+export function xlsxCellStyle(node, rIndex, cIndex, config, isChild = false) {
+  const mc = _get(node, "mc");
+  const textDecoration = [];
+  const rowLen = _get(config, "rowlen") || {};
+  const columnlen = _get(config, "columnlen") || {};
+
+  if (_get(node, "un")) textDecoration.push("underline");
+  if (_get(node, "cl")) textDecoration.push("line-through");
+
+  let style = {
+    color: _get(node, "fc") || "",
+    background: _get(node, "bg") || "",
+    fontWeight: ["normal", "bold"][_get(node, "bl")],
+    fontStyle: ["normal", "italic"][_get(node, "it")],
+    fontFamily: _get(node, "ff") || "Times New Roman",// ["Times New Roman", "Arial", "Tahoma", "Verdana", "微软雅黑", "宋体", "黑体（ST Heiti）", "楷体（ST Kaiti）", "仿宋（ST FangSong）", "新宋体（ST Song）", "华文新魏", "华文行楷", "华文隶书"][_get(node, "ff")],
+
+    fontSize: (_get(node, "fs") || 10) + "pt",
+
+    "justify-content": ["center", "flex-start", "flex-end"][_get(node, "ht")] || "left",
+    "align-items": ["center", "flex-start", "flex-end"][_get(node, "vt")] || "center",
+
+    // textAlign: ["center", "left", "right"][_get(node, "ht")] || "center",
+    // verticalAlign: ["center", "top", "bottom"][_get(node, "vt")] || "middle",
+
+    "textDecoration": textDecoration.join(" "),
+
+    ...({
+      0: {
+        "white-space": "nowrap", /* 防止自动换行 */
+        overflow: "hidden", /* 隐藏超出部分 */
+        "text-overflow": "ellipsis", /* 显示省略号 */
+      },
+      1: {
+        "white-space": "nowrap", /* 防止自动换行 */
+        overflow: "visible", /* 允许内容溢出 */
+      },
+      2: {
+        "white-space": "normal", /* 允许内容自动换行 */
+        "word-wrap": "break-word", /* 在单词内换行 */
+      },
+    }[_get(node, "tb")]),
+
+
+    padding: "2px",
+    width: (columnlen?.[cIndex] || 72) + "px",
+  };
+
+  const height = rowLen[rIndex] || 19;
+
+  if (height) {
+    style.height = `${height + 4}px`;
+  }
+
+  if (_isObject(node) && _isObject(mc)) {
+    const cs = _get(mc, "cs") || 0;
+    const rs = _get(mc, "rs") || 0;
+
+    if (!(cs || rs)) {
+      style.display = "none";
+    } else {
+      style["grid-area"] = `${rIndex + 1}/${cIndex + 1}/span ${rs}/span ${cs}`;
+      style.height = "auto";
+      style.width = "auto";
+    }
+  }
+
+  // 判断是否是多个子级
+  if (_get(node, "ct.s")) {
+    style = _pick(style, ["grid-area", "width", "height", "padding", "justify-content", "align-items", "display"]);
+  }
+
+  if (isChild) {
+    style.width = "auto";
+    style.height = "auto";
+  }
+
+  return style;
+}

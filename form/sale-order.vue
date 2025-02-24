@@ -306,6 +306,8 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
+                :is-show-recent="isPerm('Sales_Write')"
+                :supplier-id="form.supplierId"
               />
             </view>
           </UniFormsItem>

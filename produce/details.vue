@@ -12,18 +12,40 @@ import FeesList from "../components/FeesList/FeesList.vue";
 import CraftProcesses from "./pages/CraftProcesses.vue";
 import BinPacking from "./pages/BinPacking.vue";
 import CustomTable from "./pages/CustomTable.vue";
+import BinCount from "./components/BinCount.vue";
+import { getPurchaseInfoApi } from "@/api/erp/purchase";
 
 export default {
   name: "DetailsOrder",
   mixins: [mixins],
-  components: {CustomTable, BinPacking, FeesList, UvAvatar, UniCol, UniRow, ProductCard, UniSection, CraftProcesses},
+  components: {
+    BinCount,
+    CustomTable,
+    BinPacking,
+    FeesList,
+    UvAvatar,
+    UniCol,
+    UniRow,
+    ProductCard,
+    UniSection,
+    CraftProcesses,
+  },
   onLoad(option) {
     this.option = option;
+    // 销售订单
     const isSale = _isEqual(this.option.FORM, "SALE");
+    // 采购订单
+    const isPurchase = _isEqual(option.FORM, "PURCHASE");
 
     if (isSale) {
       uni.setNavigationBarTitle({title: "定制工单详情"});
     }
+
+    if (isPurchase) {
+      uni.setNavigationBarTitle({title: "采购定制工单详情"});
+    }
+
+    this.isPurchase = isPurchase;
 
     this.getFieldList();
     this.getList();
@@ -38,6 +60,8 @@ export default {
       isLogistics: false,
 
       FieldList: [],
+
+      isPurchase: false,
     };
   },
   methods: {
@@ -53,10 +77,10 @@ export default {
         "payable",
         "logistics",
       ].includes(this.option.page_type);
+      
+      const Func = this.isPurchase ? getPurchaseInfoApi : isSale ? isStockAndFinance ? getProduceOrderCodeDetailApi : getProduceOrderDetailApi : getProduceDetailApi;
 
-      const Func = isSale ? isStockAndFinance ? getProduceOrderCodeDetailApi : getProduceOrderDetailApi : getProduceDetailApi;
-
-      Func({[isSale ? "orderCode" : "id"]: this.option.id})
+      Func({[isSale || this.isPurchase ? "orderCode" : "id"]: this.option.id})
         .then(res => {
           this.node = res.data;
         })
@@ -167,7 +191,7 @@ export default {
           <label class="ko-basic-label">下单时间：</label>
           <text class="ko-details__cell--text">{{ node.createTime || "-" }}</text>
         </view>
-        <view class="ko-details__cell">
+        <view class="ko-details__cell" v-if="!isPurchase">
           <label class="ko-basic-label">计划完工日期：</label>
           <text class="ko-details__cell--text">{{ node.planFinishDate || "-" }}</text>
         </view>
@@ -257,7 +281,16 @@ export default {
           <label class="ko-basic-label">共计：</label>
           <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getCountByProductDetails) }}元</text>
         </view>
-        <view class="ko-details__cell" style="margin-top: 10px;">
+      </view>
+    </UniSection>
+
+    <UniSection title="工单总价" type="line">
+      <view class="ko-details__item">
+        <block v-if="!isEmpty(node.customizedBoards)">
+          <BinCount :value="node.customizedBoards[0]" readonly />
+        </block>
+
+        <view class="ko-details__cell">
           <label class="ko-basic-label">实收：</label>
           <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
         </view>

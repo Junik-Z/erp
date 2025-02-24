@@ -10,7 +10,7 @@ import {
   removeTableApi,
 } from "@/api/erp/produce";
 import { CONFIG } from "@/utils/config";
-import { _get, _isEmpty, CustomToast } from "@/utils";
+import { _get, _isEmpty, _pick, CustomToast } from "@/utils";
 import FastMixins from "./FastMixins";
 
 export default {
@@ -115,7 +115,7 @@ export default {
     },
 
     onApply(item) {
-      this.getDetails(item, this.type)
+      this.getDetails(_pick(item, ["id"]), this.type)
         .then(res => {
           console.log(res.data);
           this.$emit("apply-fast", res.data);

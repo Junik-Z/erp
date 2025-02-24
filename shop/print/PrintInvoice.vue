@@ -316,10 +316,10 @@ export default {
 
 <style lang="scss">
 // #ifdef H5
-@page Triple {
+/*@page Triple {
   size: 216mm 140mm;
   margin: 0;
-}
+}*/
 
 .ko-print {
   padding-top: 120px;
@@ -334,7 +334,6 @@ export default {
   &__wrap {
     width: var(--ko-paper-width);
     margin: 0 auto;
-    overflow-y: auto;
   }
 
   &__picker {
@@ -367,7 +366,7 @@ export default {
   }
 
   &__pages {
-    page: Triple;
+    //page: Triple;
 
     //position: fixed;
     //z-index: -99;

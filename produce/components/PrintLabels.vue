@@ -7,6 +7,8 @@ import { VuePrintLast } from "@/shop/print/vue-print-last";
 
 const PlateWidth = cmToPx(1.2);
 
+const EdgeSize = 40;
+
 export default {
   name: "PrintLabels",
   data() {
@@ -32,7 +34,6 @@ export default {
       getProduceDetailApi({id: this.node.id})
         .then(res => {
           this.order = res.data;
-
           const obj = _get(_deepCopy(res.data), "customizedBoards.0") || {};
 
           if (_isEmpty(obj)) {
@@ -102,13 +103,36 @@ export default {
     // 获取封边指示样式
     getEdgesStyle() {
       return node => {
-        const {edges} = _get(node, "original") || {};
-        return {
-          "border-left": edges[0] ? "2px solid #000" : "1px dashed #000",
-          "border-right": edges[1] ? "2px solid #000" : "1px dashed #000",
-          "border-top": edges[2] ? "2px solid #000" : "1px dashed #000",
-          "border-bottom": edges[3] ? "2px solid #000" : "1px dashed #000",
+        const {edges, angleType, radius, width, height} = _get(node, "original") || {};
+        const zoom = EdgeSize / (width || EdgeSize);
+
+        const style = {
+          "border-left": edges[0] ? "2px solid #000" : "2px dashed #000",
+          "border-right": edges[1] ? "2px solid #000" : "2px dashed #000",
+          "border-top": edges[2] ? "2px solid #000" : "2px dashed #000",
+          "border-bottom": edges[3] ? "2px solid #000" : "2px dashed #000",
+          width: `${width * zoom}px`,
+          height: `${height * zoom}px`,
         };
+
+
+        if (!angleType[0] && radius[0]) {
+          style["border-top-left-radius"] = `${radius[0] * zoom}px`;
+        }
+
+        if (!angleType[1] && radius[1]) {
+          style["border-top-right-radius"] = `${radius[1] * zoom}px`;
+        }
+
+        if (!angleType[2] && radius[2]) {
+          style["border-bottom-right-radius"] = `${radius[2] * zoom}px`;
+        }
+
+        if (!angleType[3] && radius[3]) {
+          style["border-bottom-left-radius"] = `${radius[3] * zoom}px`;
+        }
+
+        return style;
       };
     },
 
@@ -132,12 +156,45 @@ export default {
         const {width, height} = node;
         const M = _round(PlateWidth / width, 2);
 
+        const Y = item.y; // height - item.y - item.height;
+
         return {
           width: item.width * M + "px",
           height: item.height * M + "px",
-          transform: `translate(${item.x * M - 1}px, ${(height - item.y - item.height) * M - 1}px)`,
+          transform: `translate(${item.x * M - 1}px, ${(Y) * M - 1}px)`,
           backgroundColor: (item.rid === pItem.rid && iIndex === pIndex) ? "#000" : "",
         };
+      };
+    },
+
+    // 获取圆角数据
+    getRound() {
+      return (node, index) => {
+        const {angleType, straight, width} = _get(node, "original") || {};
+
+        const show = angleType?.[index];
+        const px = straight?.[index] || [];
+
+        const zoom = EdgeSize / (width || EdgeSize);
+
+        if (show) {
+          return {
+            width: `${(px[0] || 0) * zoom}px`,
+            height: `${(px[1] || 0) * zoom}px`,
+          };
+        }
+
+        return {
+          display: "none",
+        };
+      };
+    },
+
+    // 获取打印标签的封边指示器样式
+    getEdgesSize() {
+      return {
+        "--ko-print-label-edge-width": `${EdgeSize}px`,
+        "--ko-print-label-edge-height": `${EdgeSize}px`,
       };
     },
   },
@@ -146,7 +203,7 @@ export default {
 
 <template>
   <BasicPopup :visible.sync="visible" title="打印标签">
-    <view class="ko-print-label">
+    <view class="ko-print-label" :style="[getEdgesSize]">
       <div ref="LRef" class="ko-print-label__wrap">
         <block v-for="(wrap, wIndex) of boardRecord">
           <div class="ko-print-label__item" v-for="(item, iIndex) of wrap.items" :key="item.rid + iIndex">
@@ -156,7 +213,24 @@ export default {
             <div style="font-size: 12px; display: flex; align-items: center;">
               封边：
               <!--{{ getEdges(item) }}-->
-              <div :style="getEdgesStyle(item)" class="ko-print-label__item--edges"></div>
+              <div :style="getEdgesStyle(item)" class="ko-print-label__item--edges">
+                <div
+                  class="ko-print-label__item--round ko-print-label__item--round--0"
+                  :style="getRound(item, 0)"
+                ></div>
+                <div
+                  class="ko-print-label__item--round ko-print-label__item--round--1"
+                  :style="getRound(item, 1)"
+                ></div>
+                <div
+                  class="ko-print-label__item--round ko-print-label__item--round--2"
+                  :style="getRound(item, 2)"
+                ></div>
+                <div
+                  class="ko-print-label__item--round ko-print-label__item--round--3"
+                  :style="getRound(item,3)"
+                ></div>
+              </div>
             </div>
             <div class="ko-print-label__item--no">{{ wIndex + 1 }}</div>
 
@@ -234,16 +308,55 @@ export default {
 
     &--no {
       position: absolute;
-      left: 40%;
+      right: 40%;
       top: 25mm;
       font-size: 22px;
       z-index: 9;
     }
 
     &--edges {
-      width: 30px;
-      height: 20px;
+      width: var(--ko-print-label-edge-width);
+      height: var(--ko-print-label-edge-width);
       //border: 1px dashed #000;
+      position: relative;
+    }
+
+    $-radius-size: -2px;
+
+    &--round {
+      position: absolute;
+      height: 10px;
+      width: 10px;
+      background: #fff;
+      border: 2px solid #000;
+
+      &--0 {
+        top: $-radius-size;
+        left: $-radius-size;
+        border-top: none;
+        border-left: none;
+      }
+
+      &--1 {
+        top: $-radius-size;
+        right: $-radius-size;
+        border-top: none;
+        border-right: none;
+      }
+
+      &--2 {
+        bottom: $-radius-size;
+        right: $-radius-size;
+        border-right: none;
+        border-bottom: none;
+      }
+
+      &--3 {
+        bottom: $-radius-size;
+        left: $-radius-size;
+        border-bottom: none;
+        border-left: none;
+      }
     }
   }
 
