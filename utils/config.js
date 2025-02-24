@@ -113,14 +113,14 @@ export const ROLE_LIST_ENUMS = {
  * sse 事件
  * 类型 NewOrder
  * 事件:
- *      OutboundOrder  出库单
- *      ProduceOrder  生产单
- *      PurchaseOrder 采购单
- *      SaleOrder  销售单
- *      InboundOrder  出库单
- *      PayableOrder  应付单
- *      ReceivableOrder  应收单
- *      DeliveryOrder  物流单
+ * OutboundOrder  出库单
+ * ProduceOrder  生产单
+ * PurchaseOrder 采购单
+ * SaleOrder  销售单
+ * InboundOrder  出库单
+ * PayableOrder  应付单
+ * ReceivableOrder  应收单
+ * DeliveryOrder  物流单
  */
 
 /**

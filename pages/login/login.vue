@@ -257,13 +257,6 @@ export default {
     width: 500px;
     height: 100%;
     margin-right: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    /deep/ img {
-      width: 500px;
-    }
   }
 
   .ko-basic-button {
