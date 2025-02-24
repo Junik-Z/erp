@@ -64,6 +64,7 @@ export default {
   position: relative;
   background: #fff;
   z-index: 99;
+  overflow: hidden;
 
   h2 {
     text-align: center;
@@ -73,7 +74,9 @@ export default {
 
   &__info {
     margin-top: 10px;
-    padding: 0 20px;
+    padding: 0 10px;
+    overflow: hidden;
+
     @include print-style();
 
     &--item {

@@ -13,6 +13,7 @@ import { _get, _isEqual, _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
+
 // 设置纸张的上下间隙的和
 const UpperAndLowerClearance = cmToPx(2);
 
@@ -288,7 +289,7 @@ export default {
     </div>
 
     <div class="ko-print__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
-      <div ref="PrintRef">
+      <div class="ko-print__pages--wrap" ref="PrintRef">
         <div class="ko-print__pages--item" v-for="(item, index) of groupList" :key="'print' + index">
           <div class="ko-print__pages--center">
             <PrintTable
@@ -314,12 +315,16 @@ export default {
   <!-- #endif -->
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 // #ifdef H5
-/*@page Triple {
-  size: 216mm 140mm;
-  margin: 0;
-}*/
+@media print {
+  .ko-print__pages--center {
+    margin: 0; /* 移除外边距 */
+    padding: 0; /* 移除内边距 */
+    box-sizing: border-box; /* 确保边框包含在宽度内 */
+    width: 19.5cm;
+  }
+}
 
 .ko-print {
   padding-top: 120px;
@@ -327,7 +332,6 @@ export default {
   background: #fff;
   min-height: calc(100vh - 65px);
   position: relative;
-  //font-family: "华文楷体", "KaiTi", sans-serif;
 
   @include print-style();
 
@@ -366,16 +370,13 @@ export default {
   }
 
   &__pages {
-    //page: Triple;
-
-    //position: fixed;
-    //z-index: -99;
-    //top: 3000vh;
-    //left: 30000vw;
     @include print-style();
     position: absolute;
     left: -999999999px;
 
+    &--wrap {
+      width: 100%;
+    }
 
     &--item {
       height: var(--ko-paper-height);
@@ -383,6 +384,10 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    &--center {
+      width: calc(var(--ko-paper-width) - 2cm);
     }
 
     /deep/ .ko-print-table {

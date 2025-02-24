@@ -18,7 +18,7 @@ import { cmToPx, pointToPx } from "./utils";
 import { TabPane, Tabs } from "@/uni_modules/element-ui/element.min";
 
 // 纸张大小
-const PaperWidth = cmToPx(21);
+const PaperWidth = cmToPx(21.5);
 const PaperHeight = cmToPx(14);
 // 设置纸张的上下间隙的和
 const UpperAndLowerClearance = cmToPx(2);

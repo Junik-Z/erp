@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import PrintTable from "./components/NewPrintTable.vue";
+import PrintTable from "./components/BoardsPrint.vue";
 import PrintFooter from "./components/PrintFooter.vue";
 import PrintHeader from "./components/PrintHeader.vue";
 import { Button } from "@/uni_modules/element-ui/element.min";
@@ -8,7 +8,6 @@ import { Button } from "@/uni_modules/element-ui/element.min";
 import { VuePrintLast } from "./vue-print-last";
 import mixins from "@/mixins/mixins";
 import { cmToPx } from "@/shop/print/utils";
-import { _get, _isEqual, _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
@@ -85,31 +84,13 @@ export default {
         {
           label: "颜色",
           prop: "color",
+          bind: {colspan: 2},
         },
-        /*
         {
-          label: "封边",
-          prop: "edges",
-          render(h, {row}) {
-            const edges = _get(row, "edges") || [];
-
-            if (_isEmpty(edges)) return h("div");
-
-            return h(
-              "div",
-              {
-                style: {
-                  width: "30px",
-                  height: "16px",
-                  "border-left": edges[0] ? "2px solid #000" : "1px dashed #000",
-                  "border-right": edges[1] ? "2px solid #000" : "1px dashed #000",
-                  "border-top": edges[2] ? "2px solid #000" : "1px dashed #000",
-                  "border-bottom": edges[3] ? "2px solid #000" : "1px dashed #000",
-                },
-              },
-            );
-          },
-        }, */
+          label: "统计",
+          prop: "piece",
+          bind: {colspan: 0, style: {display: "none"}},
+        },
       ],
     };
   },
@@ -233,28 +214,50 @@ export default {
     // 表格列表
     getTableList() {
       return [
-        ...this.data,
-        /* ...(_get(this.node, "_result_") || [])
-          .map(item => {
-            return {
-              __index__: `名称：${item.name}`,
-              name: "",
-              width: "",
-              height: "",
-              weight: "",
-              quantity: `${item.quantity}`,
-              color: `单价：${this.toYuan(item.price)}`,
+        ...this.data?.map(item => {
+          return {
+            ...item,
+            _config_: {
+              color: {colspan: 2},
+              piece: {colspan: 0},
+            },
+          };
+        }),
+        {
+          name: "工程总价",
+          _config_: {
+            __index__: {colspan: 0},
+            name: {colspan: 8},
+            width: {colspan: 0},
+            height: {colspan: 0},
+            weight: {colspan: 0},
+            quantity: {colspan: 0},
+            color: {colspan: 0},
+            piece: {colspan: 0},
+          },
+        },
 
-              _config_: {
-                __index__: 5,
-                name: 0,
-                width: 0,
-                height: 0,
-                weight: 0,
-                quantity: 1,
-              },
-            };
-          }), */
+        ...this.GET_FUNC(this.node || {}, "_result_").map((item, index) => {
+          const name = item.name || "";
+
+          const numbers = name?.match?.(/\d+/g); // 匹配所有数字
+          const description = name?.match?.(/\(([^)]+)\)/); // 匹配括号内的内容
+
+          return {
+            ...item,
+            name: description?.[1] || name || "",
+            color: this.toYuan(item.price),
+            width: numbers?.[0] || "",
+            height: numbers?.[1] || "",
+            weight: numbers?.[2] || "",
+            piece: this.toYuan(item.price * item.quantity),
+            __index__: index + 1,
+            /*  _config_: {
+               __index__: {colspan: 0},
+               name: {colspan: 2},
+             }, */
+          };
+        }),
       ];
     },
   },
@@ -297,7 +300,7 @@ export default {
     </div>
 
     <div class="ko-print-customized-boards__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
-      <div ref="PrintRef">
+      <div class="ko-print-customized-boards__pages--wrap" ref="PrintRef">
         <div class="ko-print-customized-boards__pages--item" v-for="(item, index) of groupList" :key="'print' + index">
           <div class="ko-print-customized-boards__pages--center">
             <PrintTable
@@ -385,12 +388,20 @@ export default {
     position: absolute;
     left: -999999999px;
 
+    &--wrap {
+      width: 100%;
+    }
+
     &--item {
       height: var(--ko-paper-height);
       width: var(--ko-paper-width);
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    &--center {
+      width: calc(var(--ko-paper-width) - 2cm);
     }
 
     /deep/ .ko-print-table {

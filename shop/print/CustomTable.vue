@@ -243,7 +243,7 @@ export default {
     </div>
 
     <div v-if="!isA4" class="ko-print-custom-table__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
-      <div ref="PrintRef">
+      <div class="ko-print-custom-table__pages--wrap" ref="PrintRef">
         <div class="ko-print-custom-table__pages--item" v-for="(item, index) of groupList" :key="'print' + index">
           <div class="ko-print-custom-table__pages--center">
             <PrintTable
@@ -327,12 +327,21 @@ export default {
     position: absolute;
     left: -999999999px;
 
+    &--wrap {
+      width: 100%;
+    }
+
+
     &--item {
       height: var(--ko-paper-height);
       width: var(--ko-paper-width);
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    &--center {
+      width: calc(var(--ko-paper-width) - 2cm);
     }
 
     /deep/ .ko-print-table {
