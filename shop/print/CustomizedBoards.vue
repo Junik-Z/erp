@@ -379,11 +379,6 @@ export default {
   }
 
   &__pages {
-    //page: Triple;
-    //position: fixed;
-    //z-index: -99;
-    //top: 3000vh;
-    //left: 30000vw;
     @include print-style();
     position: absolute;
     left: -999999999px;
@@ -402,6 +397,7 @@ export default {
 
     &--center {
       width: calc(var(--ko-paper-width) - 2cm);
+      padding: 0 4px;
     }
 
     /deep/ .ko-print-table {

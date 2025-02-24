@@ -317,14 +317,14 @@ export default {
 
 <style scoped lang="scss">
 // #ifdef H5
-@media print {
+/*@media print {
   .ko-print__pages--center {
-    margin: 0; /* 移除外边距 */
-    padding: 0; /* 移除内边距 */
-    box-sizing: border-box; /* 确保边框包含在宽度内 */
-    width: 19.5cm;
+    margin: 0; !* 移除外边距 *!
+    padding: 0 5px; !* 移除内边距 *!
+    box-sizing: border-box; !* 确保边框包含在宽度内 *!
+    width: 100%;
   }
-}
+}*/
 
 .ko-print {
   padding-top: 120px;
@@ -388,6 +388,7 @@ export default {
 
     &--center {
       width: calc(var(--ko-paper-width) - 2cm);
+      padding: 0 4px;
     }
 
     /deep/ .ko-print-table {
