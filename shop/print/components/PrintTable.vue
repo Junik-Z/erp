@@ -94,11 +94,11 @@ export default {
       </th>
     </tr>
     <tr data-type="thead">
-      <th v-for="(column, index) of columns" :key="index">
-        <div class="ko-print-table__cell">
+      <td v-for="(column, index) of columns" :key="index">
+        <div style="font-weight: bold;" class="ko-print-table__cell">
           {{ column.label }}
         </div>
-      </th>
+      </td>
     </tr>
     </thead>
 
@@ -126,7 +126,7 @@ export default {
           >
             <div class="ko-print-table__cell">
               {{ item.label }}
-              {{ index % 2 === 0 ? ":" : ""}}
+              {{ index % 2 === 0 ? ":" : "" }}
             </div>
           </div>
         </div>
