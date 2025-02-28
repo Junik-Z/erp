@@ -309,7 +309,7 @@ export default {
                 :is-client="isClient"
                 is-actual
                 ref="PPRef"
-                :is-show-recent="isPerm('Purchase_Write')"
+                :is-show-recent="isPerm('PURCHASE_RECENT_PRICE')"
                 :supplier-id="form.supplierId"
               />
             </view>

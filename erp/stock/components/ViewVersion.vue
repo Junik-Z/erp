@@ -135,9 +135,11 @@ export default {
 
     // 跳转到库存预警页面
     onJumpWarning() {
-      uni.navigateTo({
-        url: "/erp/stock/warning",
-      });
+      if (this.isPerm("STOCK_WARNING_LIST")) {
+        uni.navigateTo({
+          url: "/erp/stock/warning",
+        });
+      }
     },
 
     onFunc(item) {

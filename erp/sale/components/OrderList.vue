@@ -24,6 +24,24 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import Pay from "../../components/Pay/Pay.vue";
 import { getOrderCodeDetailApi } from "@/api/erp/produce";
 
+const PageMenu = [
+  {
+    label: "待处理",
+    perm: "SALE_LIST",
+    func: 0,
+  },
+  {
+    label: "待付款",
+    perm: "SALE_WAIT_PAYMENT",
+    func: 1,
+  },
+  {
+    label: "已完成",
+    perm: "SALE_HISTORY",
+    func: 2,
+  },
+];
+
 export default {
   name: "OrderList",
   components: {
@@ -50,6 +68,7 @@ export default {
           iconfont: "icon-icon-test",
           path: "share",
           openType: "share",
+          perm: "SALE_SHARE",
           params: {
             title: `邀请您来下单啦！`,
             path: PageEnums.editSale,
@@ -59,26 +78,29 @@ export default {
           },
         },
         // #endif
-       /*  {
-          text: "生产",
-          iconfont: "icon-shengchan",
-          path: PageEnums.produceWork + "?ADDED_TYPE=common&FORM=SALE",
-        }, */
+        /*  {
+           text: "生产",
+           iconfont: "icon-shengchan",
+           path: PageEnums.produceWork + "?ADDED_TYPE=common&FORM=SALE",
+         }, */
         // #ifdef H5
         {
           text: "定制",
           iconfont: "icon-dingzhishengchan",
+          perm: "SALE_PRODUCE_ADD",
           path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE",
         },
         // #endif
         {
           text: "板材",
           iconfont: "icon-ziyuanicon",
+          perm: "SALE_PRODUCE_ADD",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE",
         },
         {
           text: "新增",
           iconfont: "icon-tianjia",
+          perm: "SALE_ADD",
           path: PageEnums.editSale,
         },
       ],
@@ -95,8 +117,6 @@ export default {
         orderAddress: "",
       },
       noMore: false,
-
-      tab: 0,
 
       // #ifdef H5
       columns: [
@@ -213,13 +233,9 @@ export default {
 
       isReturn: false,
 
-      values: [
-        "待处理",
-        "待付款",
-        "已完成",
-      ],
-
       isNewList: false,
+
+      PAGE_MENU: _deepCopy(PageMenu),
     };
   },
   methods: {
@@ -239,13 +255,13 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && !this.isReturn && this.list.length && (!this.isNewList || this.tab === 0)) {
+      if (this.noRefresh && info && !this.isReturn && this.list.length && (!this.isNewList || this.PAGE_MENU_INDEX === 0)) {
         this.updateList();
         return false;
       }
 
       this.loading = true;
-      const Func = [getSaleListApi, getSaleWaitPaymentListApi, getSaleHistoryApi][this.tab];
+      const Func = [getSaleListApi, getSaleWaitPaymentListApi, getSaleHistoryApi][this.PAGE_MENU_INDEX];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -317,8 +333,8 @@ export default {
       this.nodeIndex = index;
       this.noRefresh = true;
       this.jumpSaleAddedDocuments({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
-        orderType: "SALE",
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount", "orderType"]),
+        FORM: "SALE",
         noUnable: true,
       });
     },
@@ -388,35 +404,64 @@ export default {
           name: "申请退货",
           func: "onReturn",
           status: ["FINISHED"],
+          perm: "SALE_RETURN_ADD",
         },
         {
           name: "取消订单",
           func: "cancelSale",
           status: ["CREATED"],
+          perm: "SALE_CANCEL",
         },
         {
           name: "编辑",
           func: "onJump",
           status: ["CREATED", "CANCELLED", "FINISHED"],
+          perm: "SALE_UPDATE",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "removeSale",
           status: ["CANCELLED", "CREATED"],
+          perm: "SALE_DELETE",
         },
       ]
-        .filter(li => {
-          if (li.func === "onJump") {
-            if (this.tab === 1 && _isEqual(node.orderType, "PRODUCTION")) {
-              return false;
-            }
+        .filter(item => {
+          const isStatus = item.status.includes(node.status);
 
-            return this.tab !== 2 && li.status.includes(node.status);
+          if (_isEqual(item.func, "onJump")) {
+            return this.isEditorButton(node) && isStatus;
           }
 
-          return li.status.includes(node.status);
+          const isPerm = this.isPerm(item.perm);
+
+          if (_isEqual("onReturn", item.func)) {
+            return isPerm && isStatus && !_isEqual(node.orderType, "PRODUCTION");
+          }
+
+          return isPerm && isStatus;
         });
+    },
+
+    // 判断是不是要显示编辑按钮
+    isEditorButton() {
+      return (node) => {
+        if (_isEqual(this.PAGE_MENU_INDEX, 0) && _isEqual(node.orderType, "PRODUCTION")) {
+          return this.isPerm("SALE_PRODUCE_UPDATE");
+        }
+
+        if (_isEqual(this.PAGE_MENU_INDEX, 1)) {
+          // 待付款生产工单不能编辑
+          if (_isEqual(node.orderType, "PRODUCTION")) {
+            return false;
+          }
+
+          // 是否可以重新下单
+          return this.isPerm("SALE_RE_ORDER");
+        }
+
+        return !_isEqual(this.PAGE_MENU_INDEX, 2) && this.isPerm("SALE_UPDATE");
+      };
     },
   },
 };
@@ -425,8 +470,10 @@ export default {
 <template>
   <view class="ko-order">
     <HistoryBar
-      v-model="tab"
-      :values="values"
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
       @change="onResetList()"
       is-show-search
       ref="SearchRef"
@@ -464,24 +511,24 @@ export default {
             @click="onToDetails(item, 'sale')"
             is-sales
           >
-            <template #operate v-if="isPerm('Sales_Write')">
+            <template #operate>
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
-                  v-if="['FINISHED', 'CREATED'].includes(item.status)"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
                   class="ko-basic-button__card"
                   @click.stop="onPrint(item, index)"
                 >
                   打印单据
                 </button>
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
                   付款
                 </button>
                 <button
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('SALE_SUBMIT')"
                   class="ko-basic-button__card"
                   @click.stop="submitSale(item, index)"
                   :disabled="item.__s_loading__"
@@ -519,31 +566,31 @@ export default {
 
         :no-refresh="noRefresh"
       >
-        <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
+        <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+              v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
               付款
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status)"
+              v-if="['FINISHED'].includes(item.status) && !isEqual(item.orderType, 'PRODUCTION')"
               class="ko-basic-button__card"
               @click.stop="onReturn(item, index)"
             >
               申请退货
             </button>
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status)"
+              v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'sale')"
             >
               打印单据
             </button>
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('SALE_SUBMIT')"
               class="ko-basic-button__card"
               @click.stop="submitSale(item, index)"
               :disabled="item.__s_loading__"
@@ -554,14 +601,14 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2 && !(tab === 1 && isEqual(item.orderType, 'PRODUCTION'))"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && isEditorButton(item) && isPerm('SALE_UPDATE')"
             >
               修改
             </button>
             <button
               class="ko-basic-button__card"
               @click.stop="cancelSale(item, index)"
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('SALE_CANCEL')"
             >
               取消
             </button>
@@ -570,7 +617,7 @@ export default {
               @click.stop="removeSale(item, index)"
               :loading="item.__r_loading__"
               :disabled="item.__r_loading__"
-              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+              v-if="['CANCELLED', 'CREATED'].includes(item.status) && isPerm('SALE_DELETE')"
             >
               删除
             </button>
@@ -581,8 +628,8 @@ export default {
     <!-- #endif -->
 
     <KoMovable
-      v-if="isPerm('Sales_Write')"
-      :content="content"
+      :content="GET_MOVABLE_LIST"
+      v-if="isShowMovable"
       @click="onTrigger"
     />
 
@@ -598,7 +645,11 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="updateList(true)" />
+    <Pay
+      ref="TPRef"
+      @success="updateList(true)"
+      @close="noRefresh = false"
+    />
   </view>
 </template>
 

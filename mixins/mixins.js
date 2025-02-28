@@ -39,6 +39,9 @@ export default {
       TABS_LIST: [],
       TAB: 0,
 
+      PAGE_MENU: [],
+
+      PAGE_MENU_INDEX: 0,
     };
   },
   onShow() {
@@ -344,12 +347,12 @@ export default {
 
     // 判断是否是超管
     isAdmin() {
-      return this.GET_USER_ROLE.includes("Admin");
+      return this.GET_USER_ROLE.includes("ADMIN");
     },
 
     // 判断是否是商铺管理员
     isBusiness() {
-      return this.GET_USER_ROLE.includes("Business");
+      return this.GET_USER_ROLE.includes("BUSINESS");
     },
 
     // 根据传入的参数判断是否有权限
@@ -572,5 +575,34 @@ export default {
         CREATED: "财务未确认",
       })[type];
     },
+
+    // 获取页面内的导航列表
+    GET_PAGE_MENU() {
+      return this.PAGE_MENU?.flatMap(item => {
+        if (item.perm) {
+          if (this.isPerm(item.perm) || this.isBusiness || this.isAdmin) {
+            return [item];
+          } else {
+            return [];
+          }
+        }
+        return [item];
+      });
+    },
+
+    // 获取页面及的选中方法名
+    GET_PAGE_MENU_FUNC() {
+      return this.GET_PAGE_MENU?.[this.PAGE_MENU_INDEX || 0]?.func;
+    },
+
+    // 获取右下角添加按钮列表数据
+    GET_MOVABLE_LIST() {
+      return this.content?.filter(item => this.GET_USER_ROLE?.includes(item.perm));
+    },
+
+    // 是否显示添加按钮
+    isShowMovable() {
+      return this.GET_MOVABLE_LIST?.length
+    }
   },
 };

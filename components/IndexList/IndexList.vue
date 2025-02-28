@@ -98,6 +98,11 @@ export default {
 
     // 生产工单
     isWork: Boolean,
+
+    // 不需要索引列表
+    notIndex: Boolean,
+    // 显示更多按钮
+    showMoreButton: Boolean,
   },
   watch: {
     data: {
@@ -163,7 +168,6 @@ export default {
         this.itemHeight = this.winHeight / this.IndexMenus?.length;
       });
     },
-
 
     touchStart(e) {
       this.touchmove = true;
@@ -266,6 +270,16 @@ export default {
 
     onActionClick(...arg) {
       this.$emit("action-click", ...arg);
+    },
+
+    onEventItem(button, item, index, dx) {
+      this.$emit("click-item", button, item, index, dx);
+
+      this.$emit("click-event", {button, item, $index: index, buttonIndex: dx});
+    },
+
+    onMoreClick(item, index) {
+      this.$emit("click-more", item, index);
     },
   },
   computed: {
@@ -517,11 +531,20 @@ export default {
                         <button
                           class="ko-basic-button__user"
                           v-for="(button, dx) of events"
-                          @click.stop="$emit('click-item', button, item, index)"
+                          @click.stop="onEventItem(button, item, index, dx)"
                           :key="dx"
                         >
                           {{ button.label }}
                         </button>
+
+                        <button
+                          class="ko-basic-button__user"
+                          @click.stop="onMoreClick(item, index)"
+                          v-if="showMoreButton"
+                        >
+                          更多
+                        </button>
+
                         <slot v-if="$slots.default" :node="item" :index="index"></slot>
                       </view>
                     </view>
@@ -547,34 +570,36 @@ export default {
         </view>
       </scroll-view>
 
-      <view class="ko-index-list__menu">
-        <view
-          class="ko-index-list__menu--wrap"
-          @touchstart="touchStart"
-          @touchmove.stop.prevent="touchMove"
-          @touchend="touchEnd"
-          @mousedown.stop="mousedown"
-          @mousemove.stop.prevent="mousemove"
-          @mouseleave.stop="mouseleave"
-        >
+      <block v-if="!notIndex">
+        <view class="ko-index-list__menu">
           <view
-            v-for="(key, index) in IndexMenus"
-            :key="index"
-            class="ko-index-list__menu--item"
-            :class="{'is-active': touchmoveIndex === index}"
+            class="ko-index-list__menu--wrap"
+            @touchstart="touchStart"
+            @touchmove.stop.prevent="touchMove"
+            @touchend="touchEnd"
+            @mousedown.stop="mousedown"
+            @mousemove.stop.prevent="mousemove"
+            @mouseleave.stop="mouseleave"
           >
-            <text
-              class="ko-index-list__menu--text"
+            <view
+              v-for="(key, index) in IndexMenus"
+              :key="index"
+              class="ko-index-list__menu--item"
               :class="{'is-active': touchmoveIndex === index}"
             >
-              {{ key }}
-            </text>
+              <text
+                class="ko-index-list__menu--text"
+                :class="{'is-active': touchmoveIndex === index}"
+              >
+                {{ key }}
+              </text>
+            </view>
           </view>
         </view>
-      </view>
-      <view v-if="touchmove" class="ko-index-list__alert--wrapper">
-        <text class="ko-index-list__alert">{{ IndexMenus[touchmoveIndex] }}</text>
-      </view>
+        <view v-if="touchmove" class="ko-index-list__alert--wrapper">
+          <text class="ko-index-list__alert">{{ IndexMenus[touchmoveIndex] }}</text>
+        </view>
+      </block>
     </view>
   </view>
 </template>
@@ -798,6 +823,11 @@ export default {
     align-items: center;
     justify-content: flex-end;
     padding-right: 20px;
+    margin-top: 4rpx;
+
+    .ko-basic-button__user {
+      line-height: 1.2;
+    }
   }
 
   &__name {

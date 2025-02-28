@@ -20,6 +20,26 @@ import KoList from "@/components/List/List.vue";
 import { CONFIG } from "@/utils/config";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
+const PageMenu = [
+  {
+    label: "待处理",
+    perm: "STOCK_INBOUND_LIST",
+    func: 0,
+  },
+  {
+    label: "已完成",
+    perm: "STOCK_INBOUND_HISTORY",
+    func: 1,
+  },
+  // #ifdef H5
+  {
+    label: "已取消",
+    perm: "STOCK_INBOUND_CANCEL",
+    func: 2,
+  },
+  // #endif
+];
+
 export default {
   name: "Warehouse",
   components: {
@@ -39,7 +59,6 @@ export default {
     return {
       loading: false,
       list: [],
-      isHistory: 0,
 
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -152,14 +171,10 @@ export default {
       // #endif
 
       tableKey: +new Date(),
-      values: [
-        "待处理",
-        "已完成",
-        // #ifdef H5
-        "已取消",
-        // #endif
-      ],
     };
+  },
+  created() {
+    this.PAGE_MENU = _deepCopy(PageMenu);
   },
   methods: {
     // 请求下一页数据
@@ -175,24 +190,24 @@ export default {
         this.list = [];
         this.tableKey = +new Date();
       }
-
       const params = _deepCopy(this.queryList);
 
       this.loading = true;
-      const Func = [getInboundListApi, getInboundHistoryListApi, getInboundHistoryListApi][this.isHistory];
 
-      if (this.isHistory > 0) {
+
+      const Func = [getInboundListApi, getInboundHistoryListApi, getInboundHistoryListApi][this.GET_PAGE_MENU_FUNC];
+
+      if (this.GET_PAGE_MENU_FUNC > 0) {
         params.status = {
           1: "FINISHED",
           2: "CANCELLED",
-        }[this.isHistory];
+        }[this.GET_PAGE_MENU_FUNC];
       }
 
       Func(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
-          console.log(res);
         })
         .catch(() => {
           this.noMore = true;
@@ -265,8 +280,9 @@ export default {
 <template>
   <view class="ko-warehouse">
     <HistoryBar
-      v-model="isHistory"
-      :values="values"
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -302,13 +318,14 @@ export default {
           <OrderCard
             :item="item"
             @click="onJumpDetails(item, 'inbound')"
-            :is-history="isHistory"
+            :is-history="GET_PAGE_MENU_FUNC"
           >
-            <template #operate v-if="isPerm('Stock_Write')">
+            <template #operate>
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onPrint(item)"
+                  v-if="isPerm('STOCK_PRINT')"
                 >
                   打印入库单(A4)
                 </button>
@@ -321,7 +338,7 @@ export default {
                   取消入库
                 </button>
                 <button
-                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('STOCK_INBOUND_CONFIRM')"
                   class="ko-basic-button__card"
                   @click.stop="onConfirm(item, index)"
                 >
@@ -348,11 +365,12 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item, index}" v-if="isPerm('Stock_Write')">
+        <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'inbound')"
+              v-if="isPerm('STOCK_PRINT')"
             >
               打印入库单(A4)
             </button>
@@ -370,7 +388,7 @@ export default {
               取消入库
             </button>
             <button
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('STOCK_INBOUND_CONFIRM')"
               class="ko-basic-button__card"
               @click.stop="onConfirm(item, index)"
             >

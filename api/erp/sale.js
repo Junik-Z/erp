@@ -12,6 +12,17 @@ export function getCustomerListApi(data) {
 }
 
 /**
+ * @description 获取客户列表
+ */
+export function getCustomerUserListApi(data) {
+  return request({
+    url: "/customer/user-list",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取临时客户列表
  */
 export function getTempCustomerListApi(data) {
@@ -461,6 +472,78 @@ export function getRecentPriceApi(data) {
   return request({
     url: "/sale/recentPrice",
     method: "get",
+    data,
+  });
+}
+
+
+// —————————————— 付款相关 ——————————————————
+/**
+ * @description 获取已经付款的列表
+ */
+export function getSalePaidOrderApi(data) {
+  return request({
+    url: "/sale/paid-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSalePaidOrderApi(data) {
+  return request({
+    url: "/sale/add-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 修改已经付款
+ */
+export function editSalePaidOrderApi(data) {
+  return request({
+    url: "/sale/edit-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+// ———————————————————— 退货付款 ————————————————————
+
+/**
+ * @description 获取已经付款的列表
+ */
+export function getSaleReturnedOrderApi(data) {
+  return request({
+    url: "/sale/return/returned-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSaleReturnedOrderApi(data) {
+  return request({
+    url: "/sale/return/add-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 修改已经付款
+ */
+export function editSaleReturnedOrderApi(data) {
+  return request({
+    url: "/sale/return/edit-returned-order",
+    method: "post",
     data,
   });
 }

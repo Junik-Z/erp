@@ -520,3 +520,84 @@ export function getPurchaseRecentPriceApi(data) {
     data,
   });
 }
+
+/**
+ * @description 供应商用户列表
+ */
+export function getSupplierUserListApi(data) {
+  return request({
+    url: "/supplier/user-list",
+    method: "get",
+    data,
+  });
+}
+
+// —————————————— 付款相关 ——————————————————
+/**
+ * @description 获取已经付款的列表
+ */
+export function getPurchaseReturnedOrderApi(data) {
+  return request({
+    url: "/purchase/returned-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSPurchaseReturnedOrderApi(data) {
+  return request({
+    url: "/purchase/add-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 修改已经付款
+ */
+export function editPurchaseReturnedOrderApi(data) {
+  return request({
+    url: "/purchase/edit-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+// —————————————— 采购退货付款相关 ——————————————————
+/**
+ * @description 获取已经付款的列表
+ */
+export function getPurchaseReturnedPaidOrderApi(data) {
+  return request({
+    url: "/purchase/return/paid-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSPurchaseReturnedPaidOrderApi(data) {
+  return request({
+    url: "/purchase/return/add-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 修改已经付款
+ */
+export function editPurchaseReturnedPaidOrderApi(data) {
+  return request({
+    url: "/purchase/return/edit-paid-order",
+    method: "post",
+    data,
+  });
+}

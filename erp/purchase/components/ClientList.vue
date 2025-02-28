@@ -8,7 +8,7 @@ import {
   removeSupplierApi,
   unbindSupplierApi,
 } from "@/api/erp/purchase";
-import { _deepCopy, _get, _isEmpty, _isString, _xor } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
@@ -31,26 +31,6 @@ export default {
   data() {
     const _this = this;
     return {
-      content: [
-        // #ifdef MP
-        {
-          text: "分享",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: "填写信息",
-            content: "邀请您填写信息，方便下次联系。",
-            path: "/erp/purchase/client?type=added",
-          },
-        },
-        // #endif
-        {
-          text: "新增",
-          iconfont: "icon-tianjia",
-          path: "/erp/purchase/client",
-        },
-      ],
       list: [],
       loading: false,
 
@@ -183,9 +163,9 @@ export default {
       }
 
       this.loading = true;
-      const Fn = [getSupplierListApi, getTempSupplierListApi][+this.tab];
+      const Fn = [getSupplierListApi, getTempSupplierListApi][+this.tabIndex];
 
-      Fn({...this.queryList, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
+      Fn({...this.queryList, ...(+this.tabIndex === 0 ? {type: "OFFICIAL"} : {})})
         .then((res) => {
           const list = (res.data || []).map(this.getListNode);
 
@@ -244,7 +224,6 @@ export default {
         content: `您确定要解绑供应商吗？`,
         success: (res) => {
           if (res.confirm) {
-
             Promise.all(
               user.map(userId => unbindSupplierApi({
                 supplierId: this.node.id,
@@ -253,12 +232,6 @@ export default {
             )
               .then(() => {
                 uni.showToast({title: "解绑成功"});
-                const use = _deepCopy(this.list[this.nodeIndex].users)?.filter(v => {
-                  return !user.includes(v.userId);
-                });
-                this.$set(this.list[this.nodeIndex], "users", use);
-
-                // this.getList(true);
               });
           }
         },
@@ -275,22 +248,20 @@ export default {
       )
         .then(() => {
           uni.showToast({title: "绑定成功"});
-          this.$set(this.list[this.nodeIndex], "users", [...this.list[this.nodeIndex]?.users || [], ...user.map(userId => ({userId}))]);
           // this.getList(true);
         });
     },
 
     onBindPopup(item, isBind, index) {
-      this.bindUserList = _deepCopy(item)?.users?.map(v => v.userId) || [];
       this.isBind = isBind;
       this.node = item;
       this.nodeIndex = index;
-      this.visible = true;
+
+      this.$refs.SPURef?.open?.({supplierId: item.value});
     },
 
     onConfirm(checked) {
-      const users = _xor(this.bindUserList, checked);
-      !_isEmpty(users) && this[this.isBind ? "onBind" : "onUnbind"](users);
+      !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked);
       this.visible = false;
     },
 
@@ -315,7 +286,7 @@ export default {
     onConvert(item, index) {
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要将 ${item.name} 转为 ${["临时", "正式"][+this.tab]}供应商吗？`,
+        content: `您确定要将 ${item.name} 转为 ${["临时", "正式"][+this.tabIndex]}供应商吗？`,
         success: (res) => {
           if (res.confirm) {
             convertSupplierListApi(item)
@@ -368,6 +339,11 @@ export default {
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
+
+    // 处理索引点击按钮
+    onClickEvent(query) {
+      this.onBindPopup(query.item, query.button.isBind, query.$index);
+    },
   },
   computed: {
     getBindingParams() {
@@ -386,69 +362,87 @@ export default {
     actionList() {
       return [
         {
-          name: ["转为临时供应商", "转为正式供应商"][+this.tab],
+          name: ["转为临时供应商", "转为正式供应商"][+this.tabIndex],
           func: "onConvert",
+          perm: "SUPPLIER_CONVERT",
         },
         {
           name: "编辑",
           func: "onJump",
+          perm: "SUPPLIER_EDIT",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "onRemove",
+          perm: "SUPPLIER_DELETE",
         },
-      ];
+      ].filter(item => this.isPerm(item.perm));
     },
+
+    // 获取列表项
+    getTabsList() {
+      return [
+        {
+          label: "供应商",
+          perm: "SUPPLIER_LIST",
+          type: 0,
+        },
+        {
+          label: "临时供应商",
+          perm: "SUPPLIER_TEMP",
+          type: 1,
+        },
+      ].filter(item => this.isPerm(item.perm));
+    },
+
+    // 获取索引
+    tabIndex() {
+      return _get(this.getTabsList, `${this.tab}.type`);
+    },
+
+    // #ifdef MP
+    getIndexEventList() {
+      return [
+        {label: "绑定客户", isBind: true, perm: "SUPPLIER_BIND"},
+        {label: "解绑客户", isBind: false, perm: "SUPPLIER_UNBIND"},
+      ].filter(item => this.isPerm(item.perm));
+    },
+    // #endif
   },
 };
 </script>
 
 <template>
-  <view class="ko-client">
-    <view class="ko-client__content">
+  <view class="ko-purchase-client">
+    <view class="ko-purchase-client__content">
       <HistoryBar
-        :values="['供应商', '临时供应商']"
+        :values="getTabsList"
+        label-key="label"
         v-model="tab"
+
         @change="onSearchToNameIndex('')"
-        custom-class="ko-client__tabs"
+        custom-class="ko-purchase-client__tabs"
       />
 
       <!-- #ifdef MP -->
-      <view class="ko-client__wrap">
+      <view class="ko-purchase-client__wrap">
         <IndexList
           :data="list"
           :loading="loading"
           is-supplier
           @click="onJumpInfo"
-          button-perm="Purchase_Write"
 
           @lower="onLower"
           :no-more="noMore"
           @search="onSearchToNameIndex"
-        >
-          <template #default="{node, index}">
-            <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
-              <!--<button
-                @click.stop="() => {}"
-                open-type="share"
-                :data-params="getBindingParams(node)"
-                class="ko-basic-button__card"
-              >
-                邀请绑定
-              </button>-->
-              <button @click.stop="onBindPopup(node, true, index)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(node, false, index)" class="ko-basic-button__user">解绑客户</button>
 
-              <button
-                class="ko-basic-button__user"
-                @click.stop="onActionClick(node, index)"
-              >
-                更多
-              </button>
-            </view>
-          </template>
-        </IndexList>
+          :show-more-button="!!actionList.length"
+          @click-more="onActionClick"
+
+          :events="getIndexEventList"
+          @click-event="onClickEvent"
+        />
       </view>
       <!-- #endif -->
 
@@ -465,7 +459,7 @@ export default {
           @next-load="onLower"
           :no-more="noMore || loading"
         >
-          <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
+          <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <!--<button
                 @click.stop="() => {}"
@@ -475,13 +469,41 @@ export default {
               >
                 邀请绑定
               </button>-->
-              <button @click.stop="onBindPopup(item, true, index)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(item, false, index)" class="ko-basic-button__user">解绑客户</button>
-              <button class="ko-basic-button__user" @click.stop="onConvert(item)">
-                {{ ["转为临时客户", "转为正式客户"][+tab] }}
+              <button
+                @click.stop="onBindPopup(item, true, index)"
+                class="ko-basic-button__user"
+                v-if="isPerm('SUPPLIER_BIND')"
+              >
+                绑定供应商
               </button>
-              <button class="ko-basic-button__user" @click.stop="onJump(item, index)">编辑</button>
-              <button class="ko-basic-button__user" @click.stop="onRemove(item, index)">删除</button>
+              <button
+                @click.stop="onBindPopup(item, false, index)"
+                class="ko-basic-button__user"
+                v-if="isPerm('SUPPLIER_UNBIND')"
+              >
+                解绑供应商
+              </button>
+              <button
+                class="ko-basic-button__user"
+                @click.stop="onConvert(item)"
+                v-if="isPerm('SUPPLIER_CONVERT')"
+              >
+                {{ ["转为临时供应商", "转为正式供应商"][+tabIndex] }}
+              </button>
+              <button
+                v-if="isPerm('SUPPLIER_EDIT')"
+                class="ko-basic-button__user"
+                @click.stop="onJump(item, index)"
+              >
+                编辑
+              </button>
+              <button
+                class="ko-basic-button__user"
+                @click.stop="onRemove(item, index)"
+                v-if="isPerm('SUPPLIER_DELETE')"
+              >
+                删除
+              </button>
             </view>
           </template>
 
@@ -491,19 +513,24 @@ export default {
     </view>
 
     <PickerUser
-      v-if="isPerm('Purchase_Write')"
       :visible.sync="visible"
       :title="isBind ? '选择绑定客户' : '解绑客户'"
       is-confirm
-      :value="bindUserList"
-      :disabled="isBind ? bindUserList : []"
-      :checked-list="isBind ? [] : bindUserList"
       multiple
       @confirm="onConfirm"
+
+      ref="SPURef"
+      v-if="isPerm('SUPPLIER_UNBIND') || isPerm('SUPPLIER_BIND')"
+
+      is-external-open
+      not-created-request
+      :is-selected="!isBind"
+      :is-not-selected="isBind"
+      type="purchaseUserList"
     />
 
     <KoMovable
-      v-if="isPerm('Purchase_Write')"
+      v-if="isPerm('SUPPLIER_ADD')"
       @click="onTrigger('')"
     />
 
@@ -520,8 +547,10 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
-.ko-client {
+<style lang="scss">
+.ko-purchase-client {
+  padding-top: 10px;
+
   width: 100%;
   height: calc(100vh - 56px);
 

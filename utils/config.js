@@ -24,7 +24,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // #endif
 
   // #ifdef H5
@@ -113,14 +113,14 @@ export const ROLE_LIST_ENUMS = {
  * sse 事件
  * 类型 NewOrder
  * 事件:
- * OutboundOrder  出库单
- * ProduceOrder  生产单
- * PurchaseOrder 采购单
- * SaleOrder  销售单
- * InboundOrder  出库单
- * PayableOrder  应付单
- * ReceivableOrder  应收单
- * DeliveryOrder  物流单
+ *      OutboundOrder  出库单
+ *      ProduceOrder  生产单
+ *      PurchaseOrder 采购单
+ *      SaleOrder  销售单
+ *      InboundOrder  出库单
+ *      PayableOrder  应付单
+ *      ReceivableOrder  应收单
+ *      DeliveryOrder  物流单
  */
 
 /**
@@ -198,6 +198,9 @@ export const PageEnums = {
 
   // 选择产品页面
   pickerProduct: "/shop/list/list",
+
+  // 授权页面
+  adminAuthorization: "/admin/merchants/authorization",
 };
 
 /**
@@ -209,7 +212,7 @@ export const MENU_LIST = [
     icon: "icon-kucuntongjifenxi",
     value: "/erp/stock/stock",
     modelKey: "stock",
-    role: ["Admin", "Business", "Stock_Read", "Stock_Write", "Stock_Taking"],
+    role: ["ADMIN", "BUSINESS", "STOCK_READ", "STOCK_WRITE", "STOCK_TAKING"],
     // 是否可以被分配角色
     isUpRole: true,
     // 是否有会员系统
@@ -220,7 +223,7 @@ export const MENU_LIST = [
     icon: "icon-xiaoshoubi",
     value: "/erp/sale/sale",
     modelKey: "sale",
-    role: ["Admin", "Business", "Sales_Read", "Sales_Write", "Sales_Member"],
+    role: ["ADMIN", "BUSINESS", "SALES_READ", "SALES_WRITE", "SALES_MEMBER"],
     isUpRole: true,
     // 是否有会员系统
     // isMember: true,
@@ -231,7 +234,7 @@ export const MENU_LIST = [
     icon: "icon-icon_B_caigoujihuatibao",
     value: "/erp/purchase/purchase",
     modelKey: "purchase",
-    role: ["Admin", "Business", "Purchase_Read", "Purchase_Write", "Purchase_Member"],
+    role: ["ADMIN", "BUSINESS", "PURCHASE_READ", "PURCHASE_WRITE", "PURCHASE_MEMBER"],
     isUpRole: true,
     // 是否有会员系统
     // isMember: true,
@@ -243,7 +246,7 @@ export const MENU_LIST = [
     value: PageEnums.produceLoading,
     checkField: "produceEnable",
     modelKey: "produce",
-    role: ["Admin", "Business", "Produce_Read", "Produce_Write", "Produce_Member"],
+    role: ["ADMIN", "BUSINESS", "PRODUCE_READ", "PRODUCE_WRITE", "PRODUCE_MEMBER"],
     isUpRole: true,
   },
   {
@@ -251,7 +254,7 @@ export const MENU_LIST = [
     icon: "icon-tubiao-05",
     value: "/erp/finance/finance",
     modelKey: "finance",
-    role: ["Admin", "Business", "Finance_Read", "Finance_Write"],
+    role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
     isUpRole: true,
   },
   {
@@ -260,7 +263,7 @@ export const MENU_LIST = [
     value: "/erp/logistics/logistics",
     checkField: "deliveryEnable",
     modelKey: "logistics",
-    role: ["Admin", "Business", "Delivery_Read", "Delivery_Write", "Delivery_Member"],
+    role: ["ADMIN", "BUSINESS", "DELIVERY_READ", "DELIVERY_WRITE", "DELIVERY_MEMBER"],
     isUpRole: true,
     // 是否有会员系统
     // isMember: true,
@@ -271,21 +274,21 @@ export const MENU_LIST = [
     icon: "icon-chanpinguanli",
     value: PageEnums.product,
     modelKey: "product",
-    role: ["Admin", "Business", "Product_Read", "Product_Write"],
+    role: ["ADMIN", "BUSINESS", "PRODUCT_READ", "PRODUCT_WRITE"],
     isUpRole: true,
   },
   {
     label: "员工管理",
     icon: "icon-guanxiaobaotubiao38",
     value: "/admin/merchants/merchants",
-    role: ["Admin", "Business"],
+    role: ["ADMIN", "BUSINESS",],
     isUpRole: false,
   },
   {
     label: "考勤",
     icon: "icon-kaoqindaka",
     value: PageEnums.attend,
-    role: ["Admin", "Business", "Produce_Member", "Product_Write"],
+    role: ["ADMIN", "BUSINESS", "PRODUCE_MEMBER", "PRODUCE_READ"],
     isUpRole: false,
   },
   {
@@ -299,7 +302,7 @@ export const MENU_LIST = [
     label: "超管",
     icon: "icon-chaojiguanliyuan",
     value: "/admin/admin/index",
-    role: ["Admin"],
+    role: ["ADMIN"],
     isUpRole: false,
   },
 ];
@@ -361,15 +364,6 @@ export const PRICING_METHOD = {
   fixedPriceGroup: "固定价格组内平分",
   dailyRate: "按日工资",
   none: "没有定价方式",
-};
-
-/**
- * @description 生产工单类型
- */
-export const PRODUCTION_TYPE_ENUMS = {
-  common: "常规生产",
-  packing: "板材定制",
-  xlsx: "表格定制生产",
 };
 
 /**

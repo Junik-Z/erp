@@ -157,6 +157,12 @@
           }
         },
         {
+          "path": "merchants/authorization",
+          "style": {
+            "navigationBarTitleText": "授权"
+          }
+        },
+        {
           "path": "user/user",
           "style": {
             "navigationBarTitleText": "个人中心"

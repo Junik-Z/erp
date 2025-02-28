@@ -19,27 +19,27 @@ export default {
         {
           label: "采购看版",
           ref: "VVRef",
-          roles: ["Purchase_Read", "Purchase_Write"],
+          roles: ["SUPPLIER_COUNT"],
         },
         {
           label: "采购订单",
           ref: "OLRef",
-          roles: ["Purchase_Read", "Purchase_Write"],
+          roles: ["PURCHASE_LIST", "PURCHASE_WAIT_PAYMENT", "PURCHASE_HISTORY"],
         },
         {
           label: "供应商管理",
           ref: "CLRef",
-          roles: ["Purchase_Read", "Purchase_Write"],
+          roles: ["SUPPLIER_LIST", "SUPPLIER_TEMP"],
         },
         {
           label: "退货处理",
           ref: "RLRef",
-          roles: ["Purchase_Read", "Purchase_Write"],
+          roles: ["PURCHASE_RETURN_LIST", "PURCHASE_RETURN_WAIT_PAYMENT", "PURCHASE_RETURN_HISTORY"],
         },
         {
           label: "我的订单",
           ref: "MOLRef",
-          roles: ["Purchase_Member"],
+          roles: ["PURCHASE_MY_LIST", "PURCHASE_RETURN_MY_LIST"],
         },
       ],
       // TAB: 2,
@@ -129,6 +129,8 @@ export default {
     <RefundList ref="RLRef" v-if="isEqual(GET_TABS_REF_NAME, 'RLRef')" />
 
     <MyOrderList ref="MOLRef" v-if="isEqual(GET_TABS_REF_NAME, 'MOLRef')" />
+
+    <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>
 </template>
 

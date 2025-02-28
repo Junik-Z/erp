@@ -131,3 +131,71 @@ export function getPrintListApi(data) {
     data,
   });
 }
+
+/**
+ * @description 移除某个用户的角色
+ */
+export function removeRoleApi(data) {
+  return request({
+    url: "/user/delete-role",
+    method: "post",
+    data,
+  });
+}
+
+// ———————————————————— 权限设置 ————————————————————————
+
+/**
+ * @description 设置权限
+ */
+export function setRoleApi(data) {
+  return request({
+    url: "/user/add-role",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取用户角色
+ */
+export function getRoleApi(data) {
+  return request({
+    url: "/user/get-roles",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取用户对应的角色
+ */
+export function getRolePermApi(data) {
+  return request({
+    url: "/user/get-role-permission",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取用户详细的权限
+ */
+export function getRolePermListApi(data) {
+  return request({
+    url: "/user/get-permission",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取对应权限的用户列表
+ */
+export function getRolePermUsersApi(data) {
+  return request({
+    url: "/user/get-permission-users",
+    method: "get",
+    data,
+  });
+}

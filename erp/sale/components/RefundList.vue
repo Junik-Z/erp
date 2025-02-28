@@ -13,7 +13,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isString, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
@@ -23,6 +23,24 @@ import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "@/erp/components/Pay/Pay.vue";
+
+const PageMenu = [
+  {
+    label: "待处理",
+    perm: "SALE_RETURN_LIST",
+    func: 0,
+  },
+  {
+    label: "待退款",
+    perm: "SALE_RETURN_WAIT_PAYMENT",
+    func: 1,
+  },
+  {
+    label: "已完成",
+    perm: "SALE_RETURN_HISTORY",
+    func: 2,
+  },
+];
 
 export default {
   name: "RefundList",
@@ -41,6 +59,9 @@ export default {
     BasicCard,
   },
   mixins: [mixins, SaleMixins],
+  created() {
+    this.PAGE_MENU = _deepCopy(PageMenu);
+  },
   data() {
     const _this = this;
     return {
@@ -67,8 +88,6 @@ export default {
 
       loading: false,
       list: [],
-
-      tab: 0,
 
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -210,13 +229,13 @@ export default {
 
       console.log(info, "新增数据");
 
-      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.tab === 0)) {
+      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.PAGE_MENU_INDEX === 0)) {
         this.updateList();
         return false;
       }
 
       this.loading = true;
-      const Func = [getSaleReturnListApi, getSaleReturnWaitPaymentApi, getSaleReturnHistoryApi][this.tab];
+      const Func = [getSaleReturnListApi, getSaleReturnWaitPaymentApi, getSaleReturnHistoryApi][this.PAGE_MENU_INDEX];
 
       Func(this.queryList)
         .then(res => {
@@ -256,9 +275,10 @@ export default {
       this.node = item;
       this.nodeIndex = index;
       this.noRefresh = true;
+
       this.jumpSaleAddedDocuments({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
-        orderType: "SALE_RETURN",
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount", "orderType"]),
+        FORM: "SALE_RETURN",
         noUnable: true,
       });
     },
@@ -311,29 +331,36 @@ export default {
           name: "取消订单",
           func: "cancelRefundSale",
           status: ["CREATED", "FINISHED"],
+          perm: "SALE_RETURN_CANCEL",
         },
         {
           name: "编辑",
           func: "onJump",
           status: ["CREATED", "CANCELLED", "FINISHED"],
+          perm: "SALE_RETURN_UPDATE",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "removeRefundSale",
           status: ["CANCELLED", "CREATED"],
+          perm: "SALE_RETURN_DELETE",
         },
       ]
-        .filter(li => {
-          if (li.func === "cancelRefundSale") {
-            return ["CREATED"].includes(node.status) || (["FINISHED"].includes(node.status) && node.totalAmount === 0);
+        .filter(item => {
+          const isPerm = this.isPerm(item.perm);
+
+          if (_isEqual(item.func, "cancelRefundSale")) {
+            return (["CREATED"].includes(node.status) || (["FINISHED"].includes(node.status) && node.totalAmount === 0)) && isPerm;
           }
 
-          if (li.name === "编辑") {
-            return this.tab !== 2 && li.status.includes(node.status);
+          if (_isEqual(item.func, "onJump")) {
+            if (_isEqual(this.PAGE_MENU_INDEX, 1)) return item.status.includes(node.status) && this.isPerm("SALE_RETURN_RE_ORDER");
+
+            return (_isEqual(this.PAGE_MENU_INDEX, 0) && item.status.includes(node.status)) && isPerm;
           }
 
-          return li.status.includes(node.status);
+          return item.status.includes(node.status) && isPerm;
         });
     },
   },
@@ -343,8 +370,10 @@ export default {
 <template>
   <view class="ko-client">
     <HistoryBar
-      v-model="tab"
-      :values="values"
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -383,19 +412,19 @@ export default {
             @click="onJumpDetails(item, 'saleReturn')"
             is-show-total-amount
           >
-            <template #operate v-if="isPerm('Sales_Write')">
+            <template #operate>
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
               >
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onPrint(item, index)"
-                  v-if="['FINISHED', 'CREATED'].includes(item.status)"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
                 >
                   打印单据
                 </button>
                 <button
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('SALE_RETURN_CONFIRM')"
                   class="ko-basic-button__card"
                   @click.stop="submitRefundSale(item, index)"
                   :disabled="item.__s_loading__"
@@ -405,7 +434,7 @@ export default {
                 </button>
 
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_RETURN_ADD_RETURNED_ORDER') || isPerm('SALE_RETURN_RETURNED_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
@@ -415,7 +444,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item, index)"
-                  v-if="tab === 2 ? item.totalAmount === 0 : true"
+                  v-if="PAGE_MENU_INDEX !== 2"
                 >
                   更多
                 </button>
@@ -442,19 +471,19 @@ export default {
         :no-more="noMore || loading"
         :no-refresh="noRefresh"
       >
-        <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
+        <template #operate="{item, index}">
           <view
             style="display: flex; align-items: center; justify-content: center;"
           >
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status)"
+              v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'saleReturn')"
             >
               打印单据
             </button>
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('SALE_RETURN_CONFIRM')"
               class="ko-basic-button__card"
               @click.stop="submitRefundSale(item, index)"
               :disabled="item.__s_loading__"
@@ -463,7 +492,7 @@ export default {
               提交订单
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+              v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_RETURN_ADD_RETURNED_ORDER') || isPerm('SALE_RETURN_RETURNED_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
@@ -472,7 +501,7 @@ export default {
 
 
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('SALE_RETURN_CANCEL')"
               class="ko-basic-button__card"
               @click.stop="cancelRefundSale(item, index)"
             >
@@ -480,7 +509,7 @@ export default {
             </button>
 
             <button
-              v-if="['FINISHED', 'CREATED', 'CANCELLED'].includes(item.status) && tab !== 2"
+              v-if="['FINISHED', 'CREATED', 'CANCELLED'].includes(item.status) && (isEqual(PAGE_MENU_INDEX, 1) && isPerm('SALE_RETURN_RE_ORDER') || isEqual(PAGE_MENU_INDEX, 0) && isPerm('SALE_RETURN_UPDATE'))"
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
             >
@@ -488,7 +517,7 @@ export default {
             </button>
 
             <button
-              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+              v-if="['CANCELLED', 'CREATED'].includes(item.status) && isPerm('SALE_RETURN_DELETE')"
               class="ko-basic-button__card"
               @click.stop="removeRefundSale(item, index)"
             >
@@ -502,7 +531,7 @@ export default {
     <!-- #endif -->
 
     <KoMovable
-      v-if="isPerm('Sales_Write')"
+      v-if="isPerm('SALE_RETURN_ADD')"
       @click="jumpSaleReturn({})"
     />
 
@@ -518,7 +547,11 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="updateList(true)" />
+    <Pay
+      ref="TPRef"
+      @success="updateList(true)"
+      @close="noRefresh = false"
+    />
   </view>
 </template>
 

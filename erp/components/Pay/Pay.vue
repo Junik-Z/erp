@@ -4,8 +4,6 @@ import TicketMixins from "@/erp/finance/TicketMixins";
 import KoList from "@/components/List/List.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
@@ -26,8 +24,6 @@ export default {
     FilePicker,
     UniFormsItem,
     UniEasyinput,
-    UniRow,
-    UniCol,
     BasicCard,
     UvAvatar,
     KoList,
@@ -42,6 +38,13 @@ export default {
 
       moreNode: {},
     };
+  },
+  watch: {
+    visible: {
+      handler(to) {
+        if (!to) this.$emit('close')
+      }
+    }
   },
   methods: {
     open(query) {
@@ -104,6 +107,26 @@ export default {
         return true;
       });
     },
+
+    // 判断是否有权限修改已付款金额
+    isPayEdit() {
+      return {
+        SALE: this.isPerm("SALE_EDIT_PAID_ORDER"),
+        SALE_RETURN: this.isPerm("SALE_RETURN_EDIT_RETURNED_ORDER"),
+        PURCHASE: this.isPerm("PURCHASE_EDIT_RETURNED_ORDER"),
+        PURCHASE_RETURN: this.isPerm("PURCHASE_RETURN_EDIT_PAID_ORDER"),
+      }[this.option.FORM];
+    },
+
+    // 判断是否有权限添加付款单
+    isPaySubmit() {
+      return {
+        SALE: this.isPerm("SALE_ADD_PAID_ORDER"),
+        SALE_RETURN: this.isPerm("SALE_RETURN_ADD_RETURNED_ORDER"),
+        PURCHASE: this.isPerm("PURCHASE_ADD_RETURNED_ORDER"),
+        PURCHASE_RETURN: this.isPerm("PURCHASE_RETURN_ADD_PAID_ORDER"),
+      }[this.option.FORM];
+    },
   },
 };
 </script>
@@ -114,58 +137,47 @@ export default {
       <UniSection title="已付" type="line" v-if="list.length">
         <view class="ko-pay__wrap">
           <KoList :safe-area-inset-bottom="false" :loading="loading" no-more :no-data="!list.length" hide-tips>
-            <view style="padding: 10px;">
+            <view style="padding: 10px; --ko-basic-table-grid-col: auto auto auto auto auto;">
               <BasicCard :spacing="10" not-padding>
-                <view class="ko-pay__item--header">
-                  <UniRow align="center">
-                    <UniCol :span="3">
-                      <view class="ko-pay__cell">金额</view>
-                    </UniCol>
-                    <UniCol :span="3">
-                      <view class="ko-pay__cell">操作人</view>
-                    </UniCol>
-                    <UniCol :span="8">
-                      <view class="ko-pay__cell">时间</view>
-                    </UniCol>
-                    <UniCol :span="6">
-                      <view class="ko-pay__cell">备注</view>
-                    </UniCol>
-                    <UniCol :span="4">
-                      <view class="ko-pay__cell">操作</view>
-                    </UniCol>
-                  </UniRow>
-                </view>
-                <view class="ko-pay__item" v-for="(item, index) of list" :key="index">
-                  <UniRow align="center">
-                    <UniCol :span="3">
-                      <view class="ko-pay__cell"> {{ toYuan(item.totalAmount) }}</view>
-                    </UniCol>
-                    <UniCol :span="3">
-                      <view
-                        class="ko-pay__cell"
-                        :class="{'ko-link': GET_FUNC(item, 'user.avatar')}"
-                        @click="lookImage(getImageUrl(GET_FUNC(item, 'user.avatar')))"
+                <view class="ko-basic-table">
+                  <view class="ko-basic-table--th">
+                    金额
+                  </view>
+                  <view class="ko-basic-table--th">
+                    操作人
+                  </view>
+                  <view class="ko-basic-table--th">
+                    时间
+                  </view>
+                  <view class="ko-basic-table--th">
+                    备注
+                  </view>
+                  <view class="ko-basic-table--th">
+                    操作
+                  </view>
+
+                  <block v-for="(item, index) of list" :key="index">
+                    <view class="ko-basic-table--cell"> {{ toYuan(item.totalAmount) }}</view>
+                    <view
+                      class="ko-basic-table--cell"
+                      :class="{'ko-link': GET_FUNC(item, 'user.avatar')}"
+                      @click="lookImage(getImageUrl(GET_FUNC(item, 'user.avatar')))"
+                    >
+                      {{ GET_FUNC(item, "user.nickName") || "-" }}
+                    </view>
+                    <view class="ko-basic-table--cell">{{ item.updateTime || "-" }}</view>
+                    <view class="ko-basic-table--cell">{{ item.remark || "-" }}</view>
+                    <view class="ko-basic-table--cell">
+                      <button
+                        class="ko-basic-button__user"
+                        @click="onMore(item)"
+                        v-if="isPayEdit"
                       >
-                        {{ GET_FUNC(item, "user.nickName") || "-" }}
-                      </view>
-                    </UniCol>
-                    <UniCol :span="8">
-                      <view class="ko-pay__cell">{{ item.updateTime || "-" }}</view>
-                    </UniCol>
-                    <UniCol :span="6">
-                      <view class="ko-pay__cell">{{ item.remark || "-" }}</view>
-                    </UniCol>
-                    <UniCol :span="4">
-                      <view class="ko-pay__cell">
-                        <button
-                          class="ko-basic-button__user"
-                          @click="onMore(item)"
-                        >
-                          更多
-                        </button>
-                      </view>
-                    </UniCol>
-                  </UniRow>
+                        更多
+                      </button>
+                    </view>
+                  </block>
+
                 </view>
               </BasicCard>
             </view>
@@ -217,7 +229,7 @@ export default {
         @select="onSelect"
       />
     </view>
-    <template #footer>
+    <template #footer v-if="isPaySubmit">
       <view class="ko-pay__footer">
         <button
           class="ko-basic-button__card"
@@ -266,22 +278,6 @@ export default {
     font-size: 14px;
     padding: 8px;
     // #endif
-  }
-
-  &__item {
-    overflow: hidden;
-    font-size: 12px;
-
-    &:nth-child(odd) {
-      background: rgba(248, 248, 248, 0.99);
-    }
-
-    &--header {
-      font-size: 13px;
-      font-weight: 600;
-      padding-top: 8px;
-      padding-bottom: 8px;
-    }
   }
 
   &__added {

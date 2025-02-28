@@ -196,12 +196,11 @@ export default {
           clear-button="none"
         />
       </view>
-
       <PickerClass v-model="queryList.classId" @change="getList(true)" />
 
       <button
         class="ko-basic-button__card"
-        v-if="isBusiness || isAdmin || isPerm('Stock_Taking')"
+        v-if="isBusiness || isAdmin || isPerm('STOCK_TAKING') || isPerm('STOCK_CHECK_INOUT_ORDER')"
         @click.stop="onJudge"
         style="margin-left: 8px"
       >
@@ -235,13 +234,14 @@ export default {
           @next-load="onRequestNextPage"
           :no-more="noMore || loading"
         >
-          <template #operate="{item, index}" v-if="isPerm('Stock_Write')">
+          <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
                 class="ko-basic-button__card"
                 @click.stop="onRefresh(item, index)"
                 :loading="item.__r_loading__"
                 :disabled="item.__r_loading__"
+                v-if="isPerm('STOCK_REFRESH')"
               >
                 刷新库存
               </button>

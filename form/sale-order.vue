@@ -306,7 +306,7 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
-                :is-show-recent="isPerm('Sales_Write')"
+                :is-show-recent="isPerm('SALE_RECENT_PRICE')"
                 :supplier-id="form.supplierId"
               />
             </view>

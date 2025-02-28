@@ -21,13 +21,35 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 
+const PageMenu = [
+  {
+    label: "待处理",
+    perm: "STOCK_OUTBOUND_LIST",
+    func: 0,
+  },
+  {
+    label: "已完成",
+    perm: "STOCK_OUTBOUND_HISTORY",
+    func: 1,
+  },
+  // #ifdef H5
+  {
+    label: "已取消",
+    perm: "STOCK_OUTBOUND_CANCEL",
+    func: 2,
+  },
+  // #endif
+];
+
 export default {
   name: "OUT",
   components: {
     UvAvatar,
-    UniSection, BasicCard,
+    UniSection,
+    BasicCard,
     BasicPopup,
-    UniRow, UniCol, UniEasyinput,
+    UniRow, UniCol,
+    UniEasyinput,
     KoList,
     PrintList,
     OrderCard,
@@ -40,7 +62,6 @@ export default {
     return {
       loading: false,
       list: [],
-      isHistory: 0,
 
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -185,13 +206,13 @@ export default {
       const params = _deepCopy(this.queryList);
 
       this.loading = true;
-      const Func = [getOutboundListApi, getOutboundHistoryListApi, getOutboundHistoryListApi][this.isHistory];
+      const Func = [getOutboundListApi, getOutboundHistoryListApi, getOutboundHistoryListApi][this.GET_PAGE_MENU_FUNC];
 
-      if (this.isHistory > 0) {
+      if (this.GET_PAGE_MENU_FUNC > 0) {
         params.status = {
           1: "FINISHED",
           2: "CANCELLED",
-        }[this.isHistory];
+        }[this.GET_PAGE_MENU_FUNC];
       }
 
       Func(params)
@@ -280,14 +301,19 @@ export default {
       this.getList(true);
     },
   },
+  created() {
+    this.PAGE_MENU = _deepCopy(PageMenu);
+  },
 };
 </script>
 
 <template>
   <view class="ko-out">
     <HistoryBar
-      v-model="isHistory"
-      :values="values"
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -320,12 +346,13 @@ export default {
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 10px;" v-for="(item, index) of list" :key="index">
-          <OrderCard :item="item" @click="onJumpDetails(item, 'outbound')" :is-history="isHistory">
-            <template #operate v-if="isPerm('Stock_Write')">
+          <OrderCard :item="item" @click="onJumpDetails(item, 'outbound')" :is-history="GET_PAGE_MENU_FUNC">
+            <template #operate>
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onPrint(item)"
+                  v-if="isPerm('STOCK_PRINT')"
                 >
                   打印出库单(A4)
                 </button>
@@ -337,7 +364,7 @@ export default {
                   取消出库
                 </button>
                 <button
-                  v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                  v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('STOCK_OUTBOUND_CONFIRM')"
                   class="ko-basic-button__card"
                   @click.stop="onConfirm(item, index)"
                 >
@@ -364,11 +391,12 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item, index}" v-if="isPerm('Stock_Write')">
+        <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'outbound')"
+              v-if="isPerm('STOCK_PRINT')"
             >
               打印出库单(A4)
             </button>
@@ -386,7 +414,7 @@ export default {
               取消出库
             </button>
             <button
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('STOCK_OUTBOUND_CONFIRM')"
               class="ko-basic-button__card"
               @click.stop="onConfirm(item, index)"
             >

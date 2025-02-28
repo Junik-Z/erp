@@ -23,6 +23,20 @@ import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sh
 import KoMovable from "@/components/Movable/index.vue";
 import PurchaseMixins from "../PurchaseMixins";
 
+
+const PageMenu = [
+  {
+    label: "采购",
+    perm: "PURCHASE_MY_LIST",
+    func: 0,
+  },
+  {
+    label: "采购退货",
+    perm: "PURCHASE_RETURN_MY_LIST",
+    func: 1,
+  },
+];
+
 export default {
   name: "MyOrderList",
   components: {KoMovable, UvActionSheet, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo},
@@ -53,8 +67,6 @@ export default {
       },
       loading: false,
       noMore: false,
-
-      isHistory: false,
 
       // #ifdef H5
       columns: [
@@ -170,6 +182,8 @@ export default {
 
       noRefresh: false,
       isReturn: false,
+
+      PAGE_MENU: _deepCopy(PageMenu),
     };
   },
 
@@ -178,7 +192,6 @@ export default {
     InfiniteScroll,
   },
   // #endif
-
   created() {
     this.getCount();
   },
@@ -191,11 +204,13 @@ export default {
     },
 
     getCount() {
-      getMyStatisticsPurchaseApi()
-        .then(res => {
-          console.log(res.data);
-          this.data = res.data;
-        });
+      if (this.isPerm("PURCHASE_MY_STATISTICS")) {
+        getMyStatisticsPurchaseApi()
+          .then(res => {
+            console.log(res.data);
+            this.data = res.data;
+          });
+      }
     },
 
     getList(reset = false) {
@@ -217,7 +232,7 @@ export default {
       // #endif
 
       this.loading = true;
-      const Func = this.isHistory ? getReturnMyPurchaseListApi : getMyPurchaseListApi;
+      const Func = [getMyPurchaseListApi, getReturnMyPurchaseListApi][this.PAGE_MENU_INDEX];
       Func(this.queryList)
         .then(res => {
           console.log(res.data);
@@ -261,7 +276,7 @@ export default {
       // #endif
 
       this.noRefresh = true;
-      if (this.isHistory) {
+      if (this.PAGE_MENU_INDEX) {
         this.jumpAddedReturnPurchase({
           PAGE_TYPE: "ADDED_REFUND_PURCHASE",
           isNormal: true,
@@ -278,17 +293,17 @@ export default {
 
     // 提交销售订单
     onSubmit(item, index) {
-      const Func = this.isHistory ? this.submitReturnPurchase : this.submitPurchase;
+      const Func = this.PAGE_MENU_INDEX ? this.submitReturnPurchase : this.submitPurchase;
       Func(item, index);
     },
     // 删除订单
     onRemove(item, index) {
-      const Func = this.isHistory ? this.removeReturnPurchase : this.removePurchase;
+      const Func = this.PAGE_MENU_INDEX ? this.removeReturnPurchase : this.removePurchase;
       Func(item, index);
     },
     // 取消订单
     onCancel(item, index) {
-      const Func = this.isHistory ? this.cancelReturnPurchase : this.cancelPurchase;
+      const Func = this.PAGE_MENU_INDEX ? this.cancelReturnPurchase : this.cancelPurchase;
       Func(item, index, true);
     },
     // 申请退货
@@ -310,7 +325,7 @@ export default {
       const info = uni.getStorageSync("TENP_ORDER_INFO");
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
 
-      const Func = this.isHistory ? getPurchaseReturnDetailApi : getPurchaseDetailApi;
+      const Func = this.PAGE_MENU_INDEX ? getPurchaseReturnDetailApi : getPurchaseDetailApi;
 
       Func({id})
         .then(res => {
@@ -339,26 +354,39 @@ export default {
           name: "申请退货",
           func: "onReturn",
           status: ["FINISHED"],
+          perm: "PURCHASE_RETURN_ADD",
         },
         {
           name: "取消订单",
           func: "onCancel",
           status: ["CREATED"],
+          perm: "PURCHASE_CANCEL",
+          rPerm: "PURCHASE_RETURN_CANCEL",
         },
         {
           name: "编辑",
           func: "onAdded",
           status: ["CREATED", "CANCELLED"],
+          perm: "PURCHASE_UPDATE",
+          rPerm: "PURCHASE_RETURN_UPDATE",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "onRemove",
           status: ["CANCELLED", "CREATED"],
+          perm: "PURCHASE_DELETE",
+          rPerm: "PURCHASE_RETURN_DELETE",
         },
       ]
-        .filter(li => {
-          return li?.status.includes(node.status) && !(this.isHistory && _isEqual(li.func, "onReturn"));
+        .filter(item => {
+          const isStatus = item?.status.includes(node.status);
+
+          if (_isEqual(this.PAGE_MENU_INDEX, 0)) {
+            return isStatus && this.isPerm(item.perm);
+          } else {
+            return !_isEqual(item.func, "onReturn") && isStatus && this.isPerm(item.rPerm);
+          }
         });
     },
   },
@@ -385,7 +413,7 @@ export default {
       <!-- #endif -->
 
       <view class="ko-basic-count__wrap">
-        <UniRow :gutter="10">
+        <UniRow :gutter="10" v-if="isPerm('PURCHASE_MY_STATISTICS')">
           <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
             <view class="ko-basic-count">
               <view class="ko-basic-count__label">{{ item.label }}</view>
@@ -404,7 +432,13 @@ export default {
         </UniRow>
       </view>
 
-      <HistoryBar v-model="isHistory" :values="['采购订单', '采购退货订单']" @change="getList(true)" />
+      <HistoryBar
+        v-model="PAGE_MENU_INDEX"
+        :values="GET_PAGE_MENU"
+        label-key="label"
+
+        @change="getList(true)"
+      />
 
       <view class="ko-my-order-list__wrap">
         <!-- #ifdef MP -->
@@ -414,7 +448,7 @@ export default {
               v-for="(item, index) of list"
               :key="item.id"
               :item="item"
-              @click="onJumpDetails(item, isHistory ? 'purchaseReturn' : 'purchase')"
+              @click="onJumpDetails(item, PAGE_MENU_INDEX ? 'purchaseReturn' : 'purchase')"
               is-sales
               :spacing="10"
             >
@@ -433,7 +467,7 @@ export default {
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onActionClick(item, index)"
-                    v-if="[isHistory ? '' : 'FINISHED', 'CREATED', 'CANCELLED'].includes(item.status)"
+                    v-if="[PAGE_MENU_INDEX ? '' : 'FINISHED', 'CREATED', 'CANCELLED'].includes(item.status)"
                   >
                     更多
                   </button>
@@ -452,13 +486,13 @@ export default {
           :data="list"
           empty-text="暂无数据"
           stripe
-          @row-click="onJumpDetails($event, isHistory ? 'purchaseReturn' : 'purchase')"
+          @row-click="onJumpDetails($event, PAGE_MENU_INDEX ? 'purchaseReturn' : 'purchase')"
           no-more
         >
-          <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
+          <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
-                v-if="['FINISHED'].includes(item.status) && !isHistory"
+                v-if="['FINISHED'].includes(item.status) && !PAGE_MENU_INDEX && isPerm('PURCHASE_RETURN_ADD')"
                 class="ko-basic-button__card"
                 @click.stop="onReturn(item, index)"
               >
@@ -466,7 +500,7 @@ export default {
               </button>
 
               <button
-                v-if="['CREATED'].includes(item.status)"
+                v-if="['CREATED'].includes(item.status) && ((isEqual(PAGE_MENU_INDEX, 0) && isPerm('PURCHASE_CANCEL')) || (isEqual(PAGE_MENU_INDEX, 1) && isPerm('PURCHASE_RETURN_CANCEL')))"
                 class="ko-basic-button__card"
                 @click.stop="onCancel(item, index)"
               >
@@ -475,7 +509,7 @@ export default {
               <button
                 class="ko-basic-button__card"
                 @click.stop="onAdded(item, index)"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(PAGE_MENU_INDEX, 0) && isPerm('PURCHASE_UPDATE')) || (isEqual(PAGE_MENU_INDEX, 1) && isPerm('PURCHASE_RETURN_UPDATE')))"
               >
                 编辑
               </button>
@@ -484,7 +518,7 @@ export default {
                 @click.stop="onRemove(item, index)"
                 :loading="item.__r_loading__"
                 :disabled="item.__r_loading__"
-                v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+                v-if="['CANCELLED', 'CREATED'].includes(item.status) && ((isEqual(PAGE_MENU_INDEX, 0) && isPerm('PURCHASE_DELETE')) || (isEqual(PAGE_MENU_INDEX, 1) && isPerm('PURCHASE_RETURN_DELETE')))"
               >
                 删除
               </button>
@@ -494,7 +528,7 @@ export default {
         <!-- #endif -->
       </view>
 
-      <KoMovable @click="onAdded('')" v-if="!isHistory" />
+      <KoMovable @click="onAdded('')" v-if="!PAGE_MENU_INDEX && isPerm('PURCHASE_ADD')" />
 
       <!-- #ifdef MP -->
       <UvActionSheet

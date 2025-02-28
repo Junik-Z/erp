@@ -2,12 +2,12 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import { getUserListApi } from "@/api/admin";
+import { getRolePermUsersApi, getUserListApi } from "@/api/admin";
 import mixins from "@/mixins/mixins";
 import { _deepCopy, _get, _isBoolean, _isEmpty, _isEqual, _isString } from "@/utils";
-import { getCustomerListApi } from "@/api/erp/sale";
+import { getCustomerListApi, getCustomerUserListApi } from "@/api/erp/sale";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { getSupplierListApi } from "@/api/erp/purchase";
+import { getSupplierListApi, getSupplierUserListApi } from "@/api/erp/purchase";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import IndexList from "../IndexList/IndexList.vue";
@@ -38,6 +38,9 @@ export default {
       },
 
       noMore: false,
+
+      // 备份原始已经选中的用户
+      backupChecked: [],
     };
   },
   mixins: [mixins],
@@ -66,7 +69,11 @@ export default {
 
     type: {
       type: String,
-      default: "default", // client: 选择客户, supplier: 供应商, logistics: 物流商, staff: 员工, noBindStaff: 没有被绑定的员工
+      // client: 选择客户, supplier: 供应商,
+      // logistics: 物流商, staff: 员工,
+      // noBindStaff: 没有被绑定的员工，perm: 权限设置成员列表,
+      // saleUserList: 销售客户用户列表; purchaseUserList: 采购供应商用户列表
+      default: "default",
     },
     isInput: Boolean,
     placeholder: {
@@ -83,9 +90,29 @@ export default {
         return [];
       },
     },
+
+    // 外部开启弹窗选择
+    isExternalOpen: Boolean,
+
+    // 额外的请求参数
+    query: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+
+    // 不需要在创建的时候请求
+    notCreatedRequest: Boolean,
+
+    // 只显示已经标记为选中的用户
+    isSelected: Boolean,
+
+    // 只显示标记为未选中的用户
+    isNotSelected: Boolean,
   },
   created() {
-    if (this.isInput && !this.isLongList) {
+    if ((this.isInput && !this.isLongList && !this.isExternalOpen) && !this.notCreatedRequest) {
       this.getList(true);
     }
   },
@@ -109,30 +136,71 @@ export default {
         staff: getStaffListApi,
         // 没有被绑定系统的员工
         noBindStaff: getNotBindInfoApi,
+        // 获取指定菜单下所有成员及其授权情况
+        perm: getRolePermUsersApi,
+
+        // 销售客户用户列表
+        saleUserList: getCustomerUserListApi,
+
+        // 采购供应商用户列表
+        purchaseUserList: getSupplierUserListApi,
       }[this.type];
 
-      const vKey = {default: "userId", "noBindStaff": "userId"}[this.type] || "id";
-      const lKey = {default: "nickName", "noBindStaff": "nickName"}[this.type] || "name";
-      const logoKey = {default: "avatar", "noBindStaff": "avatar"}[this.type] || "logo";
+      const vKey = {
+        default: "userId",
+        noBindStaff: "userId",
+        perm: "userId",
+        saleUserList: "userId",
+        purchaseUserList: "userId",
+      }[this.type] || "id";
+      const lKey = {default: "nickName", "noBindStaff": "nickName", perm: "nickName"}[this.type] || "name";
+      const logoKey = {default: "avatar", "noBindStaff": "avatar", perm: "avatar"}[this.type] || "logo";
 
-      Func(this.queryList)
+      Func({...this.queryList, ...this.query})
         .then(res => {
-          const list = (res.data).map(item => ({
+          const originalList = (res.data).map(item => ({
             ...item,
-            value: _get(item, vKey),
-            label: _get(item, lKey),
-            logo: _get(item, logoKey),
+            value: item.id || item.userId || _get(item, vKey),
+            label: item.name || item.nickName || _get(item, lKey),
+            logo: item.logo || item.avatar || _get(item, logoKey),
           }));
+
+          let list = _deepCopy(originalList);
+
+          // 获取已经选中的用户列表
+          if (this.isSelected && !this.isNotSelected) {
+            list = _deepCopy(originalList).filter(v => v.selected);
+          }
+
+          // 获取标记为没有选中的数据
+          if (this.isNotSelected && !this.isSelected) {
+            list = _deepCopy(originalList).filter(v => !v.selected);
+          }
+
+          console.log(list);
 
           this.list = this.onMergeArrays(this.list, list, vKey);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+
+          if (_isEqual("perm", this.type) && !this.isSelected) {
+            const checkList = list?.filter?.(v => v.selected);
+
+            checkList.forEach(item => {
+              if (!this.checked.includes(item.value)) {
+                this.checked.push(item.value);
+                this.backupChecked.push(_deepCopy(item.value));
+              }
+            });
+          }
         })
         .catch(() => {
           this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
-          this.checkNode = this.getUserInfo(this.value);
+          if (!_isEqual("perm", this.type)) {
+            this.checkNode = this.getUserInfo(this.value);
+          }
         });
     },
     onSelect(item) {
@@ -167,6 +235,19 @@ export default {
       return _deepCopy((this.list || []).find(v => _isEqual(v.value, id)) || {});
     },
     onConfirm() {
+      if (_isEqual(this.type, "perm")) {
+        const backup = _deepCopy(this.backupChecked) || [];
+        const check = _deepCopy(this.checked) || [];
+
+        const remove = backup.filter(v => !check.includes(v));
+        const add = check.filter(v => !backup.includes(v));
+
+        console.log("移除的:", remove, "添加的:", add);
+
+        this.$emit("confirm", {remove, add});
+        return false;
+      }
+
       this.$emit("confirm", this.checked);
 
       if (this.isInput) {
@@ -178,7 +259,20 @@ export default {
       }
     },
     onClick() {
-      if (_isBoolean(this.disabled) && this.disabled) return false;
+      if (_isBoolean(this.disabled) && this.disabled) {
+        this.$emit("disabled-click");
+        return false;
+      }
+
+      this.modelVisible = true;
+    },
+
+    // 外部打开弹窗
+    open(query = {}) {
+      this.queryList = {...this.queryList, ...(query || {})};
+
+      this.backupChecked = [];
+      this.checked = [];
       this.modelVisible = true;
     },
 
@@ -216,6 +310,17 @@ export default {
     },
     modelVisible: {
       handler() {
+        if (this.isExternalOpen || _isEqual(this.type, "perm")) {
+          this.$emit("update:visible", this.modelVisible);
+
+          // 设置详细的权限用户列表
+          if (this.modelVisible) {
+            this.getList(true);
+          }
+
+          return false;
+        }
+
         if (this.modelVisible && !this.isLongList) {
           this.getList(true);
         }
@@ -307,17 +412,21 @@ export default {
           @lower="onLower"
           :no-more="noMore"
           @search="onSearchToNameIndex"
+
+          not-index
         />
       </view>
 
       <template #footer v-if="isConfirm">
-        <button
-          style="margin: 10px 40px 10px;"
-          class="ko-basic-button"
-          @click="onConfirm"
-        >
-          确认
-        </button>
+        <view style="padding-bottom: 10px; display: flex;justify-content: center; align-items: center;">
+          <button
+            class="ko-basic-button__card"
+            @click="onConfirm"
+            style="width: 120px;"
+          >
+            确认
+          </button>
+        </view>
       </template>
     </BasicPopup>
   </view>

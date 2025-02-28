@@ -87,6 +87,13 @@
           </view>
         </view>
       </view>
+
+      <view
+        v-if="!dataRef.length"
+        style="text-align: center; padding: 20px; font-size: 12px; color: #c7c9ce;"
+      >
+        没有节点数据
+      </view>
     </scroll-view>
   </view>
 </template>
@@ -663,6 +670,7 @@ export default {
      */
     handleLabelClick(item) {
       this.$emit("click-node", item);
+
       if (this.notChecked) {
         this.handleExpandedChange(item);
         return false;

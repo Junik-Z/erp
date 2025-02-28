@@ -20,22 +20,22 @@ export default {
         {
           label: "库存看版",
           ref: "VVRef",
-          roles: ["Stock_Read", "Stock_Write"],
+          roles: ["STOCK_COUNT"],
         },
         {
           label: "入库审批",
           ref: "WRef",
-          roles: ["Stock_Write"],
+          roles: ["STOCK_INBOUND_LIST", "STOCK_INBOUND_HISTORY", "STOCK_INBOUND_CANCEL"],
         },
         {
           label: "出库审批",
           ref: "ORef",
-          roles: ["Stock_Write"],
+          roles: ["STOCK_OUTBOUND_LIST", "STOCK_OUTBOUND_HISTORY", "STOCK_OUTBOUND_CANCEL"],
         },
         {
           label: "核对库存",
           ref: "VRef",
-          roles: ["Stock_Read", "Stock_Write"],
+          roles: ["STOCK_CHECK"],
         },
       ],
       // TAB: 3,
@@ -75,7 +75,7 @@ export default {
   <view class="ko-stock">
     <KoNotice />
 
-    <view class="ko-stock__tabs" style="padding: 10px;">
+    <view v-if="GET_TAB_LIST.length > 1" class="ko-stock__tabs" style="padding: 10px;">
       <UniSegmentedControl
         :values="GET_TAB_LIST"
         label-key="label"
@@ -91,6 +91,8 @@ export default {
     <Out ref="ORef" v-if="isEqual(GET_TABS_REF_NAME, 'ORef')" />
 
     <Verification ref="VRef" v-if="isEqual(GET_TABS_REF_NAME, 'VRef')" />
+
+    <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>
 </template>
 
@@ -102,6 +104,7 @@ export default {
   &__tabs {
     width: 500px;
   }
+
   // #endif
 }
 </style>

@@ -3,10 +3,10 @@ import { MENU_LIST, PageEnums, ROLE_LIST_ENUMS } from "@/utils/config";
 import mixins from "@/mixins/mixins";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UvAvatarGroup from "@/uni_modules/uv-avatar/components/uv-avatar-group/uv-avatar-group.vue";
-import { getPermissionsApi, setUserRoleApi } from "@/api/admin";
+import { getPermissionsApi, removeRoleApi, setRoleApi } from "@/api/admin";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _xor } from "@/utils";
+import { _deepCopy, _get } from "@/utils";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 
 export default {
@@ -22,6 +22,8 @@ export default {
       backup: [],
 
       premList: {},
+
+      avatarGroupSize: 40,
     };
   },
   onShow() {
@@ -32,6 +34,7 @@ export default {
       this.loading = true;
       getPermissionsApi()
         .then(res => {
+          console.log(res.data);
           this.premList = _deepCopy(res.data);
         })
         .finally(() => {
@@ -42,8 +45,15 @@ export default {
     // 开启设置用户权限
     onSetRole(type, item) {
       this.role = (item.role || []).find(v => v.indexOf(type) > -1);
-      this.backup = _deepCopy(_get(this.premList, this.role))?.map(v => v.userId) || [];
-      this.visible = true;
+
+      this.$refs.PickerUserRef.open({role: this.role});
+
+      /* getRolePermUsersApi({role: this.role})
+        .then(res => {
+          console.log(res);
+        }); */
+
+      // this.backup = _deepCopy(_get(this.premList, this.role))?.map(v => v.userId) || [];
     },
 
     // 跳转到会员管理
@@ -61,34 +71,68 @@ export default {
 
     // 确认设置权限
     onConfirm(checked) {
-      const users = _xor(this.backup, checked);
+      const {remove, add} = checked || {};
 
-      if (_isEmpty(users)) {
-        this.visible = false;
-        return false;
+      const Func = [];
+
+      if (remove && remove.length) {
+        Func.push(removeRoleApi({userIds: remove, role: this.role}));
       }
 
-      const cUsers = users?.map(id => {
-        const node = this.$refs.PickerUserRef.getUserInfo(id);
+      if (add && add.length) {
+        Func.push(setRoleApi({userIds: add, role: this.role}));
+      }
 
-        if (node?.role?.indexOf?.(this.role) > -1) {
-          node.role = node.role?.filter(v => !_isEqual(v, this.role));
-        } else {
-          node?.role?.push?.(this.role);
-        }
+      if (Func.length) {
+        Promise.all(Func)
+          .then(() => {
+            uni.showToast({title: "操作成功"});
+            this.getList();
+          })
+          .finally(() => {
+            this.visible = false;
+          });
+      } else {
+        this.visible = false;
+      }
 
-        return !_isEmpty(node) && setUserRoleApi(node);
-      });
+      /*  if ("not") return false;
 
-      Promise.all(cUsers)
-        .then(() => {
-          uni.showToast({title: "设置成功"});
-          this.$refs.PickerUserRef.getList(true);
-          this.getList();
-        })
-        .finally(() => {
-          this.visible = false;
-        });
+       const users = _xor(this.backup, checked);
+
+       if (_isEmpty(users)) {
+         this.visible = false;
+         return false;
+       }
+
+       const cUsers = users?.map(id => {
+         const node = this.$refs.PickerUserRef.getUserInfo(id);
+
+         if (node?.role?.indexOf?.(this.role) > -1) {
+           node.role = node.role?.filter(v => !_isEqual(v, this.role));
+         } else {
+           node?.role?.push?.(this.role);
+         }
+
+         return !_isEmpty(node) && setUserRoleApi(node);
+       });
+
+       Promise.all(cUsers)
+         .then(() => {
+           uni.showToast({title: "设置成功"});
+           this.$refs.PickerUserRef.getList(true);
+           this.getList();
+         })
+         .finally(() => {
+           this.visible = false;
+         }); */
+    },
+
+    // 前往菜单详情设置
+    onToAuth(type, item) {
+      const role = (item.role || []).find(v => v.indexOf(type) > -1);
+
+      uni.navigateTo({url: `${PageEnums.adminAuthorization}?model_key=${item.modelKey}&role=${role}`});
     },
   },
   computed: {
@@ -122,91 +166,122 @@ export default {
 </script>
 
 <template>
-  <view class="ko-role ko-basic-added-form">
+  <view class="ko-role ko-basic-added-form" :style="[{'--ko-avatar-group-size': avatarGroupSize + 'px'}]">
     <BasicCard :spacing="10" v-for="(item, index) of getMenuList" :key="index">
       <view class="ko-role__item">
-        <view class="ko-role__item--header">
-          <view class="ko-role__item--header--info">
-            <i class="iconfont" :class="[item.icon]"></i>
-            <view class="ko-basic-label">{{ item.label }}</view>
-          </view>
-        </view>
+        <uni-section :title="item.label">
+          <template #decoration>
+            <view class="ko-role__item--center--icon" style="margin-right: 10px;">
+              <i class="iconfont" :class="[item.icon]"></i>
+            </view>
+          </template>
+        </uni-section>
 
         <view class="ko-role__item--user">
           <view class="ko-role__item--read" v-if="item.isMember">
             <label class="ko-basic-label">{{ item.memberLabel || "会员" }}：</label>
             <UvAvatarGroup
-              size="52"
+              :size="avatarGroupSize"
               gap="0.4"
               :max-count="8"
-              :urls="getAvatarList('Member', item)"
-              :names="getNameList('Member', item)"
+              :urls="getAvatarList('MEMBER', item)"
+              :names="getNameList('MEMBER', item)"
             />
             <button
-              class="ko-basic-button__card"
-              @click.stop="onJumpMember('Member', item)"
+              class="ko-basic-button__card added"
+              @click.stop="onJumpMember('MEMBER', item)"
             >
               +
             </button>
-          </view>
-          <view class="ko-role__item--read" v-if="item.role.includes('Stock_Taking')">
-            <label class="ko-basic-label">盘点：</label>
-            <UvAvatarGroup
-              size="52"
-              gap="0.4"
-              :max-count="8"
-              :urls="getAvatarList('Taking', item)"
-              :names="getNameList('Taking', item)"
-            />
             <button
               class="ko-basic-button__card"
-              @click.stop="onSetRole('Taking', item)"
+              v-if="getNameList('MEMBER', item).length"
+              @click.stop="onToAuth('MEMBER', item)"
+            >
+              更多
+            </button>
+          </view>
+          <view class="ko-role__item--read" v-if="item.role.includes('STOCK_TAKING')">
+            <label class="ko-basic-label">盘点：</label>
+            <UvAvatarGroup
+              :size="avatarGroupSize"
+              gap="0.4"
+              :max-count="8"
+              :urls="getAvatarList('TAKING', item)"
+              :names="getNameList('TAKING', item)"
+            />
+            <button
+              class="ko-basic-button__card added"
+              @click.stop="onSetRole('TAKING', item)"
             >
               +
+            </button>
+            <button
+              class="ko-basic-button__card"
+              v-if="getNameList('TAKING', item).length"
+              @click.stop="onToAuth('TAKING', item)"
+            >
+              更多
             </button>
           </view>
           <view class="ko-role__item--read">
             <label class="ko-basic-label">查看：</label>
             <UvAvatarGroup
-              size="52"
+              :size="avatarGroupSize"
               gap="0.4"
               :max-count="8"
-              :urls="getAvatarList('Read', item)"
-              :names="getNameList('Read', item)"
+              :urls="getAvatarList('READ', item)"
+              :names="getNameList('READ', item)"
             />
             <button
-              class="ko-basic-button__card"
-              @click.stop="onSetRole('Read', item)"
+              class="ko-basic-button__card added"
+              @click.stop="onSetRole('READ', item)"
             >
               +
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onToAuth('READ', item)"
+              v-if="getNameList('READ', item).length"
+            >
+              更多
             </button>
           </view>
           <view class="ko-role__item--read">
             <label class="ko-basic-label">管理：</label>
             <UvAvatarGroup
               :max-count="8"
-              size="52"
+              :size="avatarGroupSize"
               gap="0.4"
-              :urls="getAvatarList('Write', item)"
-              :names="getNameList('Write', item)"
+              :urls="getAvatarList('WRITE', item)"
+              :names="getNameList('WRITE', item)"
             />
             <button
-              class="ko-basic-button__card"
-              @click.stop="onSetRole('Write', item)"
+              class="ko-basic-button__card added"
+              @click.stop="onSetRole('WRITE', item)"
             >
               +
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onToAuth('WRITE', item)"
+              v-if="getNameList('WRITE', item).length"
+            >
+              更多
             </button>
           </view>
         </view>
       </view>
     </BasicCard>
 
-
     <PickerUser
       ref="PickerUserRef"
       :visible.sync="visible"
       :title="getTitle"
-      :value="backup"
+
+      is-external-open
+      type="perm"
+
       is-confirm
       multiple
       @confirm="onConfirm"
@@ -215,82 +290,62 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .ko-role {
-  padding-bottom: 40px;
+  padding: 10px 10px 40px;
+
+  $icon-size: 20px;
 
   &__item {
-    /* #ifdef MP */
-    &--header {
+    &--center {
       display: flex;
       align-items: center;
       justify-content: center;
 
-      .ko-basic-label {
-        text-align: center;
-      }
+      &--icon {
+        width: $icon-size;
+        height: $icon-size;
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
-      .iconfont {
-        font-size: 60px;
+        .iconfont {
+          font-size: $icon-size;
+          display: inline-block;
+          height: $icon-size;
 
-        &.icon-kucuntongjifenxi {
-          margin-left: 30px;
-          width: 60px;
+          &.icon-kucuntongjifenxi {
+            margin-left: calc(100% / 5);
+            width: $icon-size;
+          }
         }
       }
     }
-
-    /* #endif */
-
-    /* #ifdef H5 */
-    &--header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      &--info {
-        height: 100%;
-      }
-
-      .ko-basic-label {
-        text-align: center;
-
-      }
-
-      .iconfont {
-        font-size: 60px;
-        display: inline-block;
-        height: 60px;
-
-        &.icon-kucuntongjifenxi {
-          margin-left: 30px;
-          width: 60px;
-        }
-      }
-    }
-
-    /* #endif */
-
 
     &--user {
-      margin-top: 20px;
+      margin-top: 0;
     }
 
     &--read {
       display: flex;
       align-items: center;
-      height: 64px;
+      font-size: 13px;
+      height: calc(var(--ko-avatar-group-size) + 10px);
 
       .ko-basic-button__card {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin-left: 20px;
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding-top: 4px;
+
+        &.added {
+          width: calc(var(--ko-avatar-group-size) - 10px);
+          height: calc(var(--ko-avatar-group-size) - 10px);
+          border-radius: 50%;
+          margin-left: 12px;
+          font-size: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding-top: 4px;
+        }
+
       }
     }
   }
