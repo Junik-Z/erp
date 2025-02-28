@@ -13,6 +13,7 @@ import { addedCategoryApi, getCategoryListApi, removeCategoryApi, updateCategory
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { _deepCopy, _get } from "@/utils";
 import { FINANCE_CLASSIFY_FIXED_ID } from "@/utils/config";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "classify",
@@ -29,6 +30,7 @@ export default {
     UniCol,
     UniRow,
   },
+  mixins: [mixins],
   data() {
     const _this = this;
 
@@ -178,8 +180,20 @@ export default {
           style="display: flex; align-items: center; justify-content: flex-end;"
           v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
         >
-          <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
-          <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+          <button
+            class="ko-basic-button__card"
+            @click.stop="onEdit(item)"
+            v-if="isPerm('COST_CATEGORY_UPDATE')"
+          >
+            编辑
+          </button>
+          <button
+            class="ko-basic-button__card"
+            @click.stop="onRemove(item)"
+            v-if="isPerm('COST_CATEGORY_DELETE')"
+          >
+            删除
+          </button>
         </view>
       </view>
     </BasicCard>
@@ -200,16 +214,28 @@ export default {
             v-if="!FINANCE_CLASSIFY_FIXED_ID.includes(item.id)"
             style="display: flex; align-items: center; justify-content: center;"
           >
-            <button class="ko-basic-button__card" @click.stop="onEdit(item)">编辑</button>
-            <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onEdit(item)"
+              v-if="isPerm('COST_CATEGORY_UPDATE')"
+            >
+              编辑
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onRemove(item)"
+              v-if="isPerm('COST_CATEGORY_DELETE')"
+            >
+              删除
+            </button>
           </view>
         </template>
       </KoTable>
     </view>
     <!-- #endif -->
 
-    <view class="ko-classify__added-btn">
-      <button class="ko-basic-button" @click="onAdded()">添加分类</button>
+    <view class="ko-classify__added-btn" v-if="isPerm('COST_CATEGORY_ADD')">
+      <button class="ko-basic-button__card" @click="onAdded()">添加分类</button>
     </view>
 
     <BasicPopup :visible.sync="visible">
@@ -224,7 +250,7 @@ export default {
         </UniForms>
       </view>
       <template #footer>
-        <button class="ko-basic-button" style="margin: 0 40px 10px;" @click.stop="onSubmit()">保存</button>
+        <button class="ko-basic-button__card" style="margin: 0 40px 10px;" @click.stop="onSubmit()">保存</button>
       </template>
     </BasicPopup>
   </view>

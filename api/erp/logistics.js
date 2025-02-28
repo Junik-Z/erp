@@ -197,6 +197,16 @@ export function checkListApi(data) {
     data,
   });
 }
+/**
+ * @description 获取物流商成员列表
+ */
+export function getLogisticsUserListApi(data) {
+  return request({
+    url: "/logistics/user-list",
+    method: "get",
+    data,
+  });
+}
 
 /**
  * @description 获取我的配送单统计

@@ -25,6 +25,20 @@ import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count
 import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 
+
+const PageMenu = [
+  {
+    label: "配送",
+    perm: "DELIVERY_LIST",
+    func: 0,
+  },
+  {
+    label: "已完成",
+    perm: "DELIVERY_HISTORY",
+    func: 1,
+  },
+];
+
 export default {
   name: "SendList",
   components: {
@@ -49,14 +63,14 @@ export default {
       loading: false,
       list: [],
 
+      PAGE_MENU: _deepCopy(PageMenu),
+
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
         pageNum: 0,
       },
 
       noMore: false,
-
-      isHistory: false,
 
       actionItem: {},
 
@@ -215,17 +229,20 @@ export default {
         this.queryList.pageNum = 0;
         this.list = [];
       }
-
-      this.loading = true;
-      getCountApi()
-        .then(res => {
-          console.log(res.data);
-          this.data = res.data;
-        })
-        .finally(() => {
-          this.loading = false;
-          this.getMyList(reset);
-        });
+      if (this.isPerm("LOGISTICS_COUNT")) {
+        this.loading = true;
+        getCountApi()
+          .then(res => {
+            console.log(res.data);
+            this.data = res.data;
+          })
+          .finally(() => {
+            this.loading = false;
+            this.getMyList(reset);
+          });
+      } else {
+        this.getMyList(reset);
+      }
     },
     getMyList(reset) {
       if (reset) {
@@ -234,7 +251,7 @@ export default {
       }
       this.loading = true;
 
-      const Func = this.isHistory ? getDeliveryHistoryListApi : getDeliveryListApi;
+      const Func = [getDeliveryListApi, getDeliveryHistoryListApi][this.GET_PAGE_MENU_FUNC];
 
       Func(this.queryList)
         .then(res => {
@@ -335,15 +352,17 @@ export default {
           name: "完成配送",
           func: "onConfirm",
           status: ["CREATED"],
+          perm: "DELIVERY_CONFIRM",
         },
         {
           name: "取消配送",
           func: "onCancel",
           color: "#e43d33",
           status: ["CREATED"],
+          perm: "DELIVERY_CANCEL",
         },
       ]
-        .filter(li => li.status.includes(node?.status));
+        .filter(item => this.isPerm(item.perm) && item.status.includes(node?.status));
     },
   },
 };
@@ -352,7 +371,7 @@ export default {
 <template>
   <view class="ko-send">
     <view class="ko-basic-count__wrap">
-      <UniRow :gutter="10">
+      <UniRow :gutter="10" v-if="isPerm('LOGISTICS_COUNT')">
         <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
           <view class="ko-basic-count" @click.stop="onFunc(item)">
             <view class="ko-basic-count__label">{{ item.label }}</view>
@@ -371,19 +390,25 @@ export default {
       </UniRow>
     </view>
 
-    <HistoryBar v-model="isHistory" text="配送" @change="getList(true)" />
+    <HistoryBar
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
+      @change="getList(true)"
+    />
 
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px" v-for="item of list" :key="item.id">
           <OrderCard :item="item" is-logistics @click="onJumpDetails(item, 'logistics')">
-            <template #operate v-if="isPerm('Delivery_Write') || (isBusiness || isAdmin)">
+            <template #operate>
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onBind(item)"
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('DELIVERY_BIND')"
                 >
                   指定物流商
                 </button>
@@ -420,27 +445,26 @@ export default {
         -->
         <template #operate="{item}">
           <view
-            v-if="isPerm('Delivery_Write')"
             style="display: flex; align-items: center; justify-content: center;"
           >
             <button
               class="ko-basic-button__card"
               @click.stop="onBind(item)"
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('DELIVERY_BIND')"
             >
               指定物流商
             </button>
             <button
               class="ko-basic-button__card"
               @click.stop="onConfirm(item)"
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('DELIVERY_CONFIRM')"
             >
               完成配送
             </button>
             <button
               class="ko-basic-button__card"
               @click.stop="onCancel(item)"
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('DELIVERY_CANCEL')"
             >
               取消配送
             </button>
@@ -461,12 +485,15 @@ export default {
     />
     <!-- #endif -->
 
-    <BasicPopup :visible.sync="visible" v-if="isPerm('Delivery_Write') || (isBusiness || isAdmin)">
+    <BasicPopup :visible.sync="visible" v-if="isPerm('DELIVERY_BIND')">
       <view class="ko-send__popup">
         <UniForms ref="FormRef" :model="form" :rules="rules" label-width="100px" label-align="right">
           <UniFormsItem required label="物流商：" name="logisticsId">
             <view style="width: 100%;">
-              <PickerUser v-model="form.logisticsId" type="logistics" is-input placeholder="请选择" />
+              <PickerUser v-if="isPerm('LOGISTICS_LIST')" v-model="form.logisticsId" type="logistics" is-input placeholder="请选择" />
+              <view v-if="!isPerm('LOGISTICS_LIST')" style="font-size: 10px;color: #e43d33; margin-top: 5px;">
+                您没有获取物流信息权限，请联系管理员授权。
+              </view>
             </view>
           </UniFormsItem>
           <UniFormsItem label="物流单号：" name="logisticsNo">

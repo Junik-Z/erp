@@ -1289,6 +1289,7 @@ export default {
             @click="onSubmitCustomized"
             :disabled="sLoading"
             :loading="sLoading"
+            v-if="isPerm('CNC_CUSTOMIZED_BOARD_CALCULATE')"
           >
             {{ sLoading ? "计算中..." : "开始计算" }}
           </button>

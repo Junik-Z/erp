@@ -14,25 +14,20 @@ export default {
   mixins: [mixins],
   data: () => ({
     tabList: [
-      /*  {
-         label: "物流看版",
-         ref: "VVRef",
-         roles: ["Admin", "Business", "Delivery_Write", "Delivery_Read"],
-       }, */
       {
         label: "配送",
         ref: "SLRef",
-        roles: ["Delivery_Write", "Delivery_Read"],
+        roles: ["LOGISTICS_COUNT", "DELIVERY_LIST", "DELIVERY_HISTORY"],
       },
       {
         label: "物流商",
         ref: "RLRef",
-        roles: ["Delivery_Write"],
+        roles: ["LOGISTICS_LIST"],
       },
       {
         label: "我的配送",
         ref: "MOLRef",
-        roles: ["Delivery_Member"],
+        roles: ["DELIVER_MY_STATISTICS", "DELIVERY_MY_LIST"],
       },
     ],
     // TAB: 0,
@@ -82,13 +77,13 @@ export default {
       />
     </view>
 
-    <!-- <ViewVersion ref="VVRef" v-if="isEqual(GET_TABS_REF_NAME, 'VVRef')" /> -->
-
     <SendList ref="SLRef" v-if="isEqual(GET_TABS_REF_NAME, 'SLRef')" />
 
     <LogisticsList ref="RLRef" v-if="isEqual(GET_TABS_REF_NAME, 'RLRef')" />
 
     <MyLogistics ref="MOLRef" v-if="isEqual(GET_TABS_REF_NAME, 'MOLRef')" />
+
+    <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>
 </template>
 

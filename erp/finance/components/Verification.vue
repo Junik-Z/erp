@@ -13,7 +13,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import { _isEmpty } from "@/utils";
+import { _get, _isEmpty } from "@/utils";
 
 export default {
   name: "Verification",
@@ -57,7 +57,7 @@ export default {
       }
 
       this.loading = true;
-      const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.current];
+      const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.getCurrent];
 
       Func(this.queryList)
         .then((res) => {
@@ -82,7 +82,7 @@ export default {
 
     onRefresh(item, index) {
       this.$set(item, "__r_loading__", true);
-      ;[refreshCustomerApi, refreshSupplierApi][+this.current]({id: item.id})
+      ;[refreshCustomerApi, refreshSupplierApi][+this.getCurrent]({id: item.id})
         .then((res) => {
           uni.showToast({title: "刷新成功"});
           this.$set(item, "amount", res.data);
@@ -94,9 +94,13 @@ export default {
 
     onJump(item) {
       this.noRefresh = true;
-      uni.navigateTo({
-        url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.current]}`,
-      });
+      if ([this.isPerm("FINANCE_RECEIVABLE_CHECK"), this.isPerm("FINANCE_PAYABLE_CHECK")][+this.getCurrent]) {
+        uni.navigateTo({
+          url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.getCurrent]}`,
+        });
+      } else {
+        this.noRefresh = false;
+      }
     },
 
     onClickItem(it, node, index) {
@@ -118,11 +122,41 @@ export default {
   },
   computed: {
     getTabsList() {
-      return this.isReconcile ? ["客户", "供应商"] : ["客户", "供应商"];
+      return (this.isReconcile
+        ? [
+          {
+            label: "客户",
+            func: 0,
+            perm: "FINANCE_UNPAID_CUSTOMER",
+          },
+          {
+            label: "供应商",
+            func: 1,
+            perm: "FINANCE_UNPAID_SUPPLIER",
+          },
+        ]
+        : [
+          {
+            label: "客户",
+            func: 0,
+            perm: "CUSTOMER_LIST",
+          },
+          {
+            label: "供应商",
+            func: 1,
+            perm: "SUPPLIER_LIST",
+          },
+        ]).filter(item => this.isPerm(item.perm));
+    },
+
+    getCurrent() {
+      return _get(this.getTabsList, `${this.current}.func`);
     },
 
     getEvents() {
-      return this.isRefreshPayment && !this.isReconcile ? [{label: "刷新款项"}] : [];
+      return !this.isReconcile && [this.isPerm("CUSTOMER_REFRESH"), this.isPerm("SUPPLIER_REFRESH")][this.getCurrent]
+        ? [{label: "刷新款项"}]
+        : [];
     },
   },
 };
@@ -131,8 +165,11 @@ export default {
 <template>
   <view class="ko-verification">
     <HistoryBar
+      v-if="getTabsList.length"
       :values="getTabsList"
       v-model="current"
+      label-key="label"
+
       @change="getList(true)"
     />
 
@@ -143,7 +180,7 @@ export default {
         :events="getEvents"
         @click-item="onClickItem"
         show-amount
-        :is-supplier="!!current"
+        :is-supplier="!!getCurrent"
         :loading="loading"
 
         @lower="onLower"
@@ -157,6 +194,8 @@ export default {
 <style scoped lang="scss">
 /* #ifdef MP */
 .ko-verification {
+  padding-top: 10px;
+
   display: flex;
   flex-direction: column;
   height: calc(100vh - 56px);
@@ -188,7 +227,6 @@ export default {
   }
 
   // #endif
-
 
   &__tabs {
     padding: 10px;

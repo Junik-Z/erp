@@ -2,7 +2,6 @@
 // #ifdef H5
 import { Checkbox } from "@/uni_modules/element-ui/element.min";
 // #endif
-
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import KoNotice from "@/components/Notice/Notice.vue";
@@ -487,11 +486,8 @@ export default {
     },
 
     // #ifdef H5
-
     getCheckColumns() {
       const columns = _deepCopy(this.columns);
-
-
       if (this.isShowCheck) {
         columns.push({
           label: "选择",
@@ -517,6 +513,14 @@ export default {
       return columns;
     },
     // #endif
+
+    getShowCheckBillButton() {
+      const key = this.option?.customer_type;
+      return {
+        sale: this.isPerm("FINANCE_RECEIVABLE_CHECK_BILL"),
+        purchase: this.isPerm("FINANCE_PAYABLE_CHECK_BILL"),
+      }[key];
+    },
   },
 };
 </script>
@@ -839,7 +843,7 @@ export default {
           </button>
 
           <button
-            v-if="!isLogistics"
+            v-if="!isLogistics && getShowCheckBillButton"
             class="ko-basic-button__card"
             @click.stop="openStatement"
           >

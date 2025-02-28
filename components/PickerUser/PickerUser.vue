@@ -11,8 +11,8 @@ import { getSupplierListApi, getSupplierUserListApi } from "@/api/erp/purchase";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import IndexList from "../IndexList/IndexList.vue";
-import { getLogisticsListApi } from "@/api/erp/logistics";
-import { getNotBindInfoApi, getStaffListApi } from "@/api/erp/product";
+import { getLogisticsListApi, getLogisticsUserListApi } from "@/api/erp/logistics";
+import { getNotBindInfoApi, getStaffListApi, getStaffUserListApi } from "@/api/erp/product";
 
 export default {
   name: "PickerUser",
@@ -73,6 +73,8 @@ export default {
       // logistics: 物流商, staff: 员工,
       // noBindStaff: 没有被绑定的员工，perm: 权限设置成员列表,
       // saleUserList: 销售客户用户列表; purchaseUserList: 采购供应商用户列表
+      // staffUserList: 员工列表
+      // logisticsUserList: 物流商列表
       default: "default",
     },
     isInput: Boolean,
@@ -144,6 +146,12 @@ export default {
 
         // 采购供应商用户列表
         purchaseUserList: getSupplierUserListApi,
+
+        // 获取员工列表
+        staffUserList: getStaffUserListApi,
+
+        // 物流商列表
+        logisticsUserList: getLogisticsUserListApi,
       }[this.type];
 
       const vKey = {
@@ -152,6 +160,8 @@ export default {
         perm: "userId",
         saleUserList: "userId",
         purchaseUserList: "userId",
+        staffUserList: "userId",
+        logisticsUserList: "userId",
       }[this.type] || "id";
       const lKey = {default: "nickName", "noBindStaff": "nickName", perm: "nickName"}[this.type] || "name";
       const logoKey = {default: "avatar", "noBindStaff": "avatar", perm: "avatar"}[this.type] || "logo";
@@ -176,8 +186,6 @@ export default {
           if (this.isNotSelected && !this.isSelected) {
             list = _deepCopy(originalList).filter(v => !v.selected);
           }
-
-          console.log(list);
 
           this.list = this.onMergeArrays(this.list, list, vKey);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;

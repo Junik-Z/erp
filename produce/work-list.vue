@@ -30,6 +30,24 @@ import { TabList } from "@/produce/define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
 
+const PageMenu = [
+  {
+    label: "待生产",
+    perm: "PRODUCE_PENDING",
+    func: 0,
+  },
+  {
+    label: "生产中",
+    perm: "PRODUCE_LIST",
+    func: 1,
+  },
+  {
+    label: "已完成",
+    perm: "PRODUCE_HISTORY",
+    func: 2,
+  },
+];
+
 export default {
   name: "WorkList",
   components: {
@@ -62,7 +80,7 @@ export default {
 
       node: {},
 
-      MovableList: [
+      content: [
         /* {
           text: "快捷",
           iconfont: "icon-shiliangzhinengduixiang6",
@@ -72,25 +90,27 @@ export default {
           text: "常规",
           iconfont: "icon-tianjia",
           path: PageEnums.produceWork + "?ADDED_TYPE=common",
+          perm: "PRODUCE_ADD",
         },
         {
           text: "板材",
           iconfont: "icon-ziyuanicon",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing",
+          perm: "PRODUCE_ADD",
         },
         // #ifdef H5
         {
           text: "定制",
           iconfont: "icon-dingzhishengchan",
           path: PageEnums.produceWork + "?ADDED_TYPE=xlsx",
+          perm: "PRODUCE_ADD",
         },
         // #endif
       ],
 
       tableKey: +new Date(),
 
-      values: ["待生产", "生产中", "已完成"],
-      tab: 0,
+      PAGE_MENU: _deepCopy(PageMenu),
 
       // #ifdef H5
       columns: [
@@ -202,7 +222,7 @@ export default {
       }
 
       this.loading = true;
-      const Func = [getProduceInListApi, getProduceListApi, getProduceHistoryListApi][this.tab];
+      const Func = [getProduceInListApi, getProduceListApi, getProduceHistoryListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -406,7 +426,7 @@ export default {
   computed: {
     // #ifdef H5
     getColumns() {
-      return this.columns.filter(item => this.tab == 2 ? !_isEqual(item.label, "操作") : true);
+      return this.columns.filter(item => this.GET_PAGE_MENU_FUNC == 2 ? !_isEqual(item.label, "操作") : true);
     },
     // #endif
 
@@ -417,37 +437,54 @@ export default {
           name: "取消工单",
           func: "onCancel",
           status: ["CREATED"],
+          perm: "PRODUCE_CANCEL",
         },
         {
           name: "编辑",
           func: "onJump",
           status: ["CREATED", "CANCELLED"],
+          perm: "PRODUCE_UPDATE",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "onRemove",
           status: ["CANCELLED", "CREATED"],
+          perm: "PRODUCE_DELETE",
         },
       ]
-        .filter(li => li.status.includes(node.status));
+        .filter(item => {
+          const isPerm = this.isPerm(item.perm);
+
+         /*  if (_isEqual(item.func, "onJump") && _isEqual(node.produceType, "customized")) {
+            return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
+          } */
+
+          return item?.status?.includes(node.status) && isPerm;
+        });
     },
   },
 };
 </script>
 
 <template>
-  <view class="ko-client">
+  <view class="ko-work-list">
     <TopMenus :tabs="TabList" :path="PageEnums.produceWorkList" />
 
-    <HistoryBar v-model="tab" :values="values" @change="getList(true)" />
+    <HistoryBar
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
+      @change="getList(true)"
+    />
 
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
           <BasicCard @click="onJumpDetails(item, 'produce')">
-            <view class="ko-client__info">
+            <view class="ko-work-list__info">
               <UniRow gutter="10">
                 <UniCol :span="24">
                   <label class="ko-basic-label">编号：</label>
@@ -492,11 +529,10 @@ export default {
               </UniRow>
               <view
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                v-if="isPerm('Produce_Write')"
               >
                 <button
                   class="ko-basic-button__card"
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
                   @click.stop="onDischarging(item, index)"
                   :loading="item.__discharging_loading__"
                   :disabled="item.__discharging_loading__"
@@ -505,7 +541,7 @@ export default {
                 </button>
                 <button
                   class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_PAUSE')"
                   @click.stop="onPause(item, index)"
                   :loading="item.__pause_loading__"
                   :disabled="item.__pause_loading__"
@@ -514,14 +550,14 @@ export default {
                 </button>
                 <button
                   class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
                   @click.stop="onTechnology(item, index)"
                 >
                   修改工艺
                 </button>
                 <button
                   class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL'].includes(item.status)"
+                  v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('PRODUCE_FINISH')"
                   @click.stop="onFinish(item, index)"
                   :loading="item.__finish_loading__"
                   :disabled="item.__finish_loading__"
@@ -544,7 +580,7 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view class="ko-client__table">
+    <view class="ko-work-list__table">
       <KoTable
         :loading="loading"
         :columns="getColumns"
@@ -558,10 +594,10 @@ export default {
       >
         <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
-            <block v-if="isPerm('Produce_Write')">
+            <block>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED'].includes(item.status)"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
                 @click.stop="onDischarging(item, index)"
                 :loading="item.__discharging_loading__"
                 :disabled="item.__discharging_loading__"
@@ -570,7 +606,7 @@ export default {
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+                v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_PAUSE')"
                 @click.stop="onPause(item, index)"
                 :loading="item.__pause_loading__"
                 :disabled="item.__pause_loading__"
@@ -579,7 +615,7 @@ export default {
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['APPLY_MATERIAL'].includes(item.status)"
+                v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('PRODUCE_FINISH')"
                 @click.stop="onFinish(item, index)"
                 :loading="item.__finish_loading__"
                 :disabled="item.__finish_loading__"
@@ -588,7 +624,14 @@ export default {
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED'].includes(item.status)"
+                v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
+                @click.stop="onTechnology(item, index)"
+              >
+                修改工艺
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_CANCEL')"
                 @click.stop="onCancel(item, index)"
                 :loading="item.__cancel_loading__"
                 :disabled="item.__cancel_loading__"
@@ -597,14 +640,14 @@ export default {
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('PRODUCE_UPDATE')"
                 @click.stop="onJump(item, index)"
               >
                 编辑
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('PRODUCE_DELETE')"
                 @click.stop="onRemove(item, index)"
                 :loading="item.__r_loading__"
                 :disabled="item.__r_loading__"
@@ -615,7 +658,7 @@ export default {
             <!-- #ifdef H5 -->
             <button
               class="ko-basic-button__card"
-              v-if="['APPLY_MATERIAL'].includes(item.status) && (isPerm('Produce_Read') || isPerm('Produce_Write'))"
+              v-if="['APPLY_MATERIAL'].includes(item.status) && (isPerm('CNC_NC_PROGRAMS') || isPerm('CNC_PROPERTIES'))"
               @click.stop="onCncClick(item, index)"
             >
               CNC
@@ -631,8 +674,9 @@ export default {
     <PrintLabels ref="PLRef" />
     <!-- #endif -->
     <KoMovable
-      :content="MovableList"
-      v-if="isPerm('Produce_Write')"
+      :content="GET_MOVABLE_LIST"
+      v-if="isShowMovable"
+
       @click="onAddedJump"
     />
 
@@ -651,8 +695,10 @@ export default {
   </view>
 </template>
 
-<style scoped lang="scss">
-.ko-client {
+<style lang="scss">
+.ko-work-list {
+  padding-top: 10px;
+
   width: 100%;
 
   :deep(.uni-list-item__container ) {

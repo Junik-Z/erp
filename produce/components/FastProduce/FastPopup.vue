@@ -32,6 +32,10 @@ export default {
       this.params = _deepCopy(data);
       this.from = {name: ""};
       this.visible = true;
+
+      this.$nextTick(() => {
+        !isNew && this.$refs.FPRef?.getList?.(true);
+      });
     },
 
     close() {
@@ -96,7 +100,7 @@ export default {
 <template>
   <BasicPopup :visible.sync="visible" :title="title" :type="isNew ? 'center' : 'bottom'">
     <view class="ko-fast-popup" :class="{'is-new': isNew}">
-      <FastProduce :type="type" @apply-fast="onApplyFast" v-if="!isNew" />
+      <FastProduce ref="FPRef" :type="type" @apply-fast="onApplyFast" v-if="!isNew" />
       <view v-else class="ko-fast-popup__new">
         <uni-forms label-align="right" :model="from">
           <uni-forms-item label="名称：" name="name">

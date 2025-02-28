@@ -17,6 +17,24 @@ import UvCalendars from "./components/uv-calendars/components/uv-calendars/uv-ca
 import dayjs from "@/utils/dayjs";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
+const PageMenu = [
+  {
+    label: "生产中",
+    perm: "CRAFT_MY_WORKING",
+    func: 0,
+  },
+  {
+    label: "待确认",
+    perm: "CRAFT_WAIT_MY_CONFIRM",
+    func: 1,
+  },
+  {
+    label: "已确认",
+    perm: "CRAFT_MY_SETTLED",
+    func: 2,
+  },
+];
+
 export default {
   name: "salary",
   components: {TopMenus, KoList, UvCalendars, UvAvatar},
@@ -33,12 +51,6 @@ export default {
         },
       ],
 
-      tab: 0,
-      values: [
-        "生产中",
-        "待确认",
-        "已确认",
-      ],
       queryList: {
         pageSize: 20,
         pageNum: 0,
@@ -61,6 +73,8 @@ export default {
       },
 
       groupList: {},
+
+      PAGE_MENU: _deepCopy(PageMenu),
     };
   },
   mixins: [mixins],
@@ -77,24 +91,28 @@ export default {
   methods: {
     // 获取我的工资
     getMySalary() {
-      getMySalaryApi()
-        .then(res => {
-          this.MySalary = res.data;
-          console.log(res.data);
-        });
+      if (this.isPerm("CRAFT_MY_SALARY")) {
+        getMySalaryApi()
+          .then(res => {
+            this.MySalary = res.data;
+            console.log(res.data);
+          });
+      }
     },
 
     // 获取月工资
     getMyMonth() {
-      getMyMonthListApi(this.MyMonthQuery)
-        .then(res => {
-          this.MyMonth = res.data.map(item => {
-            return {
-              date: item.settleDate,
-              info: this.toYuan(item.finalAmount),
-            };
+      if (this.isPerm("CRAFT_MY_MONTH")) {
+        getMyMonthListApi(this.MyMonthQuery)
+          .then(res => {
+            this.MyMonth = res.data.map(item => {
+              return {
+                date: item.settleDate,
+                info: this.toYuan(item.finalAmount),
+              };
+            });
           });
-        });
+      }
     },
 
     // 请求下一页数据
@@ -118,7 +136,7 @@ export default {
       // #endif
 
       this.loading = true;
-      const Func = [getMyWorkingListApi, getWaitMyConfirmListApi, getMySettledListApi][this.tab];
+      const Func = [getMyWorkingListApi, getWaitMyConfirmListApi, getMySettledListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -254,7 +272,7 @@ export default {
     // 获取单元格的分配
     getGridTemplateColumnsStyle() {
       return {
-        "--ko-basic-table-grid-col": "auto ".repeat([4, 5, 6][this.tab]).trim(),
+        "--ko-basic-table-grid-col": "auto ".repeat([4, 5, 6][this.GET_PAGE_MENU_FUNC]).trim(),
       };
     },
   },
@@ -279,7 +297,7 @@ export default {
       <TopMenus :tabs="TabList" :path="PageEnums.produceSalary" />
 
       <view class="ko-basic-count__wrap">
-        <UniRow :gutter="10">
+        <UniRow :gutter="10" v-if="isPerm('CRAFT_MY_SALARY')">
           <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
             <view class="ko-basic-count">
               <view class="ko-basic-count__label">{{ item.label }}</view>
@@ -298,7 +316,7 @@ export default {
         </UniRow>
       </view>
 
-      <view style="padding: 10px;">
+      <view style="padding: 10px;" v-if="isPerm('CRAFT_MY_MONTH')">
         <UvCalendars
           :insert="true"
           :lunar="true"
@@ -309,8 +327,10 @@ export default {
       </view>
 
       <HistoryBar
-        v-model="tab"
-        :values="values"
+        v-model="PAGE_MENU_INDEX"
+        :values="GET_PAGE_MENU"
+        label-key="label"
+
         @change="getList(true)"
         :is-show-search="false"
         ref="SearchRef"
@@ -327,16 +347,16 @@ export default {
                   <view class="ko-basic-table--th">计价方式</view>
                   <view class="ko-basic-table--th">价格</view>
 
-                  <block v-if="tab !== 0">
+                  <block v-if="GET_PAGE_MENU_FUNC !== 0">
                     <view class="ko-basic-table--th">数量</view>
                     <view class="ko-basic-table--th">结算</view>
                   </block>
 
-                  <block v-if="tab > 1">
+                  <block v-if="GET_PAGE_MENU_FUNC > 1">
                     <view class="ko-basic-table--th">时间</view>
                   </block>
 
-                  <view class="ko-basic-table--th" v-if="tab === 0">员工</view>
+                  <view class="ko-basic-table--th" v-if="GET_PAGE_MENU_FUNC === 0">员工</view>
 
                   <block v-for="item of child" :key="item.id">
                     <view class="ko-basic-table--cell">
@@ -349,16 +369,16 @@ export default {
                       {{ toYuan(item.price) }}
                     </view>
 
-                    <block v-if="tab !== 0">
+                    <block v-if="GET_PAGE_MENU_FUNC !== 0">
                       <view class="ko-basic-table--cell">{{ item.quantity }}</view>
                       <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
                     </block>
 
-                    <block v-if="tab > 1">
+                    <block v-if="GET_PAGE_MENU_FUNC > 1">
                       <view class="ko-basic-table--cell">{{ item.updateTime }}</view>
                     </block>
 
-                    <view class="ko-basic-table--cell" v-if="tab === 0">
+                    <view class="ko-basic-table--cell" v-if="GET_PAGE_MENU_FUNC === 0">
                       <view
                         style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;"
                       >

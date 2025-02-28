@@ -195,13 +195,13 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.PAGE_MENU_INDEX === 0)) {
+      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.GET_PAGE_MENU_FUNC === 0)) {
         this.updateList();
         return false;
       }
 
       this.loading = true;
-      const Func = [getPurchaseReturnListApi, getPurchaseReturnWaitPaymentListApi, getPurchaseReturnHistoryListApi][this.PAGE_MENU_INDEX];
+      const Func = [getPurchaseReturnListApi, getPurchaseReturnWaitPaymentListApi, getPurchaseReturnHistoryListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -338,9 +338,9 @@ export default {
           }
 
           if (_isEqual(item.func, "onJump")) {
-            if (_isEqual(this.PAGE_MENU_INDEX, 1)) return item.status.includes(node.status) && this.isPerm("PURCHASE_RETURN_RE_ORDER");
+            if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) return item.status.includes(node.status) && this.isPerm("PURCHASE_RETURN_RE_ORDER");
 
-            return (_isEqual(this.PAGE_MENU_INDEX, 0) && item.status.includes(node.status)) && isPerm;
+            return (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && item.status.includes(node.status)) && isPerm;
           }
 
           return item.status.includes(node.status) && isPerm;
@@ -424,7 +424,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item, index)"
-                  v-if="PAGE_MENU_INDEX === 2 ? item.totalAmount === 0 : true"
+                  v-if="GET_PAGE_MENU_FUNC === 2 ? item.totalAmount === 0 : true"
                 >
                   更多
                 </button>
@@ -487,7 +487,7 @@ export default {
               取消订单
             </button>
             <button
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && PAGE_MENU_INDEX !== 2 && ((isEqual(PAGE_MENU_INDEX, 0) && isPerm('PURCHASE_RETURN_UPDATE')) || (isEqual(PAGE_MENU_INDEX, 2) && isPerm('PURCHASE_RETURN_RE_ORDER')))"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && GET_PAGE_MENU_FUNC !== 2 && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_RETURN_UPDATE')) || (isEqual(GET_PAGE_MENU_FUNC, 2) && isPerm('PURCHASE_RETURN_RE_ORDER')))"
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
             >

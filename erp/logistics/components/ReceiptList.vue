@@ -2,7 +2,7 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _xor } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -138,7 +138,6 @@ export default {
       this.loading = true;
       getLogisticsListApi(this.queryList)
         .then((res) => {
-          console.log("客户列表", res.data);
           const list = (res.data || []).map(item => ({
             ...item,
             value: item.id,
@@ -193,10 +192,7 @@ export default {
               })),
             )
               .then(() => {
-                uni.showToast({
-                  title: "解绑成功",
-                });
-                this.getList();
+                uni.showToast({title: "解绑成功"});
               });
           }
         },
@@ -212,23 +208,20 @@ export default {
         })),
       )
         .then(() => {
-          uni.showToast({
-            title: "绑定成功",
-          });
-          this.getList();
+          uni.showToast({title: "绑定成功"});
         });
     },
 
     onBindPopup(item, isBind) {
-      this.bindUserList = _deepCopy(item)?.users?.map(v => v.userId) || [];
       this.isBind = isBind;
       this.item = item;
-      this.visible = true;
+
+      this.$refs.SPURef?.open?.({logisticsId: item.value});
     },
 
     onConfirm(checked) {
-      const users = _xor(this.bindUserList, checked);
-      !_isEmpty(users) && this[this.isBind ? "onBind" : "onUnbind"](users);
+      !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked);
+
       this.visible = false;
     },
 
@@ -274,6 +267,12 @@ export default {
       this.queryList.nameIndex = key;
       this.getList();
     },
+
+
+    // 处理索引点击按钮
+    onClickEvent(query) {
+      this.onBindPopup(query.item, query.button.isBind, query.$index);
+    },
   },
   computed: {
     // #ifdef H5
@@ -316,14 +315,26 @@ export default {
         {
           name: "编辑",
           func: "onJump",
+          perm: "LOGISTICS_EDIT",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "onRemove",
+          perm: "LOGISTICS_DELETE",
         },
-      ];
+      ].filter(item => this.isPerm(item.perm));
     },
+
+
+    // #ifdef MP
+    getIndexEventList() {
+      return [
+        {label: "绑定客户", isBind: true, perm: "LOGISTICS_BIND"},
+        {label: "解绑客户", isBind: false, perm: "LOGISTICS_UNBIND"},
+      ].filter(item => this.isPerm(item.perm));
+    },
+    // #endif
   },
 };
 </script>
@@ -336,36 +347,18 @@ export default {
         :data="list"
         :loading="loading"
         @click="onJumpInfo"
-        button-perm="Delivery_Write"
         is-receipt-list
 
         @lower="onLower"
         :no-more="noMore"
         @search="onSearchToNameIndex"
-      >
-        <template #default="{node}">
-          <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
-            <!--<button
-                  @click.stop="() => {}"
-                  open-type="share"
-                  :data-params="getBindingParams(actionItem)"
-                  class="ko-basic-button__card"
-                >
-                  邀请绑定
-                </button>
-                -->
-            <button @click.stop="onBindPopup(node, true)" class="ko-basic-button__user">绑定物流商</button>
-            <button @click.stop="onBindPopup(node, false)" class="ko-basic-button__user">解绑物流商</button>
 
-            <button
-              class="ko-basic-button__user"
-              @click.stop="onActionClick(node)"
-            >
-              更多
-            </button>
-          </view>
-        </template>
-      </IndexList>
+        :show-more-button="!!actionList.length"
+        @click-more="onActionClick"
+
+        :events="getIndexEventList"
+        @click-event="onClickEvent"
+      />
       <!--
        <button
                     @click.stop="() => {}"
@@ -391,7 +384,7 @@ export default {
           @next-load="onLower"
           :no-more="noMore || loading"
         >
-          <template #operate="{item}" v-if="isPerm('Delivery_Write')">
+          <template #operate="{item}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <!--<button
                 @click.stop="() => {}"
@@ -401,10 +394,34 @@ export default {
               >
                 邀请绑定
               </button>-->
-              <button @click.stop="onBindPopup(item, true)" class="ko-basic-button__user">绑定物流商</button>
-              <button @click.stop="onBindPopup(item, false)" class="ko-basic-button__user">解绑物流商</button>
-              <button class="ko-basic-button__user" @click.stop="onJump(item)">编辑</button>
-              <button class="ko-basic-button__user" @click.stop="onRemove(item)">删除</button>
+              <button
+                @click.stop="onBindPopup(item, true)"
+                class="ko-basic-button__user"
+                v-if="isPerm('LOGISTICS_BIND')"
+              >
+                绑定物流商
+              </button>
+              <button
+                @click.stop="onBindPopup(item, false)"
+                class="ko-basic-button__user"
+                v-if="isPerm('LOGISTICS_UNBIND')"
+              >
+                解绑物流商
+              </button>
+              <button
+                class="ko-basic-button__user"
+                @click.stop="onJump(item)"
+                v-if="isPerm('LOGISTICS_EDIT')"
+              >
+                编辑
+              </button>
+              <button
+                class="ko-basic-button__user"
+                @click.stop="onRemove(item)"
+                v-if="isPerm('LOGISTICS_DELETE')"
+              >
+                删除
+              </button>
             </view>
           </template>
         </KoTable>
@@ -413,19 +430,22 @@ export default {
     </view>
 
     <PickerUser
-      v-if="isPerm('Delivery_Write')"
+      ref="SPURef"
       :visible.sync="visible"
       :title="isBind ? '选择绑定物流商' : '解绑物流商'"
       is-confirm
-      :value="bindUserList"
-      :disabled="isBind ? bindUserList : []"
-      :checked-list="isBind ? [] : bindUserList"
       multiple
       @confirm="onConfirm"
+
+      is-external-open
+      not-created-request
+      :is-selected="!isBind"
+      :is-not-selected="isBind"
+      type="logisticsUserList"
     />
 
     <KoMovable
-      v-if="isPerm('Delivery_Write')"
+      v-if="isPerm('LOGISTICS_ADD')"
       @click="onTrigger('')"
     />
 

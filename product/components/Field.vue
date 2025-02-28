@@ -233,14 +233,15 @@ export default {
                 </UniCol>
               </UniRow>
               <view
-                v-if="isPerm('Product_Write')"
                 style="display: flex; align-items: center; justify-content: flex-end; padding-top: 10px;"
               >
-                <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
+                <button v-if="isPerm('PRODUCT_FIELD_EDIT')" class="ko-basic-button__card" @click="onEdit(item)">编辑
+                </button>
                 <button
                   class="ko-basic-button__card"
                   @click="onRemove(item)"
                   :loading="item.__remove_loading__"
+                  v-if="isPerm('PRODUCT_FIELD_DELETE')"
                 >
                   删除
                 </button>
@@ -262,13 +263,15 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item}" v-if="isPerm('Product_Write')">
+        <template #operate="{item}">
           <view style="display: flex; align-items: center; justify-content: center;">
-            <button class="ko-basic-button__card" @click="onEdit(item)">编辑</button>
+            <button v-if="isPerm('PRODUCT_FIELD_EDIT')" class="ko-basic-button__card" @click="onEdit(item)">编辑
+            </button>
             <button
               class="ko-basic-button__card"
               @click="onRemove(item)"
               :loading="item.__remove_loading__"
+              v-if="isPerm('PRODUCT_FIELD_DELETE')"
             >
               删除
             </button>
@@ -293,7 +296,7 @@ export default {
       </view>
     </BasicPopup>
     <KoMovable
-      v-if="isPerm('Product_Write')"
+      v-if="isPerm('PRODUCT_FIELD_ADD')"
       @click="onAdded('')"
     />
   </view>

@@ -246,13 +246,13 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && !this.isReturn && this.list.length && (!this.isNewList || this.PAGE_MENU_INDEX === 0)) {
+      if (this.noRefresh && info && !this.isReturn && this.list.length && (!this.isNewList || this.GET_PAGE_MENU_FUNC === 0)) {
         this.updateList();
         return false;
       }
 
       this.loading = true;
-      const Func = [getPurchaseListApi, getPurchaseWaitPaymentListApi, getPurchaseHistoryListApi][this.PAGE_MENU_INDEX];
+      const Func = [getPurchaseListApi, getPurchaseWaitPaymentListApi, getPurchaseHistoryListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -455,11 +455,11 @@ export default {
     // 判断是不是要显示编辑按钮
     isEditorButton() {
       return (node) => {
-        if (_isEqual(this.PAGE_MENU_INDEX, 0) && _isEqual(node.orderType, "CUSTOMIZED")) {
+        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && _isEqual(node.orderType, "CUSTOMIZED")) {
           return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
         }
 
-        if (_isEqual(this.PAGE_MENU_INDEX, 1)) {
+        if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
           // 待付款生产工单不能编辑
           if (_isEqual(node.orderType, "CUSTOMIZED")) {
             return false;
@@ -469,7 +469,7 @@ export default {
           return this.isPerm("PURCHASE_UPDATE");
         }
 
-        return !_isEqual(this.PAGE_MENU_INDEX, 2) && this.isPerm("PURCHASE_UPDATE");
+        return !_isEqual(this.GET_PAGE_MENU_FUNC, 2) && this.isPerm("PURCHASE_UPDATE");
       };
     },
   },

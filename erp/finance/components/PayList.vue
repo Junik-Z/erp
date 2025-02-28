@@ -21,6 +21,26 @@ import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "@/erp/components/Pay/Pay.vue";
 
+const PageMenu = [
+  {
+    label: "待清帐",
+    perm: "FINANCE_PAYABLE_LIST",
+    func: 0,
+  },
+  {
+    label: "已完成",
+    perm: "FINANCE_PAYABLE_HISTORY",
+    func: 1,
+  },
+  // #ifdef H5
+  {
+    label: "已取消",
+    perm: "FINANCE_PAYABLE_HISTORY",
+    func: 2,
+  },
+  // #endif
+];
+
 export default {
   name: "PayList",
   mixins: [mixins],
@@ -42,7 +62,6 @@ export default {
       loading: false,
       list: [],
 
-      isHistory: 0,
       operate: [
         {
           label: "订单确认",
@@ -213,13 +232,7 @@ export default {
       node: {},
       nodeIndex: null,
 
-      values: [
-        "待清帐",
-        "已完成",
-        // #ifdef H5
-        "已取消",
-        // #endif
-      ],
+      PAGE_MENU: _deepCopy(PageMenu),
     };
   },
   mounted() {
@@ -242,15 +255,14 @@ export default {
 
       const params = _deepCopy(this.queryList);
       this.loading = true;
-      const Func = [getPayableListApi, getPayableHistoryListApi, getPayableHistoryListApi][this.isHistory];
+      const Func = [getPayableListApi, getPayableHistoryListApi, getPayableHistoryListApi][this.GET_PAGE_MENU_FUNC];
 
-      if (this.isHistory > 0) {
+      if (this.GET_PAGE_MENU_FUNC > 0) {
         params.status = {
           1: "FINISHED",
           2: "CANCELLED",
-        }[this.isHistory];
+        }[this.GET_PAGE_MENU_FUNC];
       }
-
 
       // #ifdef H5
       const top = _deepCopy(this.$refs.WrapRef.scrollTop);
@@ -307,11 +319,13 @@ export default {
     },
 
     getCount() {
-      getPayableCountApi()
-        .then(res => {
-          this.count = res.data;
-          console.log(res.data);
-        });
+      if (this.isPerm("FINANCE_PAYABLE_COUNT")) {
+        getPayableCountApi()
+          .then(res => {
+            this.count = res.data;
+            console.log(res.data);
+          });
+      }
     },
     // 添加票据
     onAddedTicket(item, index) {
@@ -320,6 +334,7 @@ export default {
       this.$refs.TPRef.open({
         ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId", "totalAmount"]),
         isReceivable: false,
+        FORM: "PAY_LISE",
       });
       /*  const q = this.getQueryString({
          ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
@@ -386,7 +401,7 @@ export default {
     <view class="ko-pay">
       <!-- #endif -->
       <view class="ko-basic-count__wrap">
-        <UniRow :gutter="10">
+        <UniRow :gutter="10" v-if="isPerm('FINANCE_PAYABLE_COUNT')">
           <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
             <view class="ko-basic-count" @click.stop="onFunc(item)">
               <view class="ko-basic-count__label">{{ item.label }}</view>
@@ -406,8 +421,10 @@ export default {
       </view>
 
       <HistoryBar
-        v-model="isHistory"
-        :values="values"
+        v-model="PAGE_MENU_INDEX"
+        :values="GET_PAGE_MENU"
+        label-key="label"
+
         @change="onResetList(false)"
         is-show-search
         ref="SearchRef"
@@ -449,11 +466,11 @@ export default {
               >
                 <template #operate>
                   <view
-                    v-if="isPerm('Finance_Write') && !isHistory"
+                    v-if="!GET_PAGE_MENU_FUNC"
                     style="display: flex; align-items: center; justify-content: center; padding-top: 8px;"
                   >
                     <button
-                      v-if="item.confirmable"
+                      v-if="item.confirmable && isPerm('FINANCE_PAYABLE_FINISH')"
                       class="ko-basic-button__card"
                       @click.stop="onConfirm(item, index)"
                     >
@@ -462,13 +479,14 @@ export default {
                     <button
                       class="ko-basic-button__card"
                       @click.stop="onAddedTicket(item, index)"
+                      v-if="isPerm('FINANCE_ADD_RETURNED_ORDER') || isPerm('FINANCE_RETURNED_ORDER')"
                     >
                       添加单据
                     </button>
                     <button
                       class="ko-basic-button__card"
                       @click.stop="onCancel(item, index)"
-                      v-if="['CREATED'].includes(item.status)"
+                      v-if="['CREATED'].includes(item.status) && isPerm('FINANCE_PAYABLE_CANCEL')"
                     >
                       取消订单
                     </button>
@@ -495,11 +513,11 @@ export default {
           >
             <template #operate="{item, index}">
               <view
-                v-if="isPerm('Finance_Write') && !isHistory"
+                v-if="!GET_PAGE_MENU_FUNC"
                 style="display: flex; align-items: center; justify-content: center; padding-top: 8px;"
               >
                 <button
-                  v-if="item.confirmable"
+                  v-if="item.confirmable && isPerm('FINANCE_PAYABLE_FINISH')"
                   class="ko-basic-button__card"
                   @click.stop="onConfirm(item, index)"
                 >
@@ -508,13 +526,14 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onAddedTicket(item, index)"
+                  v-if="isPerm('FINANCE_ADD_RETURNED_ORDER') || isPerm('FINANCE_RETURNED_ORDER')"
                 >
                   添加单据
                 </button>
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onCancel(item, index)"
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('FINANCE_PAYABLE_CANCEL')"
                 >
                   取消订单
                 </button>

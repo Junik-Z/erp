@@ -2,7 +2,7 @@
 import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "./define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _xor } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
@@ -19,14 +19,6 @@ export default {
     const _this = this;
     return {
       TabList,
-
-      content: [
-        {
-          text: "新增",
-          iconfont: "icon-tianjia",
-          path: "/erp/sale/client",
-        },
-      ],
 
       list: [],
       loading: false,
@@ -208,22 +200,20 @@ export default {
     },
 
     // 解绑
-    onUnbind(node, index) {
+    onUnbind(userId) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要解绑员工吗？`,
         success: (res) => {
           if (res.confirm) {
             unbindStaffApi({
-              staffId: node.id,
-              userId: _get(node, "users.0.userId"),
+              staffId: this.node.id,
+              userId,
             })
               .then(() => {
-                uni.showToast({
-                  title: "解绑成功",
-                });
-                this.$set(this.list[index], "users", null);
-                this.$set(this.list[index], "_no_bind_", true);
+                uni.showToast({title: "解绑成功"});
+                this.$set(this.list[this.nodeIndex], "users", null);
+                this.$set(this.list[this.nodeIndex], "_no_bind_", true);
               });
           }
         },
@@ -231,34 +221,28 @@ export default {
     },
 
     // 绑定
-    onBind(user = []) {
-      Promise.all(
-        user.map(userId => bindStaffApi({
-          staffId: this.node.id,
-          userId,
-        })),
-      )
+    onBind(userId) {
+      bindStaffApi({
+        staffId: this.node.id,
+        userId,
+      })
         .then(() => {
-          uni.showToast({
-            title: "绑定成功",
-          });
-
-          this.$set(this.list[this.nodeIndex], "users", user.map(userId => this.$refs.PURef.getUserInfo(userId)));
+          uni.showToast({title: "绑定成功"});
+          this.$set(this.list[this.nodeIndex], "users", [this.$refs.PURef.getUserInfo(userId)]);
           this.$set(this.list[this.nodeIndex], "_no_bind_", false);
         });
     },
 
     onBindPopup(item, isBind, index) {
-      this.bindUserList = _deepCopy(item)?.users?.map(v => v.userId) || [];
       this.isBind = isBind;
       this.node = item;
       this.nodeIndex = index;
-      this.visible = true;
+
+      this.$refs.PURef?.open?.({staffId: item.value});
     },
 
     onConfirm(checked) {
-      const users = _xor(this.bindUserList, checked);
-      !_isEmpty(users) && this[this.isBind ? "onBind" : "onUnbind"](users);
+      !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked[0]);
       this.visible = false;
     },
 
@@ -330,6 +314,20 @@ export default {
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
+
+    // 处理索引点击按钮
+    onClickEvent(query) {
+      this.onBindPopup(query.item, query.button.isBind, query.$index);
+    },
+
+    // 判断是否显示索引列表内的按钮
+    setShowEventButtonFunc(obj) {
+      if (obj.button.isBind) {
+        return obj.item._no_bind_;
+      } else {
+        return !obj.item._no_bind_;
+      }
+    },
   },
 
   computed: {
@@ -344,14 +342,29 @@ export default {
         {
           name: "编辑",
           func: "onJump",
+          perm: "STAFF_EDIT",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "onRemove",
+          perm: "STAFF_DELETE",
         },
-      ];
+      ].filter(item => this.isPerm(item.perm));
     },
+
+    // #ifdef MP
+    getIndexEventList() {
+      return [
+        {label: "绑定员工", isBind: true, perm: "STAFF_BIND"},
+        {label: "解绑员工", isBind: false, perm: "STAFF_UNBIND"},
+      ].filter(item => this.isPerm(item.perm));
+    },
+
+
+    // #endif
+
+
   },
 };
 </script>
@@ -367,37 +380,18 @@ export default {
           :data="list"
           :loading="loading"
           @click="onJumpInfo"
-          button-perm="Produce_Write"
           @lower="onLower"
           :no-more="noMore"
           @search="onSearchToNameIndex"
           is-staff
-        >
-          <template #default="{node, index}">
-            <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
-              <button
-                @click.stop="onBindPopup(node, true, index)"
-                class="ko-basic-button__user"
-                v-if="node._no_bind_"
-              >
-                绑定员工
-              </button>
-              <button
-                v-else
-                @click.stop="onUnbind(node, index)"
-                class="ko-basic-button__user"
-              >
-                解绑员工
-              </button>
-              <button
-                class="ko-basic-button__user"
-                @click.stop="onActionClick(node, index)"
-              >
-                更多
-              </button>
-            </view>
-          </template>
-        </IndexList>
+
+          :show-more-button="!!actionList.length"
+          @click-more="onActionClick"
+
+          :events="getIndexEventList"
+          @click-event="onClickEvent"
+          :show-event-button-func="setShowEventButtonFunc"
+        />
       </view>
       <!-- #endif -->
 
@@ -416,24 +410,36 @@ export default {
 
           :no-refresh="noRefresh"
         >
-          <template #operate="{item, index}" v-if="isPerm('Produce_Write')">
+          <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
-                v-if="item._no_bind_"
+                v-if="item._no_bind_ && isPerm('STAFF_BIND')"
                 @click.stop="onBindPopup(item, true, index)"
                 class="ko-basic-button__user"
               >
                 绑定员工
               </button>
               <button
-                v-else
-                @click.stop="onUnbind(item, index)"
+                v-if="!item._no_bind_ && isPerm('STAFF_UNBIND')"
+                @click.stop="onBindPopup(item, false, index)"
                 class="ko-basic-button__user"
               >
                 解绑员工
               </button>
-              <button class="ko-basic-button__user" @click.stop="onJump(item, index)">编辑</button>
-              <button class="ko-basic-button__user" @click.stop="onRemove(item, index)">删除</button>
+              <button
+                class="ko-basic-button__user"
+                @click.stop="onJump(item, index)"
+                v-if="isPerm('STAFF_EDIT')"
+              >
+                编辑
+              </button>
+              <button
+                class="ko-basic-button__user"
+                @click.stop="onRemove(item, index)"
+                v-if="isPerm('STAFF_DELETE')"
+              >
+                删除
+              </button>
             </view>
           </template>
         </KoTable>
@@ -442,21 +448,22 @@ export default {
     </view>
 
     <PickerUser
-      v-if="isPerm('Produce_Write')"
       :visible.sync="visible"
       :title="isBind ? '选择绑定员工' : '解绑员工'"
       is-confirm
-      :value="bindUserList"
-      :disabled="isBind ? bindUserList : []"
-      :checked-list="isBind ? [] : bindUserList"
       :multiple="false"
       @confirm="onConfirm"
       ref="PURef"
-      type="noBindStaff"
+      type="staffUserList"
+
+      is-external-open
+      not-created-request
+      :is-selected="!isBind"
+      :is-not-selected="isBind"
     />
 
     <KoMovable
-      v-if="isPerm('Produce_Write')"
+      v-if="isPerm('STAFF_ADD')"
       @click="onTrigger('')"
     />
     <!-- #ifdef MP -->

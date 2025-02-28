@@ -10,7 +10,7 @@ import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
-import { _deepCopy, _get } from "@/utils";
+import { _deepCopy, _get, _isEqual } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/components/PrintList/PrintList.vue";
 
@@ -42,9 +42,9 @@ export default {
   watch: {
     visible: {
       handler(to) {
-        if (!to) this.$emit('close')
-      }
-    }
+        if (!to) this.$emit("close");
+      },
+    },
   },
   methods: {
     open(query) {
@@ -81,12 +81,12 @@ export default {
     },
 
     actionList() {
-      const item = this.moreNode;
+      const node = this.moreNode || {};
       return [
         {
           name: "查看凭证",
           func: "onLookVoucher",
-          disabled: !item.voucher,
+          disabled: !node.voucher,
         },
         {
           name: "修改",
@@ -96,14 +96,18 @@ export default {
           name: "确认单据金额",
           func: "onConfirmOrder",
         },
-      ].filter(li => {
-        if (li.func === "addedTicket") {
-          return item.orderStatus !== "FINISHED" && !this.isDetails;
+      ].filter(item => {
+        if (_isEqual(item.func, "addedTicket")) {
+          return node.orderStatus !== "FINISHED" && !this.isDetails;
         }
 
-        if (li.func === "onConfirmOrder") {
-          return (item.orderStatus !== "FINISHED" && !this.isDetails) && !this.noUnable;
+        if (_isEqual(item.func, "onConfirmOrder")) {
+          return ((node.orderStatus !== "FINISHED" && !this.isDetails) && !this.noUnable) && ({
+            RECEIVABLE: this.isPerm("FINANCE_CONFIRM_PAID_ORDER"),
+            PAY_LISE: this.isPerm("FINANCE_CONFIRM_RETURNED_ORDER"),
+          }[this.option.FORM]);
         }
+
         return true;
       });
     },
@@ -115,6 +119,8 @@ export default {
         SALE_RETURN: this.isPerm("SALE_RETURN_EDIT_RETURNED_ORDER"),
         PURCHASE: this.isPerm("PURCHASE_EDIT_RETURNED_ORDER"),
         PURCHASE_RETURN: this.isPerm("PURCHASE_RETURN_EDIT_PAID_ORDER"),
+        RECEIVABLE: this.isPerm("FINANCE_EDIT_PAID_ORDER") || this.isPerm("FINANCE_CONFIRM_PAID_ORDER"),
+        PAY_LISE: this.isPerm("FINANCE_EDIT_RETURNED_ORDER") || this.isPerm("FINANCE_CONFIRM_RETURNED_ORDER"),
       }[this.option.FORM];
     },
 
@@ -125,6 +131,8 @@ export default {
         SALE_RETURN: this.isPerm("SALE_RETURN_ADD_RETURNED_ORDER"),
         PURCHASE: this.isPerm("PURCHASE_ADD_RETURNED_ORDER"),
         PURCHASE_RETURN: this.isPerm("PURCHASE_RETURN_ADD_PAID_ORDER"),
+        RECEIVABLE: this.isPerm("FINANCE_ADD_PAID_ORDER"),
+        PAY_LISE: this.isPerm("FINANCE_ADD_RETURNED_ORDER"),
       }[this.option.FORM];
     },
   },

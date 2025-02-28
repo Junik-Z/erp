@@ -232,7 +232,7 @@ export default {
       // #endif
 
       this.loading = true;
-      const Func = [getMyPurchaseListApi, getReturnMyPurchaseListApi][this.PAGE_MENU_INDEX];
+      const Func = [getMyPurchaseListApi, getReturnMyPurchaseListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           console.log(res.data);
@@ -276,7 +276,7 @@ export default {
       // #endif
 
       this.noRefresh = true;
-      if (this.PAGE_MENU_INDEX) {
+      if (this.GET_PAGE_MENU_FUNC) {
         this.jumpAddedReturnPurchase({
           PAGE_TYPE: "ADDED_REFUND_PURCHASE",
           isNormal: true,
@@ -293,17 +293,17 @@ export default {
 
     // 提交销售订单
     onSubmit(item, index) {
-      const Func = this.PAGE_MENU_INDEX ? this.submitReturnPurchase : this.submitPurchase;
+      const Func = this.GET_PAGE_MENU_FUNC ? this.submitReturnPurchase : this.submitPurchase;
       Func(item, index);
     },
     // 删除订单
     onRemove(item, index) {
-      const Func = this.PAGE_MENU_INDEX ? this.removeReturnPurchase : this.removePurchase;
+      const Func = this.GET_PAGE_MENU_FUNC ? this.removeReturnPurchase : this.removePurchase;
       Func(item, index);
     },
     // 取消订单
     onCancel(item, index) {
-      const Func = this.PAGE_MENU_INDEX ? this.cancelReturnPurchase : this.cancelPurchase;
+      const Func = this.GET_PAGE_MENU_FUNC ? this.cancelReturnPurchase : this.cancelPurchase;
       Func(item, index, true);
     },
     // 申请退货
@@ -325,7 +325,7 @@ export default {
       const info = uni.getStorageSync("TENP_ORDER_INFO");
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
 
-      const Func = this.PAGE_MENU_INDEX ? getPurchaseReturnDetailApi : getPurchaseDetailApi;
+      const Func = this.GET_PAGE_MENU_FUNC ? getPurchaseReturnDetailApi : getPurchaseDetailApi;
 
       Func({id})
         .then(res => {
@@ -382,7 +382,7 @@ export default {
         .filter(item => {
           const isStatus = item?.status.includes(node.status);
 
-          if (_isEqual(this.PAGE_MENU_INDEX, 0)) {
+          if (_isEqual(this.GET_PAGE_MENU_FUNC, 0)) {
             return isStatus && this.isPerm(item.perm);
           } else {
             return !_isEqual(item.func, "onReturn") && isStatus && this.isPerm(item.rPerm);
@@ -448,7 +448,7 @@ export default {
               v-for="(item, index) of list"
               :key="item.id"
               :item="item"
-              @click="onJumpDetails(item, PAGE_MENU_INDEX ? 'purchaseReturn' : 'purchase')"
+              @click="onJumpDetails(item, GET_PAGE_MENU_FUNC ? 'purchaseReturn' : 'purchase')"
               is-sales
               :spacing="10"
             >
@@ -467,7 +467,7 @@ export default {
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onActionClick(item, index)"
-                    v-if="[PAGE_MENU_INDEX ? '' : 'FINISHED', 'CREATED', 'CANCELLED'].includes(item.status)"
+                    v-if="[GET_PAGE_MENU_FUNC ? '' : 'FINISHED', 'CREATED', 'CANCELLED'].includes(item.status)"
                   >
                     更多
                   </button>
@@ -486,13 +486,13 @@ export default {
           :data="list"
           empty-text="暂无数据"
           stripe
-          @row-click="onJumpDetails($event, PAGE_MENU_INDEX ? 'purchaseReturn' : 'purchase')"
+          @row-click="onJumpDetails($event, GET_PAGE_MENU_FUNC ? 'purchaseReturn' : 'purchase')"
           no-more
         >
           <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
-                v-if="['FINISHED'].includes(item.status) && !PAGE_MENU_INDEX && isPerm('PURCHASE_RETURN_ADD')"
+                v-if="['FINISHED'].includes(item.status) && !GET_PAGE_MENU_FUNC && isPerm('PURCHASE_RETURN_ADD')"
                 class="ko-basic-button__card"
                 @click.stop="onReturn(item, index)"
               >
@@ -500,7 +500,7 @@ export default {
               </button>
 
               <button
-                v-if="['CREATED'].includes(item.status) && ((isEqual(PAGE_MENU_INDEX, 0) && isPerm('PURCHASE_CANCEL')) || (isEqual(PAGE_MENU_INDEX, 1) && isPerm('PURCHASE_RETURN_CANCEL')))"
+                v-if="['CREATED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_CANCEL')) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('PURCHASE_RETURN_CANCEL')))"
                 class="ko-basic-button__card"
                 @click.stop="onCancel(item, index)"
               >
@@ -509,7 +509,7 @@ export default {
               <button
                 class="ko-basic-button__card"
                 @click.stop="onAdded(item, index)"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(PAGE_MENU_INDEX, 0) && isPerm('PURCHASE_UPDATE')) || (isEqual(PAGE_MENU_INDEX, 1) && isPerm('PURCHASE_RETURN_UPDATE')))"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_UPDATE')) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('PURCHASE_RETURN_UPDATE')))"
               >
                 编辑
               </button>
@@ -518,7 +518,7 @@ export default {
                 @click.stop="onRemove(item, index)"
                 :loading="item.__r_loading__"
                 :disabled="item.__r_loading__"
-                v-if="['CANCELLED', 'CREATED'].includes(item.status) && ((isEqual(PAGE_MENU_INDEX, 0) && isPerm('PURCHASE_DELETE')) || (isEqual(PAGE_MENU_INDEX, 1) && isPerm('PURCHASE_RETURN_DELETE')))"
+                v-if="['CANCELLED', 'CREATED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_DELETE')) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('PURCHASE_RETURN_DELETE')))"
               >
                 删除
               </button>
@@ -528,7 +528,7 @@ export default {
         <!-- #endif -->
       </view>
 
-      <KoMovable @click="onAdded('')" v-if="!PAGE_MENU_INDEX && isPerm('PURCHASE_ADD')" />
+      <KoMovable @click="onAdded('')" v-if="!GET_PAGE_MENU_FUNC && isPerm('PURCHASE_ADD')" />
 
       <!-- #ifdef MP -->
       <UvActionSheet

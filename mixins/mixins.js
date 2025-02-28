@@ -340,11 +340,6 @@ export default {
       return _isEmpty;
     },
 
-    // 判断用户是否可以刷新用户款项
-    isRefreshPayment() {
-      return this.isPerm("Finance_Write");
-    },
-
     // 判断是否是超管
     isAdmin() {
       return this.GET_USER_ROLE.includes("ADMIN");
@@ -592,7 +587,7 @@ export default {
 
     // 获取页面及的选中方法名
     GET_PAGE_MENU_FUNC() {
-      return this.GET_PAGE_MENU?.[this.PAGE_MENU_INDEX || 0]?.func;
+      return this.GET_PAGE_MENU?.[this.PAGE_MENU_INDEX || 0]?.func || 0;
     },
 
     // 获取右下角添加按钮列表数据
@@ -602,7 +597,7 @@ export default {
 
     // 是否显示添加按钮
     isShowMovable() {
-      return this.GET_MOVABLE_LIST?.length
-    }
+      return this.GET_MOVABLE_LIST?.length;
+    },
   },
 };

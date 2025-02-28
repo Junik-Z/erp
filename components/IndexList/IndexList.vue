@@ -103,6 +103,9 @@ export default {
     notIndex: Boolean,
     // 显示更多按钮
     showMoreButton: Boolean,
+
+    // 显示按钮的方法
+    showEventButtonFunc: Function,
   },
   watch: {
     data: {
@@ -362,6 +365,18 @@ export default {
         },
       ];
     },
+
+    getShowEventButton() {
+      return (button, item, index, dx) => {
+        return this.showEventButtonFunc ?
+          this.showEventButtonFunc({
+            button,
+            item,
+            index,
+            dx,
+          }) : true;
+      };
+    },
   },
 };
 </script>
@@ -429,7 +444,6 @@ export default {
                     :node="item"
                     is-list
                     :span="24"
-                    perm="Product_Write"
                     custom-style="height: 100%;"
                     style="height: 100%;"
                   >
@@ -533,6 +547,7 @@ export default {
                           v-for="(button, dx) of events"
                           @click.stop="onEventItem(button, item, index, dx)"
                           :key="dx"
+                          v-if="getShowEventButton(button, item, index, dx)"
                         >
                           {{ button.label }}
                         </button>

@@ -43,6 +43,7 @@ export default {
           text: "分享",
           iconfont: "icon-icon-test",
           path: PageEnums.shareProduct,
+          perm: "SHARE_PRODUCT",
           /* openType: "share",
           params: {
             title: `邀请您绑定产品！`,
@@ -57,6 +58,7 @@ export default {
           text: "新增",
           iconfont: "icon-tianjia",
           path: PageEnums.addedProduct,
+          perm: "PRODUCT_ADD",
         },
       ],
 
@@ -209,6 +211,7 @@ export default {
     onActionClick(item, index) {
       this.node = item;
       this.nodeIndex = index;
+
       this.$refs.UASRef.open();
     },
 
@@ -306,28 +309,31 @@ export default {
   computed: {
     getActionsList() {
       return () => {
-        if (!this.isPerm("Product_Write")) return [];
         const {saleOff, purchaseOff} = this.node || {};
 
         return [
           {
             name: saleOff ? "上架销售" : "下架销售",
             func: "upDownSale",
+            perm: "PRODUCT_UPDOWN_SALE",
           },
           {
             name: purchaseOff ? "上架采购" : "下架采购",
             func: "upDownPurchase",
+            perm: "PRODUCT_UPDOWN_PURCHASE",
           },
           {
             name: "编辑",
             func: "onFabClick",
+            perm: "PRODUCT_EDIT",
           },
           {
             name: "删除",
             color: "#e43d33",
             func: "onRemove",
+            perm: "PRODUCT_DELETE",
           },
-        ];
+        ].filter(item => this.isPerm(item.perm));
       };
     },
 
@@ -488,29 +494,33 @@ export default {
               @next-load="onLower"
               :no-more="noMore || loading"
             >
-              <template #operate="{item, index}" v-if="isPerm('Product_Write')">
+              <template #operate="{item, index}">
                 <view style="display: flex; align-items: center; justify-content: center;">
                   <button
                     class="ko-basic-button__card"
                     @click.stop="upDownSale(item, index)"
+                    v-if="isPerm('PRODUCT_UPDOWN_SALE')"
                   >
                     {{ item.saleOff ? "上架销售" : "下架销售" }}
                   </button>
                   <button
                     class="ko-basic-button__card"
                     @click.stop="upDownPurchase(item, index)"
+                    v-if="isPerm('PRODUCT_UPDOWN_PURCHASE')"
                   >
                     {{ item.purchaseOff ? "上架采购" : "下架采购" }}
                   </button>
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onFabClick(item, index)"
+                    v-if="isPerm('PRODUCT_EDIT')"
                   >
                     编辑
                   </button>
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onRemove(item, index)"
+                    v-if="isPerm('PRODUCT_DELETE')"
                   >
                     删除
                   </button>
@@ -535,8 +545,9 @@ export default {
     </view>
 
     <KoMovable
-      v-if="isPerm('Product_Write') && !isChecked"
-      :content="content"
+      :content="GET_MOVABLE_LIST"
+      v-if="isShowMovable && !isChecked"
+
       @click="onTrigger"
     />
 

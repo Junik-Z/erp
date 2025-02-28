@@ -484,8 +484,9 @@ export default {
           iconfont: "icon-zt-01-02",
           func: "onSelectCraft",
           arg: ["craft"],
+          perm: "QUICK_CRAFT_LIST",
         },
-      ];
+      ].filter(item => item.perm ? this.isPerm(item.perm) : true);
     },
   },
 };
@@ -502,7 +503,7 @@ export default {
     />
 
     <KoMovable
-      v-if="!tree.length && !readonly"
+      v-if="!tree.length && !readonly && getMContent.length"
       :content="getMContent"
       :y-axis="-60"
       @click="onSMovable"
@@ -545,18 +546,24 @@ export default {
           <uni-forms-item
             label="员工"
             name="staffList"
+            v-if="visible"
           >
-            <PickerUser
-              style="width: 100%;"
-              is-input
-              title="选择员工"
-              v-model="form.staffList"
-              type="staff"
-              multiple
-              is-confirm
-              ref="UserRef"
-              @check-node="onCheckNode"
-            />
+            <view style="width: 100%;">
+              <PickerUser
+                style="width: 100%;"
+                is-input
+                title="选择员工"
+                v-model="form.staffList"
+                type="staff"
+                multiple
+                is-confirm
+                ref="UserRef"
+                @check-node="onCheckNode"
+              />
+              <view v-if="!isPerm('STAFF_LIST')" style="font-size: 10px;color: #e43d33; margin-top: 5px;">
+                您没有获取员工信息权限，请联系管理员授权。
+              </view>
+            </view>
           </uni-forms-item>
           <uni-forms-item label="描述" name="description">
             <uni-easyinput type="textarea" v-model="form.description" placeholder="请输入" />

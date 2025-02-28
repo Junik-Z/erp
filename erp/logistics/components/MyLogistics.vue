@@ -134,11 +134,13 @@ export default {
   },
   methods: {
     getCount() {
-      getMyStatisticsApi()
-        .then(res => {
-          console.log(res.data);
-          this.data = res.data;
-        });
+      if (this.isPerm("DELIVER_MY_STATISTICS")) {
+        getMyStatisticsApi()
+          .then(res => {
+            console.log(res.data);
+            this.data = res.data;
+          });
+      }
     },
 
     getList(reset) {
@@ -202,7 +204,7 @@ export default {
 <template>
   <view class="ko-my-order-list">
     <view class="ko-basic-count__wrap">
-      <UniRow :gutter="10">
+      <UniRow :gutter="10" v-if="isPerm('DELIVER_MY_STATISTICS')">
         <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
           <view class="ko-basic-count">
             <view class="ko-basic-count__label">{{ item.label }}</view>
@@ -226,7 +228,7 @@ export default {
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 5px 10px" v-for="item of list" :key="item.id">
           <OrderCard :item="item" is-logistics @click="onJumpDetails(item, 'logistics')">
-            <template #operate v-if="['CREATED'].includes(item.status)">
+            <template #operate v-if="['CREATED'].includes(item.status) && isPerm('DELIVERY_CONFIRM')">
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   class="ko-basic-button__card"
@@ -270,6 +272,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onConfirm(item)"
+              v-if="isPerm('DELIVERY_CONFIRM')"
             >
               完成配送
             </button>

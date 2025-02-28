@@ -852,7 +852,7 @@ export const PURCHASE_PERM_TREE = [
     label: "我的订单",
     type: 1,
     perm: ["PURCHASE_MY_LIST", "PURCHASE_RETURN_MY_LIST"],
-    id: "653655",
+    id: "653655000",
     children: [
       {
         label: "采购",
@@ -878,7 +878,7 @@ export const PURCHASE_PERM_TREE = [
     label: "定制采购",
     type: 1,
     perm: ["PURCHASE_RETURN_LIST"],
-    id: "",
+    id: "45000000",
     children: [
       {
         label: "新增定制化采购",
@@ -935,16 +935,16 @@ export const PRODUCE_PERM_TREE = [
     id: "421000000",
     children: [
       {
+        label: "员工列表",
+        type: 3,
+        perm: "STAFF_LIST",
+        id: "421",
+      },
+      {
         label: "员工统计",
         type: 2,
         perm: "STAFF_COUNT",
         id: "420",
-      },
-      {
-        label: "员工列表",
-        type: 2,
-        perm: "STAFF_LIST",
-        id: "421",
       },
       {
         label: "添加员工",
@@ -1021,18 +1021,6 @@ export const PRODUCE_PERM_TREE = [
         id: "404",
       },
       {
-        label: "添加定制单",
-        type: 2,
-        perm: "PURCHASE_CUSTOMIZED_ADD",
-        id: "450",
-      },
-      {
-        label: "编辑定制单",
-        type: 2,
-        perm: "PURCHASE_CUSTOMIZED_UPDATE",
-        id: "452",
-      },
-      {
         label: "暂停/恢复生产工单",
         type: 2,
         perm: "PRODUCE_PAUSE",
@@ -1057,7 +1045,7 @@ export const PRODUCE_PERM_TREE = [
         id: "410",
       },
       {
-        label: "申请物料",
+        label: "进入生产",
         type: 2,
         perm: "PRODUCE_APPLY_MATERIAL",
         id: "411",
@@ -1073,6 +1061,107 @@ export const PRODUCE_PERM_TREE = [
         type: 2,
         perm: "PRODUCE_UPDATE_CRAFT_PROCESS",
         id: "413",
+      },
+    ],
+  },
+  {
+    label: "生产流程",
+    type: 1,
+    perm: ["CRAFT_WORKING_LIST", "CRAFT_WAIT_CONFIRM", "CRAFT_SETTLED"],
+    id: "911000000",
+    children: [
+      {
+        label: "生产中",
+        type: 3,
+        perm: "CRAFT_WORKING_LIST",
+        id: "911",
+      },
+      {
+        label: "待确认",
+        type: 3,
+        perm: "CRAFT_WAIT_CONFIRM",
+        id: "915",
+      },
+      {
+        label: "已完成",
+        type: 3,
+        perm: "CRAFT_SETTLED",
+        id: "917",
+      },
+      {
+        label: "完成流程",
+        type: 2,
+        perm: "CRAFT_COMPLETE",
+        id: "912",
+      },
+      {
+        label: "流程更新",
+        type: 2,
+        perm: "CRAFT_UPDATE",
+        id: "910",
+      },
+      {
+        label: "流程恢复",
+        type: 2,
+        perm: "CRAFT_RECOVER",
+        id: "913",
+      },
+      {
+        label: "流程申请结算",
+        type: 2,
+        perm: "CRAFT_APPLY_SETTLE",
+        id: "914",
+      },
+      {
+        label: "流程确认结算",
+        type: 2,
+        perm: "CRAFT_CONFIRM_SETTLE",
+        id: "916",
+      },
+      {
+        label: "流程取消结算",
+        type: 2,
+        perm: "CRAFT_CANCEL_SETTLE",
+        id: "918",
+      },
+    ],
+  },
+  {
+    label: "我的工资",
+    type: 1,
+    perm: ["CRAFT_MY_SALARY", "CRAFT_MY_MONTH", "CRAFT_MY_WORKING", "CRAFT_WAIT_MY_CONFIRM", "CRAFT_MY_SETTLED"],
+    id: "900901903",
+    children: [
+
+      {
+        label: "工资统计",
+        type: 3,
+        perm: "CRAFT_MY_SALARY",
+        id: "904",
+      },
+      {
+        label: "月度工资记录",
+        type: 3,
+        perm: "CRAFT_MY_MONTH",
+        id: "900",
+      },
+      {
+        label: "进行中",
+        type: 3,
+        perm: "CRAFT_MY_WORKING",
+        id: "903",
+      },
+      {
+        label: "待确认",
+        type: 3,
+        perm: "CRAFT_WAIT_MY_CONFIRM",
+        id: "902",
+      },
+      {
+        label: "已确认",
+        type: 3,
+        perm: "CRAFT_MY_SETTLED",
+        id: "901",
       },
     ],
   },
@@ -1139,106 +1228,6 @@ export const PRODUCE_PERM_TREE = [
     ],
   },
   {
-    label: "生产流程",
-    type: 1,
-    perm: ["CRAFT_WORKING_LIST", "CRAFT_COMPLETE", ""],
-    id: "911000000",
-    children: [
-      {
-        label: "工艺更新",
-        type: 2,
-        perm: "CRAFT_UPDATE",
-        id: "910",
-      },
-      {
-        label: "工艺进行中列表",
-        type: 2,
-        perm: "CRAFT_WORKING_LIST",
-        id: "911",
-      },
-      {
-        label: "工艺完成",
-        type: 2,
-        perm: "CRAFT_COMPLETE",
-        id: "912",
-      },
-      {
-        label: "工艺恢复",
-        type: 2,
-        perm: "CRAFT_RECOVER",
-        id: "913",
-      },
-      {
-        label: "工艺申请结算",
-        type: 2,
-        perm: "CRAFT_APPLY_SETTLE",
-        id: "914",
-      },
-      {
-        label: "工艺待确认",
-        type: 2,
-        perm: "CRAFT_WAIT_CONFIRM",
-        id: "915",
-      },
-      {
-        label: "工艺确认结算",
-        type: 2,
-        perm: "CRAFT_CONFIRM_SETTLE",
-        id: "916",
-      },
-      {
-        label: "工艺已结算",
-        type: 2,
-        perm: "CRAFT_SETTLED",
-        id: "917",
-      },
-      {
-        label: "工艺取消结算",
-        type: 2,
-        perm: "CRAFT_CANCEL_SETTLE",
-        id: "918",
-      },
-    ],
-  },
-  {
-    label: "我的工资",
-    type: 1,
-    perm: ["CRAFT_MY_MONTH", "CRAFT_MY_SETTLED", "CRAFT_MY_WORKING"],
-    id: "900901903",
-    children: [
-      {
-        label: "我的月度工艺记录",
-        type: 2,
-        perm: "CRAFT_MY_MONTH",
-        id: "900",
-      },
-      {
-        label: "我的已结算工艺记录",
-        type: 2,
-        perm: "CRAFT_MY_SETTLED",
-        id: "901",
-      },
-      {
-        label: "待我确认的工艺记录",
-        type: 2,
-        perm: "CRAFT_WAIT_MY_CONFIRM",
-        id: "902",
-      },
-      {
-        label: "我的进行中工艺记录",
-        type: 2,
-        perm: "CRAFT_MY_WORKING",
-        id: "903",
-      },
-      {
-        label: "我的工艺工资",
-        type: 2,
-        perm: "CRAFT_MY_SALARY",
-        id: "904",
-      },
-    ],
-  },
-  {
     label: "数控(CNC)",
     type: 1,
     perm: ["CNC_PROPERTIES", "CNC_UPDATE_PROPERTIES"],
@@ -1295,16 +1284,34 @@ export const FINANCE_PERM_TREE = [
     id: "550553555",
     children: [
       {
-        label: "应收账款统计",
-        type: 2,
+        label: "账款统计",
+        type: 3,
         perm: "FINANCE_RECEIVABLE_COUNT",
         id: "550",
       },
       {
-        label: "应收账款审核",
+        label: "未付款客户列表",
         type: 2,
-        perm: "FINANCE_RECEIVABLE_CHECK",
-        id: "551",
+        perm: "FINANCE_UNPAID_CUSTOMER",
+        id: "500",
+      },
+      {
+        label: "待清帐",
+        type: 3,
+        perm: "FINANCE_RECEIVABLE_LIST",
+        id: "553",
+      },
+      {
+        label: "已完成",
+        type: 3,
+        perm: "FINANCE_RECEIVABLE_HISTORY",
+        id: "555",
+      },
+      {
+        label: "取消订单",
+        type: 2,
+        perm: "FINANCE_RECEIVABLE_CANCEL",
+        id: "556",
       },
       {
         label: "应收账款对账单",
@@ -1313,25 +1320,7 @@ export const FINANCE_PERM_TREE = [
         id: "552",
       },
       {
-        label: "应收账款列表",
-        type: 2,
-        perm: "FINANCE_RECEIVABLE_LIST",
-        id: "553",
-      },
-      {
-        label: "应收账款历史记录",
-        type: 2,
-        perm: "FINANCE_RECEIVABLE_HISTORY",
-        id: "555",
-      },
-      {
-        label: "应收账款取消",
-        type: 2,
-        perm: "FINANCE_RECEIVABLE_CANCEL",
-        id: "556",
-      },
-      {
-        label: "应收账款完成",
+        label: "确认清帐",
         type: 2,
         perm: "FINANCE_RECEIVABLE_FINISH",
         id: "557",
@@ -1343,19 +1332,19 @@ export const FINANCE_PERM_TREE = [
         id: "502",
       },
       {
-        label: "添加已收款单据",
+        label: "添加单据",
         type: 2,
         perm: "FINANCE_ADD_PAID_ORDER",
         id: "503",
       },
       {
-        label: "编辑已收款单据",
+        label: "编辑单据",
         type: 2,
         perm: "FINANCE_EDIT_PAID_ORDER",
         id: "504",
       },
       {
-        label: "确认已收款单据",
+        label: "确认单据金额",
         type: 2,
         perm: "FINANCE_CONFIRM_PAID_ORDER",
         id: "505",
@@ -1365,20 +1354,32 @@ export const FINANCE_PERM_TREE = [
   {
     label: "应付款",
     type: 1,
-    perm: ["FINANCE_PAYABLE_COUNT", "FINANCE_PAYABLE_LIST"],
-    id: "540543",
+    perm: ["FINANCE_PAYABLE_COUNT", "FINANCE_PAYABLE_LIST", "FINANCE_PAYABLE_HISTORY"],
+    id: "540543000",
     children: [
       {
-        label: "应付账款统计",
-        type: 2,
+        label: "账款统计",
+        type: 3,
         perm: "FINANCE_PAYABLE_COUNT",
         id: "540",
       },
       {
-        label: "应付账款审核",
+        label: "未付款供应商列表",
         type: 2,
-        perm: "FINANCE_PAYABLE_CHECK",
-        id: "541",
+        perm: "FINANCE_UNPAID_SUPPLIER",
+        id: "501",
+      },
+      {
+        label: "待清帐",
+        type: 3,
+        perm: "FINANCE_PAYABLE_LIST",
+        id: "543",
+      },
+      {
+        label: "清帐历史记录",
+        type: 3,
+        perm: "FINANCE_PAYABLE_HISTORY",
+        id: "545",
       },
       {
         label: "应付账款对账单",
@@ -1387,43 +1388,31 @@ export const FINANCE_PERM_TREE = [
         id: "542",
       },
       {
-        label: "应付账款列表",
-        type: 2,
-        perm: "FINANCE_PAYABLE_LIST",
-        id: "543",
-      },
-      {
-        label: "应付账款历史记录",
-        type: 2,
-        perm: "FINANCE_PAYABLE_HISTORY",
-        id: "545",
-      },
-      {
-        label: "应付账款取消",
+        label: "取消订单",
         type: 2,
         perm: "FINANCE_PAYABLE_CANCEL",
         id: "546",
       },
       {
-        label: "应付账款完成",
+        label: "确认清帐",
         type: 2,
         perm: "FINANCE_PAYABLE_FINISH",
         id: "547",
       },
       {
-        label: "付款单据列表",
+        label: "单据列表",
         type: 2,
         perm: "FINANCE_RETURNED_ORDER",
         id: "506",
       },
       {
-        label: "添加付款单据",
+        label: "添加单据",
         type: 2,
         perm: "FINANCE_ADD_RETURNED_ORDER",
         id: "507",
       },
       {
-        label: "编辑付款单据",
+        label: "编辑单据",
         type: 2,
         perm: "FINANCE_EDIT_RETURNED_ORDER",
         id: "508",
@@ -1444,54 +1433,54 @@ export const FINANCE_PERM_TREE = [
     children: [
       {
         label: "成本统计",
-        type: 2,
+        type: 3,
         perm: "COST_STATISTICS",
         id: "520",
       },
       {
-        label: "获取成本分类列表",
-        type: 2,
+        label: "分类列表",
+        type: 3,
         perm: "COST_GET_CATEGORY_LIST",
         id: "521",
       },
       {
-        label: "新增成本分类",
+        label: "成本列表",
+        type: 3,
+        perm: "COST_GET_LIST",
+        id: "525",
+      },
+      {
+        label: "新增分类",
         type: 2,
         perm: "COST_CATEGORY_ADD",
         id: "522",
       },
       {
-        label: "编辑成本分类",
+        label: "编辑分类",
         type: 2,
         perm: "COST_CATEGORY_UPDATE",
         id: "523",
       },
       {
-        label: "删除成本分类",
+        label: "删除分类",
         type: 2,
         perm: "COST_CATEGORY_DELETE",
         id: "524",
       },
       {
-        label: "获取成本列表",
-        type: 2,
-        perm: "COST_GET_LIST",
-        id: "525",
-      },
-      {
-        label: "新增成本记录",
+        label: "新增成本",
         type: 2,
         perm: "COST_ADD",
         id: "526",
       },
       {
-        label: "编辑成本记录",
+        label: "编辑成本",
         type: 2,
         perm: "COST_UPDATE",
         id: "527",
       },
       {
-        label: "删除成本记录",
+        label: "删除成本",
         type: 2,
         perm: "COST_DELETE",
         id: "528",
@@ -1501,26 +1490,26 @@ export const FINANCE_PERM_TREE = [
   {
     label: "核对款项",
     type: 1,
-    perm: ["FINANCE_UNPAID_CUSTOMER", "FINANCE_UNPAID_SUPPLIER"],
-    id: "500501",
+    perm: ["CUSTOMER_LIST", "SUPPLIER_LIST"],
+    id: "500501000",
     children: [
       {
-        label: "未付款客户列表",
+        label: "应收账款核对",
         type: 2,
-        perm: "FINANCE_UNPAID_CUSTOMER",
-        id: "500",
+        perm: "FINANCE_RECEIVABLE_CHECK",
+        id: "551",
+      },
+      {
+        label: "应付账款核对",
+        type: 2,
+        perm: "FINANCE_PAYABLE_CHECK",
+        id: "541",
       },
       {
         label: "刷新客户金额",
         type: 2,
         perm: "CUSTOMER_REFRESH",
         id: "330",
-      },
-      {
-        label: "未付款供应商列表",
-        type: 2,
-        perm: "FINANCE_UNPAID_SUPPLIER",
-        id: "501",
       },
       {
         label: "刷新供应商金额",
@@ -1539,9 +1528,15 @@ export const LOGISTICS_PERM_TREE = [
   {
     label: "配送",
     type: 1,
-    perm: ["DELIVERY_LIST", "DELIVERY_CHECK_LIST"],
+    perm: ["LOGISTICS_COUNT", "DELIVERY_LIST", "DELIVERY_HISTORY"],
     id: "810816000",
     children: [
+      {
+        label: "物流统计",
+        type: 2,
+        perm: "LOGISTICS_COUNT",
+        id: "820",
+      },
       {
         label: "发货列表",
         type: 2,
@@ -1555,28 +1550,22 @@ export const LOGISTICS_PERM_TREE = [
         id: "812",
       },
       {
-        label: "绑定发货信息",
+        label: "指定物流商",
         type: 2,
         perm: "DELIVERY_BIND",
         id: "813",
       },
       {
-        label: "取消发货",
+        label: "取消配送",
         type: 2,
         perm: "DELIVERY_CANCEL",
         id: "814",
       },
       {
-        label: "确认发货",
+        label: "完成配送",
         type: 2,
         perm: "DELIVERY_CONFIRM",
         id: "815",
-      },
-      {
-        label: "发货审核列表",
-        type: 2,
-        perm: "DELIVERY_CHECK_LIST",
-        id: "816",
       },
     ],
   },
@@ -1586,12 +1575,6 @@ export const LOGISTICS_PERM_TREE = [
     perm: ["LOGISTICS_LIST"],
     id: "820000000",
     children: [
-      {
-        label: "物流商统计",
-        type: 2,
-        perm: "LOGISTICS_COUNT",
-        id: "820",
-      },
       {
         label: "物流商列表",
         type: 2,
@@ -1635,11 +1618,17 @@ export const LOGISTICS_PERM_TREE = [
         id: "828",
       },
       {
+        label: "核对物流款项",
+        type: 2,
+        perm: "DELIVERY_CHECK_LIST",
+        id: "816",
+      },
+      /* {
         label: "刷新物流商",
         type: 2,
         perm: "LOGISTICS_REFRESH",
         id: "829",
-      },
+      }, */
     ],
   },
   {
@@ -1649,23 +1638,23 @@ export const LOGISTICS_PERM_TREE = [
     id: "800801000",
     children: [
       {
-        label: "我的发货统计",
-        type: 2,
+        label: "我的统计",
+        type: 3,
         perm: "DELIVER_MY_STATISTICS",
         id: "800",
       },
       {
-        label: "我的发货列表",
-        type: 2,
+        label: "我的列表",
+        type: 3,
         perm: "DELIVERY_MY_LIST",
         id: "801",
       },
-      {
-        label: "我的发货审核列表",
+      /* {
+        label: "审核列表",
         type: 2,
         perm: "DELIVERY_CHECK_MY_LIST",
         id: "802",
-      },
+      }, */
     ],
   },
 ];
@@ -1699,13 +1688,13 @@ export const PRODUCT_PERM_TREE = [
         id: "113",
       },
       {
-        label: "上下架销售产品",
+        label: "上下架销售",
         type: 2,
         perm: "PRODUCT_UPDOWN_SALE",
         id: "114",
       },
       {
-        label: "上下架采购产品",
+        label: "上下架采购",
         type: 2,
         perm: "PRODUCT_UPDOWN_PURCHASE",
         id: "115",
@@ -1723,23 +1712,22 @@ export const PRODUCT_PERM_TREE = [
         id: "132",
       },
       {
-        label: "接收分享的产品",
-        type: 2,
-        perm: "SHARE_RECEIVE_SHARE_PRODUCT",
-        id: "134",
-      },
-      {
-        label: "检查产品重复分享",
+        label: "检查重复分享",
         type: 2,
         perm: "SHARE_CHECK_DUPLICATE",
         id: "133",
       },
-
       {
         label: "获取产品扩展信息",
         type: 2,
         perm: "SHARE_GET_PRODUCT_EXT",
         id: "131",
+      },
+      {
+        label: "接收分享的产品",
+        type: 2,
+        perm: "SHARE_RECEIVE_SHARE_PRODUCT",
+        id: "134",
       },
     ],
   },
@@ -1750,31 +1738,31 @@ export const PRODUCT_PERM_TREE = [
     id: "100000000",
     children: [
       {
-        label: "新增产品分类",
+        label: "新增分类",
         type: 2,
         perm: "PRODUCT_CLASS_ADD",
         id: "100",
       },
       {
-        label: "编辑产品分类",
+        label: "编辑分类",
         type: 2,
         perm: "PRODUCT_CLASS_EDIT",
         id: "101",
       },
       {
-        label: "删除产品分类",
+        label: "删除分类",
         type: 2,
         perm: "PRODUCT_CLASS_DELETE",
         id: "102",
       },
       {
-        label: "上下架销售产品分类",
+        label: "上下架销售分类",
         type: 2,
         perm: "PRODUCT_CLASS_UPDOWN_SALE",
         id: "103",
       },
       {
-        label: "上下架采购产品分类",
+        label: "上下架采购分类",
         type: 2,
         perm: "PRODUCT_CLASS_UPDOWN_PURCHASE",
         id: "104",
@@ -1788,19 +1776,19 @@ export const PRODUCT_PERM_TREE = [
     id: "120000000",
     children: [
       {
-        label: "新增产品字段",
+        label: "新增字段",
         type: 2,
         perm: "PRODUCT_FIELD_ADD",
         id: "120",
       },
       {
-        label: "编辑产品字段",
+        label: "编辑字段",
         type: 2,
         perm: "PRODUCT_FIELD_EDIT",
         id: "121",
       },
       {
-        label: "删除产品字段",
+        label: "删除字段",
         type: 2,
         perm: "PRODUCT_FIELD_DELETE",
         id: "122",

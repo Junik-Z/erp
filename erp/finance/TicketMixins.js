@@ -177,6 +177,8 @@ export default {
         SALE_RETURN: getSaleReturnedOrderApi,
         PURCHASE: getPurchaseReturnedOrderApi,
         PURCHASE_RETURN: getPurchaseReturnedPaidOrderApi,
+        RECEIVABLE: getPaidOrderListApi,
+        PAY_LISE: getReturnedOrderListApi,
       }[this.option.FORM];
 
       const Func = this.isRefund ? getReturnedOrderListApi : getPaidOrderListApi;
@@ -230,6 +232,8 @@ export default {
             SALE_RETURN: this.isEdit ? editSaleReturnedOrderApi : addedSaleReturnedOrderApi,
             PURCHASE: this.isEdit ? editPurchaseReturnedOrderApi : addedSPurchaseReturnedOrderApi,
             PURCHASE_RETURN: this.isEdit ? editPurchaseReturnedPaidOrderApi : addedSPurchaseReturnedPaidOrderApi,
+            RECEIVABLE: this.isEdit ? editPaidOrderApi : addedPaidOrderApi,
+            PAY_LISE: this.isEdit ? editReturnedOrderApi : addedReturnedOrderApi,
           }[this.option.FORM];
 
 
@@ -266,12 +270,17 @@ export default {
         confirmText: "已确认",
         success: (resq) => {
           if (resq.confirm) {
+            const Event = {
+              RECEIVABLE: confirmPaidOrderApi,
+              PAY_LISE: confirmReturnedOrderApi,
+            }[this.option.FORM];
+
             const Func = this.isRefund ? confirmReturnedOrderApi : confirmPaidOrderApi;
             const params = _deepCopy(item);
 
             this.$set(item, "__confirm_loading__", true);
 
-            Func(params)
+            ;(Event || Func)(params)
               .then(() => {
                 CustomToast({
                   title: "单据已确认",

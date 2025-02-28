@@ -229,13 +229,13 @@ export default {
 
       console.log(info, "新增数据");
 
-      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.PAGE_MENU_INDEX === 0)) {
+      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.GET_PAGE_MENU_FUNC === 0)) {
         this.updateList();
         return false;
       }
 
       this.loading = true;
-      const Func = [getSaleReturnListApi, getSaleReturnWaitPaymentApi, getSaleReturnHistoryApi][this.PAGE_MENU_INDEX];
+      const Func = [getSaleReturnListApi, getSaleReturnWaitPaymentApi, getSaleReturnHistoryApi][this.GET_PAGE_MENU_FUNC];
 
       Func(this.queryList)
         .then(res => {
@@ -355,9 +355,9 @@ export default {
           }
 
           if (_isEqual(item.func, "onJump")) {
-            if (_isEqual(this.PAGE_MENU_INDEX, 1)) return item.status.includes(node.status) && this.isPerm("SALE_RETURN_RE_ORDER");
+            if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) return item.status.includes(node.status) && this.isPerm("SALE_RETURN_RE_ORDER");
 
-            return (_isEqual(this.PAGE_MENU_INDEX, 0) && item.status.includes(node.status)) && isPerm;
+            return (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && item.status.includes(node.status)) && isPerm;
           }
 
           return item.status.includes(node.status) && isPerm;
@@ -444,7 +444,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item, index)"
-                  v-if="PAGE_MENU_INDEX !== 2"
+                  v-if="GET_PAGE_MENU_FUNC !== 2"
                 >
                   更多
                 </button>
@@ -509,7 +509,7 @@ export default {
             </button>
 
             <button
-              v-if="['FINISHED', 'CREATED', 'CANCELLED'].includes(item.status) && (isEqual(PAGE_MENU_INDEX, 1) && isPerm('SALE_RETURN_RE_ORDER') || isEqual(PAGE_MENU_INDEX, 0) && isPerm('SALE_RETURN_UPDATE'))"
+              v-if="['FINISHED', 'CREATED', 'CANCELLED'].includes(item.status) && (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('SALE_RETURN_RE_ORDER') || isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('SALE_RETURN_UPDATE'))"
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
             >

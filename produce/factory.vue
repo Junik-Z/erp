@@ -20,6 +20,24 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import PickerSheet from "@/produce/components/PickerSheet.vue";
 import CraftCard from "./components/CraftCard.vue";
 
+const PageMenu = [
+  {
+    label: "生产中",
+    perm: "CRAFT_WORKING_LIST",
+    func: 0,
+  },
+  {
+    label: "待确认",
+    perm: "CRAFT_WAIT_CONFIRM",
+    func: 1,
+  },
+  {
+    label: "已确认",
+    perm: "CRAFT_SETTLED",
+    func: 2,
+  },
+];
+
 export default {
   name: "Factory",
   components: {CraftCard, PickerSheet, TopMenus, KoList},
@@ -37,12 +55,6 @@ export default {
         },
       ],
 
-      tab: 0,
-      values: [
-        "生产中",
-        "待确认",
-        "已确认",
-      ],
       queryList: {
         pageSize: 20,
         pageNum: 0,
@@ -76,6 +88,8 @@ export default {
       groupList: {},
 
       tableKey: +new Date(),
+
+      PAGE_MENU: _deepCopy(PageMenu),
     };
   },
   mixins: [mixins],
@@ -107,7 +121,7 @@ export default {
       // #endif
 
       this.loading = true;
-      const Func = [getWorkingListApi, getWaitConfirmListApi, getSettledListApi][this.tab];
+      const Func = [getWorkingListApi, getWaitConfirmListApi, getSettledListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -353,7 +367,7 @@ export default {
     // 获取单元格的分配
     getGridTemplateColumnsStyle() {
       return {
-        "--ko-basic-table-grid-col": "auto ".repeat([5, 7, 7][this.tab]).trim(),
+        "--ko-basic-table-grid-col": "auto ".repeat([5, 7, 7][this.GET_PAGE_MENU_FUNC]).trim(),
       };
     },
 
@@ -398,7 +412,7 @@ export default {
             return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.price)]);
           },
         },
-        ...(_this.tab >= 1 ? [
+        ...(_this.GET_PAGE_MENU_FUNC >= 1 ? [
           {
             label: "数量",
             prop: "quantity",
@@ -466,7 +480,7 @@ export default {
             return h("span", [row.description]);
           },
         },
-        ...(_this.tab < 2 ?
+        ...(_this.GET_PAGE_MENU_FUNC < 2 ?
           [{
             label: "操作",
             slot: "operate",
@@ -484,8 +498,10 @@ export default {
     <TopMenus :tabs="TabList" :path="PageEnums.factory" />
 
     <HistoryBar
-      v-model="tab"
-      :values="values"
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
       @change="onResetList()"
       :is-show-search="false"
       ref="SearchRef"
@@ -502,17 +518,17 @@ export default {
                 <view class="ko-basic-table--th">计价方式</view>
                 <view class="ko-basic-table--th">价格</view>
 
-                <block v-if="tab > 0">
+                <block v-if="GET_PAGE_MENU_FUNC > 0">
                   <view class="ko-basic-table--th">数量</view>
                   <view class="ko-basic-table--th">结算</view>
                 </block>
 
-                <block v-if="tab > 1">
+                <block v-if="GET_PAGE_MENU_FUNC > 1">
                   <view class="ko-basic-table--th">时间</view>
                 </block>
 
                 <view class="ko-basic-table--th">员工</view>
-                <view class="ko-basic-table--th" v-if="tab <= 1">操作</view>
+                <view class="ko-basic-table--th" v-if="GET_PAGE_MENU_FUNC <= 1">操作</view>
 
                 <block v-for="(item, index) of child" :key="item.id">
                   <view class="ko-basic-table--cell">
@@ -525,12 +541,12 @@ export default {
                     {{ toYuan(item.price) }}
                   </view>
 
-                  <block v-if="tab > 0">
+                  <block v-if="GET_PAGE_MENU_FUNC > 0">
                     <view class="ko-basic-table--cell">{{ item.quantity }}</view>
                     <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
                   </block>
 
-                  <block v-if="tab > 1">
+                  <block v-if="GET_PAGE_MENU_FUNC > 1">
                     <view class="ko-basic-table--cell">{{ item.updateTime }}</view>
                   </block>
 
@@ -553,27 +569,30 @@ export default {
                       </view>
                     </view>
                   </view>
-                  <view class="ko-basic-table--cell" v-if="tab <= 1">
+                  <view class="ko-basic-table--cell" v-if="GET_PAGE_MENU_FUNC <= 1">
                     <view
                       style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap;"
                     >
-                      <block v-if="tab === 0">
+                      <block v-if="GET_PAGE_MENU_FUNC === 0">
                         <block v-if="['CREATED'].includes(item.status)">
                           <button
                             class="ko-basic-button__card"
                             @click.stop="onComplete(item, index, key)"
+                            v-if="isPerm('CRAFT_COMPLETE')"
                           >
                             完成
                           </button>
                           <button
                             class="ko-basic-button__card"
                             @click.stop="onSettlement(item, index)"
+                            v-if="isPerm('CRAFT_APPLY_SETTLE')"
                           >
                             结算
                           </button>
                           <button
                             class="ko-basic-button__card"
                             @click.stop="onEditor(item, index)"
+                            v-if="isPerm('CRAFT_UPDATE')"
                           >
                             编辑
                           </button>
@@ -582,7 +601,7 @@ export default {
                         <button
                           class="ko-basic-button__card"
                           @click.stop="onRecover(item, index, key)"
-                          v-if="['FINISHED'].includes(item.status)"
+                          v-if="['FINISHED'].includes(item.status) && isPerm('CRAFT_RECOVER')"
                         >
                           恢复
                         </button>
@@ -590,14 +609,14 @@ export default {
                       <button
                         class="ko-basic-button__card"
                         @click.stop="onCancel(item, index, key)"
-                        v-if="[1].includes(tab)"
+                        v-if="[1].includes(GET_PAGE_MENU_FUNC) && isPerm('CRAFT_CANCEL_SETTLE')"
                       >
                         取消
                       </button>
                       <button
                         class="ko-basic-button__card"
                         @click.stop="onFinish(item, index, key)"
-                        v-if="[1].includes(tab)"
+                        v-if="[1].includes(GET_PAGE_MENU_FUNC) && isPerm('CRAFT_CONFIRM_SETTLE')"
                       >
                         确认
                       </button>
@@ -633,23 +652,26 @@ export default {
           >
             <template #operate="{item, index}">
               <view style="display: flex; align-items: center; justify-content: center;">
-                <block v-if="tab === 0">
+                <block v-if="GET_PAGE_MENU_FUNC === 0">
                   <block v-if="['CREATED'].includes(item.status)">
                     <button
                       class="ko-basic-button__card"
                       @click.stop="onComplete(item, index, key)"
+                      v-if="isPerm('CRAFT_COMPLETE')"
                     >
                       完成
                     </button>
                     <button
                       class="ko-basic-button__card"
                       @click.stop="onSettlement(item, index)"
+                      v-if="isPerm('CRAFT_APPLY_SETTLE')"
                     >
                       结算
                     </button>
                     <button
                       class="ko-basic-button__card"
                       @click.stop="onEditor(item, index)"
+                      v-if="isPerm('CRAFT_UPDATE')"
                     >
                       编辑
                     </button>
@@ -658,7 +680,7 @@ export default {
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onRecover(item, index, key)"
-                    v-if="['FINISHED'].includes(item.status)"
+                    v-if="['FINISHED'].includes(item.status) && isPerm('CRAFT_RECOVER')"
                   >
                     恢复
                   </button>
@@ -666,14 +688,14 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onCancel(item, index, key)"
-                  v-if="[1].includes(tab)"
+                  v-if="[1].includes(GET_PAGE_MENU_FUNC) && isPerm('CRAFT_CANCEL_SETTLE')"
                 >
                   取消
                 </button>
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onFinish(item, index, key)"
-                  v-if="[1].includes(tab)"
+                  v-if="[1].includes(GET_PAGE_MENU_FUNC) && isPerm('CRAFT_CONFIRM_SETTLE')"
                 >
                   确认
                 </button>
@@ -738,17 +760,23 @@ export default {
           <uni-forms-item
             label="员工"
             name="staffList"
+            v-if="visible"
           >
-            <PickerUser
-              style="width: 100%;"
-              is-input
-              title="选择员工"
-              v-model="form.staffList"
-              type="staff"
-              multiple
-              is-confirm
-              ref="UserRef"
-            />
+            <view style="width: 100%;">
+              <PickerUser
+                style="width: 100%;"
+                is-input
+                title="选择员工"
+                v-model="form.staffList"
+                type="staff"
+                multiple
+                is-confirm
+                ref="UserRef"
+              />
+              <view v-if="!isPerm('STAFF_LIST')" style="font-size: 10px;color: #e43d33; margin-top: 5px;">
+                您没有获取员工信息权限，请联系管理员授权。
+              </view>
+            </view>
           </uni-forms-item>
           <uni-forms-item label="描述" name="description">
             <uni-easyinput type="textarea" v-model="form.description" placeholder="请输入" />
