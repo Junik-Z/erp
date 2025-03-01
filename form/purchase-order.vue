@@ -235,6 +235,11 @@ export default {
         });
     },
   },
+  computed: {
+    noSupplierPerm() {
+      return this.isPerm("SUPPLIER_LIST");
+    },
+  },
 };
 </script>
 
@@ -249,7 +254,7 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="margin: 0 30px 20px;" v-if="!isClient">
+          <view style="margin: 0 30px 20px;" v-if="!isClient && noSupplierPerm">
             <UniSegmentedControl
               :current.sync="current"
               :values="tabs"
@@ -258,7 +263,7 @@ export default {
             />
           </view>
 
-          <template v-if="current === 0">
+          <template v-if="current === 0 && noSupplierPerm">
             <UniFormsItem label="供应商：" name="supplierId">
               <PickerUser
                 style="width: 100%;"
@@ -275,7 +280,7 @@ export default {
             </UniFormsItem>
           </template>
 
-          <template v-if="current === 1">
+          <template v-if="current === 1 || !noSupplierPerm">
             <UniFormsItem :label="`${isClient ? '姓名' : '名称'}：`" name="otherSupplier">
               <UniEasyinput
                 v-model="form.otherSupplier"

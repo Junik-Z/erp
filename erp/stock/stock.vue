@@ -35,7 +35,7 @@ export default {
         {
           label: "核对库存",
           ref: "VRef",
-          roles: ["STOCK_CHECK"],
+          roles: ["STOCK_CHECK", "STOCK_TAKING"],
         },
       ],
       // TAB: 3,

@@ -81,7 +81,7 @@ export default {
       <view class="ko-history__tabs ko-basic-box-shadow">
         <UniSegmentedControl
           :current.sync="content"
-          :values="values.length ? values : [text, `已完成${text}`]"
+          :values="values"
           @clickItem="onClick"
           style-type="text"
           :label-key="labelKey"
