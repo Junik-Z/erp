@@ -180,7 +180,7 @@ export default {
           height: "300px",
           yAxis: {
             ...opt.yAxis,
-            gridType: "dash",
+           /*  gridType: "dash",
             dashLength: 2,
             showTitle: true,
             data: [
@@ -188,7 +188,7 @@ export default {
                 position: "left",
                 title: "单位(元)",
               },
-            ],
+            ], */
           },
         };
       };
