@@ -25,6 +25,7 @@ export default {
       form: {
         seller: "", // 卖方
         buyer: "", // 买方
+        address: "", // 地址
       },
     };
   },
@@ -51,6 +52,7 @@ export default {
 
           this.form.seller = this.getSeller;
           this.form.buyer = this.getBuyer;
+          this.form.address = res.data?.address || "";
         })
         .finally(() => {
         });
@@ -147,7 +149,7 @@ export default {
       <view class="ko-check-popup__wrap">
         <view class="ko-check-popup__row">
           <view class="ko-check-popup__row--item">
-            对账单位（卖方）：
+            <text style="width: 10em;text-align: right;">对账单位（卖方）：</text>
             <!-- #ifdef MP -->
             {{ form.seller }}
             <!-- #endif -->
@@ -157,13 +159,23 @@ export default {
             <!-- #endif -->
           </view>
           <view class="ko-check-popup__row--item">
-            对账单位（买方）：
+            <text style="width: 10em;text-align: right;">对账单位（买方）：</text>
             <!-- #ifdef MP -->
             {{ form.buyer }}
             <!-- #endif -->
 
             <!-- #ifdef H5 -->
             <uni-easyinput v-model="form.buyer" placeholder="请输入" />
+            <!-- #endif -->
+          </view>
+          <view class="ko-check-popup__row--item">
+            <text style="width: 10em;text-align: right;">地址：</text>
+            <!-- #ifdef MP -->
+            {{ form.address }}
+            <!-- #endif -->
+
+            <!-- #ifdef H5 -->
+            <uni-easyinput v-model="form.address" placeholder="请输入" />
             <!-- #endif -->
           </view>
         </view>
@@ -283,8 +295,24 @@ export default {
               </tr>
               <tr>
                 <th colspan="5" style="text-align: left; padding: 10px;">
-                  <div>对账单位(卖方)：{{ form.seller }}</div>
-                  <div>对账单位(买方)：{{ form.buyer }}</div>
+                  <div>
+                    <span style="display: inline-block; width: 10em; text-align: right;">
+                      对账单位(卖方)：
+                    </span>
+                    {{ form.seller }}
+                  </div>
+                  <div>
+                    <span style="display: inline-block; width: 10em; text-align: right;">
+                      对账单位(买方)：
+                    </span>
+                    {{ form.buyer }}
+                  </div>
+                  <div>
+                    <span style="display: inline-block; width: 10em; text-align: right;">
+                      地址：
+                    </span>
+                    {{ form.address }}
+                  </div>
                 </th>
               </tr>
               <tr>

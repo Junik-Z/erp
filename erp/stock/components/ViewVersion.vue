@@ -224,7 +224,7 @@ export default {
 
       <UniSection title="存量类别排名" type="line">
         <QiunDataCharts
-          type="column"
+          type="bar"
           :opts="getBasicChartsOptions(data.stockRank)"
           :chart-data="data.stockRank"
         />
