@@ -266,10 +266,12 @@ export default {
     },
 
     onJumpInfo(item) {
-      this.noRefresh = true;
-      uni.navigateTo({
-        url: "/erp/finance/check" + `?id=${item.id}&customer_type=purchase`,
-      });
+      if (this.isPerm("FINANCE_PAYABLE_CHECK")) {
+        this.noRefresh = true;
+        uni.navigateTo({
+          url: "/erp/finance/check" + `?id=${item.id}&customer_type=purchase`,
+        });
+      }
     },
 
     onActionClick(item, index) {

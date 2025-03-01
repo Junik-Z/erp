@@ -35,7 +35,7 @@ export default {
       getPermissionsApi()
         .then(res => {
           console.log(res.data);
-          this.premList = _deepCopy(res.data);
+          this.premList = _deepCopy(res.data) || [];
         })
         .finally(() => {
           this.loading = false;
@@ -44,7 +44,7 @@ export default {
 
     // 开启设置用户权限
     onSetRole(type, item) {
-      this.role = (item.role || []).find(v => v.indexOf(type) > -1);
+      this.role = (item?.role || []).find(v => v.indexOf(type) > -1);
 
       this.$refs.PickerUserRef.open({role: this.role});
 
@@ -130,9 +130,9 @@ export default {
 
     // 前往菜单详情设置
     onToAuth(type, item) {
-      const role = (item.role || []).find(v => v.indexOf(type) > -1);
+      const role = (item?.role || []).find(v => v.indexOf(type) > -1);
 
-      uni.navigateTo({url: `${PageEnums.adminAuthorization}?model_key=${item.modelKey}&role=${role}`});
+      role && uni.navigateTo({url: `${PageEnums.adminAuthorization}?model_key=${item.modelKey}&role=${role}`});
     },
   },
   computed: {
@@ -146,15 +146,15 @@ export default {
 
     getAvatarList() {
       return (type, item) => {
-        const role = (item.role || []).find(v => v.indexOf(type) > -1);
-        return (_get(this.premList, role) || []).map(v => this.getImageUrl(v.avatar));
+        const role = (item?.role || []).find(v => v.indexOf(type) > -1);
+        return (_get(this.premList || {}, role) || []).map(v => this.getImageUrl(v.avatar));
       };
     },
 
     getNameList() {
       return (type, item) => {
-        const role = (item.role || []).find(v => v.indexOf(type) > -1);
-        return (_get(this.premList, role) || []).map(v => v.nickName);
+        const role = (item?.role || []).find(v => v.indexOf(type) > -1);
+        return (_get(this.premList || {}, role) || []).map(v => v.nickName);
       };
     },
 

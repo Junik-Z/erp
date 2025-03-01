@@ -495,7 +495,7 @@ export default {
           <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
-                v-if="['FINISHED'].includes(item.status) && !GET_PAGE_MENU_FUNC && isPerm('SALE_ADD')"
+                v-if="['FINISHED'].includes(item.status) && !GET_PAGE_MENU_FUNC && isPerm('SALE_RETURN_ADD')"
                 class="ko-basic-button__card"
                 @click.stop="onReturn(item, index)"
               >

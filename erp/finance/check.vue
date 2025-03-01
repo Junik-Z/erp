@@ -393,18 +393,20 @@ export default {
         try {
           // 添加收款订单
           if (_isEqual(this.getPageType, "receivable")) {
-            await addedPaidOrderApi(item).then((res) => {
-              this.onCheckboxItem(item);
-              return res;
-            });
+            await addedPaidOrderApi(item)
+              .then((res) => {
+                this.onCheckboxItem(item);
+                return res;
+              });
           }
 
           // 添加付款订单
           if (_isEqual(this.getPageType, "payable")) {
-            await addedReturnedOrderApi(item).then((res) => {
-              this.onCheckboxItem(item);
-              return res;
-            });
+            await addedReturnedOrderApi(item)
+              .then((res) => {
+                this.onCheckboxItem(item);
+                return res;
+              });
           }
         } catch (e) {
           console.error(e);
@@ -413,6 +415,7 @@ export default {
       }
 
       this.sLoading = false;
+
       if (!isError) {
         await CustomToast({
           title: "操作成功",
@@ -821,7 +824,10 @@ export default {
     </view>
     <!-- #endif -->
 
-    <KoMovable v-if="!isShowCheck && current === 0" @click="onBatchClearing('')">
+    <KoMovable
+      v-if="!isShowCheck && current === 0 && !isLogistics"
+      @click="onBatchClearing('')"
+    >
       <view style="line-height: 1.2; font-size: 12px;">
         <view>批量</view>
         清帐
@@ -853,7 +859,10 @@ export default {
           <button
             :disabled="sLoading"
             :loading="sLoading"
-            v-if="isShowCheck" class="ko-basic-button__card" @click.stop="onSubmit">
+            v-if="isShowCheck"
+            class="ko-basic-button__card"
+            @click.stop="onSubmit"
+          >
             提交
           </button>
         </view>

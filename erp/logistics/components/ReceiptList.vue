@@ -238,9 +238,11 @@ export default {
     },
 
     onJumpInfo(item) {
-      uni.navigateTo({
-        url: "/erp/finance/check" + `?id=${item.id}&customer_type=logistics`,
-      });
+      if (this.isPerm("DELIVERY_CHECK_LIST")) {
+        uni.navigateTo({
+          url: "/erp/finance/check" + `?id=${item.id}&customer_type=logistics`,
+        });
+      }
     },
 
     onActionClick(item) {
