@@ -224,7 +224,7 @@ export default {
     <view class="ko-view-version__row">
       <UniSection title="产品采购排行" type="line">
         <QiunDataCharts
-          type="column"
+          type="bar"
           :opts="getOptions(productPurchaseRank)"
           :chart-data="productPurchaseRank"
           ref="PPRRef"
@@ -233,7 +233,7 @@ export default {
 
       <UniSection title="供应商排名" type="line">
         <QiunDataCharts
-          type="column"
+          type="bar"
           :opts="getOptions(supplierRank)"
           :chart-data="supplierRank"
           ref="SRRef"

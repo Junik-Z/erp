@@ -462,7 +462,7 @@ export default {
         // 空x图表数据
         const notSeries = data.series?.every(item => _isEmpty(item.data));
 
-        let padding = [15, 15, 0, 5];
+        let padding = [15, 30, 10, 5];
 
         // #ifdef H5
         padding = [20, 20, 20, 20];
@@ -499,6 +499,16 @@ export default {
               type: "straight",
               width: 2,
               activeType: "hollow",
+            },
+            bar: {
+              // type: "stack",
+              width: 20,
+              meterBorde: 1,
+              activeBgOpacity: 0.08,
+              linearType: "none",
+              barBorderCircle: true,
+              seriesGap: 0,
+              categoryGap: 2,
             },
           },
         };

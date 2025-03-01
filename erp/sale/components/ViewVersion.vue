@@ -194,7 +194,7 @@ export default {
     <view class="ko-view-version__row">
       <UniSection title="产品排行" type="line">
         <QiunDataCharts
-          type="column"
+          type="bar"
           :opts="getOptions(productPurchaseRank)"
           :chart-data="productPurchaseRank"
           :loading="loading"
@@ -203,7 +203,7 @@ export default {
 
       <UniSection title="客户排名" type="line">
         <QiunDataCharts
-          type="column"
+          type="bar"
           :opts="getOptions(supplierRank)"
           :chart-data="supplierRank"
           :loading="loading"
