@@ -259,10 +259,12 @@ export default {
     },
 
     onJumpInfo(item) {
-      this.noRefresh = true;
-      uni.navigateTo({
-        url: PageEnums.produceStaffCompleteProcess + `?id=${item.id}`,
-      });
+      if (this.isPerm("CRAFT_SETTLED")) {
+        this.noRefresh = true;
+        uni.navigateTo({
+          url: PageEnums.produceStaffCompleteProcess + `?id=${item.id}`,
+        });
+      }
     },
 
     onActionClick(item, index) {
@@ -481,6 +483,8 @@ export default {
 
 <style scoped lang="scss">
 .ko-staff {
+  padding-top: 10px;
+
   display: flex;
   flex-direction: column;
   // #ifdef MP

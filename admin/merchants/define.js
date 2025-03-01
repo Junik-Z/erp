@@ -976,17 +976,24 @@ export const PRODUCE_PERM_TREE = [
         perm: "STAFF_GET_NOT_BIND_INFO",
         id: "427",
       },
-      {
+      /* {
         label: "刷新员工",
         type: 2,
         perm: "STAFF_REFRESH",
         id: "428",
-      },
+      }, */
       {
         label: "绑定员工",
         type: 2,
         perm: "STAFF_BIND",
         id: "429",
+      },
+
+      {
+        label: "考勤记录",
+        type: 2,
+        perm: "ATTENDANCE_ALL_RECORDS",
+        id: "510",
       },
     ],
   },

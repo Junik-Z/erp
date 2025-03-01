@@ -836,6 +836,8 @@ export default {
 
 <style scoped lang="scss">
 .ko-factory {
+  padding-top: 10px;
+
   &__info {
     font-size: 14px;
     color: $uni-base-color;

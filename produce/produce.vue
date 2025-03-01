@@ -261,6 +261,8 @@ export default {
 
 <style scoped lang="scss">
 .ko-purchase {
+  padding-top: 10px;
+
   width: 100%;
   padding-bottom: 80px;
 
