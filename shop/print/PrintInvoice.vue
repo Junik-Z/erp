@@ -8,8 +8,8 @@ import PrintHeader from "./components/PrintHeader.vue";
 import PrintFooter from "./components/PrintFooter.vue";
 import PrintTable from "./components/PrintTable.vue";
 import mixins from "@/mixins/mixins";
-import { cmToPx } from "@/shop/print/utils";
-import { _get, _isEqual, _sum } from "@/utils";
+import { cmToPx, getMillimeterManyPixel } from "@/shop/print/utils";
+import { _deepCopy, _get, _isEqual, _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
@@ -30,6 +30,11 @@ const SummaryText = {
   receivable: "实收",
   payable: "实收",
 };
+
+// 纸张高度 MM
+const MHeight = getMillimeterManyPixel(140) - 8;
+// 上下间距 MM
+const MUpperAndLowerClearance = getMillimeterManyPixel(16);
 
 export default {
   name: "PrintInvoice",
@@ -139,7 +144,7 @@ export default {
       });
 
       if (vessel.length < pageNumberSize) {
-        let number = pageNumberSize - vessel.length - 2;
+        let number = pageNumberSize - (vessel.length - 2);
 
         for (let i = 0; i < number; i++) {
           vessel.push({__label__: ""});
@@ -157,6 +162,86 @@ export default {
         }
         pages.push(vessel, li);
       }
+
+      this.maxHeight = maxHeight;
+      this.groupList = pages;
+    },
+
+    // 获取各个元素的大小 使用毫米进行计算
+    getListHeight() {
+      // 获取表格每行的高度 毫米计算;
+      const rect = this.$refs.PTableRef?.getListSize?.() || {};
+
+      // 表头总高度
+      const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
+      // 表尾的高度
+      const footerHeight = (rect.slotTFoot || 0);
+
+      // 纸张高度
+      const totalHeight = MHeight - MUpperAndLowerClearance;
+
+      // 最大高度 = 纸张高度 - 头部高度 - 底部高度；
+      const maxHeight = totalHeight - headerHeight - footerHeight;
+
+      // 最终分页
+      const pages = [];
+
+      // 每页临时数据
+      let vessel = [];
+
+      // 各个数据项加起来的高度
+      let count = 0;
+      let pageNumberSize = 0;
+
+      // 根据数据计算能分几页
+      const list = _deepCopy((this.data || []));
+
+      for (let i = 0; i < list.length; i++) {
+        const row = list[i];
+        // 行高度
+        const h = rect[row.id] || 0;
+
+        const obj = {...row, __height__: h};
+
+        if (!pageNumberSize) {
+          pageNumberSize = Math.floor(maxHeight / h);
+        }
+
+        if (count + h <= maxHeight) {
+          vessel.push(obj);
+          count += h;
+        } else {
+          pages.push(vessel);
+          vessel = [obj];
+          count = h;
+        }
+
+        pageNumberSize = pageNumberSize < vessel.length ? vessel.length : pageNumberSize;
+      }
+
+
+      // 判断最后一页的数据是不是小于最大数据页， 如果小于的话就补空白行过去
+      if (vessel.length < pageNumberSize) {
+        let number = pageNumberSize - (vessel.length - 2);
+
+        for (let i = 0; i < number; i++) {
+          vessel.push({__label__: ""});
+        }
+      }
+
+      // 当最后一页小于最大高度时直接渲染 否则就新开一页
+      if ((count + footerHeight + (rect.fees || 0)) <= maxHeight) {
+        pages.push(vessel);
+      } else {
+        const foot = pageNumberSize - 2;
+        const li = [];
+        for (let i = 0; i < foot; i++) {
+          li.push({__label__: ""});
+        }
+        pages.push(vessel, li);
+      }
+
+      console.log(pageNumberSize, pages, maxHeight);
 
       this.maxHeight = maxHeight;
       this.groupList = pages;
@@ -185,6 +270,7 @@ export default {
           setTimeout(() => {
             this.$nextTick(() => {
               this.getGroupList();
+              // this.getListHeight();
             });
           }, 300);
         }
@@ -388,7 +474,7 @@ export default {
 
     &--center {
       width: calc(var(--ko-paper-width) - 2cm);
-      padding: 0 4px;
+      padding: 4px;
     }
 
     /deep/ .ko-print-table {
