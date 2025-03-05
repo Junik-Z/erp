@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _set, CustomToast } from "@/utils";
 import BasicMixins from "@/mixins/mixins";
 import {
   bindCustomerApi,
@@ -211,7 +211,7 @@ export default {
 
     // 解绑
     onUnbind(user) {
-      uni.showModal({
+      /* uni.showModal({
         title: "温馨提示",
         content: `您确定要解绑客户吗？`,
         success: (res) => {
@@ -224,10 +224,26 @@ export default {
             )
               .then(() => {
                 uni.showToast({title: "解绑成功"});
+                const node = _deepCopy(this.list[this.nodeIndex]);
+                node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
+                this.$set(this.list, this.nodeIndex, node);
               });
           }
         },
-      });
+      }); */
+
+      Promise.all(
+        user.map(userId => unbindCustomerApi({
+          customerId: this.node.id,
+          userId,
+        })),
+      )
+        .then(() => {
+          uni.showToast({title: "操作成功"});
+          const node = _deepCopy(this.list[this.nodeIndex]);
+          node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
+          this.$set(this.list, this.nodeIndex, node);
+        });
     },
 
     // 绑定
@@ -239,21 +255,50 @@ export default {
         })),
       )
         .then(() => {
-          uni.showToast({title: "绑定成功"});
+          uni.showToast({title: "操作成功"});
+          const node = _deepCopy(this.list[this.nodeIndex]);
+
+          const UList = _get(node, "users") || [];
+          _set(node, "users", [...UList, ...(user || []).map(id => this.$refs.SPURef?.getUserInfo?.(id) || {})]);
+
+          this.$set(this.list, this.nodeIndex, node);
         });
     },
 
-    onBindPopup(item, isBind, index) {
-      this.isBind = isBind;
+    onBindPopup(item, index) {
       this.node = item;
       this.nodeIndex = index;
 
       this.$refs.SPURef?.open?.({customerId: item.value});
     },
 
-    onConfirm(checked) {
-      !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked);
+    onConfirm(obj) {
+      if (!_isEmpty(obj?.add)) {
+        if (this.isPerm("CUSTOMER_BIND")) {
+          this.onBind(obj?.add);
+        } else {
+          CustomToast({
+            title: "您没有权限绑定",
+            icon: "none",
+          });
+        }
+      }
+
+      if (!_isEmpty(obj?.remove)) {
+        if (this.isPerm("CUSTOMER_UNBIND")) {
+          this.onUnbind(obj?.remove);
+        } else {
+          CustomToast({
+            title: "您没有权限解绑",
+            icon: "none",
+          });
+        }
+      }
+
       this.visible = false;
+
+      // !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked);
+      // this.visible = false;
     },
 
     onTrigger(event) {
@@ -269,10 +314,10 @@ export default {
     },
 
     onJumpInfo(item) {
-      if (this.isPerm("FINANCE_RECEIVABLE_CHECK")) {
+      if (this.isPerm("FINANCE_RECEIVABLE_CHECK") || this.isPerm("FINANCE_PAYABLE_CHECK")) {
         this.noRefresh = true;
         uni.navigateTo({
-          url: "/erp/finance/check" + `?id=${item.id}&customer_type=sale`,
+          url: "/erp/finance/check" + `?id=${item.id}&customer_type=sale&FORM=sale`,
         });
       }
     },
@@ -345,7 +390,7 @@ export default {
 
     // 处理索引点击按钮
     onClickEvent(query) {
-      this.onBindPopup(query.item, query.button.isBind, query.$index);
+      this.onBindPopup(query.item, query.$index);
     },
   },
   computed: {
@@ -428,10 +473,15 @@ export default {
 
     // #ifdef MP
     getIndexEventList() {
-      return [
-        {label: "绑定客户", isBind: true, perm: "CUSTOMER_BIND"},
-        {label: "解绑客户", isBind: false, perm: "CUSTOMER_UNBIND"},
-      ].filter(item => this.isPerm(item.perm));
+      if (this.isPerm("CUSTOMER_BIND") || this.isPerm("CUSTOMER_UNBIND")) {
+        return [{label: "绑定"}];
+      }
+      return [];
+
+      /*  return [
+         {label: "绑定客户", isBind: true, perm: "CUSTOMER_BIND"},
+         {label: "解绑客户", isBind: false, perm: "CUSTOMER_UNBIND"},
+       ].filter(item => this.isPerm(item.perm)); */
     },
     // #endif
   },
@@ -465,6 +515,7 @@ export default {
 
           :events="getIndexEventList"
           @click-event="onClickEvent"
+          show-bind-user-list
         />
       </view>
       <!--
@@ -495,19 +546,13 @@ export default {
           <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
-                v-if="isPerm('CUSTOMER_BIND')"
-                @click.stop="onBindPopup(item, true, index)"
+                v-if="isPerm('CUSTOMER_BIND') || isPerm('CUSTOMER_UNBIND')"
+                @click.stop="onBindPopup(item, index)"
                 class="ko-basic-button__user"
               >
-                绑定客户
+                绑定
               </button>
-              <button
-                v-if="isPerm('CUSTOMER_UNBIND')"
-                @click.stop="onBindPopup(item, false, index)"
-                class="ko-basic-button__user"
-              >
-                解绑客户
-              </button>
+
               <button
                 v-if="isPerm('CUSTOMER_CONVERT')"
                 class="ko-basic-button__user"
@@ -539,7 +584,7 @@ export default {
     <PickerUser
       ref="SPURef"
       v-if="isPerm('CUSTOMER_UNBIND') || isPerm('CUSTOMER_BIND')"
-      :title="isBind ? '选择绑定客户' : '解绑客户'"
+      title="绑定/解绑客户"
       :visible.sync="visible"
       is-confirm
       multiple
@@ -547,8 +592,6 @@ export default {
 
       is-external-open
       not-created-request
-      :is-selected="!isBind"
-      :is-not-selected="isBind"
       type="saleUserList"
     />
 

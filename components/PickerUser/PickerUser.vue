@@ -35,6 +35,7 @@ export default {
       queryList: {
         pageSize: 20,
         pageNum: 0,
+        nickName: "",
       },
 
       noMore: false,
@@ -71,8 +72,11 @@ export default {
       type: String,
       // client: 选择客户, supplier: 供应商,
       // logistics: 物流商, staff: 员工,
-      // noBindStaff: 没有被绑定的员工，perm: 权限设置成员列表,
-      // saleUserList: 销售客户用户列表; purchaseUserList: 采购供应商用户列表
+      // noBindStaff: 没有被绑定的员工，
+      // perm: 权限设置成员列表,
+
+      // saleUserList: 销售客户绑定用户列表;
+      // purchaseUserList: 采购供应商用户列表
       // staffUserList: 员工列表
       // logisticsUserList: 物流商列表
       default: "default",
@@ -190,7 +194,7 @@ export default {
           this.list = this.onMergeArrays(this.list, list, vKey);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
 
-          if (_isEqual("perm", this.type) && !this.isSelected) {
+          if (this.isAutoCheckType && !this.isSelected) {
             const checkList = list?.filter?.(v => v.selected);
 
             checkList.forEach(item => {
@@ -206,7 +210,7 @@ export default {
         })
         .finally(() => {
           this.loading = false;
-          if (!_isEqual("perm", this.type)) {
+          if (!this.isAutoCheckType) {
             this.checkNode = this.getUserInfo(this.value);
           }
         });
@@ -243,7 +247,7 @@ export default {
       return _deepCopy((this.list || []).find(v => _isEqual(v.value, id)) || {});
     },
     onConfirm() {
-      if (_isEqual(this.type, "perm")) {
+      if (this.isAutoCheckType) {
         const backup = _deepCopy(this.backupChecked) || [];
         const check = _deepCopy(this.checked) || [];
 
@@ -295,6 +299,14 @@ export default {
       this.queryList.nameIndex = key;
       this.getList(true);
     },
+
+    onCancel() {
+      setTimeout(() => {
+        this.$nextTick(() => {
+          this.getList(true);
+        });
+      });
+    },
   },
   watch: {
     value: {
@@ -318,7 +330,7 @@ export default {
     },
     modelVisible: {
       handler() {
-        if (this.isExternalOpen || _isEqual(this.type, "perm")) {
+        if (this.isExternalOpen || this.isAutoCheckType) {
           this.$emit("update:visible", this.modelVisible);
 
           // 设置详细的权限用户列表
@@ -378,10 +390,16 @@ export default {
       };
     },
 
+    // 显示label
     getShowLabel() {
       return this.multiple
         ? (Array.isArray(this?.checkNode) ? this?.checkNode : [])?.map(v => v.label)?.join("、")
         : this.checkNode?.label;
+    },
+
+    // 需要自动勾选的类型
+    isAutoCheckType() {
+      return ["perm", "saleUserList", "purchaseUserList", "logisticsUserList"].includes(this.type);
     },
   },
 };
@@ -405,24 +423,36 @@ export default {
       :type="isInput ? 'bottom' : 'center'"
     >
       <view v-if="modelVisible" class="ko-picker-user__popup" :class="{'is-input': isInput}">
-        <IndexList
-          @click="onSelect"
-          :checked-list="checkedList"
-          :data="list"
-          :value="checked"
-          is-checked
-          :disabled="disabled"
-          :is-receipt-list="type === 'logistics'"
-          :safe-area-inset-bottom="false"
+        <view v-if="isAutoCheckType || ['staffUserList'].includes(type)">
+          <uni-search-bar
+            v-model="queryList.nickName"
+            placeholder="请输入"
+            @confirm="getList(true)"
+            @cancel="onCancel"
+            clear-button="none"
+          />
+        </view>
 
-          :is-staff="isEqual('staff', type)"
+        <view style="flex: 1; position: relative; padding-top: 10px;">
+          <IndexList
+            @click="onSelect"
+            :checked-list="checkedList"
+            :data="list"
+            :value="checked"
+            is-checked
+            :disabled="disabled"
+            :is-receipt-list="type === 'logistics'"
+            :safe-area-inset-bottom="false"
 
-          @lower="onLower"
-          :no-more="noMore"
-          @search="onSearchToNameIndex"
+            :is-staff="isEqual('staff', type)"
 
-          not-index
-        />
+            @lower="onLower"
+            :no-more="noMore"
+            @search="onSearchToNameIndex"
+
+            not-index
+          />
+        </view>
       </view>
 
       <template #footer v-if="isConfirm">
@@ -443,7 +473,7 @@ export default {
 <style scoped lang="scss">
 .ko-picker-user {
   &__popup {
-    height: 70vh;
+    height: 74vh;
     // #ifdef MP
     width: 100vw;
     // #endif
@@ -457,7 +487,8 @@ export default {
     width: 100%;
     min-width: 600px;
     // #endif
-
+    display: flex;
+    flex-direction: column;
   }
 
   /deep/ input[disabled] {

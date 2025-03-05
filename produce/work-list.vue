@@ -96,7 +96,7 @@ export default {
           text: "板材",
           iconfont: "icon-ziyuanicon",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing",
-          perm: "PRODUCE_ADD",
+          perm: "CNC_ADD_CUSTOMIZED_BOARD",
         },
         // #ifdef H5
         {

@@ -199,3 +199,38 @@ export function getRolePermUsersApi(data) {
     data,
   });
 }
+
+
+// ————————————————————— 支付接口 ————————————————————
+/**
+ * @description 支付回调通知处理
+ */
+export function orderNotifyApi(data) {
+  return request({
+    url: "/order/notify/order",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 统一下单服务
+ */
+export function createOrderApi(data) {
+  return request({
+    url: "/order/createOrder",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 查询订单
+ */
+export function queryOrderApi(data) {
+  return request({
+    url: "/order/queryOrder",
+    method: "get",
+    data,
+  });
+}

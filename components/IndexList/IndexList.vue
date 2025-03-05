@@ -1,5 +1,5 @@
 <script>
-import { _isEmpty, getRect } from "@/utils";
+import { _deepCopy, _get, _isEmpty, getRect } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
@@ -106,6 +106,9 @@ export default {
 
     // 显示按钮的方法
     showEventButtonFunc: Function,
+
+    // 显示绑定的用户列表
+    showBindUserList: Boolean,
   },
   watch: {
     data: {
@@ -377,6 +380,14 @@ export default {
           }) : true;
       };
     },
+
+    // 获取绑定的用户头像列表
+    getBindUserList() {
+      return (item) => {
+        const list = _deepCopy(_get(item, "users")) || [];
+        return list?.slice?.(0, 3) || [];
+      };
+    },
   },
 };
 </script>
@@ -505,7 +516,7 @@ export default {
                         />
                         <view style="padding-left: 10px; flex: 1; position: relative">
                           <view
-                            v-if="isStaff && !isEmpty(GET_FUNC(item, 'users'))"
+                            v-if="(isStaff) && !isEmpty(GET_FUNC(item, 'users'))"
                             style="position: absolute; top: 6px; right: 20px;"
                           >
                             <uv-avatar
@@ -518,6 +529,29 @@ export default {
                               {{ GET_FUNC(item, "users.0.nickName") }}
                             </view>
                           </view>
+
+                          <block v-if="showBindUserList && !isEmpty(GET_FUNC(item, 'users'))">
+                            <view
+                              style="position: absolute; top: 6px; right: 20px; display: flex; align-items: center;"
+                            >
+                              <view
+                                v-for="user of getBindUserList(item)"
+                                :key="user.userId"
+                                style="display: flex; justify-content: center; flex-direction: column; align-items: center; padding: 0 4px;"
+                              >
+                                <uv-avatar
+                                  :src="getImageUrl(GET_FUNC(user, 'avatar'))"
+                                  :text="GET_FUNC(user, 'nickName')"
+                                  random-bg-color
+                                  :size="22"
+                                />
+                                <view style="font-size: 10px;color: #999; text-align: center;">
+                                  {{ GET_FUNC(user, "nickName") }}
+                                </view>
+                              </view>
+                            </view>
+                          </block>
+
 
                           <UniRow :gutter="10">
                             <UniCol :span="24">

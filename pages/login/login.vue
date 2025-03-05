@@ -64,7 +64,7 @@ export default {
 
     // 开启长链接
     getEventSource() {
-      const ESVm = new EventSource(getScanQrCodeApi() + `?X_MiniApp_Env=${CONFIG.SystemVersion}&X_MiniApp_ID=${CONFIG.APP_ID}`);
+      const ESVm = new EventSource(getScanQrCodeApi() + `?X_MiniApp_Env=${CONFIG.SystemVersion}&X_MiniApp_ID=${CONFIG.APP_ID}&T_VERSION=${CONFIG.T_VERSION}`);
 
       uni.$__EVENT_SOUECE_VM__ = ESVm;
 

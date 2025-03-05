@@ -94,7 +94,7 @@ export default {
         {
           text: "板材",
           iconfont: "icon-ziyuanicon",
-          perm: "SALE_PRODUCE_ADD",
+          perm: "CNC_ADD_CUSTOMIZED_BOARD",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE",
         },
         {

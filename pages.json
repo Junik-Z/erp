@@ -173,6 +173,12 @@
           "style": {
             "navigationBarTitleText": "信息设置"
           }
+        },
+        {
+          "path": "renewal/renewal",
+          "style": {
+            "navigationBarTitleText": "服务续费"
+          }
         }
       ]
     },

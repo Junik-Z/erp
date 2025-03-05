@@ -26,6 +26,8 @@ import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import CheckPopup from "./CheckPopup.vue";
+import { addedSalePaidOrderApi } from "@/api/erp/sale";
+import { addedSPurchaseReturnedOrderApi } from "@/api/erp/purchase";
 
 export default {
   name: "check",
@@ -56,6 +58,7 @@ export default {
           logistics: "送货订单",
           func: getReceivableCheckApi,
           pageType: "receivable",
+          perm: "FINANCE_RECEIVABLE_CHECK",
         },
         // 添加付款款单据
         {
@@ -64,6 +67,7 @@ export default {
           logistics: "收货订单",
           func: getPayableCheckApi,
           pageType: "payable",
+          perm: "FINANCE_PAYABLE_CHECK",
         },
 
         /*  {
@@ -292,12 +296,19 @@ export default {
         logistics: this.logisticsIndex,
       }[key] || [];
 
-      this.showTabList = Ins.map(index => {
-        const obj = this.tabsList[index];
-        return {
-          ...obj,
-          label: obj[key],
-        };
+      this.showTabList = Ins.flatMap(index => {
+        const obj = this.tabsList?.[index] || {};
+        if (this.isPerm(obj.perm)) {
+          const item = {
+            ...obj,
+            label: obj[key],
+          };
+
+          return [item];
+        } else {
+          return [];
+        }
+
       });
 
       this.getList();
@@ -309,11 +320,11 @@ export default {
         this.tableKey = +new Date();
       }
 
-      const Func = this.isLogistics ? checkListApi : _get(this.showTabList, `${this.current}.func`); // [getReceivableCheckApi, getPayableCheckApi, getPaidOrderListApi, getReturnedOrderListApi][this.current];
+      const Func = this.isLogistics ? checkListApi : _get(this.showTabList || [], `${this.current}.func`); // [getReceivableCheckApi, getPayableCheckApi, getPaidOrderListApi, getReturnedOrderListApi][this.current];
 
       this.loading = true;
 
-      Func({
+      Func?.({
         [this.isLogistics ? "logisticsId" : "supplierId"]: this.option.id,
         ...(this.current > 1 ? {orderStatus: "FINISHED"} : {}),
         ...this.queryList,
@@ -391,22 +402,35 @@ export default {
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
         try {
-          // 添加收款订单
-          if (_isEqual(this.getPageType, "receivable")) {
-            await addedPaidOrderApi(item)
-              .then((res) => {
-                this.onCheckboxItem(item);
-                return res;
-              });
-          }
+          const Func = {
+            sale: addedSalePaidOrderApi,
+            purchase: addedSPurchaseReturnedOrderApi,
+          }[this.option?.FORM];
 
-          // 添加付款订单
-          if (_isEqual(this.getPageType, "payable")) {
-            await addedReturnedOrderApi(item)
+          if (Func) {
+            await Func(item)
               .then((res) => {
                 this.onCheckboxItem(item);
                 return res;
               });
+          } else {
+            // 添加收款订单
+            if (_isEqual(this.getPageType, "receivable")) {
+              await addedPaidOrderApi(item)
+                .then((res) => {
+                  this.onCheckboxItem(item);
+                  return res;
+                });
+            }
+
+            // 添加付款订单
+            if (_isEqual(this.getPageType, "payable")) {
+              await addedReturnedOrderApi(item)
+                .then((res) => {
+                  this.onCheckboxItem(item);
+                  return res;
+                });
+            }
           }
         } catch (e) {
           console.error(e);
@@ -523,6 +547,24 @@ export default {
         sale: this.isPerm("FINANCE_RECEIVABLE_CHECK_BILL"),
         purchase: this.isPerm("FINANCE_PAYABLE_CHECK_BILL"),
       }[key];
+    },
+
+    // 是否显示批量清帐按钮
+    isShowCheckButton() {
+      const label = _get(this.showTabList || [], `${this.current}.label`) || "";
+
+      const isCheck = ["销售订单", "采购订单"].includes(label);
+
+      const isPaid = {
+        sale: this.isPerm("SALE_ADD_PAID_ORDER"),
+        purchase: this.isPerm("PURCHASE_ADD_RETURNED_ORDER"),
+
+        F_SALE: this.isPerm("FINANCE_ADD_PAID_ORDER"),
+        F_PURCHASE: this.isPerm("FINANCE_ADD_RETURNED_ORDER"),
+      }[this.option?.FORM];
+
+      // 当显示弹窗 并且 不是物流商 并且
+      return !this.isShowCheck && isCheck && !this.isLogistics && (this.option?.FORM ? isPaid : true);
     },
   },
 };
@@ -825,7 +867,7 @@ export default {
     <!-- #endif -->
 
     <KoMovable
-      v-if="!isShowCheck && current === 0 && !isLogistics"
+      v-if="isShowCheckButton"
       @click="onBatchClearing('')"
     >
       <view style="line-height: 1.2; font-size: 12px;">

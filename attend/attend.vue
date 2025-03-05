@@ -257,7 +257,7 @@ export default {
 
 <template>
   <view class="ko-attend">
-    <view class="ko-attend__set" v-if="isPerm('PRODUCE_WRITE')">
+    <view class="ko-attend__set" v-if="isPerm('PRODUCE_WRITE') || isBusiness">
       <button
         class="ko-basic-button__card"
         @click="onJumpStaff"

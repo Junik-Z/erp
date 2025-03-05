@@ -108,6 +108,7 @@ export default {
                       :size="64"
                       random-bg-color
                       :text="item.remark || GET_SHOP_NAME"
+                      not-view
                     />
                   </view>
                 </UniCol>

@@ -8,7 +8,7 @@ import {
   removeSupplierApi,
   unbindSupplierApi,
 } from "@/api/erp/purchase";
-import { _deepCopy, _get, _isEmpty, _isString } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isString, _set, CustomToast } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
@@ -219,23 +219,36 @@ export default {
 
     // 解绑
     onUnbind(user) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `您确定要解绑供应商吗？`,
-        success: (res) => {
-          if (res.confirm) {
-            Promise.all(
-              user.map(userId => unbindSupplierApi({
-                supplierId: this.node.id,
-                userId,
-              })),
-            )
-              .then(() => {
-                uni.showToast({title: "解绑成功"});
-              });
-          }
-        },
-      });
+      /*  uni.showModal({
+         title: "温馨提示",
+         content: `您确定要解绑供应商吗？`,
+         success: (res) => {
+           if (res.confirm) {
+             Promise.all(
+               user.map(userId => unbindSupplierApi({
+                 supplierId: this.node.id,
+                 userId,
+               })),
+             )
+               .then(() => {
+                 uni.showToast({title: "解绑成功"});
+               });
+           }
+         },
+       }); */
+      Promise.all(
+        user.map(userId => unbindSupplierApi({
+          supplierId: this.node.id,
+          userId,
+        })),
+      )
+        .then(() => {
+          uni.showToast({title: "操作成功"});
+
+          const node = _deepCopy(this.list[this.nodeIndex]);
+          node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
+          this.$set(this.list, this.nodeIndex, node);
+        });
     },
 
     // 绑定
@@ -247,29 +260,55 @@ export default {
         })),
       )
         .then(() => {
-          uni.showToast({title: "绑定成功"});
-          // this.getList(true);
+          uni.showToast({title: "操作成功"});
+
+          const node = _deepCopy(this.list[this.nodeIndex]);
+
+          const UList = _get(node, "users") || [];
+          _set(node, "users", [...UList, ...(user || []).map(id => this.$refs.SPURef?.getUserInfo?.(id) || {})]);
+
+          this.$set(this.list, this.nodeIndex, node);
         });
     },
 
-    onBindPopup(item, isBind, index) {
-      this.isBind = isBind;
+    onBindPopup(item, index) {
       this.node = item;
       this.nodeIndex = index;
 
       this.$refs.SPURef?.open?.({supplierId: item.value});
     },
 
-    onConfirm(checked) {
-      !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked);
+    onConfirm(obj) {
+      if (!_isEmpty(obj?.add)) {
+        if (this.isPerm("SUPPLIER_BIND")) {
+          this.onBind(obj?.add);
+        } else {
+          CustomToast({
+            title: "您没有权限绑定",
+            icon: "none",
+          });
+        }
+      }
+
+      if (!_isEmpty(obj?.remove)) {
+        if (this.isPerm("SUPPLIER_UNBIND")) {
+          this.onUnbind(obj?.remove);
+        } else {
+          CustomToast({
+            title: "您没有权限解绑",
+            icon: "none",
+          });
+        }
+      }
+
       this.visible = false;
     },
 
     onJumpInfo(item) {
-      if (this.isPerm("FINANCE_PAYABLE_CHECK")) {
+      if (this.isPerm("FINANCE_RECEIVABLE_CHECK") || this.isPerm("FINANCE_PAYABLE_CHECK")) {
         this.noRefresh = true;
         uni.navigateTo({
-          url: "/erp/finance/check" + `?id=${item.id}&customer_type=purchase`,
+          url: "/erp/finance/check" + `?id=${item.id}&customer_type=purchase&FORM=purchase`,
         });
       }
     },
@@ -344,7 +383,7 @@ export default {
 
     // 处理索引点击按钮
     onClickEvent(query) {
-      this.onBindPopup(query.item, query.button.isBind, query.$index);
+      this.onBindPopup(query.item, query.$index);
     },
   },
   computed: {
@@ -405,10 +444,15 @@ export default {
 
     // #ifdef MP
     getIndexEventList() {
-      return [
-        {label: "绑定客户", isBind: true, perm: "SUPPLIER_BIND"},
-        {label: "解绑客户", isBind: false, perm: "SUPPLIER_UNBIND"},
-      ].filter(item => this.isPerm(item.perm));
+      if (this.isPerm("SUPPLIER_BIND") || this.isPerm("SUPPLIER_UNBIND")) {
+        return [{label: "绑定"}];
+      }
+      return [];
+
+      /*  return [
+         {label: "绑定客户", isBind: true, perm: "SUPPLIER_BIND"},
+         {label: "解绑客户", isBind: false, perm: "SUPPLIER_UNBIND"},
+       ].filter(item => this.isPerm(item.perm)); */
     },
     // #endif
   },
@@ -444,6 +488,7 @@ export default {
 
           :events="getIndexEventList"
           @click-event="onClickEvent"
+          show-bind-user-list
         />
       </view>
       <!-- #endif -->
@@ -472,18 +517,11 @@ export default {
                 邀请绑定
               </button>-->
               <button
-                @click.stop="onBindPopup(item, true, index)"
+                @click.stop="onBindPopup(item, index)"
                 class="ko-basic-button__user"
-                v-if="isPerm('SUPPLIER_BIND')"
+                v-if="isPerm('SUPPLIER_BIND') || isPerm('SUPPLIER_UNBIND')"
               >
-                绑定供应商
-              </button>
-              <button
-                @click.stop="onBindPopup(item, false, index)"
-                class="ko-basic-button__user"
-                v-if="isPerm('SUPPLIER_UNBIND')"
-              >
-                解绑供应商
+                绑定
               </button>
               <button
                 class="ko-basic-button__user"
@@ -516,7 +554,7 @@ export default {
 
     <PickerUser
       :visible.sync="visible"
-      :title="isBind ? '选择绑定客户' : '解绑客户'"
+      title="绑定/解绑供应商"
       is-confirm
       multiple
       @confirm="onConfirm"
@@ -526,8 +564,6 @@ export default {
 
       is-external-open
       not-created-request
-      :is-selected="!isBind"
-      :is-not-selected="isBind"
       type="purchaseUserList"
     />
 

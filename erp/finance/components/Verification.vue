@@ -96,7 +96,7 @@ export default {
       this.noRefresh = true;
       if ([this.isPerm("FINANCE_RECEIVABLE_CHECK"), this.isPerm("FINANCE_PAYABLE_CHECK")][+this.getCurrent]) {
         uni.navigateTo({
-          url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.getCurrent]}`,
+          url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.getCurrent]}&FORM=${["F_SALE", "F_PURCHASE"][+this.getCurrent]}`,
         });
       } else {
         this.noRefresh = false;

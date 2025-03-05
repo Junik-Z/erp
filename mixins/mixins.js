@@ -352,7 +352,7 @@ export default {
 
     // 根据传入的参数判断是否有权限
     isPerm() {
-      return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin || this.isBusiness;
+      return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin;
     },
 
     // 用户信息
@@ -530,7 +530,7 @@ export default {
       return this.TABS_LIST?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
-          if (_haveCommonElements(role, item.roles) || this.isBusiness || this.isAdmin) {
+          if (_haveCommonElements(role, item.roles) || this.isAdmin) {
             return [item];
           } else {
             return [];
@@ -585,7 +585,7 @@ export default {
     GET_PAGE_MENU() {
       return this.PAGE_MENU?.flatMap(item => {
         if (item.perm) {
-          if (this.isPerm(item.perm) || this.isBusiness || this.isAdmin) {
+          if (this.isPerm(item.perm)) {
             return [item];
           } else {
             return [];
@@ -602,7 +602,7 @@ export default {
 
     // 获取右下角添加按钮列表数据
     GET_MOVABLE_LIST() {
-      return this.content?.filter(item => this.GET_USER_ROLE?.includes(item.perm));
+      return this.content?.filter(item => this.isPerm(item.perm));
     },
 
     // 是否显示添加按钮

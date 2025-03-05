@@ -568,7 +568,7 @@ export default {
             <!-- #endif -->
 
             <UniSection :title="`${isPurchase ? '供应商' : '客户'}信息`" type="line">
-              <view style="padding: 10px;">
+              <view style="padding: 10px 0 0;">
                 <view style="margin: 0 10px 10px;" v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
                   <uni-segmented-control
                     :current.sync="clientType"
@@ -639,7 +639,7 @@ export default {
 
         <block v-if="isEqual(getCurrentValue, 'other')">
 
-          <view style="padding: 10px;">
+          <view style="padding: 10px 0 0;">
             <view style="margin: 0 10px 10px;" v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
               <uni-segmented-control
                 :current.sync="clientType"
@@ -664,7 +664,7 @@ export default {
             </block>
 
             <block v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
-              <uni-forms-item label="姓名" name="otherSupplier">
+              <uni-forms-item label="姓名：" name="otherSupplier" key="otherSupplier">
                 <UniEasyinput
                   v-model="form.otherSupplier"
                   style="width: 100%;"

@@ -2,7 +2,7 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _set, CustomToast } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -35,15 +35,14 @@ export default {
 
       bindUserList: [],
       isBind: false,
-      item: {},
+      node: {},
+      nodeIndex: null,
 
       noMore: false,
       queryList: {
         pageSize: 20,
         pageNum: 0,
       },
-
-      actionItem: {},
 
       // #ifdef H5
       columns: [
@@ -179,48 +178,87 @@ export default {
 
     // 解绑
     onUnbind(user) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `您确定要解绑物流商吗？`,
-        success: (res) => {
-          if (res.confirm) {
+      /*  uni.showModal({
+         title: "温馨提示",
+         content: `您确定要解绑物流商吗？`,
+         success: (res) => {
+           if (res.confirm) {
 
-            Promise.all(
-              user.map(userId => unbindLogisticsApi({
-                logisticsId: this.item.id,
-                userId,
-              })),
-            )
-              .then(() => {
-                uni.showToast({title: "解绑成功"});
-              });
-          }
-        },
-      });
+             Promise.all(
+               user.map(userId => unbindLogisticsApi({
+                 logisticsId: this.item.id,
+                 userId,
+               })),
+             )
+               .then(() => {
+                 uni.showToast({title: "解绑成功"});
+               });
+           }
+         },
+       }); */
+      Promise.all(
+        user.map(userId => unbindLogisticsApi({
+          logisticsId: this.node.id,
+          userId,
+        })),
+      )
+        .then(() => {
+          uni.showToast({title: "操作成功"});
+
+          const node = _deepCopy(this.list[this.nodeIndex]);
+          node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
+          this.$set(this.list, this.nodeIndex, node);
+        });
     },
 
     // 绑定
     onBind(user = []) {
       Promise.all(
         user.map(userId => bindLogisticsApi({
-          logisticsId: this.item.id,
+          logisticsId: this.node.id,
           userId,
         })),
       )
         .then(() => {
-          uni.showToast({title: "绑定成功"});
+          uni.showToast({title: "操作成功"});
+          const node = _deepCopy(this.list[this.nodeIndex]);
+
+          const UList = _get(node, "users") || [];
+          _set(node, "users", [...UList, ...(user || []).map(id => this.$refs.SPURef?.getUserInfo?.(id) || {})]);
+
+          this.$set(this.list, this.nodeIndex, node);
         });
     },
 
-    onBindPopup(item, isBind) {
-      this.isBind = isBind;
-      this.item = item;
+    onBindPopup(item, index) {
+      this.node = item;
+      this.nodeIndex = index;
 
       this.$refs.SPURef?.open?.({logisticsId: item.value});
     },
 
-    onConfirm(checked) {
-      !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked);
+    onConfirm(obj) {
+      if (!_isEmpty(obj?.add)) {
+        if (this.isPerm("LOGISTICS_BIND")) {
+          this.onBind(obj?.add);
+        } else {
+          CustomToast({
+            title: "您没有权限绑定",
+            icon: "none",
+          });
+        }
+      }
+
+      if (!_isEmpty(obj?.remove)) {
+        if (this.isPerm("LOGISTICS_UNBIND")) {
+          this.onUnbind(obj?.remove);
+        } else {
+          CustomToast({
+            title: "您没有权限解绑",
+            icon: "none",
+          });
+        }
+      }
 
       this.visible = false;
     },
@@ -246,14 +284,14 @@ export default {
     },
 
     onActionClick(item) {
-      this.actionItem = item;
+      this.node = item;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
       if (item.openType) return false;
 
-      this[item.func](_deepCopy(this.actionItem), ...(item.arg || []));
+      this[item.func](_deepCopy(this.node), ...(item.arg || []));
     },
 
     onLower() {
@@ -273,7 +311,7 @@ export default {
 
     // 处理索引点击按钮
     onClickEvent(query) {
-      this.onBindPopup(query.item, query.button.isBind, query.$index);
+      this.onBindPopup(query.item, query.$index);
     },
   },
   computed: {
@@ -297,7 +335,7 @@ export default {
     },
 
     actionList() {
-      // const node = _deepCopy(this.actionItem);
+      // const node = _deepCopy(this.node);
       return [
         /* {
           openType: "share",
@@ -331,10 +369,10 @@ export default {
 
     // #ifdef MP
     getIndexEventList() {
-      return [
-        {label: "绑定客户", isBind: true, perm: "LOGISTICS_BIND"},
-        {label: "解绑客户", isBind: false, perm: "LOGISTICS_UNBIND"},
-      ].filter(item => this.isPerm(item.perm));
+      if (this.isPerm("LOGISTICS_BIND") || this.isPerm("LOGISTICS_UNBIND")) {
+        return [{label: "绑定"}];
+      }
+      return [];
     },
     // #endif
   },
@@ -360,6 +398,7 @@ export default {
 
         :events="getIndexEventList"
         @click-event="onClickEvent"
+        show-bind-user-list
       />
       <!--
        <button
@@ -386,7 +425,7 @@ export default {
           @next-load="onLower"
           :no-more="noMore || loading"
         >
-          <template #operate="{item}">
+          <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <!--<button
                 @click.stop="() => {}"
@@ -397,19 +436,13 @@ export default {
                 邀请绑定
               </button>-->
               <button
-                @click.stop="onBindPopup(item, true)"
+                @click.stop="onBindPopup(item, index)"
                 class="ko-basic-button__user"
-                v-if="isPerm('LOGISTICS_BIND')"
+                v-if="isPerm('LOGISTICS_BIND') || isPerm('LOGISTICS_UNBIND')"
               >
-                绑定物流商
+                绑定
               </button>
-              <button
-                @click.stop="onBindPopup(item, false)"
-                class="ko-basic-button__user"
-                v-if="isPerm('LOGISTICS_UNBIND')"
-              >
-                解绑物流商
-              </button>
+
               <button
                 class="ko-basic-button__user"
                 @click.stop="onJump(item)"
@@ -434,15 +467,13 @@ export default {
     <PickerUser
       ref="SPURef"
       :visible.sync="visible"
-      :title="isBind ? '选择绑定物流商' : '解绑物流商'"
+      title="绑定物流商"
       is-confirm
       multiple
       @confirm="onConfirm"
 
       is-external-open
       not-created-request
-      :is-selected="!isBind"
-      :is-not-selected="isBind"
       type="logisticsUserList"
     />
 

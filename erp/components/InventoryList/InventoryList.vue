@@ -27,13 +27,18 @@ export default {
     onLower() {
       this.$emit("lower");
     },
-    onViewImage(node) {
+    onViewImage(node, col) {
       const image = this.getImageUrl(node.images);
       if (image) {
         uni.previewImage({
           urls: [image],
         });
       }
+    },
+
+    // 点击列表项
+    onClickCell(item, col) {
+      this.$emit("click-cell", {item, column: col});
     },
   },
   computed: {
@@ -56,21 +61,20 @@ export default {
         return col.isClass && item.quantity <= item.stockWarning ? "ko-basic-money" : "";
       };
     },
+
+    // 获取样式
+    getRootStyle() {
+      return {
+        "--ko-basic-table-grid-col": (this.columns || [])?.map(() => "auto").join(" "),
+      };
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-inventory-list">
-    <view class="ko-inventory-list__header ko-basic-box-shadow">
-      <UniRow :gutter="10">
-        <UniCol v-for="item of columns" :key="item.key" :span="item.span">
-          <view class="ko-inventory-list__header--item">{{ item.label }}</view>
-        </UniCol>
-      </UniRow>
-    </view>
-
-    <view class="ko-inventory-list__content">
+    <view class="ko-inventory-list__content" :style="[getRootStyle]">
       <KoList
         :loading="loading"
         :no-more="noMore"
@@ -79,31 +83,38 @@ export default {
       >
         <view class="ko-inventory-list__wrap">
           <view v-for="(item, key) of groupList" :key="key">
-            <UniSection :title="key" type="line">
+            <UniSection :title="key || ''" type="line">
               <BasicCard>
-                <view
-                  class="ko-inventory-list__item"
-                  v-for="child of item"
-                  :key="child.id"
-                  @click.stop="onViewImage(child)"
-                >
-                  <UniRow :gutter="6">
-                    <UniCol style="height: 100%;" v-for="col of columns" :key="col.key" :span="col.span">
-                      <view
-                        class="ko-inventory-list__cell"
-                        :class="[col.class || '', getCellClass(col, child)]"
-                      >
-                        <view>{{ GET_FUNC(child, col.key) }}</view>
+                <view class="ko-basic-table">
+                  <view
+                    class="ko-basic-table--th"
+                    v-for="col of columns"
+                    :key="col.key"
+                  >
+                    {{ col.label }}
+                  </view>
 
-                        <view
-                          style="width: 100%; font-size: 10px; color: #8f939c; padding: 2px 4px 0"
-                          v-if="fieldList && fieldList.length && col.isField"
-                        >
-                          {{ getFieldListText(child) }}
-                        </view>
+                  <block
+                    v-for="child of item"
+                    :key="child.id"
+                  >
+                    <view
+                      v-for="col of columns"
+                      :key="col.key"
+                      class="ko-inventory-list__cell ko-basic-table--cell"
+                      :class="[col.class || '', getCellClass(col, child)]"
+                      @click.stop="onClickCell(child, col)"
+                    >
+                      <view>{{ GET_FUNC(child, col.key) }}</view>
+
+                      <view
+                        style="width: 100%; font-size: 10px; color: #8f939c; padding: 2px 4px 0"
+                        v-if="fieldList && fieldList.length && col.isField"
+                      >
+                        {{ getFieldListText(child) }}
                       </view>
-                    </UniCol>
-                  </UniRow>
+                    </view>
+                  </block>
                 </view>
               </BasicCard>
             </UniSection>
@@ -120,19 +131,6 @@ export default {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-
-  &__header {
-    padding: 0 16px;
-    margin-bottom: 10px;
-    font-size: 14px;
-
-    &--item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1.2;
-    }
-  }
 
   &__content {
     flex: 1;

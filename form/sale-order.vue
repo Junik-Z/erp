@@ -168,6 +168,8 @@ export default {
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   if (this.isClient && !this.isNormal) {
+                    uni.$emit('$__get_all_info__')
+
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {

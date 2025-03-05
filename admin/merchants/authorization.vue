@@ -2,6 +2,7 @@
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import {
+  CNC_PERM_TREE,
   FINANCE_PERM_TREE,
   LOGISTICS_PERM_TREE,
   PRODUCE_PERM_TREE,
@@ -10,8 +11,9 @@ import {
   SALE_PERM_TREE,
   STOCK_PERM_TREE,
 } from "@/admin/merchants/define";
-import { _deepCopy, _get, _xor, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEqual, _xor, CustomToast } from "@/utils";
 import { getRolePermListApi, setUserRoleApi } from "@/api/admin";
+import mixins from "@/mixins/mixins";
 
 const TREE_DATA = {
   stock: STOCK_PERM_TREE,
@@ -21,13 +23,22 @@ const TREE_DATA = {
   finance: FINANCE_PERM_TREE,
   logistics: LOGISTICS_PERM_TREE,
   product: PRODUCT_PERM_TREE,
+  cnc: CNC_PERM_TREE,
 };
 
 export default {
   name: "authorization",
   components: {PickerUser, BasicCard},
+  mixins: [mixins],
   onLoad(option) {
     this.option = option;
+    this.isCustom = _isEqual(option.isCustom, "true");
+
+    if (this.isCustom) {
+      this.userId = this.GET_USER_INFO.userId;
+      this.onChangeUser();
+    }
+
     /* getRolePermApi({role: option.role})
       .then(res => {
         console.log(res.data);
@@ -46,6 +57,8 @@ export default {
       backup: [],
 
       sLoading: false,
+      // 是否是定制
+      isCustom: false,
     };
   },
   methods: {
@@ -158,7 +171,7 @@ export default {
 <template>
   <view class="ko-admin-authorization">
     <uni-forms label-width="100">
-      <uni-forms-item label="授权用户：">
+      <uni-forms-item label="授权用户：" v-if="!isCustom">
         <view style="width: 100%;">
           <PickerUser
             @check-node="onChangeUser"
@@ -220,9 +233,10 @@ export default {
                     v-else
                   />
                 </block>
-                <view>
+                <view style="font-size: 13px; line-height: 1.2" :style="[child.color ? {color: child.color} : {}]">
                   {{ child.label }}
-                  <text style="font-size: 10px">({{ ["目录", "按钮", "页面"][child.type - 1] || "" }})
+                  <text style="font-size: 8px">
+                    ({{ ["目录", "按钮", "页面"][child.type - 1] || "" }})
                   </text>
                 </view>
               </button>
@@ -291,7 +305,7 @@ export default {
     &--cell {
       text-align: left;
       justify-content: flex-start;
-      font-size: 14px;
+      align-items: center;
 
       height: 32px;
 

@@ -4,7 +4,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _get, _isEmpty } from "@/utils";
+import { _get, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { getProductFieldApi } from "@/api/erp/product";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
@@ -99,6 +99,19 @@ export default {
           this.FieldList = res.data;
         });
     },
+
+    // 点击列表项了
+    onClickCell(obj) {
+      const node = obj.item;
+      if (node.images) {
+        const image = this.getImageUrl(node.images);
+        if (image) {
+          uni.previewImage({
+            urls: [image],
+          });
+        }
+      }
+    },
   },
   computed: {
     // #ifdef H5
@@ -171,6 +184,7 @@ export default {
         :columns="columnTable"
         @lower="RequestNextPage"
         :field-list="FieldList"
+        @click-cell="onClickCell"
       />
     </view>
     <!-- #endif -->

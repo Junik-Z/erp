@@ -355,10 +355,11 @@ export const SALE_PERM_TREE = [
         id: "307",
       },
       {
-        label: "重新下单",
+        label: "已提交可修改",
         type: 2,
         perm: "SALE_RE_ORDER",
         id: "360",
+        color: "#e43d33",
       },
       {
         label: "已付款列表",
@@ -404,12 +405,12 @@ export const SALE_PERM_TREE = [
         perm: "CUSTOMER_BIND",
         id: "327",
       },
-      {
+      /* {
         label: "获取绑定客户信息",
         type: 2,
         perm: "CUSTOMER_GET_BIND_INFO",
         id: "328",
-      },
+      }, */
       {
         label: "解绑客户",
         type: 2,
@@ -439,6 +440,19 @@ export const SALE_PERM_TREE = [
         type: 2,
         perm: "CUSTOMER_DELETE",
         id: "326",
+      },
+
+      {
+        label: "应收账款核对",
+        type: 2,
+        perm: "FINANCE_RECEIVABLE_CHECK",
+        id: "551",
+      },
+      {
+        label: "应付账款核对",
+        type: 2,
+        perm: "FINANCE_PAYABLE_CHECK",
+        id: "541",
       },
     ],
   },
@@ -497,7 +511,8 @@ export const SALE_PERM_TREE = [
         id: "318",
       },
       {
-        label: "销售退货重新下单",
+        label: "已提交可修改",
+        color: "#e43d33",
         type: 2,
         perm: "SALE_RETURN_RE_ORDER",
         id: "361",
@@ -556,13 +571,13 @@ export const SALE_PERM_TREE = [
     id: "342000000",
     children: [
       {
-        label: "添加生产订单",
+        label: "添加定制订单",
         type: 2,
         perm: "SALE_PRODUCE_ADD",
         id: "342",
       },
       {
-        label: "更新生产订单",
+        label: "编辑定制订单",
         type: 2,
         perm: "SALE_PRODUCE_UPDATE",
         id: "345",
@@ -644,12 +659,7 @@ export const PURCHASE_PERM_TREE = [
         perm: "PURCHASE_ADD",
         id: "600",
       },
-      {
-        label: "分享下采购单",
-        type: 2,
-        perm: "PURCHASE_SHARE",
-        id: "604",
-      },
+
       {
         label: "取消采购单",
         type: 2,
@@ -674,14 +684,10 @@ export const PURCHASE_PERM_TREE = [
         perm: "PURCHASE_CONFIRM",
         id: "609",
       },
+
       {
-        label: "显示最近成交价",
-        type: 2,
-        perm: "PURCHASE_RECENT_PRICE",
-        id: "611",
-      },
-      {
-        label: "重新采购",
+        label: "已提交可修改",
+        color: "#e43d33",
         type: 2,
         perm: "PURCHASE_RE_ORDER",
         id: "650",
@@ -736,12 +742,12 @@ export const PURCHASE_PERM_TREE = [
         perm: "SUPPLIER_BIND",
         id: "636",
       },
-      {
+      /* {
         label: "获取绑定的供应商",
         type: 2,
         perm: "SUPPLIER_GET_BIND_INFO",
         id: "637",
-      },
+      }, */
       {
         label: "解绑供应商",
         type: 2,
@@ -765,6 +771,19 @@ export const PURCHASE_PERM_TREE = [
         type: 2,
         perm: "SUPPLIER_DELETE",
         id: "635",
+      },
+
+      {
+        label: "应收账款核对",
+        type: 2,
+        perm: "FINANCE_RECEIVABLE_CHECK",
+        id: "551",
+      },
+      {
+        label: "应付账款核对",
+        type: 2,
+        perm: "FINANCE_PAYABLE_CHECK",
+        id: "541",
       },
     ],
   },
@@ -823,7 +842,8 @@ export const PURCHASE_PERM_TREE = [
         id: "628",
       },
       {
-        label: "重新采购退货",
+        label: "已提交可修改",
+        color: "#e43d33",
         type: 2,
         perm: "PURCHASE_RETURN_RE_ORDER",
         id: "651",
@@ -881,13 +901,13 @@ export const PURCHASE_PERM_TREE = [
     id: "45000000",
     children: [
       {
-        label: "新增定制化采购",
+        label: "添加定制订单",
         type: 2,
         perm: "PURCHASE_CUSTOMIZED_ADD",
         id: "450",
       },
       {
-        label: "更新定制化采购",
+        label: "编辑定制订单",
         type: 2,
         perm: "PURCHASE_CUSTOMIZED_UPDATE",
         id: "453",
@@ -905,6 +925,18 @@ export const PURCHASE_PERM_TREE = [
         type: 2,
         perm: "PURCHASE_PRINT",
         id: "610",
+      },
+      {
+        label: "显示最近采购价",
+        type: 2,
+        perm: "PURCHASE_RECENT_PRICE",
+        id: "611",
+      },
+      {
+        label: "分享下单",
+        type: 2,
+        perm: "PURCHASE_SHARE",
+        id: "604",
       },
     ],
   },
@@ -1022,31 +1054,31 @@ export const PRODUCE_PERM_TREE = [
         id: "403",
       },
       {
-        label: "添加生产工单",
+        label: "添加生产",
         type: 2,
         perm: "PRODUCE_ADD",
         id: "404",
       },
       {
-        label: "暂停/恢复生产工单",
+        label: "暂停/恢复生产",
         type: 2,
         perm: "PRODUCE_PAUSE",
         id: "407",
       },
       {
-        label: "取消生产工单",
+        label: "取消生产",
         type: 2,
         perm: "PRODUCE_CANCEL",
         id: "408",
       },
       {
-        label: "编辑生产工单",
+        label: "编辑生产",
         type: 2,
         perm: "PRODUCE_UPDATE",
         id: "409",
       },
       {
-        label: "删除生产工单",
+        label: "删除生产",
         type: 2,
         perm: "PRODUCE_DELETE",
         id: "410",
@@ -1064,7 +1096,7 @@ export const PRODUCE_PERM_TREE = [
         id: "412",
       },
       {
-        label: "更新生产工艺",
+        label: "更新生产流程",
         type: 2,
         perm: "PRODUCE_UPDATE_CRAFT_PROCESS",
         id: "413",
@@ -1114,19 +1146,19 @@ export const PRODUCE_PERM_TREE = [
         id: "913",
       },
       {
-        label: "流程申请结算",
+        label: "申请结算",
         type: 2,
         perm: "CRAFT_APPLY_SETTLE",
         id: "914",
       },
       {
-        label: "流程确认结算",
+        label: "确认结算",
         type: 2,
         perm: "CRAFT_CONFIRM_SETTLE",
         id: "916",
       },
       {
-        label: "流程取消结算",
+        label: "取消结算",
         type: 2,
         perm: "CRAFT_CANCEL_SETTLE",
         id: "918",
@@ -1234,50 +1266,6 @@ export const PRODUCE_PERM_TREE = [
       },
     ],
   },
-  {
-    label: "数控(CNC)",
-    type: 1,
-    perm: ["CNC_PROPERTIES", "CNC_UPDATE_PROPERTIES"],
-    id: "700000000",
-    children: [
-      {
-        label: "CNC设备属性管理",
-        type: 2,
-        perm: "CNC_PROPERTIES",
-        id: "700",
-      },
-      {
-        label: "更新CNC设备属性",
-        type: 2,
-        perm: "CNC_UPDATE_PROPERTIES",
-        id: "701",
-      },
-      {
-        label: "CNC数控程序列表",
-        type: 2,
-        perm: "CNC_NC_PROGRAMS",
-        id: "702",
-      },
-      {
-        label: "删除CNC数控程序",
-        type: 2,
-        perm: "CNC_DELETE_PROGRAM",
-        id: "703",
-      },
-      {
-        label: "生成CNC数控程序",
-        type: 2,
-        perm: "CNC_GENERATE_PROGRAM",
-        id: "704",
-      },
-      {
-        label: "CNC定制化板材计算",
-        type: 2,
-        perm: "CNC_CUSTOMIZED_BOARD_CALCULATE",
-        id: "705",
-      },
-    ],
-  },
 ];
 
 /**
@@ -1297,7 +1285,7 @@ export const FINANCE_PERM_TREE = [
         id: "550",
       },
       {
-        label: "未付款客户列表",
+        label: "未付款客户",
         type: 2,
         perm: "FINANCE_UNPAID_CUSTOMER",
         id: "500",
@@ -1371,7 +1359,7 @@ export const FINANCE_PERM_TREE = [
         id: "540",
       },
       {
-        label: "未付款供应商列表",
+        label: "未付款供应商",
         type: 2,
         perm: "FINANCE_UNPAID_SUPPLIER",
         id: "501",
@@ -1712,7 +1700,7 @@ export const PRODUCT_PERM_TREE = [
         perm: "SHARE_PRODUCT",
         id: "130",
       },
-      {
+      /* {
         label: "获取已分享的产品",
         type: 2,
         perm: "SHARE_GET_SHARE_PRODUCT",
@@ -1729,7 +1717,8 @@ export const PRODUCT_PERM_TREE = [
         type: 2,
         perm: "SHARE_GET_PRODUCT_EXT",
         id: "131",
-      },
+      },*/
+
       {
         label: "接收分享的产品",
         type: 2,
@@ -1805,68 +1794,56 @@ export const PRODUCT_PERM_TREE = [
 ];
 
 /**
- * @description 员工管理
+ * @description 数控加工
  */
-export const MERCHANTS_PERM_TREE = [
+export const CNC_PERM_TREE = [
   {
-    label: "员工管理",
+    label: "数控(CNC)",
     type: 1,
-    perm: ["STAFF_LIST"],
-    id: "421000000",
+    perm: ["CNC_PROPERTIES", "CNC_UPDATE_PROPERTIES"],
+    id: "700000000",
     children: [
       {
-        label: "员工统计",
+        label: "添加CNC板材订单",
         type: 2,
-        perm: "STAFF_COUNT",
-        id: "420",
+        perm: "CNC_ADD_CUSTOMIZED_BOARD",
+        id: "706",
       },
       {
-        label: "员工列表",
+        label: "CNC设备属性",
         type: 2,
-        perm: "STAFF_LIST",
-        id: "421",
+        perm: "CNC_PROPERTIES",
+        id: "700",
       },
       {
-        label: "添加员工",
+        label: "更新CNC设备",
         type: 2,
-        perm: "STAFF_ADD",
-        id: "422",
+        perm: "CNC_UPDATE_PROPERTIES",
+        id: "701",
       },
       {
-        label: "编辑员工",
+        label: "CNC程序列表",
         type: 2,
-        perm: "STAFF_EDIT",
-        id: "424",
+        perm: "CNC_NC_PROGRAMS",
+        id: "702",
       },
       {
-        label: "删除员工",
+        label: "删除CNC程序",
         type: 2,
-        perm: "STAFF_DELETE",
-        id: "425",
+        perm: "CNC_DELETE_PROGRAM",
+        id: "703",
       },
       {
-        label: "解绑员工",
+        label: "生成CNC程序",
         type: 2,
-        perm: "STAFF_UNBIND",
-        id: "426",
+        perm: "CNC_GENERATE_PROGRAM",
+        id: "704",
       },
       {
-        label: "获取未绑定的员工",
+        label: "CNC板材计算",
         type: 2,
-        perm: "STAFF_GET_NOT_BIND_INFO",
-        id: "427",
-      },
-      {
-        label: "刷新员工",
-        type: 2,
-        perm: "STAFF_REFRESH",
-        id: "428",
-      },
-      {
-        label: "绑定员工",
-        type: 2,
-        perm: "STAFF_BIND",
-        id: "429",
+        perm: "CNC_CUSTOMIZED_BOARD_CALCULATE",
+        id: "705",
       },
     ],
   },
@@ -1911,58 +1888,6 @@ export const ATTEND_PERM_TREE = [
         type: 2,
         perm: "",
         id: "",
-      },
-    ],
-  },
-  {
-    label: "考勤记录",
-    type: 1,
-    perm: "",
-    id: "",
-  },
-  {
-    label: "考勤设置",
-    type: 1,
-    perm: "",
-    id: "",
-  },
-  {
-    label: "考勤二维码",
-    type: 1,
-    perm: "",
-    id: "",
-  },
-];
-
-/**
- * @description 超管
- */
-export const ADMIN_PERM_TREE = [
-  {
-    label: "商户管理",
-    type: 1,
-    perm: "",
-    id: "",
-    children: [
-      {
-        label: "查看商户二维码",
-        type: 2,
-        perm: "",
-        id: "",
-      },
-      {
-        label: "查看商户成员",
-        type: 2,
-        perm: "",
-        id: "",
-        children: [
-          {
-            label: "设为商户",
-            type: 2,
-            perm: "",
-            id: "",
-          },
-        ],
       },
     ],
   },

@@ -52,6 +52,8 @@ export const CONFIG = {
   APP_ID: "wx525c19deacc41329",
   SystemVersion: type,
 
+  "T_VERSION": 4,
+
   ...(
     {
       develop: {
@@ -201,6 +203,11 @@ export const PageEnums = {
 
   // 授权页面
   adminAuthorization: "/admin/merchants/authorization",
+
+  // 服务续费
+  adminRenewal: "/admin/renewal/renewal",
+  // 系统设置
+  adminStore: "/admin/admin/store",
 };
 
 /**
@@ -278,10 +285,20 @@ export const MENU_LIST = [
     isUpRole: true,
   },
   {
+    label: "板材加工",
+    icon: "icon-ziyuanicon",
+    value: "CNC_MEMBER",
+    modelKey: "cnc",
+    role: ["ADMIN", "CNC_MEMBER"],
+    isUpRole: true,
+    // 不显示在首页菜单
+    noShowInHome: true,
+  },
+  {
     label: "员工管理",
     icon: "icon-guanxiaobaotubiao38",
     value: "/admin/merchants/merchants",
-    role: ["ADMIN", "BUSINESS",],
+    role: ["ADMIN", "BUSINESS"],
     isUpRole: false,
   },
   {

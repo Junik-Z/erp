@@ -2,7 +2,7 @@
 import { getCheckListApi, refreshStockApi } from "@/api/erp/stock";
 import mixins from "@/mixins/mixins";
 import { getProductFieldApi } from "@/api/erp/product";
-import { _isEmpty } from "@/utils";
+import { _isEmpty, _isEqual } from "@/utils";
 import InventoryList from "@/erp/components/InventoryList/InventoryList.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import PickerClass from "@/components/PickerClass/PickerClass.vue";
@@ -99,6 +99,23 @@ export default {
           this.getList(true);
         });
       });
+    },
+
+    // 点击列表项了
+    onClickCell(obj) {
+      const column = obj.column;
+      const node = obj.item;
+
+      if (_isEqual(column.key, "name") && node.images) {
+        const image = this.getImageUrl(node.images);
+        if (image) {
+          uni.previewImage({
+            urls: [image],
+          });
+        }
+      } else {
+        this.onJump(node);
+      }
     },
 
     // #ifdef H5
@@ -200,7 +217,7 @@ export default {
 
       <button
         class="ko-basic-button__card"
-        v-if="isBusiness || isAdmin || isPerm('STOCK_TAKING') || isPerm('STOCK_CHECK_INOUT_ORDER')"
+        v-if="isPerm('STOCK_TAKING') || isPerm('STOCK_CHECK_INOUT_ORDER')"
         @click.stop="onJudge"
         style="margin-left: 8px"
       >
@@ -218,6 +235,7 @@ export default {
         :columns="columnTable"
         @lower="onLower"
         :field-list="FieldList"
+        @click-cell="onClickCell"
       />
       <!-- #endif -->
 

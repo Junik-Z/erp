@@ -32,7 +32,7 @@ export default {
       return this.tabs?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
-          if (_haveCommonElements(role, item.roles) || this.isBusiness || this.isAdmin) {
+          if (_haveCommonElements(role, item.roles) || this.isAdmin) {
             return [item];
           } else {
             return [];
