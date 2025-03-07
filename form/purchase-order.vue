@@ -16,10 +16,10 @@ import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } fr
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import FeesList from "@/components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
 import { PageEnums } from "@/utils/config";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");

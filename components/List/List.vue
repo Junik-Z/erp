@@ -16,6 +16,10 @@ export default {
     noMoreText: {
       type: String,
       default: '没有更多数据了'
+    },
+    noDataText: {
+      type: String,
+      default: '暂无数据'
     }
   },
   methods: {
@@ -50,7 +54,7 @@ export default {
         </view>
 
         <view class="ko-list__no-data" v-if="!loading && noData">
-          暂无数据
+          {{ noDataText }}
         </view>
       </block>
     </view>

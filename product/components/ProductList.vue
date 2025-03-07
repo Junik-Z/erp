@@ -13,7 +13,7 @@ import {
 } from "@/api/erp/product";
 import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import PickerClass from "../components/PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";

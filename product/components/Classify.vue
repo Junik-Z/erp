@@ -1,5 +1,5 @@
 <script>
-import DaTreeVue2 from "@/components/da-tree-vue2/index.vue";
+import DaTreeVue2 from "../components/da-tree-vue2/index.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";

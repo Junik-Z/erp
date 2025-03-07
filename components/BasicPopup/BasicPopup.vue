@@ -16,6 +16,8 @@ export default {
     },
     title: String,
     maxHeight: String,
+
+    noFooterPadding: Boolean,
   },
   data() {
     return {};
@@ -76,7 +78,7 @@ export default {
         <slot></slot>
       </view>
 
-      <view class="ko-basic-popup__footer" v-if="$slots.footer">
+      <view class="ko-basic-popup__footer" :class="{'no-padding': noFooterPadding}" v-if="$slots.footer">
         <slot name="footer"></slot>
       </view>
     </view>
@@ -141,6 +143,11 @@ export default {
   &__footer {
     // #ifdef H5
     padding-bottom: 20px;
+
+    &.no-padding {
+      padding-bottom: 0;
+    }
+
     // #endif
   }
 }

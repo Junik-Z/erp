@@ -381,4 +381,50 @@ $--ko-print-font-size: 11pt;
   margin: 0 auto;
 }
 
+
+// 天科打印模块的样式
+@mixin tk-print-style() {
+  font-family: "华文楷体", "KaiTi", sans-serif;
+  font-size: 14px;
+  min-height: 16px;
+  line-height: 16px;
+}
+
+.ko-p-table {
+  width: 100%;
+  border-collapse: collapse;
+  @include print-style();
+  border-left: 1px solid #000;
+  border-top: 1px solid #000;
+
+  &.not-border {
+    border-left: none;
+    border-top: none;
+
+    th, td {
+      border-bottom: none;
+      border-right: none;
+    }
+  }
+
+  &__cell {
+    min-height: 22px;
+
+    &.not-data {
+      color: #c7c9ce;
+    }
+  }
+
+  th, td {
+    border-bottom: 1px solid #000;
+    border-right: 1px solid #000;
+  }
+
+  tr {
+    td {
+      min-height: 22px;
+    }
+  }
+}
+
 // #endif

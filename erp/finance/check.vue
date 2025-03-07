@@ -12,7 +12,7 @@ import {
   getPayableCheckApi,
   getReceivableCheckApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -642,6 +642,8 @@ export default {
               is-finished
               is-finance
               is-hide-status
+              is-new
+              show-order-type
             />
 
             <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">

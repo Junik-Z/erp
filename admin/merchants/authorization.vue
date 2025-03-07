@@ -164,12 +164,25 @@ export default {
       const is = _xor(_deepCopy(this.checked), _deepCopy(this.backup));
       return is.length > 0;
     },
+
+    // 获取表格的数据
+    getTableStyle() {
+      let col = "auto auto";
+
+      // #ifdef H5
+      col = "25% 25% 25% 25%";
+      // #endif
+
+      return {
+        "--ko-basic-table-grid-col": col,
+      };
+    },
   },
 };
 </script>
 
 <template>
-  <view class="ko-admin-authorization">
+  <view class="ko-admin-authorization ko-basic-added-form">
     <uni-forms label-width="100">
       <uni-forms-item label="授权用户：" v-if="!isCustom">
         <view style="width: 100%;">
@@ -195,7 +208,7 @@ export default {
         <view class="ko-admin-authorization__wrap--label">授权功能：</view>
 
         <BasicCard :spacing="10" v-for="item of getTreeList" :key="item.id">
-          <view class="ko-admin-authorization__item" style="--ko-basic-table-grid-col: auto auto;">
+          <view class="ko-admin-authorization__item" :style="getTableStyle">
             <view class="ko-admin-authorization__item--title" @click="onClickTitle(item)">
               <block v-if="!!userId">
                 <view

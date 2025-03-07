@@ -585,6 +585,37 @@ export const SALE_PERM_TREE = [
     ],
   },
   {
+    label: "消息功能",
+    type: 1,
+    id: "900000000",
+    children: [
+      {
+        label: "消息列表",
+        type: 2,
+        perm: "MESSAGE_LIST",
+        id: "900",
+      },
+      {
+        label: "删除消息",
+        type: 2,
+        perm: "DELETE_MESSAGE",
+        id: "901",
+      },
+      {
+        label: "已读消息",
+        type: 2,
+        perm: "READ_MESSAGE",
+        id: "902",
+      },
+      {
+        label: "创建并绑定客户",
+        type: 2,
+        perm: "CREATE_BIND_CUSTOMER",
+        id: "903",
+      },
+    ],
+  },
+  {
     label: "其它功能",
     type: 1,
     id: "309000000",
@@ -911,6 +942,37 @@ export const PURCHASE_PERM_TREE = [
         type: 2,
         perm: "PURCHASE_CUSTOMIZED_UPDATE",
         id: "453",
+      },
+    ],
+  },
+  {
+    label: "消息功能",
+    type: 1,
+    id: "900000000",
+    children: [
+      {
+        label: "消息列表",
+        type: 2,
+        perm: "MESSAGE_LIST",
+        id: "900",
+      },
+      {
+        label: "删除消息",
+        type: 2,
+        perm: "DELETE_MESSAGE",
+        id: "901",
+      },
+      {
+        label: "已读消息",
+        type: 2,
+        perm: "READ_MESSAGE",
+        id: "902",
+      },
+      {
+        label: "创建并绑定供应商",
+        type: 2,
+        perm: "CREATE_BIND_SUPPLIER",
+        id: "904",
       },
     ],
   },
@@ -1859,34 +1921,46 @@ export const ATTEND_PERM_TREE = [
     perm: "ATTENDANCE_ALL_RECORDS",
     id: "510",
   },
+];
+
+/**
+ * @description 消息权限
+ */
+export const MESSAGE_PERM_TREE = [
   {
-    label: "员工管理",
+    label: "消息管理",
     type: 1,
-    perm: "",
+    perm: ["MESSAGE_LIST"],
     id: "",
     children: [
       {
-        label: "绑定员工",
+        label: "消息列表",
         type: 2,
-        perm: "",
+        perm: "MESSAGE_LIST",
         id: "",
       },
       {
-        label: "编辑员工",
+        label: "删除消息",
         type: 2,
-        perm: "",
+        perm: "DELETE_MESSAGE",
         id: "",
       },
       {
-        label: "删除员工",
+        label: "已读消息",
         type: 2,
-        perm: "",
+        perm: "READ_MESSAGE",
         id: "",
       },
       {
-        label: "查看员工生产记录",
+        label: "创建并绑定客户",
         type: 2,
-        perm: "",
+        perm: "CREATE_BIND_CUSTOMER",
+        id: "",
+      },
+      {
+        label: "创建并绑定供应商",
+        type: 2,
+        perm: "CREATE_BIND_SUPPLIER",
         id: "",
       },
     ],

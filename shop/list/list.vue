@@ -10,7 +10,7 @@ import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box
 import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
 import { _deepCopy, _get, _isEmpty, _isEnv, _isEqual, _isObject, _sum, CustomToast } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import PickerClass from "../components/PickerClass/PickerClass.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
@@ -996,5 +996,6 @@ export default {
     }
   }
 }
+
 // #endif
 </style>

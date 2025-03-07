@@ -104,7 +104,13 @@ export default {
       }
 
       const path = `${obj.path}?${QS.stringify(query)}`;
-      const obQuery = {...obj, path, type: CONFIG.SHARE_TYPE};
+      const obQuery = {
+        ...obj,
+        path,
+        type: CONFIG.SHARE_TYPE,
+        imageUrl: "https://erp.kuaouyun.cn/api/files/down/static/share.png",
+      };
+
       return _omit(obQuery, ["query"]);
     },
 
@@ -447,7 +453,7 @@ export default {
           UpstairsFee: "上楼费",
           HandlingFee: "搬运费",
           InstallationFee: "安装费",
-          LogisticsFee: "物流费",
+          LogisticsFee: this.isTkCustom ? "运费" : "物流费",
           ClearAnAccount: "已付费用",
         };
         return _get(obj, type) || "-";
@@ -608,6 +614,11 @@ export default {
     // 是否显示添加按钮
     isShowMovable() {
       return this.GET_MOVABLE_LIST?.length;
+    },
+
+    // 天科装饰定制打印
+    isTkCustom() {
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg");
     },
   },
 };

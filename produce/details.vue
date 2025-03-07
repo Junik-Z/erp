@@ -8,7 +8,7 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { getProduceDetailApi, getProduceOrderCodeDetailApi, getProduceOrderDetailApi } from "@/api/erp/produce";
 import { getProductFieldApi } from "@/api/erp/product";
-import FeesList from "../components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
 import CraftProcesses from "./pages/CraftProcesses.vue";
 import BinPacking from "./pages/BinPacking.vue";
 import CustomTable from "./pages/CustomTable.vue";
@@ -77,7 +77,7 @@ export default {
         "payable",
         "logistics",
       ].includes(this.option.page_type);
-      
+
       const Func = this.isPurchase ? getPurchaseInfoApi : isSale ? isStockAndFinance ? getProduceOrderCodeDetailApi : getProduceOrderDetailApi : getProduceDetailApi;
 
       Func({[isSale || this.isPurchase ? "orderCode" : "id"]: this.option.id})

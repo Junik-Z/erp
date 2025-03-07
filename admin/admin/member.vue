@@ -93,7 +93,7 @@ export default {
           label: "是否为商户",
           prop: "role",
           render: (h, {row}) => {
-            return h("div", [_this.isInBusiness(row.role) ? "是" : "否"]);
+            return h("div", [row.selected ? "是" : "否"]);
           },
         },
         {
@@ -182,7 +182,7 @@ export default {
         <view style="padding: 10px;" v-for="(item, index) of list" :key="index">
           <BasicCard>
             <i
-              v-if="isInBusiness(item.role)"
+              v-if="item.selected"
               class="iconfont icon-shanghuguanli"
             />
 

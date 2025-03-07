@@ -11,9 +11,9 @@ import {
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "@/components/PrintList/PrintList.vue";
+import PrintList from "@/erp/components/PrintList/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import SaleMixins from "../SaleMixins";
@@ -318,11 +318,11 @@ export default {
     },
 
     onTrigger(event) {
-      this.noRefresh = true;
-      this.isNewList = true;
-
       const {path} = event.item || {};
       if (path) {
+        this.noRefresh = true;
+        this.isNewList = true;
+
         uni.navigateTo({url: path});
       }
     },
@@ -510,9 +510,12 @@ export default {
             :item="item"
             @click="onToDetails(item, 'sale')"
             is-sales
+            is-new
+            :is-custom-status-name="isEqual(GET_PAGE_MENU_FUNC, 1)"
+            custom-status-name="待付款"
           >
             <template #operate>
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+              <view style="display: flex; align-items: center; justify-content: flex-end;">
                 <button
                   v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
                   class="ko-basic-button__card"

@@ -2,7 +2,7 @@
 // #ifdef H5
 import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
 // #endif
-import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
@@ -16,8 +16,8 @@ import {
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
-import { CONFIG } from "@/utils/config";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import { CONFIG, PageEnums } from "@/utils/config";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
@@ -39,7 +39,14 @@ const PageMenu = [
 export default {
   name: "MyOrderList",
   components: {
-    KoMovable, UvActionSheet, OrderCard, KoList, HistoryBar, UniRow, UniCol, UvCountTo,
+    KoMovable,
+    UvActionSheet,
+    OrderCard,
+    KoList,
+    HistoryBar,
+    UniRow,
+    UniCol,
+    UvCountTo,
   },
   mixins: [mixins, SaleMixins],
 
@@ -190,6 +197,30 @@ export default {
       noRefresh: false,
       isReturn: false,
       PAGE_MENU: _deepCopy(PageMenu),
+
+
+      content: [
+        // #ifdef H5
+        {
+          text: "定制",
+          iconfont: "icon-dingzhishengchan",
+          perm: "SALE_PRODUCE_ADD",
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE",
+        },
+        // #endif
+        {
+          text: "板材",
+          iconfont: "icon-ziyuanicon",
+          perm: "CNC_ADD_CUSTOMIZED_BOARD",
+          path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE&isClient=true",
+        },
+        {
+          text: "新增",
+          iconfont: "icon-tianjia",
+          perm: "SALE_ADD",
+          path: PageEnums.editSale + "?PAGE_TYPE=ADDED_SALE&isNormal=true",
+        },
+      ],
     };
   },
   created() {
@@ -257,14 +288,12 @@ export default {
     },
 
     // 处理添加修改
-    onAdded(item, index) {
+    onJumpEditor(item, index) {
       // #ifdef H5
       this.node = item;
       this.nodeIndex = index;
       // #endif
-
       this.noRefresh = true;
-
       if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
         this.jumpSaleReturn({
           PAGE_TYPE: "ADDED_REFUND_SALE",
@@ -337,6 +366,18 @@ export default {
         });
 
     },
+
+    // 处理添加
+    onTrigger(event) {
+
+      const {path} = event.item || {};
+      if (path) {
+        this.noRefresh = true;
+        this.isNewList = true;
+
+        uni.navigateTo({url: path});
+      }
+    },
   },
   computed: {
     getCountValue() {
@@ -364,7 +405,7 @@ export default {
         },
         {
           name: "编辑",
-          func: "onAdded",
+          func: "onJumpEditor",
           status: ["CREATED", "CANCELLED"],
           perm: "SALE_UPDATE",
           rPerm: "SALE_RETURN_UPDATE",
@@ -451,9 +492,10 @@ export default {
               @click="onJumpDetails(item, GET_PAGE_MENU_FUNC ? 'saleReturn' : 'sale')"
               is-sales
               :spacing="10"
+              is-new
             >
               <template #operate>
-                <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <view style="display: flex; align-items: center; justify-content: flex-end;">
                   <!--<button
                     v-if="['CREATED'].includes(item.status)"
                     class="ko-basic-button__card"
@@ -504,7 +546,7 @@ export default {
 
               <button
                 class="ko-basic-button__card"
-                @click.stop="onAdded(item, index)"
+                @click.stop="onJumpEditor(item, index)"
                 v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('SALE_UPDATE')) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('SALE_RETURN_UPDATE')))"
               >
                 修改
@@ -531,7 +573,11 @@ export default {
         <!-- #endif -->
       </view>
 
-      <KoMovable @click="onAdded('')" v-if="!GET_PAGE_MENU_FUNC && isPerm('SALE_ADD')" />
+      <KoMovable
+        :content="GET_MOVABLE_LIST"
+        @click="onTrigger"
+        v-if="!GET_PAGE_MENU_FUNC"
+      />
 
       <!-- #ifdef MP -->
       <UvActionSheet

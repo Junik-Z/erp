@@ -15,10 +15,10 @@ import {
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import FeesList from "@/components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
 
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { PageEnums } from "@/utils/config";
@@ -168,7 +168,7 @@ export default {
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   if (this.isClient && !this.isNormal) {
-                    uni.$emit('$__get_all_info__')
+                    uni.$emit("$__get_all_info__");
 
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
@@ -273,6 +273,7 @@ export default {
                 v-model="form.supplierId"
                 type="client"
                 ref="UserRef"
+
                 :is-long-list="isClient"
                 :options="bindList"
                 @input="onSupplierId"

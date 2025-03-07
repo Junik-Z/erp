@@ -69,6 +69,7 @@ export default {
     <uv-popup
       mode="center"
       ref="PRef"
+      :overlay-style="{background: 'rgba(0, 0, 0, .2)'}"
       @change="onChange"
       :close-on-click-overlay="false"
       :safe-area-inset-bottom="false"
@@ -76,7 +77,7 @@ export default {
       bg-color="transparent"
       :adjustPosition="false"
     >
-      <view class="ko-billing__content">
+      <view class="ko-billing__content ko-basic-box-shadow">
         <view class="ko-billing__top">
           <button
             class="ko-billing__top--close"
@@ -85,27 +86,31 @@ export default {
             <i class="iconfont icon-guanbi" />
           </button>
         </view>
-        <swiper class="ko-billing__swiper" autoplay interval="5000" :style="[{height: swiperHeight + 'px'}]">
-          <swiper-item v-for="item of getCncAD" :key="item">
-            <view class="ko-billing__swiper--item">
-              <image
-                class="ko-billing__swiper--item--image"
-                :src="getImageUrl(item)"
-                mode="widthFix"
-                @load="onImageLoad"
-              />
+
+        <view class="ko-billing__content--wrap">
+
+          <swiper class="ko-billing__swiper" autoplay interval="4000" :style="[{height: swiperHeight + 'px'}]">
+            <swiper-item v-for="item of getCncAD" :key="item">
+              <view class="ko-billing__swiper--item">
+                <image
+                  class="ko-billing__swiper--item--image"
+                  :src="getImageUrl(item)"
+                  mode="widthFix"
+                  @load="onImageLoad"
+                />
+              </view>
+            </swiper-item>
+          </swiper>
+
+
+          <view class="ko-billing__footer">
+            <view class="ko-billing__footer--desc">
+              尊敬的用户，您尚未开通板材加工功能。如需使用，请联系商务进行开通，感谢您的支持！
             </view>
-          </swiper-item>
-        </swiper>
-
-
-        <view class="ko-billing__footer">
-          <view style="color:#e9e9eb; font-size: 12px; text-align: center;">
-            尊敬的用户，您尚未开通板材加工功能。如需使用，请联系商务进行开通，感谢您的支持！
+            <!-- #ifdef MP -->
+            <!--<button style="margin-top: 20px;" class="ko-basic-button__card" @click="onJumpRenewal">自助开通</button>-->
+            <!-- #endif -->
           </view>
-          <!-- #ifdef MP -->
-          <!--<button style="margin-top: 20px;" class="ko-basic-button__card" @click="onJumpRenewal">自助开通</button>-->
-          <!-- #endif -->
         </view>
       </view>
     </uv-popup>
@@ -137,27 +142,44 @@ export default {
     justify-content: center;
     flex-wrap: wrap;
     margin-top: 20px;
-    background: rgba(0, 0, 0, .9);
+    //background: rgba(0, 0, 0, .9);
     border-radius: 10px;
     padding: 10px;
 
-    margin-bottom: 10vh;
-  }
+    //margin-bottom: 10vh;
 
-  &__content {
-    width: 98vw;
-    padding: 10px;
+    &--desc {
+      //color: #e9e9eb;
+      color: #333;
+      font-size: 12px;
+      text-align: center;
+    }
   }
 
   // #ifdef MP
+  &__content {
+    width: 100vw;
+    height: 70vh;
+    background: #fff;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+
+    &--wrap {
+      flex: 1;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
   &__swiper {
+    width: 100%;
 
     &--item {
-      //width: 100%;
-      //height: 100%;
-
       &--image {
-        //height: 100%;
         width: 100%;
         border-radius: 10px;
       }

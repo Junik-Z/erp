@@ -29,6 +29,8 @@ import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "@/produce/define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
+import MaterialPopup from "./components/MaterialPopup.vue";
 
 const PageMenu = [
   {
@@ -60,6 +62,9 @@ export default {
     UniCol,
     UniRow,
     BasicCard,
+    OrderCard,
+    MaterialPopup,
+
     // #ifdef H5
     CNC,
     PrintLabels,
@@ -111,6 +116,8 @@ export default {
       tableKey: +new Date(),
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      noRefresh: false,
 
       // #ifdef H5
       columns: [
@@ -188,7 +195,7 @@ export default {
   onLoad() {
   },
   onShow() {
-    if (!uni.getStorageSync("TO_DETAILS")) {
+    if (!uni.getStorageSync("TO_DETAILS") && !this.noRefresh) {
       this.getList(true);
     }
 
@@ -412,6 +419,12 @@ export default {
       this.onJump(item, index, true);
     },
 
+    // 处理添加材料
+    onAddedMaterial(item, index) {
+      this.noRefresh = true;
+      this.$refs.MPRef.open(item);
+    },
+
     // #ifdef H5
     onCncClick(item, index) {
       this.$refs.CncRef.open(item, index);
@@ -456,9 +469,9 @@ export default {
         .filter(item => {
           const isPerm = this.isPerm(item.perm);
 
-         /*  if (_isEqual(item.func, "onJump") && _isEqual(node.produceType, "customized")) {
-            return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
-          } */
+          /*  if (_isEqual(item.func, "onJump") && _isEqual(node.produceType, "customized")) {
+             return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
+           } */
 
           return item?.status?.includes(node.status) && isPerm;
         });
@@ -482,98 +495,71 @@ export default {
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
-          <BasicCard @click="onJumpDetails(item, 'produce')">
-            <view class="ko-work-list__info">
-              <UniRow gutter="10">
-                <UniCol :span="24">
-                  <label class="ko-basic-label">编号：</label>
-                  <text>{{ item.orderCode }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">状态：</label>
-                  <text>{{ PRODUCE_STATUS_ENUMS(item.status) }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">总价：</label>
-                  <text class="ko-basic-money">{{ toYuan(item.totalAmount) }}元</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <view style="display: flex; align-items: center">
-                    <label class="ko-basic-label">提单用户：</label>
-                    <uv-avatar
-                      :src="getImageUrl(GET_FUNC(item,'user.avatar'))"
-                      :size="38"
-                      :text="GET_FUNC(item, 'user.nickName') || ''"
-                      random-bg-color
-                    />
-                    <text style="margin-left: 10px;">{{ GET_FUNC(item, "user.nickName") || "" }}</text>
-                  </view>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">地址：</label>
-                  <text>{{ item.orderAddress || "-" }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">电话：</label>
-                  <text>{{ item.orderPhone || "-" }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">计划完成时间：</label>
-                  <text>{{ item.planFinishDate }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">备注：</label>
-                  <text>{{ item.remark || "-" }}</text>
-                </UniCol>
-              </UniRow>
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-              >
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
-                  @click.stop="onDischarging(item, index)"
-                  :loading="item.__discharging_loading__"
-                  :disabled="item.__discharging_loading__"
-                >
-                  进入生产
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_PAUSE')"
-                  @click.stop="onPause(item, index)"
-                  :loading="item.__pause_loading__"
-                  :disabled="item.__pause_loading__"
-                >
-                  {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
-                  @click.stop="onTechnology(item, index)"
-                >
-                  修改工艺
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('PRODUCE_FINISH')"
-                  @click.stop="onFinish(item, index)"
-                  :loading="item.__finish_loading__"
-                  :disabled="item.__finish_loading__"
-                >
-                  完成生产
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onActionClick(item, index)"
-                  v-if='["CREATED", "CANCELLED"].includes(item.status)'
-                >
-                  更多
-                </button>
-              </view>
-            </view>
-          </BasicCard>
+        <view style="padding: 10px;">
+          <block v-for="(item, index) of list" :key="item.id">
+            <OrderCard
+              :item="item"
+              :spacing="10"
+              @click="onJumpDetails(item, 'produce')"
+              is-new
+              show-order-phone
+              is-work
+            >
+              <template #operate>
+                <view style="display: flex; align-items: center; justify-content: flex-end;">
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="GET_PAGE_MENU_FUNC === 0 && isPerm('PRODUCE_UPDATE')"
+                    @click.stop="onAddedMaterial(item, index)"
+                  >
+                    添加物料
+                  </button>
+
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
+                    @click.stop="onDischarging(item, index)"
+                    :loading="item.__discharging_loading__"
+                    :disabled="item.__discharging_loading__"
+                  >
+                    进入生产
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_PAUSE')"
+                    @click.stop="onPause(item, index)"
+                    :loading="item.__pause_loading__"
+                    :disabled="item.__pause_loading__"
+                  >
+                    {{ item.status === "PAUSED" ? "恢复" : "暂停" }}
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
+                    @click.stop="onTechnology(item, index)"
+                  >
+                    修改工艺
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('PRODUCE_FINISH')"
+                    @click.stop="onFinish(item, index)"
+                    :loading="item.__finish_loading__"
+                    :disabled="item.__finish_loading__"
+                  >
+                    完成
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onActionClick(item, index)"
+                    v-if='["CREATED", "CANCELLED"].includes(item.status)'
+                  >
+                    更多
+                  </button>
+                </view>
+              </template>
+            </OrderCard>
+          </block>
         </view>
       </KoList>
     </view>
@@ -597,6 +583,13 @@ export default {
             <block>
               <button
                 class="ko-basic-button__card"
+                v-if="GET_PAGE_MENU_FUNC === 0 && isPerm('PRODUCE_UPDATE')"
+                @click.stop="onAddedMaterial(item, index)"
+              >
+                添加物料
+              </button>
+              <button
+                class="ko-basic-button__card"
                 v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
                 @click.stop="onDischarging(item, index)"
                 :loading="item.__discharging_loading__"
@@ -611,7 +604,7 @@ export default {
                 :loading="item.__pause_loading__"
                 :disabled="item.__pause_loading__"
               >
-                {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
+                {{ item.status === "PAUSED" ? "恢复" : "暂停" }}
               </button>
               <button
                 class="ko-basic-button__card"
@@ -620,7 +613,7 @@ export default {
                 :loading="item.__finish_loading__"
                 :disabled="item.__finish_loading__"
               >
-                完成生产
+                完成
               </button>
               <button
                 class="ko-basic-button__card"
@@ -673,10 +666,12 @@ export default {
 
     <PrintLabels ref="PLRef" />
     <!-- #endif -->
+
+    <MaterialPopup ref="MPRef" @close="noRefresh = false" />
+
     <KoMovable
       :content="GET_MOVABLE_LIST"
       v-if="isShowMovable"
-
       @click="onAddedJump"
     />
 

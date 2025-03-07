@@ -92,6 +92,12 @@ export default {
       });
     },
 
+    onJumpMessage() {
+      uni.navigateTo({
+        url: PageEnums.messageList,
+      });
+    },
+
     // 判断商户是否过期
     validShopDate(obj) {
       // date: 系统时间
@@ -230,9 +236,26 @@ export default {
 
     <MerchantsHeader ref="MHRef" :disabled="disabled" />
 
-    <button class="ko-home__store" @click="onJumpStore" v-if="isBusiness || isAdmin">
-      <i class="iconfont icon-shezhi"></i>
-    </button>
+    <view class="ko-home__store">
+      <button class="ko-home__store--shezhi" @click="onJumpStore" v-if="isBusiness || isAdmin">
+        <i class="iconfont icon-shezhi"></i>
+      </button>
+
+      <button
+        class="ko-home__store--notification"
+        @click="onJumpMessage"
+        v-if="isPerm('MESSAGE_LIST')"
+      >
+        <view style="position: relative;">
+          <uni-icons
+            type="notification-filled"
+            size="28"
+          />
+
+          <text v-if="false" class="ko-home__store--notification--badge"></text>
+        </view>
+      </button>
+    </view>
 
     <!-- #ifdef MP -->
     <UniRow
@@ -301,6 +324,84 @@ export default {
     justify-content: center;
     flex-wrap: wrap;
   }
+
+  &__store {
+    display: flex;
+    align-items: center;
+    font-size: 26px;
+
+    &--notification {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &--badge {
+        position: absolute;
+        z-index: 99;
+        top: 20px;
+        right: 0;
+
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #e43d33;
+      }
+    }
+  }
+
+  // #ifdef MP
+  &__store {
+    position: fixed;
+    top: var(--ko-menu-top);
+    left: var(--ko-menu-left);
+    height: var(--ko-menu-height, 32px);
+    z-index: 88;
+
+    .icon-shezhi {
+      height: var(--ko-menu-height, 32px);
+      font-size: 26px;
+    }
+
+    &--notification {
+      margin-left: 10px;
+    }
+  }
+
+  // #endif
+
+  // #ifndef MP
+  &__store {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    z-index: 88;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &--shezhi {
+      order: 2;
+    }
+
+    .icon-shezhi {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    &--notification {
+      margin-right: 20px;
+      order: 1;
+
+      .uni-icons.uniui-notification-filled {
+        color: #fff !important;
+        font-size: 32px !important;
+      }
+    }
+  }
+
+  // #endif
 }
 
 // #ifdef MP
@@ -370,19 +471,6 @@ export default {
       width: 120px;
       height: 120px;
       margin-bottom: 20px;
-    }
-  }
-
-  &__store {
-    position: fixed;
-    top: var(--ko-menu-top);
-    left: var(--ko-menu-left);
-    height: var(--ko-menu-height, 32px);
-    z-index: 88;
-
-    .icon-shezhi {
-      height: var(--ko-menu-height, 32px);
-      font-size: 26px;
     }
   }
 }
@@ -509,17 +597,6 @@ export default {
     }
   }
 
-  &__store {
-    position: fixed;
-    top: 50px;
-    right: 50px;
-    z-index: 88;
-
-    .icon-shezhi {
-      font-size: 30px;
-      color: #fff;
-    }
-  }
 }
 
 // #endif

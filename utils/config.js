@@ -24,7 +24,9 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  // type = "trial";
+  type = "trial";
+  // BASE_URL = "https://erp.kuaouyun.cn/api";
+  // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
   // #endif
 
   // #ifdef H5
@@ -153,8 +155,6 @@ export const PageEnums = {
   // 采购供应商下单返回地址
   purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
 
-  // 物流商
-  logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
 
   // 添加产品
   addedProduct: "/product/added",
@@ -173,23 +173,11 @@ export const PageEnums = {
   produce: "/produce/produce",
   // 生产工单
   produceWorkList: "/produce/work-list",
-  // 员工管理
-  produceStaff: "/produce/staff",
-  // 新员工
-  produceNewStaff: "/produce/new-staff",
-  // 员工的已完结工单列表
-  produceStaffCompleteProcess: "/produce/complete-process",
   // 新的生产工单
   produceWork: "/produce/work",
-  // 员工工艺工资
-  salary: "/produce/salary",
-  // 生产流程
-  factory: "/produce/factory",
   // 生产详情
   produceDetails: "/produce/details",
 
-  // 员工，我的工资
-  produceSalary: "/produce/salary",
 
   // 考勤
   attend: "/attend/attend",
@@ -208,6 +196,43 @@ export const PageEnums = {
   adminRenewal: "/admin/renewal/renewal",
   // 系统设置
   adminStore: "/admin/admin/store",
+
+  // 消息列表
+  messageList: "/message/list/list",
+
+  // ———————————— 物流管理 ————————————
+
+  // 物流
+  logistics: "/logistics/logistics",
+
+  // 物流商
+  logisticsClient: "/logistics/logistics?TO_REF=RLRef",
+  // 物流上
+  logisticsClientList: "/logistics/client",
+
+  // ———————————— 库存管理 ————————————
+
+  // 库存管理
+  stock: "/stock/stock",
+  // 核销库存
+  stockCheck: "/stock/check",
+  // 库存预警
+  stockWarning: "/stock/warning",
+
+
+  // ———————————— 员工管理 ————————————
+  // 员工管理
+  produceStaff: "/staff/staff",
+  // 新员工
+  produceNewStaff: "/staff/new-staff",
+  // 生产流程
+  factory: "/staff/factory",
+  // 员工的已完结工单列表
+  produceStaffCompleteProcess: "/staff/complete-process",
+
+
+  // 员工工艺工资
+  salary: "/staff/salary",
 };
 
 /**
@@ -217,7 +242,7 @@ export const MENU_LIST = [
   {
     label: "库存",
     icon: "icon-kucuntongjifenxi",
-    value: "/erp/stock/stock",
+    value: PageEnums.stock,
     modelKey: "stock",
     role: ["ADMIN", "BUSINESS", "STOCK_READ", "STOCK_WRITE", "STOCK_TAKING"],
     // 是否可以被分配角色
@@ -267,7 +292,7 @@ export const MENU_LIST = [
   {
     label: "配送",
     icon: "icon-daishouhuo",
-    value: "/erp/logistics/logistics",
+    value: PageEnums.logistics,
     checkField: "deliveryEnable",
     modelKey: "logistics",
     role: ["ADMIN", "BUSINESS", "DELIVERY_READ", "DELIVERY_WRITE", "DELIVERY_MEMBER"],

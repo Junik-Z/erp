@@ -42,6 +42,7 @@ import KoMovable from "@/components/Movable/index.vue";
 import { getMyInfoApi } from "@/api/user";
 import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
+import { getBindInfoApi } from "@/api/erp/sale";
 
 export default {
   name: "Work",
@@ -134,6 +135,11 @@ export default {
 
       // 采购定制生成销售定制
       isGenerateSales: false,
+
+      // 客户下单
+      isClient: false,
+
+      bindList: [],
     };
   },
   onLoad(option) {
@@ -141,6 +147,9 @@ export default {
     this.isEdit = !!option.id;
     // 销售定制单
     this.isSale = _isEqual(option.FORM, "SALE");
+
+    // 客户下单
+    this.isClient = _isEqual(option.isClient, "true");
 
     // 采购定制单
     this.isPurchase = _isEqual(option.FORM, "PURCHASE");
@@ -192,6 +201,12 @@ export default {
 
       this.isSale = true;
       uni.setNavigationBarTitle({title: "定制工单"});
+    }
+
+    if (this.isClient) {
+      this.clientType = 1;
+      this.form.otherSupplier = this.GET_USER_INFO.nickName;
+      this.getBindInfo();
     }
 
     this.onKeepAlive();
@@ -442,6 +457,29 @@ export default {
         this.form.totalAmount = this.toYuan(P + C);
       }, 10);
     },
+
+    // 获取绑定的客户
+    getBindInfo() {
+      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+        .then(res => {
+          this.bindList = res.data?.map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
+
+          if (this.bindList.length) {
+            this.clientType = 0;
+            const one = _get(res.data, "0") || {};
+            this.form.supplierId = one.id;
+            this.form.orderPhone = _get(one, "contacts.0.phone");
+            this.form.orderAddress = _get(one, "address");
+          } else {
+            this.clientType = 1;
+          }
+        });
+    },
   },
   computed: {
     getStartDate() {
@@ -640,7 +678,8 @@ export default {
         <block v-if="isEqual(getCurrentValue, 'other')">
 
           <view style="padding: 10px 0 0;">
-            <view style="margin: 0 10px 10px;" v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
+            <view style="margin: 0 10px 10px;"
+                  v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient">
               <uni-segmented-control
                 :current.sync="clientType"
                 :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
@@ -659,6 +698,9 @@ export default {
                   :type="isPurchase ? 'supplier' : 'client'"
                   ref="UserRef"
                   @input="onSupplierId"
+
+                  :is-long-list="isClient"
+                  :options="bindList"
                 />
               </uni-forms-item>
             </block>

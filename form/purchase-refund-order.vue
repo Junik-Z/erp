@@ -19,7 +19,7 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
-import FeesList from "@/components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
 
 export default {
   name: "refund",

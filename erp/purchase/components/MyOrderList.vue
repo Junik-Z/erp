@@ -2,14 +2,14 @@
 // #ifdef H5
 import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
 // #endif
-import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _isString } from "@/utils";
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import {
   getMyPurchaseListApi,
   getMyStatisticsPurchaseApi,
@@ -451,9 +451,10 @@ export default {
               @click="onJumpDetails(item, GET_PAGE_MENU_FUNC ? 'purchaseReturn' : 'purchase')"
               is-sales
               :spacing="10"
+              is-new
             >
               <template #operate>
-                <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                <view style="display: flex; align-items: center; justify-content: flex-end;">
                   <!--<button
                     v-if="['CREATED'].includes(item.status)"
                     class="ko-basic-button__card"

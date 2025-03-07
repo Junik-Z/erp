@@ -9,8 +9,8 @@ import {
   getReceivableHistoryListApi,
   getReceivableListApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
-import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
@@ -460,7 +460,8 @@ export default {
                 @click="onJumpDetails(item, 'receivable')"
                 :item="item"
                 is-finance
-                is-show-total-amount
+                is-new
+                show-order-type
               >
                 <template #operate>
                   <view

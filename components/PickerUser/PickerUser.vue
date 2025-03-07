@@ -70,7 +70,8 @@ export default {
 
     type: {
       type: String,
-      // client: 选择客户, supplier: 供应商,
+      // client: 选择客户,
+      // supplier: 供应商,
       // logistics: 物流商, staff: 员工,
       // noBindStaff: 没有被绑定的员工，
       // perm: 权限设置成员列表,
@@ -286,6 +287,12 @@ export default {
       this.backupChecked = [];
       this.checked = [];
       this.modelVisible = true;
+    },
+
+    close() {
+      this.backupChecked = [];
+      this.checked = [];
+      this.modelVisible = false;
     },
 
 

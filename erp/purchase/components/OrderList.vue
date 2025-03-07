@@ -12,9 +12,9 @@ import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "@/components/PrintList/PrintList.vue";
+import PrintList from "@/erp/components/PrintList/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import PurchaseMixins from "../PurchaseMixins";
@@ -516,11 +516,15 @@ export default {
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 10px;" v-for="(item, index) of list" :key="item.id">
           <OrderCard
-            is-purchase :item="item"
+            is-purchase
+            :item="item"
             @click="onJumpDetails(item, 'purchase')"
+            is-new
+            :is-custom-status-name="isEqual(GET_PAGE_MENU_FUNC, 1)"
+            custom-status-name="待付款"
           >
             <template #operate>
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+              <view style="display: flex; align-items: center; justify-content: flex-end;">
                 <button
                   class="ko-basic-button__card"
                   v-if="['FINISHED', 'CREATED'].includes(item.status) && item.orderType !== 'CUSTOMIZED' && isPerm('PURCHASE_PRINT')"
