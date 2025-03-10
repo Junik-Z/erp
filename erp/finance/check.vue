@@ -2,7 +2,6 @@
 // #ifdef H5
 import { Checkbox } from "@/uni_modules/element-ui/element.min";
 // #endif
-
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import KoNotice from "@/components/Notice/Notice.vue";
@@ -13,7 +12,7 @@ import {
   getPayableCheckApi,
   getReceivableCheckApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -27,6 +26,8 @@ import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import CheckPopup from "./CheckPopup.vue";
+import { addedSalePaidOrderApi } from "@/api/erp/sale";
+import { addedSPurchaseReturnedOrderApi } from "@/api/erp/purchase";
 
 export default {
   name: "check",
@@ -57,6 +58,7 @@ export default {
           logistics: "送货订单",
           func: getReceivableCheckApi,
           pageType: "receivable",
+          perm: "FINANCE_RECEIVABLE_CHECK",
         },
         // 添加付款款单据
         {
@@ -65,6 +67,7 @@ export default {
           logistics: "收货订单",
           func: getPayableCheckApi,
           pageType: "payable",
+          perm: "FINANCE_PAYABLE_CHECK",
         },
 
         /*  {
@@ -293,12 +296,19 @@ export default {
         logistics: this.logisticsIndex,
       }[key] || [];
 
-      this.showTabList = Ins.map(index => {
-        const obj = this.tabsList[index];
-        return {
-          ...obj,
-          label: obj[key],
-        };
+      this.showTabList = Ins.flatMap(index => {
+        const obj = this.tabsList?.[index] || {};
+        if (this.isPerm(obj.perm)) {
+          const item = {
+            ...obj,
+            label: obj[key],
+          };
+
+          return [item];
+        } else {
+          return [];
+        }
+
       });
 
       this.getList();
@@ -310,11 +320,11 @@ export default {
         this.tableKey = +new Date();
       }
 
-      const Func = this.isLogistics ? checkListApi : _get(this.showTabList, `${this.current}.func`); // [getReceivableCheckApi, getPayableCheckApi, getPaidOrderListApi, getReturnedOrderListApi][this.current];
+      const Func = this.isLogistics ? checkListApi : _get(this.showTabList || [], `${this.current}.func`); // [getReceivableCheckApi, getPayableCheckApi, getPaidOrderListApi, getReturnedOrderListApi][this.current];
 
       this.loading = true;
 
-      Func({
+      Func?.({
         [this.isLogistics ? "logisticsId" : "supplierId"]: this.option.id,
         ...(this.current > 1 ? {orderStatus: "FINISHED"} : {}),
         ...this.queryList,
@@ -392,20 +402,35 @@ export default {
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
         try {
-          // 添加收款订单
-          if (_isEqual(this.getPageType, "receivable")) {
-            await addedPaidOrderApi(item).then((res) => {
-              this.onCheckboxItem(item);
-              return res;
-            });
-          }
+          const Func = {
+            sale: addedSalePaidOrderApi,
+            purchase: addedSPurchaseReturnedOrderApi,
+          }[this.option?.FORM];
 
-          // 添加付款订单
-          if (_isEqual(this.getPageType, "payable")) {
-            await addedReturnedOrderApi(item).then((res) => {
-              this.onCheckboxItem(item);
-              return res;
-            });
+          if (Func) {
+            await Func(item)
+              .then((res) => {
+                this.onCheckboxItem(item);
+                return res;
+              });
+          } else {
+            // 添加收款订单
+            if (_isEqual(this.getPageType, "receivable")) {
+              await addedPaidOrderApi(item)
+                .then((res) => {
+                  this.onCheckboxItem(item);
+                  return res;
+                });
+            }
+
+            // 添加付款订单
+            if (_isEqual(this.getPageType, "payable")) {
+              await addedReturnedOrderApi(item)
+                .then((res) => {
+                  this.onCheckboxItem(item);
+                  return res;
+                });
+            }
           }
         } catch (e) {
           console.error(e);
@@ -414,6 +439,7 @@ export default {
       }
 
       this.sLoading = false;
+
       if (!isError) {
         await CustomToast({
           title: "操作成功",
@@ -487,11 +513,8 @@ export default {
     },
 
     // #ifdef H5
-
     getCheckColumns() {
       const columns = _deepCopy(this.columns);
-
-
       if (this.isShowCheck) {
         columns.push({
           label: "选择",
@@ -517,6 +540,32 @@ export default {
       return columns;
     },
     // #endif
+
+    getShowCheckBillButton() {
+      const key = this.option?.customer_type;
+      return {
+        sale: this.isPerm("FINANCE_RECEIVABLE_CHECK_BILL"),
+        purchase: this.isPerm("FINANCE_PAYABLE_CHECK_BILL"),
+      }[key];
+    },
+
+    // 是否显示批量清帐按钮
+    isShowCheckButton() {
+      const label = _get(this.showTabList || [], `${this.current}.label`) || "";
+
+      const isCheck = ["销售订单", "采购订单"].includes(label);
+
+      const isPaid = {
+        sale: this.isPerm("SALE_ADD_PAID_ORDER"),
+        purchase: this.isPerm("PURCHASE_ADD_RETURNED_ORDER"),
+
+        F_SALE: this.isPerm("FINANCE_ADD_PAID_ORDER"),
+        F_PURCHASE: this.isPerm("FINANCE_ADD_RETURNED_ORDER"),
+      }[this.option?.FORM];
+
+      // 当显示弹窗 并且 不是物流商 并且
+      return !this.isShowCheck && isCheck && !this.isLogistics && (this.option?.FORM ? isPaid : true);
+    },
   },
 };
 </script>
@@ -593,6 +642,8 @@ export default {
               is-finished
               is-finance
               is-hide-status
+              is-new
+              show-order-type
             />
 
             <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
@@ -817,7 +868,10 @@ export default {
     </view>
     <!-- #endif -->
 
-    <KoMovable v-if="!isShowCheck && current === 0" @click="onBatchClearing('')">
+    <KoMovable
+      v-if="isShowCheckButton"
+      @click="onBatchClearing('')"
+    >
       <view style="line-height: 1.2; font-size: 12px;">
         <view>批量</view>
         清帐
@@ -839,7 +893,7 @@ export default {
           </button>
 
           <button
-            v-if="!isLogistics"
+            v-if="!isLogistics && getShowCheckBillButton"
             class="ko-basic-button__card"
             @click.stop="openStatement"
           >
@@ -849,7 +903,10 @@ export default {
           <button
             :disabled="sLoading"
             :loading="sLoading"
-            v-if="isShowCheck" class="ko-basic-button__card" @click.stop="onSubmit">
+            v-if="isShowCheck"
+            class="ko-basic-button__card"
+            @click.stop="onSubmit"
+          >
             提交
           </button>
         </view>

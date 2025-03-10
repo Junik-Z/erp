@@ -16,14 +16,17 @@ export default {
       {
         label: "产品管理",
         ref: "ListRef",
+        // roles: [],
       },
       {
         label: "分类管理",
         ref: "ClassRef",
+        // roles: [],
       },
       {
         label: "扩展字段",
         ref: "FieldRef",
+        // roles: [],
       },
     ],
     // TAB: 0,
@@ -93,6 +96,8 @@ export default {
     <Classify ref="ClassRef" v-if="isEqual(GET_TABS_REF_NAME, 'ClassRef')" />
 
     <FieldList ref="FieldRef" v-if="isEqual(GET_TABS_REF_NAME, 'FieldRef')" />
+
+    <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>
 </template>
 

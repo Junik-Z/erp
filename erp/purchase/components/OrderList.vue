@@ -12,9 +12,9 @@ import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "@/components/PrintList/PrintList.vue";
+import PrintList from "@/erp/components/PrintList/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import PurchaseMixins from "../PurchaseMixins";
@@ -23,6 +23,24 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import Pay from "@/erp/components/Pay/Pay.vue";
+
+const PageMenu = [
+  {
+    label: "待处理",
+    perm: "PURCHASE_LIST",
+    func: 0,
+  },
+  {
+    label: "待付款",
+    perm: "PURCHASE_WAIT_PAYMENT",
+    func: 1,
+  },
+  {
+    label: "已完成",
+    perm: "PURCHASE_HISTORY",
+    func: 2,
+  },
+];
 
 export default {
   name: "OrderList",
@@ -58,6 +76,7 @@ export default {
               PAGE_TYPE: "ADDED_PURCHASE",
             },
           },
+          perm: "PURCHASE_SHARE",
         },
         // #endif
 
@@ -66,6 +85,7 @@ export default {
           text: "定制",
           iconfont: "icon-dingzhishengchan",
           path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=PURCHASE",
+          perm: "PURCHASE_CUSTOMIZED_ADD",
         },
         // #endif
 
@@ -73,6 +93,7 @@ export default {
           text: "新增",
           iconfont: "icon-tianjia",
           path: PageEnums.editPurchase,
+          perm: "PURCHASE_ADD",
         },
       ],
 
@@ -87,8 +108,6 @@ export default {
       },
       loading: false,
       noMore: false,
-
-      tab: 0,
 
       // #ifdef H5
       columns: [
@@ -202,15 +221,12 @@ export default {
       nodeIndex: null,
 
       noRefresh: false,
-      // 退货申请
+      // 退货申请a
       isReturn: false,
-      values: [
-        "待处理",
-        "待付款",
-        "已完成",
-      ],
 
       isNewList: false,
+
+      PAGE_MENU: _deepCopy(PageMenu),
     };
   },
   methods: {
@@ -230,13 +246,13 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && !this.isReturn && this.list.length && (!this.isNewList || this.tab === 0)) {
+      if (this.noRefresh && info && !this.isReturn && this.list.length && (!this.isNewList || this.GET_PAGE_MENU_FUNC === 0)) {
         this.updateList();
         return false;
       }
 
       this.loading = true;
-      const Func = [getPurchaseListApi, getPurchaseWaitPaymentListApi, getPurchaseHistoryListApi][this.tab];
+      const Func = [getPurchaseListApi, getPurchaseWaitPaymentListApi, getPurchaseHistoryListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -310,8 +326,8 @@ export default {
       this.nodeIndex = index;
       this.noRefresh = true;
       this.jumpDocumentsTicket({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
-        orderType: "PURCHASE",
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount", "orderType"]),
+        FORM: "PURCHASE",
         noUnable: true,
       });
     },
@@ -391,53 +407,82 @@ export default {
         {
           name: "打印采购单(A4)",
           func: "onPrint",
+          perm: "PURCHASE_PRINT",
           status: [],
         },
         {
           name: "申请退货",
           func: "onReturn",
           status: ["FINISHED"],
+          perm: "PURCHASE_RETURN_ADD",
         },
         {
           name: "取消订单",
           func: "cancelPurchase",
           status: ["CREATED"],
+          perm: "PURCHASE_CANCEL",
         },
         {
           name: "编辑",
           func: "onJump",
           status: ["CREATED", "CANCELLED", "FINISHED"],
+          perm: "PURCHASE_UPDATE",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "removePurchase",
           status: ["CANCELLED", "CREATED"],
+          perm: "PURCHASE_DELETE",
         },
       ]
-        .filter(li => {
-          if (_isEqual(li.func, "onPrint") && _isEqual(node.orderType, "CUSTOMIZED")) {
+        .filter(item => {
+          const isPerm = this.isPerm(item.perm);
+          const isStatus = item?.status?.includes(node.status);
+
+          if (_isEqual(item.func, "onPrint")) {
+            return isPerm && !_isEqual(node.orderType, "CUSTOMIZED");
+          }
+
+          if (_isEqual(item.func, "onJump")) {
+            return this.isEditorButton(node) && isStatus;
+          }
+
+          return isStatus;
+        });
+    },
+
+    // 判断是不是要显示编辑按钮
+    isEditorButton() {
+      return (node) => {
+        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && _isEqual(node.orderType, "CUSTOMIZED")) {
+          return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
+        }
+
+        if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
+          // 待付款生产工单不能编辑
+          if (_isEqual(node.orderType, "CUSTOMIZED")) {
             return false;
           }
 
-          if (li.func === "onPrint") return true;
+          // 是否可以重新下单
+          return this.isPerm("PURCHASE_UPDATE");
+        }
 
-          if (li.name === "编辑") {
-            return this.tab !== 2 && li?.status?.includes(node.status);
-          }
-
-          return li?.status?.includes?.(node.status);
-        });
+        return !_isEqual(this.GET_PAGE_MENU_FUNC, 2) && this.isPerm("PURCHASE_UPDATE");
+      };
     },
   },
 };
 </script>
 
 <template>
-  <view class="ko-order">
+  <view class="ko-purchase-order">
     <HistoryBar
-      v-model="tab"
-      :values="values"
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -465,26 +510,31 @@ export default {
         </UniRow>
       </view>
     </HistoryBar>
+
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
         <view style="padding: 10px;" v-for="(item, index) of list" :key="item.id">
           <OrderCard
-            is-purchase :item="item"
+            is-purchase
+            :item="item"
             @click="onJumpDetails(item, 'purchase')"
+            is-new
+            :is-custom-status-name="isEqual(GET_PAGE_MENU_FUNC, 1)"
+            custom-status-name="待付款"
           >
-            <template #operate v-if="isPerm('Purchase_Write')">
-              <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+            <template #operate>
+              <view style="display: flex; align-items: center; justify-content: flex-end;">
                 <button
                   class="ko-basic-button__card"
-                  v-if="['FINISHED', 'CREATED'].includes(item.status) && item.orderType !== 'CUSTOMIZED'"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status) && item.orderType !== 'CUSTOMIZED' && isPerm('PURCHASE_PRINT')"
                   @click.stop="onPrint(item, index)"
                 >
                   打印单据
                 </button>
 
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('PURCHASE_ADD_RETURNED_ORDER') || isPerm('PURCHASE_RETURNED_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
@@ -492,7 +542,7 @@ export default {
                 </button>
 
                 <button
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('PURCHASE_CONFIRM')"
                   class="ko-basic-button__card"
                   @click.stop="submitPurchase(item, index)"
                   :disabled="item.__s_loading__"
@@ -529,24 +579,24 @@ export default {
         :no-more="noMore || loading"
         :no-refresh="noRefresh"
       >
-        <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
+        <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status)"
+              v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('PURCHASE_PRINT')"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchase')"
             >
               打印单据
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+              v-if="['FINISHED'].includes(item.status) && !item.confirmable&& (isPerm('PURCHASE_ADD_RETURNED_ORDER') || isPerm('PURCHASE_RETURNED_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
               付款
             </button>
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status)  && isPerm('PURCHASE_CONFIRM')"
               class="ko-basic-button__card"
               @click.stop="submitPurchase(item, index)"
               :disabled="item.__s_loading__"
@@ -558,7 +608,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchase', {isA4: 'true'})"
-              v-if="!['CUSTOMIZED'].includes(item.orderType)"
+              v-if="!['CUSTOMIZED'].includes(item.orderType) && isPerm('PURCHASE_PRINT')"
             >
               打印采购单(A4)
             </button>
@@ -566,13 +616,13 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onGenerateSale(item)"
-              v-if="['CUSTOMIZED'].includes(item.orderType) && !['CANCELLED'].includes(item.status)"
+              v-if="['CUSTOMIZED'].includes(item.orderType) && !['CANCELLED'].includes(item.status) && false"
             >
               生成销售单
             </button>
 
             <button
-              v-if="['FINISHED'].includes(item.status) && !['CUSTOMIZED'].includes(item.orderType)"
+              v-if="['FINISHED'].includes(item.status) && !['CUSTOMIZED'].includes(item.orderType) && isPerm('PURCHASE_RETURN_ADD')"
               class="ko-basic-button__card"
               @click.stop="onReturn(item, index)"
             >
@@ -580,7 +630,7 @@ export default {
             </button>
 
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('PURCHASE_CANCEL')"
               class="ko-basic-button__card"
               @click.stop="cancelPurchase(item, index)"
             >
@@ -590,7 +640,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && isEditorButton(item)"
             >
               编辑
             </button>
@@ -600,7 +650,7 @@ export default {
               @click.stop="removePurchase(item, index)"
               :loading="item.__r_loading__"
               :disabled="item.__r_loading__"
-              v-if="['CANCELLED', 'CREATED'].includes(item.status)"
+              v-if="['CANCELLED', 'CREATED'].includes(item.status) && isPerm('PURCHASE_DELETE')"
             >
               删除
             </button>
@@ -611,9 +661,9 @@ export default {
     <!-- #endif -->
 
     <KoMovable
-      v-if="isPerm('Purchase_Write')"
       @click="onTrigger"
-      :content="content"
+      v-if="isShowMovable"
+      :content="GET_MOVABLE_LIST"
     />
 
     <!-- #ifdef MP -->
@@ -628,13 +678,19 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="updateList(true)" />
+    <Pay
+      ref="TPRef"
+      @success="updateList(true)"
+      @close="noRefresh = false"
+    />
   </view>
 </template>
 
-<style scoped lang="scss">
-.ko-order {
+<style lang="scss">
+.ko-purchase-order {
+  padding-top: 10px;
   width: 100%;
+
   // #ifdef MP
   padding-bottom: 80px;
   // #endif

@@ -42,6 +42,7 @@ import KoMovable from "@/components/Movable/index.vue";
 import { getMyInfoApi } from "@/api/user";
 import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
+import { getBindInfoApi } from "@/api/erp/sale";
 
 export default {
   name: "Work",
@@ -134,6 +135,11 @@ export default {
 
       // 采购定制生成销售定制
       isGenerateSales: false,
+
+      // 客户下单
+      isClient: false,
+
+      bindList: [],
     };
   },
   onLoad(option) {
@@ -141,6 +147,9 @@ export default {
     this.isEdit = !!option.id;
     // 销售定制单
     this.isSale = _isEqual(option.FORM, "SALE");
+
+    // 客户下单
+    this.isClient = _isEqual(option.isClient, "true");
 
     // 采购定制单
     this.isPurchase = _isEqual(option.FORM, "PURCHASE");
@@ -192,6 +201,12 @@ export default {
 
       this.isSale = true;
       uni.setNavigationBarTitle({title: "定制工单"});
+    }
+
+    if (this.isClient) {
+      this.clientType = 1;
+      this.form.otherSupplier = this.GET_USER_INFO.nickName;
+      this.getBindInfo();
     }
 
     this.onKeepAlive();
@@ -442,6 +457,29 @@ export default {
         this.form.totalAmount = this.toYuan(P + C);
       }, 10);
     },
+
+    // 获取绑定的客户
+    getBindInfo() {
+      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+        .then(res => {
+          this.bindList = res.data?.map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
+
+          if (this.bindList.length) {
+            this.clientType = 0;
+            const one = _get(res.data, "0") || {};
+            this.form.supplierId = one.id;
+            this.form.orderPhone = _get(one, "contacts.0.phone");
+            this.form.orderAddress = _get(one, "address");
+          } else {
+            this.clientType = 1;
+          }
+        });
+    },
   },
   computed: {
     getStartDate() {
@@ -533,6 +571,7 @@ export default {
 
             <KoMovable
               :y-axis="-60"
+              v-if="isPerm('QUICK_PRODUCE_LIST')"
               @click="onFast('quick')"
             >
               <view style="line-height: 1.3">
@@ -552,6 +591,7 @@ export default {
             <!-- #ifdef H5 -->
             <KoMovable
               :y-axis="-60"
+              v-if="isPerm('QUICK_TABLE_LIST')"
               @click="onFast('table')"
             >
               <view style="line-height: 1.3">
@@ -566,8 +606,8 @@ export default {
             <!-- #endif -->
 
             <UniSection :title="`${isPurchase ? '供应商' : '客户'}信息`" type="line">
-              <view style="padding: 10px;">
-                <view style="margin: 0 10px 10px;">
+              <view style="padding: 10px 0 0;">
+                <view style="margin: 0 10px 10px;" v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
                   <uni-segmented-control
                     :current.sync="clientType"
                     :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
@@ -576,7 +616,7 @@ export default {
                   />
                 </view>
 
-                <block v-if="clientType === 0">
+                <block v-if="clientType === 0 && isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
                   <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
                     <PickerUser
                       style="width: 100%;"
@@ -590,7 +630,7 @@ export default {
                   </uni-forms-item>
                 </block>
 
-                <block v-if="clientType === 1">
+                <block v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
                   <uni-forms-item label="姓名" name="otherSupplier">
                     <UniEasyinput
                       v-model="form.otherSupplier"
@@ -636,38 +676,45 @@ export default {
         </block>
 
         <block v-if="isEqual(getCurrentValue, 'other')">
-          <view style="margin: 0 10px 10px;">
-            <uni-segmented-control
-              :current.sync="clientType"
-              :values="clientTabs"
-              style-type="text"
-              @clickItem="onTabItem"
-            />
+
+          <view style="padding: 10px 0 0;">
+            <view style="margin: 0 10px 10px;"
+                  v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient">
+              <uni-segmented-control
+                :current.sync="clientType"
+                :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
+                style-type="text"
+                @clickItem="onTabItem"
+              />
+            </view>
+
+            <block v-if="clientType === 0 && isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
+              <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
+                <PickerUser
+                  style="width: 100%;"
+                  is-input
+                  :title="`选择${isPurchase ? '供应商' : '客户'}`"
+                  v-model="form.supplierId"
+                  :type="isPurchase ? 'supplier' : 'client'"
+                  ref="UserRef"
+                  @input="onSupplierId"
+
+                  :is-long-list="isClient"
+                  :options="bindList"
+                />
+              </uni-forms-item>
+            </block>
+
+            <block v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
+              <uni-forms-item label="姓名：" name="otherSupplier" key="otherSupplier">
+                <UniEasyinput
+                  v-model="form.otherSupplier"
+                  style="width: 100%;"
+                  placeholder="请输入"
+                />
+              </uni-forms-item>
+            </block>
           </view>
-
-          <block v-if="clientType === 0">
-            <uni-forms-item label="客户：" name="supplierId">
-              <PickerUser
-                style="width: 100%;"
-                is-input
-                title="选择客户"
-                v-model="form.supplierId"
-                type="client"
-                ref="UserRef"
-                @input="onSupplierId"
-              />
-            </uni-forms-item>
-          </block>
-
-          <block v-if="clientType === 1">
-            <uni-forms-item label="姓名" name="otherSupplier">
-              <UniEasyinput
-                v-model="form.otherSupplier"
-                style="width: 100%;"
-                placeholder="请输入"
-              />
-            </uni-forms-item>
-          </block>
 
           <uni-forms-item label="计划完成时间：" name="planFinishDate">
             <UniDatetimePicker
@@ -744,14 +791,14 @@ export default {
         </button>
         <button
           class="ko-basic-button__card"
-          v-if="isEqual(getCurrentValue, 'crafts')"
+          v-if="isEqual(getCurrentValue, 'crafts') && isPerm('QUICK_CRAFT_ADD')"
           @click.stop="onSubmitCraft"
         >
           存为快捷工艺
         </button>
         <button
           class="ko-basic-button__card"
-          v-if="isEqual(getCurrentValue, 'type') && isEqual(type, 'common')"
+          v-if="isEqual(getCurrentValue, 'type') && isEqual(type, 'common') && isPerm('QUICK_PRODUCE_LIST')"
           @click.stop="onSubmitQuick"
         >
           存为快捷生产
@@ -759,7 +806,7 @@ export default {
         <!-- #ifdef H5 -->
         <button
           class="ko-basic-button__card"
-          v-if="isEqual(getCurrentValue, 'type') && isEqual(type, 'xlsx')"
+          v-if="isEqual(getCurrentValue, 'type') && isEqual(type, 'xlsx') && isPerm('QUICK_TABLE_ADD')"
           @click.stop="onSubmitTable"
         >
           存为快捷表格

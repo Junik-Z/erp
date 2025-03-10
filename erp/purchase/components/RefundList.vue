@@ -9,18 +9,36 @@ import {
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isString, _pick, CustomToast } from "@/utils";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
+import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "@/components/PrintList/PrintList.vue";
+import PrintList from "@/erp/components/PrintList/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import { CONFIG, PageEnums } from "@/utils/config";
+import { CONFIG } from "@/utils/config";
 import PurchaseMixins from "../PurchaseMixins";
 import KoList from "@/components/List/List.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "@/erp/components/Pay/Pay.vue";
+
+const PageMenu = [
+  {
+    label: "待处理",
+    perm: "PURCHASE_RETURN_LIST",
+    func: 0,
+  },
+  {
+    label: "待付款",
+    perm: "PURCHASE_RETURN_WAIT_PAYMENT",
+    func: 1,
+  },
+  {
+    label: "已完成",
+    perm: "PURCHASE_RETURN_HISTORY",
+    func: 2,
+  },
+];
 
 export default {
   name: "RefundList",
@@ -40,27 +58,6 @@ export default {
   data() {
     const _this = this;
     return {
-      content: [
-        // #ifdef MP
-        {
-          text: "分享",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: "填写信息",
-            content: "邀请您填写信息，方便下次联系。",
-            path: "/erp/purchase/refund?type=added",
-          },
-        },
-        // #endif
-        {
-          text: "新增",
-          iconfont: "icon-tianjia",
-          path: PageEnums.refundPurchase,
-        },
-      ],
-
       list: [],
       queryList: {
         pageSize: CONFIG.DEFAULT_PAGE_SIZE,
@@ -72,8 +69,6 @@ export default {
       },
       loading: false,
       noMore: false,
-
-      tab: 0,
 
       // #ifdef H5
       columns: [
@@ -179,11 +174,8 @@ export default {
       noRefresh: false,
       isReturn: false,
       isNewList: false,
-      values: [
-        "待处理",
-        "待付款",
-        "已完成",
-      ],
+
+      PAGE_MENU: _deepCopy(PageMenu),
     };
   },
   methods: {
@@ -203,13 +195,13 @@ export default {
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
 
-      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.tab === 0)) {
+      if (this.noRefresh && info && this.list.length && (!this.isNewList || this.GET_PAGE_MENU_FUNC === 0)) {
         this.updateList();
         return false;
       }
 
       this.loading = true;
-      const Func = [getPurchaseReturnListApi, getPurchaseReturnWaitPaymentListApi, getPurchaseReturnHistoryListApi][this.tab];
+      const Func = [getPurchaseReturnListApi, getPurchaseReturnWaitPaymentListApi, getPurchaseReturnHistoryListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -258,8 +250,8 @@ export default {
       this.nodeIndex = index;
       this.noRefresh = true;
       this.jumpDocumentsTicket({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
-        orderType: "PURCHASE_RETURN",
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount", "orderType"]),
+        FORM: "PURCHASE_RETURN",
         noUnable: true,
       });
     },
@@ -321,28 +313,37 @@ export default {
           name: "取消订单",
           func: "cancelReturnPurchase",
           status: ["CREATED"],
+          perm: "PURCHASE_RETURN_CANCEL",
         },
         {
           name: "编辑",
           func: "onJump",
           status: ["CREATED", "CANCELLED", "FINISHED"],
+          perm: "PURCHASE_RETURN_UPDATE",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "removeReturnPurchase",
           status: ["CANCELLED", "CREATED"],
+          perm: "PURCHASE_RETURN_DELETE",
         },
       ]
-        .filter(li => {
-          if (li.func === "cancelReturnPurchase") {
-            return ["CREATED"].includes(node.status) || (["FINISHED"].includes(node.status) && node.totalAmount === 0);
+        .filter(item => {
+          const isPerm = this.isPerm(item.perm);
+          const isStatus = item?.status?.includes?.(node.status);
+
+          if (_isEqual(item.func, "cancelReturnPurchase")) {
+            return isStatus && isPerm;
           }
 
-          if (li.name === "编辑") {
-            return this.tab !== 2 && li?.status?.includes(node.status);
+          if (_isEqual(item.func, "onJump")) {
+            if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) return item.status.includes(node.status) && this.isPerm("PURCHASE_RETURN_RE_ORDER");
+
+            return (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && item.status.includes(node.status)) && isPerm;
           }
-          return li?.status?.includes?.(node.status);
+
+          return item.status.includes(node.status) && isPerm;
         });
     },
   },
@@ -350,10 +351,12 @@ export default {
 </script>
 
 <template>
-  <view class="ko-client">
+  <view class="ko-purchase-refund-list">
     <HistoryBar
-      v-model="tab"
-      :values="values"
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
       @change="onResetList(false)"
       is-show-search
       ref="SearchRef"
@@ -390,27 +393,31 @@ export default {
             :item="item"
             is-show-total-amount
             @click="onJumpDetails(item, 'purchaseReturn')"
+            is-new
+
+            :is-custom-status-name="isEqual(GET_PAGE_MENU_FUNC, 1)"
+            custom-status-name="待付款"
           >
-            <template #operate v-if="isPerm('Purchase_Write')">
+            <template #operate>
               <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
+                style="display: flex; align-items: center; justify-content: flex-end;"
               >
                 <button
                   class="ko-basic-button__card"
-                  v-if="['FINISHED', 'CREATED'].includes(item.status)"
+                  v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('PURCHASE_PRINT')"
                   @click.stop="onPrint(item, index)"
                 >
                   打印单据
                 </button>
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('PURCHASE_RETURN_ADD_PAID_ORDER') || isPerm('PURCHASE_RETURN_PAID_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
                   付款
                 </button>
                 <button
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('PURCHASE_RETURN_CONFIRM')"
                   class="ko-basic-button__card"
                   @click.stop="submitReturnPurchase(item, index)"
                   :disabled="item.__s_loading__"
@@ -421,7 +428,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onActionClick(item, index)"
-                  v-if="tab === 2 ? item.totalAmount === 0 : true"
+                  v-if="GET_PAGE_MENU_FUNC === 2 ? item.totalAmount === 0 : true"
                 >
                   更多
                 </button>
@@ -446,26 +453,26 @@ export default {
         @next-load="onRequestNextPage"
         :no-more="noMore || loading"
       >
-        <template #operate="{item, index}" v-if="isPerm('Purchase_Write')">
+        <template #operate="{item, index}">
           <view
             style="display: flex; align-items: center; justify-content: center;"
           >
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status)"
+              v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('PURCHASE_PRINT')"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchaseReturn')"
             >
               打印单据
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable"
+              v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('PURCHASE_RETURN_ADD_PAID_ORDER') || isPerm('PURCHASE_RETURN_PAID_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
               付款
             </button>
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('PURCHASE_RETURN_CONFIRM')"
               class="ko-basic-button__card"
               @click.stop="submitReturnPurchase(item, index)"
               :disabled="item.__s_loading__"
@@ -475,7 +482,7 @@ export default {
             </button>
 
             <button
-              v-if="['CREATED'].includes(item.status)"
+              v-if="['CREATED'].includes(item.status) && isPerm('PURCHASE_RETURN_CANCEL')"
               class="ko-basic-button__card"
               @click.stop="cancelReturnPurchase(item, index)"
               :disabled="item.__s_loading__"
@@ -484,14 +491,14 @@ export default {
               取消订单
             </button>
             <button
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && tab !== 2"
+              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && GET_PAGE_MENU_FUNC !== 2 && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_RETURN_UPDATE')) || (isEqual(GET_PAGE_MENU_FUNC, 2) && isPerm('PURCHASE_RETURN_RE_ORDER')))"
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
             >
               编辑
             </button>
             <button
-              v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+              v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('PURCHASE_RETURN_DELETE')"
               class="ko-basic-button__card"
               @click.stop="removeReturnPurchase(item, index)"
               :disabled="item.__s_loading__"
@@ -506,7 +513,7 @@ export default {
     <!-- #endif -->
 
     <KoMovable
-      v-if="isPerm('Purchase_Write')"
+      v-if="isPerm('PURCHASE_RETURN_ADD')"
       @click="onTrigger('')"
     />
 
@@ -522,12 +529,18 @@ export default {
     />
     <!-- #endif -->
 
-    <Pay ref="TPRef" @success="updateList(true)" />
+    <Pay
+      ref="TPRef"
+      @success="updateList(true)"
+      @close="noRefresh = false"
+    />
   </view>
 </template>
 
-<style scoped lang="scss">
-.ko-client {
+<style lang="scss">
+.ko-purchase-refund-list {
+  padding-top: 10px;
+
   width: 100%;
   // #ifdef MP
   padding-bottom: 80px;
@@ -535,29 +548,6 @@ export default {
 
   :deep(.uni-list-item__container ) {
     display: block;
-  }
-
-  &__info {
-    display: flex;
-    flex-direction: column;
-
-    font-size: 14px;
-    color: $uni-base-color;
-
-    &--name {
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 10px;
-    }
-
-    &--title {
-      display: flex;
-      align-items: center;
-
-      text {
-        flex: 1;
-      }
-    }
   }
 
   // #ifdef H5

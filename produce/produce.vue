@@ -2,7 +2,7 @@
 import mixins from "@/mixins/mixins";
 import QiunDataCharts from "@/produce/components/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "./components/uv-count-to/uv-count-to.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { TabList } from "./define";
@@ -82,9 +82,9 @@ export default {
   onLoad() {
     this.getList();
   },
- /*  onShow() {
-    this.getList();
-  }, */
+  /*  onShow() {
+     this.getList();
+   }, */
   methods: {
     getList() {
       this.loading = true;
@@ -155,7 +155,7 @@ export default {
     // 跳转到库存预警页面
     onJumpWarning() {
       uni.navigateTo({
-        url: "/erp/stock/warning",
+        url: PageEnums.stockWarning
       });
     },
 
@@ -261,6 +261,8 @@ export default {
 
 <style scoped lang="scss">
 .ko-purchase {
+  padding-top: 10px;
+
   width: 100%;
   padding-bottom: 80px;
 

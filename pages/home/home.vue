@@ -10,6 +10,7 @@ export default {
   data() {
     return {
       option: {},
+      VM_TIME: null,
     };
   },
   async onLoad(option) {
@@ -37,6 +38,8 @@ export default {
     beReady() {
       console.log("系统已经准好了");
 
+      this.VM_TIME && clearTimeout(this.VM_TIME);
+
       // #ifdef MP
       uni.$emit("$__init_web_socket__");
       // #endif
@@ -59,6 +62,13 @@ export default {
 
       // 获取所有的用户信息
       uni.$emit("$__get_all_info__");
+
+      this.VM_TIME && clearTimeout(this.VM_TIME);
+
+      /* this.VM_TIME = setTimeout(() => {
+        this.beReady();
+      }, 60 * 1000); */
+
       // 获取成功后跳转到首页
       uni.$on("$__get_info_success__", this.beReady);
     },

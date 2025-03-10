@@ -39,6 +39,9 @@ export default {
       TABS_LIST: [],
       TAB: 0,
 
+      PAGE_MENU: [],
+
+      PAGE_MENU_INDEX: 0,
     };
   },
   onShow() {
@@ -101,7 +104,13 @@ export default {
       }
 
       const path = `${obj.path}?${QS.stringify(query)}`;
-      const obQuery = {...obj, path, type: CONFIG.SHARE_TYPE};
+      const obQuery = {
+        ...obj,
+        path,
+        type: CONFIG.SHARE_TYPE,
+        imageUrl: "https://erp.kuaouyun.cn/api/files/down/static/share.png",
+      };
+
       return _omit(obQuery, ["query"]);
     },
 
@@ -337,24 +346,19 @@ export default {
       return _isEmpty;
     },
 
-    // 判断用户是否可以刷新用户款项
-    isRefreshPayment() {
-      return this.isPerm("Finance_Write");
-    },
-
     // 判断是否是超管
     isAdmin() {
-      return this.GET_USER_ROLE.includes("Admin");
+      return this.GET_USER_ROLE.includes("ADMIN");
     },
 
     // 判断是否是商铺管理员
     isBusiness() {
-      return this.GET_USER_ROLE.includes("Business");
+      return this.GET_USER_ROLE.includes("BUSINESS");
     },
 
     // 根据传入的参数判断是否有权限
     isPerm() {
-      return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin || this.isBusiness;
+      return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin;
     },
 
     // 用户信息
@@ -449,7 +453,7 @@ export default {
           UpstairsFee: "上楼费",
           HandlingFee: "搬运费",
           InstallationFee: "安装费",
-          LogisticsFee: "物流费",
+          LogisticsFee: this.isTkCustom ? "运费" : "物流费",
           ClearAnAccount: "已付费用",
         };
         return _get(obj, type) || "-";
@@ -532,7 +536,7 @@ export default {
       return this.TABS_LIST?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
-          if (_haveCommonElements(role, item.roles) || this.isBusiness || this.isAdmin) {
+          if (_haveCommonElements(role, item.roles) || this.isAdmin) {
             return [item];
           } else {
             return [];
@@ -581,6 +585,40 @@ export default {
       return (type) => ({
         CREATED: "财务未确认",
       })[type];
+    },
+
+    // 获取页面内的导航列表
+    GET_PAGE_MENU() {
+      return this.PAGE_MENU?.flatMap(item => {
+        if (item.perm) {
+          if (this.isPerm(item.perm)) {
+            return [item];
+          } else {
+            return [];
+          }
+        }
+        return [item];
+      });
+    },
+
+    // 获取页面及的选中方法名
+    GET_PAGE_MENU_FUNC() {
+      return this.GET_PAGE_MENU?.[this.PAGE_MENU_INDEX || 0]?.func || 0;
+    },
+
+    // 获取右下角添加按钮列表数据
+    GET_MOVABLE_LIST() {
+      return this.content?.filter(item => this.isPerm(item.perm));
+    },
+
+    // 是否显示添加按钮
+    isShowMovable() {
+      return this.GET_MOVABLE_LIST?.length;
+    },
+
+    // 天科装饰定制打印
+    isTkCustom() {
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg");
     },
   },
 };

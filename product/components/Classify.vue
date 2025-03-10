@@ -1,5 +1,5 @@
 <script>
-import DaTreeVue2 from "@/components/da-tree-vue2/index.vue";
+import DaTreeVue2 from "../components/da-tree-vue2/index.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
@@ -144,38 +144,42 @@ export default {
     },
 
     upDownSale(row) {
-      const node = _deepCopy(row);
-      node.saleOff = !node.saleOff;
-      uni.showModal({
-        title: "温馨提示",
-        content: `您确定要 ${node.saleOff ? "下架" : "上架"} 该分类到销售吗？`,
-        success: (res) => {
-          if (res.confirm) {
-            upDownSaleClassApi(node)
-              .then(() => {
-                uni.showToast({title: "操作成功"});
-                this.getList();
-              });
-          }
-        },
-      });
+      if (this.isPerm("PRODUCT_CLASS_UPDOWN_SALE")) {
+        const node = _deepCopy(row);
+        node.saleOff = !node.saleOff;
+        uni.showModal({
+          title: "温馨提示",
+          content: `您确定要 ${node.saleOff ? "下架" : "上架"} 该分类到销售吗？`,
+          success: (res) => {
+            if (res.confirm) {
+              upDownSaleClassApi(node)
+                .then(() => {
+                  uni.showToast({title: "操作成功"});
+                  this.getList();
+                });
+            }
+          },
+        });
+      }
     },
     upDownPurchase(row) {
-      const node = _deepCopy(row);
-      node.purchaseOff = !node.purchaseOff;
-      uni.showModal({
-        title: "温馨提示",
-        content: `您确定要 ${node.purchaseOff ? "下架" : "上架"} 该分类到采购吗？`,
-        success: (res) => {
-          if (res.confirm) {
-            upDownPurchaseClassApi(node)
-              .then(() => {
-                uni.showToast({title: "操作成功"});
-                this.getList();
-              });
-          }
-        },
-      });
+      if (this.isPerm("PRODUCT_CLASS_UPDOWN_PURCHASE")) {
+        const node = _deepCopy(row);
+        node.purchaseOff = !node.purchaseOff;
+        uni.showModal({
+          title: "温馨提示",
+          content: `您确定要 ${node.purchaseOff ? "下架" : "上架"} 该分类到采购吗？`,
+          success: (res) => {
+            if (res.confirm) {
+              upDownPurchaseClassApi(node)
+                .then(() => {
+                  uni.showToast({title: "操作成功"});
+                  this.getList();
+                });
+            }
+          },
+        });
+      }
     },
     onSelect(item) {
       this[item.func](_get(_deepCopy(this.actionItem), "originItem"));
@@ -199,32 +203,38 @@ export default {
   computed: {
     getActionsList() {
       return () => {
-        const item = _deepCopy(this.actionItem);
-        const {saleOff, purchaseOff} = _get(item, "originItem") || {};
+        const node = _deepCopy(this.actionItem);
+        const {saleOff, purchaseOff} = _get(node, "originItem") || {};
+
         return [
           {
             name: saleOff ? "上架销售" : "下架销售",
             func: "upDownSale",
+            perm: "PRODUCT_CLASS_UPDOWN_SALE",
           },
           {
             name: purchaseOff ? "上架采购" : "下架采购",
             func: "upDownPurchase",
+            perm: "PRODUCT_CLASS_UPDOWN_PURCHASE",
           },
           {
             name: "添加子级",
             func: "onAdded",
-            disabled: item.level > 6,
+            disabled: node.level > 6,
+            perm: "PRODUCT_CLASS_ADD",
           },
           {
             name: "编辑",
             func: "onEdit",
+            perm: "PRODUCT_CLASS_EDIT",
           },
           {
             name: "删除",
             color: "#e43d33",
             func: "onRemove",
+            perm: "PRODUCT_CLASS_DELETE",
           },
-        ];
+        ].filter(item => this.isPerm(item.perm));
       };
     },
   },
@@ -245,7 +255,7 @@ export default {
         :max-level="6"
         load-mode
         :load-api="getApiData"
-        :is-operate="isPerm('Product_Write')"
+        :is-operate="true"
         @action-click="onOpenAction"
         :children-field="childrenField"
         :is-leaf-fn="getIsLeafFn"
@@ -254,17 +264,43 @@ export default {
         <template #node="{node, item}">
           <div style="display: flex; align-items: center; justify-content: center;">
             <view class="ko-classify__off">
-              <view @click.stop="upDownSale(node)" class="xiao" :class="{'is-active': node.saleOff}">
+              <view
+                @click.stop="upDownSale(node)"
+                class="xiao"
+                :class="{'is-active': node.saleOff}"
+              >
                 <text>销</text>
               </view>
-              <view @click.stop="upDownPurchase(node)" class="cai" :class="{'is-active': node.purchaseOff}">
+              <view
+                @click.stop="upDownPurchase(node)"
+                class="cai"
+                :class="{'is-active': node.purchaseOff}"
+              >
                 <text>采</text>
               </view>
             </view>
 
-            <button class="ko-basic-button__card" v-if="item.level <= 10" @click.stop="onAdded(node)">添加子级</button>
-            <button class="ko-basic-button__card" @click.stop="onEdit(node)">编辑</button>
-            <button class="ko-basic-button__card" @click.stop="onRemove(node)">删除</button>
+            <button
+              class="ko-basic-button__card"
+              v-if="item.level <= 10 && isPerm('PRODUCT_CLASS_ADD')"
+              @click.stop="onAdded(node)"
+            >
+              添加子级
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onEdit(node)"
+              v-if="isPerm('PRODUCT_CLASS_EDIT')"
+            >
+              编辑
+            </button>
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onRemove(node)"
+              v-if="isPerm('PRODUCT_CLASS_DELETE')"
+            >
+              删除
+            </button>
           </div>
         </template>
         <!-- #endif -->
@@ -305,7 +341,7 @@ export default {
     </BasicPopup>
 
     <KoMovable
-      v-if="isPerm('Product_Write')"
+      v-if="isPerm('PRODUCT_CLASS_ADD')"
       @click="onAdded('')"
     />
 

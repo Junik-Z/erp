@@ -25,6 +25,8 @@ if (_isDev()) {
 
   // #ifdef MP
   type = "trial";
+  // BASE_URL = "https://erp.kuaouyun.cn/api";
+  // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
   // #endif
 
   // #ifdef H5
@@ -51,6 +53,8 @@ export const CONFIG = {
   // 请求头的参数
   APP_ID: "wx525c19deacc41329",
   SystemVersion: type,
+
+  "T_VERSION": 4,
 
   ...(
     {
@@ -113,14 +117,14 @@ export const ROLE_LIST_ENUMS = {
  * sse 事件
  * 类型 NewOrder
  * 事件:
- * OutboundOrder  出库单
- * ProduceOrder  生产单
- * PurchaseOrder 采购单
- * SaleOrder  销售单
- * InboundOrder  出库单
- * PayableOrder  应付单
- * ReceivableOrder  应收单
- * DeliveryOrder  物流单
+ *      OutboundOrder  出库单
+ *      ProduceOrder  生产单
+ *      PurchaseOrder 采购单
+ *      SaleOrder  销售单
+ *      InboundOrder  出库单
+ *      PayableOrder  应付单
+ *      ReceivableOrder  应收单
+ *      DeliveryOrder  物流单
  */
 
 /**
@@ -151,8 +155,6 @@ export const PageEnums = {
   // 采购供应商下单返回地址
   purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
 
-  // 物流商
-  logisticsClient: "/erp/logistics/logistics?TO_REF=RLRef",
 
   // 添加产品
   addedProduct: "/product/added",
@@ -171,23 +173,11 @@ export const PageEnums = {
   produce: "/produce/produce",
   // 生产工单
   produceWorkList: "/produce/work-list",
-  // 员工管理
-  produceStaff: "/produce/staff",
-  // 新员工
-  produceNewStaff: "/produce/new-staff",
-  // 员工的已完结工单列表
-  produceStaffCompleteProcess: "/produce/complete-process",
   // 新的生产工单
   produceWork: "/produce/work",
-  // 员工工艺工资
-  salary: "/produce/salary",
-  // 生产流程
-  factory: "/produce/factory",
   // 生产详情
   produceDetails: "/produce/details",
 
-  // 员工，我的工资
-  produceSalary: "/produce/salary",
 
   // 考勤
   attend: "/attend/attend",
@@ -198,6 +188,51 @@ export const PageEnums = {
 
   // 选择产品页面
   pickerProduct: "/shop/list/list",
+
+  // 授权页面
+  adminAuthorization: "/admin/merchants/authorization",
+
+  // 服务续费
+  adminRenewal: "/admin/renewal/renewal",
+  // 系统设置
+  adminStore: "/admin/admin/store",
+
+  // 消息列表
+  messageList: "/message/list/list",
+
+  // ———————————— 物流管理 ————————————
+
+  // 物流
+  logistics: "/logistics/logistics",
+
+  // 物流商
+  logisticsClient: "/logistics/logistics?TO_REF=RLRef",
+  // 物流上
+  logisticsClientList: "/logistics/client",
+
+  // ———————————— 库存管理 ————————————
+
+  // 库存管理
+  stock: "/stock/stock",
+  // 核销库存
+  stockCheck: "/stock/check",
+  // 库存预警
+  stockWarning: "/stock/warning",
+
+
+  // ———————————— 员工管理 ————————————
+  // 员工管理
+  produceStaff: "/staff/staff",
+  // 新员工
+  produceNewStaff: "/staff/new-staff",
+  // 生产流程
+  factory: "/staff/factory",
+  // 员工的已完结工单列表
+  produceStaffCompleteProcess: "/staff/complete-process",
+
+
+  // 员工工艺工资
+  salary: "/staff/salary",
 };
 
 /**
@@ -207,9 +242,9 @@ export const MENU_LIST = [
   {
     label: "库存",
     icon: "icon-kucuntongjifenxi",
-    value: "/erp/stock/stock",
+    value: PageEnums.stock,
     modelKey: "stock",
-    role: ["Admin", "Business", "Stock_Read", "Stock_Write", "Stock_Taking"],
+    role: ["ADMIN", "BUSINESS", "STOCK_READ", "STOCK_WRITE", "STOCK_TAKING"],
     // 是否可以被分配角色
     isUpRole: true,
     // 是否有会员系统
@@ -220,7 +255,7 @@ export const MENU_LIST = [
     icon: "icon-xiaoshoubi",
     value: "/erp/sale/sale",
     modelKey: "sale",
-    role: ["Admin", "Business", "Sales_Read", "Sales_Write", "Sales_Member"],
+    role: ["ADMIN", "BUSINESS", "SALES_READ", "SALES_WRITE", "SALES_MEMBER"],
     isUpRole: true,
     // 是否有会员系统
     // isMember: true,
@@ -231,7 +266,7 @@ export const MENU_LIST = [
     icon: "icon-icon_B_caigoujihuatibao",
     value: "/erp/purchase/purchase",
     modelKey: "purchase",
-    role: ["Admin", "Business", "Purchase_Read", "Purchase_Write", "Purchase_Member"],
+    role: ["ADMIN", "BUSINESS", "PURCHASE_READ", "PURCHASE_WRITE", "PURCHASE_MEMBER"],
     isUpRole: true,
     // 是否有会员系统
     // isMember: true,
@@ -243,7 +278,7 @@ export const MENU_LIST = [
     value: PageEnums.produceLoading,
     checkField: "produceEnable",
     modelKey: "produce",
-    role: ["Admin", "Business", "Produce_Read", "Produce_Write", "Produce_Member"],
+    role: ["ADMIN", "BUSINESS", "PRODUCE_READ", "PRODUCE_WRITE", "PRODUCE_MEMBER"],
     isUpRole: true,
   },
   {
@@ -251,16 +286,16 @@ export const MENU_LIST = [
     icon: "icon-tubiao-05",
     value: "/erp/finance/finance",
     modelKey: "finance",
-    role: ["Admin", "Business", "Finance_Read", "Finance_Write"],
+    role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
     isUpRole: true,
   },
   {
     label: "配送",
     icon: "icon-daishouhuo",
-    value: "/erp/logistics/logistics",
+    value: PageEnums.logistics,
     checkField: "deliveryEnable",
     modelKey: "logistics",
-    role: ["Admin", "Business", "Delivery_Read", "Delivery_Write", "Delivery_Member"],
+    role: ["ADMIN", "BUSINESS", "DELIVERY_READ", "DELIVERY_WRITE", "DELIVERY_MEMBER"],
     isUpRole: true,
     // 是否有会员系统
     // isMember: true,
@@ -271,21 +306,31 @@ export const MENU_LIST = [
     icon: "icon-chanpinguanli",
     value: PageEnums.product,
     modelKey: "product",
-    role: ["Admin", "Business", "Product_Read", "Product_Write"],
+    role: ["ADMIN", "BUSINESS", "PRODUCT_READ", "PRODUCT_WRITE"],
     isUpRole: true,
+  },
+  {
+    label: "板材加工",
+    icon: "icon-ziyuanicon",
+    value: "CNC_MEMBER",
+    modelKey: "cnc",
+    role: ["ADMIN", "CNC_MEMBER"],
+    isUpRole: true,
+    // 不显示在首页菜单
+    noShowInHome: true,
   },
   {
     label: "员工管理",
     icon: "icon-guanxiaobaotubiao38",
     value: "/admin/merchants/merchants",
-    role: ["Admin", "Business"],
+    role: ["ADMIN", "BUSINESS"],
     isUpRole: false,
   },
   {
     label: "考勤",
     icon: "icon-kaoqindaka",
     value: PageEnums.attend,
-    role: ["Admin", "Business", "Produce_Member", "Product_Write"],
+    role: ["ADMIN", "BUSINESS", "PRODUCE_MEMBER", "PRODUCE_READ"],
     isUpRole: false,
   },
   {
@@ -299,7 +344,7 @@ export const MENU_LIST = [
     label: "超管",
     icon: "icon-chaojiguanliyuan",
     value: "/admin/admin/index",
-    role: ["Admin"],
+    role: ["ADMIN"],
     isUpRole: false,
   },
 ];
@@ -361,15 +406,6 @@ export const PRICING_METHOD = {
   fixedPriceGroup: "固定价格组内平分",
   dailyRate: "按日工资",
   none: "没有定价方式",
-};
-
-/**
- * @description 生产工单类型
- */
-export const PRODUCTION_TYPE_ENUMS = {
-  common: "常规生产",
-  packing: "板材定制",
-  xlsx: "表格定制生产",
 };
 
 /**

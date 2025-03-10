@@ -21,7 +21,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import KoList from "@/components/List/List.vue";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import PickerClass from "./components/PickerClass/PickerClass.vue";
 
 export default {
   name: "Added",

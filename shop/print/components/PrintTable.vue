@@ -26,7 +26,8 @@ export default {
         return this.render(h, params);
       },
     },
-    Col, Row,
+    Col,
+    Row,
   },
   mixins: [mixins],
   props: {

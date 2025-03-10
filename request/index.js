@@ -45,6 +45,8 @@ export default function request(config, isLoading = false, whole = false) {
         "X-MiniApp-Env": CONFIG.SystemVersion,
         "X-MiniApp-ID": CONFIG.APP_ID,
         "X-Tenant-ID": scene || "",
+
+        "T-VERSION": CONFIG.T_VERSION,
       },
       data: config["data"],
 
@@ -83,7 +85,28 @@ export default function request(config, isLoading = false, whole = false) {
           uni.$__IS_LOGOUT_FLAG__ = false;
           // #endif
           resolve(res.data);
-        } else if (code === 401) {
+        } else if (_isEqual(code, 402)) {
+
+          uni.showModal({
+            title: "过期提醒",
+            content: msg,
+            showCancel: false,
+            confirmText: "重试",
+            success: async (resp) => {
+
+              await goLogin();
+              uni.$emit("$__get_all_info__");
+
+              if (resp.confirm) {
+                uni.reLaunch({
+                  url: "/pages/home/home",
+                });
+              }
+            },
+          });
+
+          reject(res);
+        } else if (_isEqual(code, 401)) {
 
           // #ifdef H5
           uni.setStorageSync("__APP_SCENE__", "");
@@ -119,7 +142,7 @@ export default function request(config, isLoading = false, whole = false) {
             } catch (e) {
               console.log("登录报错", e);
               isFlag = true;
-              uni.showModal({
+              /* uni.showModal({
                 title: "温馨提示",
                 content: "登录失败，请稍后再试。",
                 showCancel: true,
@@ -136,7 +159,7 @@ export default function request(config, isLoading = false, whole = false) {
                     });
                   }
                 },
-              });
+              }); */
               reject(res);
             }
           } else {

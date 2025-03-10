@@ -26,27 +26,27 @@ export default {
         {
           label: "销售看版",
           ref: "VVRef",
-          roles: ["Sales_Read", "Sales_Write"],
+          roles: ["SALE_STATISTICS"],
         },
         {
           label: "销售订单",
           ref: "OLRef",
-          roles: ["Sales_Read", "Sales_Write"],
+          roles: ["SALE_LIST", "SALE_WAIT_PAYMENT", "SALE_HISTORY"],
         },
         {
           label: "客户管理",
           ref: "CLRef",
-          roles: ["Sales_Read", "Sales_Write"],
+          roles: ["CUSTOMER_LIST", "CUSTOMER_TEMP"],
         },
         {
           label: "退货处理",
           ref: "RLRef",
-          roles: ["Sales_Read", "Sales_Write"],
+          roles: ["SALE_RETURN_LIST", "SALE_RETURN_WAIT_PAYMENT", "SALE_RETURN_HISTORY"],
         },
         {
           label: "我的订单",
           ref: "MOLRef",
-          roles: ["Sales_Member"],
+          roles: ["SALE_MY", "SALE_MY_STATISTICS", "SALE_RETURN_MY"],
         },
       ],
       // TAB: 1,
@@ -137,6 +137,8 @@ export default {
     <RefundList ref="RLRef" v-if="isEqual(GET_TABS_REF_NAME, 'RLRef')" />
 
     <MyOrderList ref="MOLRef" v-if="isEqual(GET_TABS_REF_NAME, 'MOLRef')" />
+
+    <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>
 </template>
 

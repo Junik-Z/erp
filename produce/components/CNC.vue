@@ -21,9 +21,11 @@ import {
 } from "@/uni_modules/element-ui/element.min";
 import { _deepCopy, _get, _isEmpty, _isEqual, _omit, _toFinite, CustomToast } from "@/utils";
 import { CncCalculate } from "./cncCalculate";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "CNC",
+  mixins: [mixins],
   data() {
     return {
       visible: false,
@@ -263,7 +265,7 @@ export default {
       <div ref="TRef" v-if="false" style="width: 100%; overflow: auto"></div>
       <Tabs
         type="card"
-        editable
+        :editable="isPerm('CNC_DELETE_PROGRAM')"
         @edit="onAddedTabs"
         v-model="editableTabsValue"
         @tab-click="onTabClick"
@@ -380,13 +382,14 @@ export default {
     </view>
     <template #footer>
       <view class="ko-cnc__footer" style="display:flex; align-items: center;justify-content: space-around;">
-        <button class="ko-basic-button__card" @click="onSubmit">更新配置</button>
+        <button class="ko-basic-button__card" @click="onSubmit" v-if="isPerm('CNC_UPDATE_PROPERTIES')">更新配置</button>
         <button class="ko-basic-button__card" @click="onPrintLabels">打印标签</button>
         <button
           class="ko-basic-button__card"
           :loading="gLoading"
           :disabled="gLoading"
           @click="onGenerate"
+          v-if="isPerm('CNC_GENERATE_PROGRAM')"
         >
           生成NC程序
         </button>

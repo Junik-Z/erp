@@ -2,7 +2,7 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 // #endif
-import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -220,18 +220,20 @@ export default {
     },
 
     getCost() {
-      return statisticsCostApi({
-        startTime: dayjs().subtract(1, "M").format("YYYY-MM-DD HH:mm:ss"),
-        endTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      })
-        .then(res => {
-          this.costList = res.data.map(v => ({
-            ...v,
-            // #ifdef H5
-            span: 6,
-            // #endif
-          }));
-        });
+      if (this.isPerm("COST_STATISTICS")) {
+        return statisticsCostApi({
+          startTime: dayjs().subtract(1, "M").format("YYYY-MM-DD HH:mm:ss"),
+          endTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        })
+          .then(res => {
+            this.costList = res.data.map(v => ({
+              ...v,
+              // #ifdef H5
+              span: 6,
+              // #endif
+            }));
+          });
+      }
     },
 
     onSubmit() {
@@ -336,7 +338,7 @@ export default {
     <!-- #ifndef H5 -->
     <view class="ko-cost">
       <!-- #endif -->
-      <view class="ko-basic-count__wrap">
+      <view class="ko-basic-count__wrap" v-if="isPerm('COST_STATISTICS')">
         <UniRow :gutter="10">
           <UniCol v-for="(item) of costList" :key="item.id" :span="item.span || 12">
             <view class="ko-basic-count">
@@ -366,7 +368,7 @@ export default {
             @clickItem="getList(true)"
           />
         </view>
-        <button @click="onJump" v-if="isPerm('Finance_Write')">
+        <button @click="onJump">
           <i style="font-size: 20px;" class="iconfont icon-fenjifenleiguanli" />
         </button>
       </view>
@@ -395,10 +397,21 @@ export default {
                       <text>{{ item.remark || "-" }}</text>
                     </UniCol>
                   </UniRow>
-                  <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                        v-if="isPerm('Finance_Write')">
-                    <button class="ko-basic-button__card" @click.stop="onEdit(item)">修改</button>
-                    <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+                  <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
+                    <button
+                      class="ko-basic-button__card"
+                      @click.stop="onEdit(item)"
+                      v-if="isPerm('COST_UPDATE')"
+                    >
+                      修改
+                    </button>
+                    <button
+                      class="ko-basic-button__card"
+                      @click.stop="onRemove(item)"
+                      v-if="isPerm('COST_DELETE')"
+                    >
+                      删除
+                    </button>
                   </view>
                 </view>
               </BasicCard>
@@ -431,7 +444,7 @@ export default {
       </view>
 
       <KoMovable
-        v-if="isPerm('Finance_Write')"
+        v-if="isPerm('COST_ADD')"
         @click="onAdded('')"
       />
 
@@ -458,32 +471,50 @@ export default {
               <text style="margin-left: 10px;">元</text>
             </UniFormsItem>
             <UniFormsItem
-              v-if="getClassId === 'freight'" label="物流商："
+              v-if="getClassId === 'freight'"
+              label="物流商："
               required
               name="personId"
               :rules="[{required: true, errorMessage: '请选择物流商'}]"
             >
-              <PickerUser
-                style="width: 100%;"
-                v-model="form.personId"
-                is-input
-                type="logistics"
-                placeholder="请选择物流商"
-              />
+              <view style="width: 100%;">
+                <block v-if="isPerm('LOGISTICS_LIST')">
+                  <PickerUser
+                    style="width: 100%;"
+                    v-model="form.personId"
+                    is-input
+                    type="logistics"
+                    placeholder="请选择物流商"
+                  />
+                </block>
+
+                <view v-if="!isPerm('LOGISTICS_LIST')" style="font-size: 10px;color: #e43d33; margin-top: 5px;">
+                  您没有获取物流信息权限，请联系管理员授权。
+                </view>
+              </view>
             </UniFormsItem>
             <UniFormsItem
-              v-if="getClassId === 'wages'" label="员工："
+              v-if="getClassId === 'wages'"
+              label="员工："
               required
               name="personId"
               :rules="[{required: true, errorMessage: '请选择员工'}]"
             >
-              <PickerUser
-                style="width: 100%;"
-                v-model="form.personId"
-                is-input
-                type="staff"
-                placeholder="请选择员工"
-              />
+              <view style="width: 100%">
+                <block v-if="isPerm('STAFF_LIST')">
+                  <PickerUser
+                    style="width: 100%;"
+                    v-model="form.personId"
+                    is-input
+                    type="staff"
+                    placeholder="请选择员工"
+                  />
+                </block>
+                <view v-if="!isPerm('STAFF_LIST')" style="font-size: 10px;color: #e43d33; margin-top: 5px;">
+                  您没有获取员工信息权限，请联系管理员授权。
+                </view>
+              </view>
+
             </UniFormsItem>
             <UniFormsItem label="凭证：" name="voucher">
               <FilePicker v-model="form.voucher" />
@@ -494,7 +525,7 @@ export default {
           </UniForms>
         </view>
         <template #footer>
-          <button class="ko-basic-button" style="margin: 0 40px 10px;" @click="onSubmit">保存</button>
+          <button class="ko-basic-button__card" style="margin: 0 40px 10px;" @click="onSubmit">保存</button>
         </template>
       </BasicPopup>
       <!-- #ifdef H5 -->

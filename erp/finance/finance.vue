@@ -18,18 +18,22 @@ export default {
         {
           label: "应收款",
           ref: "VVRef",
+          roles: ["FINANCE_RECEIVABLE_COUNT", "FINANCE_RECEIVABLE_LIST", "FINANCE_RECEIVABLE_HISTORY"],
         },
         {
           label: "应付款",
           ref: "PLRef",
+          roles: ["FINANCE_PAYABLE_COUNT", "FINANCE_PAYABLE_LIST", "FINANCE_PAYABLE_HISTORY"],
         },
         {
           label: "成本统计",
           ref: "CLRef",
+          roles: ["COST_STATISTICS", "COST_GET_LIST", "COST_GET_CATEGORY_LIST"],
         },
         {
           label: "核对款项",
           ref: "VRef",
+          roles: ["CUSTOMER_LIST", "SUPPLIER_LIST"],
         },
       ],
       // TAB: 3,
@@ -84,6 +88,8 @@ export default {
     <CostList ref="CLRef" v-if="isEqual(GET_TABS_REF_NAME,'CLRef')" />
 
     <Verification ref="VRef" v-if="isEqual(GET_TABS_REF_NAME,'VRef')" />
+
+    <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>
 </template>
 

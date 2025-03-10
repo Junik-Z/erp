@@ -159,3 +159,60 @@ export function logoutApi(data) {
 export function getWSUrl() {
   return CONFIG.BASE_WS_URL;
 }
+
+// —————————————————— 消息管理 ——————————————
+/**
+ * @description 获取消息列表
+ */
+export function getMessageListApi(data) {
+  return request({
+    url: "/message/myMessageList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除消息
+ */
+export function removeMessageApi(data) {
+  return request({
+    url: "/message/deleteMessage",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 标记已读
+ */
+export function readMessageApi(data) {
+  return request({
+    url: "/message/readMessage",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 绑定供应商
+ */
+export function bindSupplierMessageApi(data) {
+  return request({
+    url: "/message/createAndBindSupplier",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 绑定客户
+ */
+export function bindCustomerMessageApi(data) {
+  return request({
+    url: "/message/createAndBindCustomer",
+    method: "post",
+    data,
+  });
+}

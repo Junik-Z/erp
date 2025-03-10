@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _xor } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _set, CustomToast } from "@/utils";
 import BasicMixins from "@/mixins/mixins";
 import {
   bindCustomerApi,
@@ -33,29 +33,6 @@ export default {
   data() {
     const _this = this;
     return {
-      content: [
-        // #ifdef MP
-        /* {
-          text: "分享",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: "填写信息",
-            path: "/erp/sale/client",
-            query: {
-              PAGE_TYPE: "ADDED_CLIENT_BY_SALE",
-            },
-          },
-        }, */
-        // #endif
-        {
-          text: "新增",
-          iconfont: "icon-tianjia",
-          path: "/erp/sale/client",
-        },
-      ],
-
       list: [],
       loading: false,
       visible: false,
@@ -188,9 +165,9 @@ export default {
       }
 
       this.loading = true;
-      const Fn = [getCustomerListApi, getTempCustomerListApi][+this.tab];
+      const Fn = [getCustomerListApi, getTempCustomerListApi][+this.tabIndex];
 
-      Fn({...this.queryList, ...(+this.tab === 0 ? {type: "OFFICIAL"} : {})})
+      Fn({...this.queryList, ...(+this.tabIndex === 0 ? {type: "OFFICIAL"} : {})})
         .then((res) => {
           console.log("客户列表", res.data);
           const list = (res.data || []).map(this.getListNode);
@@ -234,12 +211,11 @@ export default {
 
     // 解绑
     onUnbind(user) {
-      uni.showModal({
+      /* uni.showModal({
         title: "温馨提示",
         content: `您确定要解绑客户吗？`,
         success: (res) => {
           if (res.confirm) {
-
             Promise.all(
               user.map(userId => unbindCustomerApi({
                 customerId: this.node.id,
@@ -247,18 +223,27 @@ export default {
               })),
             )
               .then(() => {
-                uni.showToast({
-                  title: "解绑成功",
-                });
-                // this.getList(true);
-                const use = _deepCopy(this.list[this.nodeIndex].users)?.filter(v => {
-                  return !user.includes(v.userId);
-                });
-                this.$set(this.list[this.nodeIndex], "users", use);
+                uni.showToast({title: "解绑成功"});
+                const node = _deepCopy(this.list[this.nodeIndex]);
+                node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
+                this.$set(this.list, this.nodeIndex, node);
               });
           }
         },
-      });
+      }); */
+
+      Promise.all(
+        user.map(userId => unbindCustomerApi({
+          customerId: this.node.id,
+          userId,
+        })),
+      )
+        .then(() => {
+          uni.showToast({title: "操作成功"});
+          const node = _deepCopy(this.list[this.nodeIndex]);
+          node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
+          this.$set(this.list, this.nodeIndex, node);
+        });
     },
 
     // 绑定
@@ -270,25 +255,50 @@ export default {
         })),
       )
         .then(() => {
-          uni.showToast({
-            title: "绑定成功",
-          });
-          this.$set(this.list[this.nodeIndex], "users", [...this.list[this.nodeIndex]?.users || [], ...user.map(userId => ({userId}))]);
+          uni.showToast({title: "操作成功"});
+          const node = _deepCopy(this.list[this.nodeIndex]);
+
+          const UList = _get(node, "users") || [];
+          _set(node, "users", [...UList, ...(user || []).map(id => this.$refs.SPURef?.getUserInfo?.(id) || {})]);
+
+          this.$set(this.list, this.nodeIndex, node);
         });
     },
 
-    onBindPopup(item, isBind, index) {
-      this.bindUserList = _deepCopy(item)?.users?.map(v => v.userId) || [];
-      this.isBind = isBind;
+    onBindPopup(item, index) {
       this.node = item;
       this.nodeIndex = index;
-      this.visible = true;
+
+      this.$refs.SPURef?.open?.({customerId: item.value});
     },
 
-    onConfirm(checked) {
-      const users = _xor(this.bindUserList, checked);
-      !_isEmpty(users) && this[this.isBind ? "onBind" : "onUnbind"](users);
+    onConfirm(obj) {
+      if (!_isEmpty(obj?.add)) {
+        if (this.isPerm("CUSTOMER_BIND")) {
+          this.onBind(obj?.add);
+        } else {
+          CustomToast({
+            title: "您没有权限绑定",
+            icon: "none",
+          });
+        }
+      }
+
+      if (!_isEmpty(obj?.remove)) {
+        if (this.isPerm("CUSTOMER_UNBIND")) {
+          this.onUnbind(obj?.remove);
+        } else {
+          CustomToast({
+            title: "您没有权限解绑",
+            icon: "none",
+          });
+        }
+      }
+
       this.visible = false;
+
+      // !_isEmpty(checked) && this[this.isBind ? "onBind" : "onUnbind"](checked);
+      // this.visible = false;
     },
 
     onTrigger(event) {
@@ -304,10 +314,12 @@ export default {
     },
 
     onJumpInfo(item) {
-      this.noRefresh = true;
-      uni.navigateTo({
-        url: "/erp/finance/check" + `?id=${item.id}&customer_type=sale`,
-      });
+      if (this.isPerm("FINANCE_RECEIVABLE_CHECK") || this.isPerm("FINANCE_PAYABLE_CHECK")) {
+        this.noRefresh = true;
+        uni.navigateTo({
+          url: "/erp/finance/check" + `?id=${item.id}&customer_type=sale&FORM=sale`,
+        });
+      }
     },
 
     onActionClick(item, index) {
@@ -325,16 +337,12 @@ export default {
     onConvert(item, index) {
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要将 ${item.name} 转为 ${["临时", "正式"][+this.tab]}客户吗？`,
+        content: `您确定要将 ${item.name} 转为 ${["临时", "正式"][+this.tabIndex]}客户吗？`,
         success: (res) => {
           if (res.confirm) {
-
             convertTempCustomerApi(item)
               .then(() => {
-                uni.showToast({
-                  title: "转换成功",
-                });
-                // this.getList(true);
+                uni.showToast({title: "转换成功"});
                 this.list.splice(index, 1);
               });
           }
@@ -379,6 +387,11 @@ export default {
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
+
+    // 处理索引点击按钮
+    onClickEvent(query) {
+      this.onBindPopup(query.item, query.$index);
+    },
   },
   computed: {
     // #ifdef H5
@@ -419,20 +432,58 @@ export default {
           arg: [false],
         }, */
         {
-          name: ["转为临时客户", "转为正式客户"][+this.tab],
+          name: ["转为临时客户", "转为正式客户"][+this.tabIndex],
+          perm: "CUSTOMER_CONVERT",
           func: "onConvert",
         },
         {
           name: "编辑",
+          perm: "CUSTOMER_EDIT",
           func: "onJump",
         },
         {
           name: "删除",
           color: "#e43d33",
+          perm: "CUSTOMER_DELETE",
           func: "onRemove",
         },
-      ];
+      ].filter(item => this.isPerm(item.perm));
     },
+
+    // 获取列表项
+    getTabsList() {
+      return [
+        {
+          label: "客户",
+          perm: "CUSTOMER_LIST",
+          type: 0,
+        },
+        {
+          label: "临时客户",
+          perm: "CUSTOMER_TEMP",
+          type: 1,
+        },
+      ].filter(item => this.isPerm(item.perm));
+    },
+
+    // 获取索引
+    tabIndex() {
+      return _get(this.getTabsList, `${this.tab}.type`);
+    },
+
+    // #ifdef MP
+    getIndexEventList() {
+      if (this.isPerm("CUSTOMER_BIND") || this.isPerm("CUSTOMER_UNBIND")) {
+        return [{label: "绑定"}];
+      }
+      return [];
+
+      /*  return [
+         {label: "绑定客户", isBind: true, perm: "CUSTOMER_BIND"},
+         {label: "解绑客户", isBind: false, perm: "CUSTOMER_UNBIND"},
+       ].filter(item => this.isPerm(item.perm)); */
+    },
+    // #endif
   },
 };
 </script>
@@ -441,8 +492,9 @@ export default {
   <view class="ko-client">
     <view class="ko-client__content">
       <HistoryBar
-        :values="['客户', '临时客户']"
+        :values="getTabsList"
         v-model="tab"
+        label-key="label"
         @change="onSearchToNameIndex('')"
         custom-class="ko-client__tabs"
       />
@@ -453,35 +505,18 @@ export default {
           :data="list"
           :loading="loading"
           @click="onJumpInfo"
-          button-perm="Sales_Write"
 
           @lower="onLower"
           :no-more="noMore"
           @search="onSearchToNameIndex"
-        >
-          <template #default="{node, index}">
-            <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px">
-              <!--<button
-                    @click.stop="() => {}"
-                    open-type="share"
-                    :data-params="getBindingParams(node)"
-                    class="ko-basic-button__card"
-                  >
-                    邀请绑定
-                  </button>
-                  -->
-              <button @click.stop="onBindPopup(node, true, index)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(node, false, index)" class="ko-basic-button__user">解绑客户</button>
 
-              <button
-                class="ko-basic-button__user"
-                @click.stop="onActionClick(node, index)"
-              >
-                更多
-              </button>
-            </view>
-          </template>
-        </IndexList>
+          :show-more-button="!!actionList.length"
+          @click-more="onActionClick"
+
+          :events="getIndexEventList"
+          @click-event="onClickEvent"
+          show-bind-user-list
+        />
       </view>
       <!--
        <button
@@ -508,15 +543,37 @@ export default {
           @next-load="onLower"
           :no-more="noMore || loading"
         >
-          <template #operate="{item, index}" v-if="isPerm('Sales_Write')">
+          <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
-              <button @click.stop="onBindPopup(item, true, index)" class="ko-basic-button__user">绑定客户</button>
-              <button @click.stop="onBindPopup(item, false, index)" class="ko-basic-button__user">解绑客户</button>
-              <button class="ko-basic-button__user" @click.stop="onConvert(item, index)">
-                {{ ["转为临时客户", "转为正式客户"][+tab] }}
+              <button
+                v-if="isPerm('CUSTOMER_BIND') || isPerm('CUSTOMER_UNBIND')"
+                @click.stop="onBindPopup(item, index)"
+                class="ko-basic-button__user"
+              >
+                绑定
               </button>
-              <button class="ko-basic-button__user" @click.stop="onJump(item, index)">编辑</button>
-              <button class="ko-basic-button__user" @click.stop="onRemove(item, index)">删除</button>
+
+              <button
+                v-if="isPerm('CUSTOMER_CONVERT')"
+                class="ko-basic-button__user"
+                @click.stop="onConvert(item, index)"
+              >
+                {{ ["转为临时客户", "转为正式客户"][+tabIndex] }}
+              </button>
+              <button
+                v-if="isPerm('CUSTOMER_EDIT')"
+                class="ko-basic-button__user"
+                @click.stop="onJump(item, index)"
+              >
+                编辑
+              </button>
+              <button
+                v-if="isPerm('CUSTOMER_DELETE')"
+                class="ko-basic-button__user"
+                @click.stop="onRemove(item, index)"
+              >
+                删除
+              </button>
             </view>
           </template>
         </KoTable>
@@ -525,19 +582,21 @@ export default {
     </view>
 
     <PickerUser
-      v-if="isPerm('Sales_Write')"
+      ref="SPURef"
+      v-if="isPerm('CUSTOMER_UNBIND') || isPerm('CUSTOMER_BIND')"
+      title="绑定/解绑客户"
       :visible.sync="visible"
-      :title="isBind ? '选择绑定客户' : '解绑客户'"
       is-confirm
-      :value="bindUserList"
-      :disabled="isBind ? bindUserList : []"
-      :checked-list="isBind ? [] : bindUserList"
       multiple
       @confirm="onConfirm"
+
+      is-external-open
+      not-created-request
+      type="saleUserList"
     />
 
     <KoMovable
-      v-if="isPerm('Sales_Write')"
+      v-if="isPerm('CUSTOMER_ADD')"
       @click="onTrigger('')"
     />
 

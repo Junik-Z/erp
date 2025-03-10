@@ -398,7 +398,7 @@ export default {
                 <text>采</text>
               </view>
 
-              <slot v-if="isPerm(perm)" name="footer" :item="node"></slot>
+              <slot v-if="!!$slots.footer" name="footer" :item="node"></slot>
             </view>
           </UniCol>
         </template>

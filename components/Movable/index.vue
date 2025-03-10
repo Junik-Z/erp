@@ -1,5 +1,5 @@
 <script>
-import { getRect } from "@/utils";
+import { _get, getRect } from "@/utils";
 
 export default {
   name: "KoMovable",
@@ -81,6 +81,16 @@ export default {
         "--ko-movable-count": this.content.length,
       };
     },
+
+    // 只有分享功能
+    isOnlyShare() {
+      return this.content?.length === 1 && !!_get(this.content || [], "0.openType");
+    },
+
+    // 获取分享按钮信息
+    getShareInfo() {
+      return this.isOnlyShare ? _get(this.content || [], "0") : {};
+    },
   },
 };
 </script>
@@ -124,7 +134,24 @@ export default {
           </view>
         </view>
 
-        <button class="ko-movable__button" :class="{'active': isShow}" @click="onClick">
+        <button
+          class="ko-movable__button"
+          :class="{'active': isShow}"
+          :open-type="getShareInfo.openType"
+          :data-params="getShareInfo.params"
+          v-if="isOnlyShare"
+        >
+          <slot>
+            <i class="iconfont icon-tianjia"></i>
+          </slot>
+        </button>
+
+        <button
+          class="ko-movable__button"
+          :class="{'active': isShow}"
+          @click="onClick"
+          v-else
+        >
           <slot>
             <i class="iconfont icon-tianjia"></i>
           </slot>

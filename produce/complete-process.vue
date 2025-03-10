@@ -8,7 +8,7 @@ import TopMenus from "@/produce/components/TopMenus.vue";
 import { TabList } from "./define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerSheet from "@/produce/components/PickerSheet.vue";
-import CraftCard from "./components/CraftCard.vue";
+import CraftCard from "../staff/components/CraftCard.vue";
 
 export default {
   name: "Factory",

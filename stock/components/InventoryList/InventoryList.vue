@@ -1,0 +1,156 @@
+<script>
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import KoList from "@/components/List/List.vue";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import { _deepCopy, _get, _groupBy } from "@/utils";
+import mixins from "@/mixins/mixins";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+
+export default {
+  name: "InventoryList",
+  components: {UniCol, UniRow, UniSection, KoList, BasicCard},
+  mixins: [mixins],
+  props: {
+    loading: Boolean,
+    noMore: Boolean,
+    list: [Array],
+    columns: [Array],
+    fieldList: Array,
+    isStock: Boolean,
+  },
+
+  data() {
+    return {};
+  },
+  methods: {
+    onLower() {
+      this.$emit("lower");
+    },
+    onViewImage(node, col) {
+      const image = this.getImageUrl(node.images);
+      if (image) {
+        uni.previewImage({
+          urls: [image],
+        });
+      }
+    },
+
+    // 点击列表项
+    onClickCell(item, col) {
+      this.$emit("click-cell", {item, column: col});
+    },
+  },
+  computed: {
+    groupList() {
+      return _groupBy(_deepCopy(this.list) || [], (item) => item.className);
+    },
+
+    getFieldListText() {
+      return (item) => {
+        return this.fieldList?.flatMap(v => {
+          const label = _get(item, `extend.${v.fieldCode}`);
+          if (label) return [label];
+          else return [];
+        })?.join(" | ") || "";
+      };
+    },
+
+    getCellClass() {
+      return (col, item) => {
+        return col.isClass && item.quantity <= item.stockWarning ? "ko-basic-money" : "";
+      };
+    },
+
+    // 获取样式
+    getRootStyle() {
+      return {
+        "--ko-basic-table-grid-col": (this.columns || [])?.map(() => "auto").join(" "),
+      };
+    },
+  },
+};
+</script>
+
+<template>
+  <view class="ko-inventory-list">
+    <view class="ko-inventory-list__content" :style="[getRootStyle]">
+      <KoList
+        :loading="loading"
+        :no-more="noMore"
+        :no-data="!list.length"
+        @lower="onLower"
+      >
+        <view class="ko-inventory-list__wrap">
+          <view v-for="(item, key) of groupList" :key="key">
+            <UniSection :title="key || ''" type="line">
+              <BasicCard>
+                <view class="ko-basic-table">
+                  <view
+                    class="ko-basic-table--th"
+                    v-for="col of columns"
+                    :key="col.key"
+                  >
+                    {{ col.label }}
+                  </view>
+
+                  <block
+                    v-for="child of item"
+                    :key="child.id"
+                  >
+                    <view
+                      v-for="col of columns"
+                      :key="col.key"
+                      class="ko-inventory-list__cell ko-basic-table--cell"
+                      :class="[col.class || '', getCellClass(col, child)]"
+                      @click.stop="onClickCell(child, col)"
+                    >
+                      <view>{{ GET_FUNC(child, col.key) }}</view>
+
+                      <view
+                        style="width: 100%; font-size: 10px; color: #8f939c; padding: 2px 4px 0"
+                        v-if="fieldList && fieldList.length && col.isField"
+                      >
+                        {{ getFieldListText(child) }}
+                      </view>
+                    </view>
+                  </block>
+                </view>
+              </BasicCard>
+            </UniSection>
+          </view>
+        </view>
+      </KoList>
+    </view>
+  </view>
+</template>
+
+<style scoped lang="scss">
+.ko-inventory-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  &__content {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &__item {
+    font-size: 12px;
+
+    &:nth-child(odd) {
+      background: rgba(248, 248, 248, 0.99);
+    }
+  }
+
+  &__cell {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+}
+</style>

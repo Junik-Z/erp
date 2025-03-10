@@ -1,12 +1,13 @@
 <script>
 import QiunDataCharts from "@/erp/components/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import { getStatisticsApi } from "@/api/erp/sale";
-import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import { _deepCopy, _get, _round } from "@/utils";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import { PageEnums } from "@/utils/config";
 
 export default {
   name: "ViewVersion",
@@ -122,7 +123,7 @@ export default {
     // 跳转到库存预警页面
     onJumpWarning() {
       uni.navigateTo({
-        url: "/erp/stock/warning",
+        url: PageEnums.stockWarning,
       });
     },
 
@@ -150,15 +151,15 @@ export default {
           ...opt,
           yAxis: {
             ...opt.yAxis,
-           /*  gridType: "dash",
-            dashLength: 2,
-            showTitle: true,
-            data: [
-              {
-                position: "left",
-                title: "单位(元)",
-              },
-            ], */
+            /*  gridType: "dash",
+             dashLength: 2,
+             showTitle: true,
+             data: [
+               {
+                 position: "left",
+                 title: "单位(元)",
+               },
+             ], */
           },
         };
       };

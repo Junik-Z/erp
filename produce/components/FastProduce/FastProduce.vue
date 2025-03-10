@@ -37,16 +37,16 @@ export default {
     },
   },
 
-  watch: {
+  /* watch: {
     type: {
       handler() {
         this.getList(true);
       },
     },
-  },
+  }, */
 
   created() {
-    this.getList(true);
+    // this.getList(true);
   },
 
   methods: {
@@ -127,6 +127,15 @@ export default {
     getProcessName() {
       return (item) => _get(item, {quick: "produceName", craft: "processName", table: "name"}[this.type]);
     },
+
+    // 显示删除快捷表格
+    isRemoveItem() {
+      return this.isPerm({
+        quick: "QUICK_PRODUCE_DELETE",
+        craft: "QUICK_CRAFT_DELETE",
+        table: "QUICK_TABLE_DELETE",
+      }[this.type]);
+    },
   },
 };
 </script>
@@ -150,6 +159,7 @@ export default {
                     :loading="item.__r_loading__"
                     :disabled="item.__r_loading__"
                     class="ko-basic-button__card"
+                    v-if="isRemoveItem"
                   >
                     删除
                   </button>

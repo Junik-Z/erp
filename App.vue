@@ -2,7 +2,7 @@
 import { getConfigApi, getMyInfoApi, getScanQrCodeApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
 import { _deepCopy, _get, _isDev, _isEnv, _isEqual, _omit } from "@/utils";
 import dayjs from "@/utils/dayjs";
-import { PageEnums } from "@/utils/config";
+import { CONFIG, PageEnums } from "@/utils/config";
 
 export default {
   async onLaunch(option) {
@@ -166,14 +166,22 @@ export default {
     // 发起 WebSocket
     initiateWebSocket() {
       try {
+        const scene = uni.getStorageSync("__APP_SCENE__") || "";
+
         uni.$__SOCKET_TASK__ = uni.connectSocket({
           url: getWSUrl(),
           multiple: true,
-          // #ifndef H5
           header: {
+            // #ifndef H5
             "Cookie": uni.getStorageSync("Cookie"),
+            // #endif
+
+            "X-MiniApp-Env": CONFIG.SystemVersion,
+            "X-MiniApp-ID": CONFIG.APP_ID,
+            "X-Tenant-ID": scene || "",
+
+            "T-VERSION": CONFIG.T_VERSION,
           },
-          // #endif
           fail: (e) => {
             console.error(e);
           },

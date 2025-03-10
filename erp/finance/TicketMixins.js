@@ -15,6 +15,22 @@ import {
 import { _deepCopy, _get, _isEmpty, _pick, _sum, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import mixins from "@/mixins/mixins";
+import {
+  addedSalePaidOrderApi,
+  addedSaleReturnedOrderApi,
+  editSalePaidOrderApi,
+  editSaleReturnedOrderApi,
+  getSalePaidOrderApi,
+  getSaleReturnedOrderApi,
+} from "@/api/erp/sale";
+import {
+  addedSPurchaseReturnedOrderApi,
+  addedSPurchaseReturnedPaidOrderApi,
+  editPurchaseReturnedOrderApi,
+  editPurchaseReturnedPaidOrderApi,
+  getPurchaseReturnedOrderApi,
+  getPurchaseReturnedPaidOrderApi,
+} from "@/api/erp/purchase";
 
 export default {
   name: "TicketMixins",
@@ -138,7 +154,7 @@ export default {
       this.isDetails = !!option.isDetails;
 
       // 销售退货和采购和采购定制的时候需要进行付款
-      this.isRefund = ["SALE_RETURN", "PURCHASE", 'CUSTOMIZED'].includes(option.orderType);
+      this.isRefund = ["SALE_RETURN", "PURCHASE", "CUSTOMIZED"].includes(option.orderType);
 
       // 是否是应收模块
       this.isReceivable = !!option.isReceivable;
@@ -153,10 +169,21 @@ export default {
     getList() {
       this.loading = true;
 
-      const obj = _pick(_deepCopy(this.option), ["supplierId", "purchaserId", "orderCode"]);
+      const obj = _pick(_deepCopy(this.option), ["supplierId", "purchaserId", "orderCode", "orderType"]);
+
+      // 获取最新的接口
+      const Event = {
+        SALE: getSalePaidOrderApi,
+        SALE_RETURN: getSaleReturnedOrderApi,
+        PURCHASE: getPurchaseReturnedOrderApi,
+        PURCHASE_RETURN: getPurchaseReturnedPaidOrderApi,
+        RECEIVABLE: getPaidOrderListApi,
+        PAY_LISE: getReturnedOrderListApi,
+      }[this.option.FORM];
 
       const Func = this.isRefund ? getReturnedOrderListApi : getPaidOrderListApi;
-      Func({...obj, pageSize: 100, pageNum: 0})
+
+      ;(Event || Func)({...obj, pageSize: 100, pageNum: 0})
         .then(res => {
           this.list = res.data;
         })
@@ -199,12 +226,27 @@ export default {
           const Func = this.isEdit
             ? this.isRefund ? editReturnedOrderApi : editPaidOrderApi
             : this.isRefund ? addedReturnedOrderApi : addedPaidOrderApi;
+
+          const Event = {
+            SALE: this.isEdit ? editSalePaidOrderApi : addedSalePaidOrderApi,
+            SALE_RETURN: this.isEdit ? editSaleReturnedOrderApi : addedSaleReturnedOrderApi,
+            PURCHASE: this.isEdit ? editPurchaseReturnedOrderApi : addedSPurchaseReturnedOrderApi,
+            PURCHASE_RETURN: this.isEdit ? editPurchaseReturnedPaidOrderApi : addedSPurchaseReturnedPaidOrderApi,
+            RECEIVABLE: this.isEdit ? editPaidOrderApi : addedPaidOrderApi,
+            PAY_LISE: this.isEdit ? editReturnedOrderApi : addedReturnedOrderApi,
+          }[this.option.FORM];
+
+
           const params = _deepCopy(this.form);
 
           const obj = _pick(_deepCopy(this.option), ["supplierId", "orderType", "purchaserId", "orderCode"]);
           params.totalAmount = yuanToPoints(params.totalAmount);
 
-          Func({...params, ...obj})
+          if (!obj.orderType) {
+            obj.orderType = this.option.FORM;
+          }
+
+          ;(Event || Func)({...params, ...obj})
             .then(() => {
               uni.showToast({title: "操作成功"});
               this.getList();
@@ -228,12 +270,17 @@ export default {
         confirmText: "已确认",
         success: (resq) => {
           if (resq.confirm) {
+            const Event = {
+              RECEIVABLE: confirmPaidOrderApi,
+              PAY_LISE: confirmReturnedOrderApi,
+            }[this.option.FORM];
+
             const Func = this.isRefund ? confirmReturnedOrderApi : confirmPaidOrderApi;
             const params = _deepCopy(item);
 
             this.$set(item, "__confirm_loading__", true);
 
-            Func(params)
+            ;(Event || Func)(params)
               .then(() => {
                 CustomToast({
                   title: "单据已确认",

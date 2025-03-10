@@ -4,7 +4,7 @@ import { PageEnums } from "@/utils/config";
 import { _isEmpty, _isEqual } from "@/utils";
 import InventoryList from "@/shop/components/InventoryList/InventoryList.vue";
 import mixins from "@/mixins/mixins";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import PickerClass from "../components/PickerClass/PickerClass.vue";
 
 export default {
   name: "share",

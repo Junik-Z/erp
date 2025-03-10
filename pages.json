@@ -50,24 +50,6 @@
       "root": "erp",
       "pages": [
         {
-          "path": "stock/stock",
-          "style": {
-            "navigationBarTitleText": "库存"
-          }
-        },
-        {
-          "path": "stock/check",
-          "style": {
-            "navigationBarTitleText": "核对库存"
-          }
-        },
-        {
-          "path": "stock/warning",
-          "style": {
-            "navigationBarTitleText": "库存预警"
-          }
-        },
-        {
           "path": "sale/sale",
           "style": {
             "navigationBarTitleText": "销售"
@@ -116,18 +98,6 @@
           }
         },
         {
-          "path": "logistics/logistics",
-          "style": {
-            "navigationBarTitleText": "配送"
-          }
-        },
-        {
-          "path": "logistics/client",
-          "style": {
-            "navigationBarTitleText": "物流商"
-          }
-        },
-        {
           "path": "qrcode/qrcode",
           "style": {
             "navigationBarTitleText": "登录确认"
@@ -157,6 +127,12 @@
           }
         },
         {
+          "path": "merchants/authorization",
+          "style": {
+            "navigationBarTitleText": "授权"
+          }
+        },
+        {
           "path": "user/user",
           "style": {
             "navigationBarTitleText": "个人中心"
@@ -166,6 +142,12 @@
           "path": "admin/store",
           "style": {
             "navigationBarTitleText": "信息设置"
+          }
+        },
+        {
+          "path": "renewal/renewal",
+          "style": {
+            "navigationBarTitleText": "服务续费"
           }
         }
       ]
@@ -257,18 +239,6 @@
           }
         },
         {
-          "path": "staff",
-          "style": {
-            "navigationBarTitleText": "员工管理"
-          }
-        },
-        {
-          "path": "new-staff",
-          "style": {
-            "navigationBarTitleText": "员工"
-          }
-        },
-        {
           "path": "work",
           "style": {
             "navigationBarTitleText": "生产工单",
@@ -276,30 +246,9 @@
           }
         },
         {
-          "path": "salary",
-          "style": {
-            "navigationBarTitleText": "我的工资",
-            "disableScroll": false
-          }
-        },
-        {
-          "path": "factory",
-          "style": {
-            "navigationBarTitleText": "生产流程",
-            "disableScroll": false
-          }
-        },
-        {
           "path": "details",
           "style": {
             "navigationBarTitleText": "生产工单详情",
-            "disableScroll": false
-          }
-        },
-        {
-          "path": "complete-process",
-          "style": {
-            "navigationBarTitleText": "员工生产记录",
             "disableScroll": false
           }
         }
@@ -341,6 +290,95 @@
           "path": "check-in",
           "style": {
             "navigationBarTitleText": "扫码打卡"
+          }
+        }
+      ]
+    },
+    {
+      "root": "message",
+      "pages": [
+        {
+          "path": "list/list",
+          "style": {
+            "navigationBarTitleText": "消息列表"
+          }
+        }
+      ]
+    },
+    {
+      "root": "logistics",
+      "pages": [
+        {
+          "path": "logistics",
+          "style": {
+            "navigationBarTitleText": "配送"
+          }
+        },
+        {
+          "path": "client",
+          "style": {
+            "navigationBarTitleText": "物流商"
+          }
+        }
+      ]
+    },
+    {
+      "root": "stock",
+      "pages": [
+        {
+          "path": "stock",
+          "style": {
+            "navigationBarTitleText": "库存"
+          }
+        },
+        {
+          "path": "check",
+          "style": {
+            "navigationBarTitleText": "核对库存"
+          }
+        },
+        {
+          "path": "warning",
+          "style": {
+            "navigationBarTitleText": "库存预警"
+          }
+        }
+      ]
+    },
+    {
+      "root": "staff",
+      "pages": [
+        {
+          "path": "staff",
+          "style": {
+            "navigationBarTitleText": "员工管理"
+          }
+        },
+        {
+          "path": "new-staff",
+          "style": {
+            "navigationBarTitleText": "员工"
+          }
+        },
+        {
+          "path": "factory",
+          "style": {
+            "navigationBarTitleText": "生产流程",
+            "disableScroll": false
+          }
+        },
+        {
+          "path": "complete-process",
+          "style": {
+            "navigationBarTitleText": "员工生产记录",
+            "disableScroll": false
+          }
+        },
+        {
+          "path": "salary",
+          "style": {
+            "navigationBarTitleText": "我的工资",
+            "disableScroll": false
           }
         }
       ]

@@ -15,10 +15,10 @@ import {
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import FeesList from "@/components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
 
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { PageEnums } from "@/utils/config";
@@ -168,6 +168,8 @@ export default {
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
                   if (this.isClient && !this.isNormal) {
+                    uni.$emit("$__get_all_info__");
+
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {
@@ -233,6 +235,12 @@ export default {
         });
     },
   },
+
+  computed: {
+    noCustomerPerm() {
+      return this.isPerm("CUSTOMER_LIST");
+    },
+  },
 };
 </script>
 
@@ -247,7 +255,7 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="margin: 0 30px 20px;" v-if="!isClient">
+          <view style="margin: 0 30px 20px;" v-if="!isClient && noCustomerPerm">
             <UniSegmentedControl
               :current.sync="current"
               :values="tabs"
@@ -256,7 +264,7 @@ export default {
             />
           </view>
 
-          <template v-if="current === 0">
+          <template v-if="current === 0 && noCustomerPerm">
             <UniFormsItem label="客户：" name="supplierId">
               <PickerUser
                 style="width: 100%;"
@@ -265,6 +273,7 @@ export default {
                 v-model="form.supplierId"
                 type="client"
                 ref="UserRef"
+
                 :is-long-list="isClient"
                 :options="bindList"
                 @input="onSupplierId"
@@ -272,7 +281,7 @@ export default {
             </UniFormsItem>
           </template>
 
-          <template v-if="current === 1">
+          <template v-if="current === 1 || !noCustomerPerm">
             <UniFormsItem :label="`${isClient ? '姓名' : '姓名'}：`" name="otherSupplier">
               <UniEasyinput
                 v-model="form.otherSupplier"
@@ -306,7 +315,7 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
-                :is-show-recent="isPerm('Sales_Write')"
+                :is-show-recent="isPerm('SALE_RECENT_PRICE')"
                 :supplier-id="form.supplierId"
               />
             </view>

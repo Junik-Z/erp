@@ -8,7 +8,7 @@ import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import {PageEnums} from '@/utils/config'
+import { PageEnums } from "@/utils/config";
 
 // #ifdef H5
 import { InputNumber } from "@/uni_modules/element-ui/element.min";
@@ -82,7 +82,7 @@ export default {
           label: "单价",
           prop: "price",
           render: (h, {row}) => {
-            if (_this.isClient || (_this.isWork && _this.type !== 'sale')) {
+            if (_this.isClient || (_this.isWork && _this.type !== "sale")) {
               return h(
                 "label",
                 {class: "ko-basic-money"},
@@ -277,7 +277,9 @@ export default {
             <UniCol :span="24" v-if="item.price !== 0 && !hidePrices || isWork">
               <view style="display: flex; align-items: center;">
                 <label class="ko-basic-label">单价：</label>
-                <text class="ko-basic-money" v-if="isClient || (isWork && type !== 'sale')">{{ toYuan(item.price) }} 元</text>
+                <text class="ko-basic-money" v-if="isClient || (isWork && type !== 'sale')">
+                  {{ toYuan(item.price) }} 元
+                </text>
                 <view v-else class="ko-basic-money" style="display: flex; align-items: center;">
                   <view style="margin-right: 5px">
                     <UniNumberBox
@@ -314,7 +316,7 @@ export default {
         </view>
       </view>
     </BasicCard>
-    <LoadMore v-if="!list.length" :no-more="true" content-text="暂无产品数据" />
+    <LoadMore v-if="!list.length" :no-more="true" content-text="暂无数据" />
     <!-- #endif -->
 
     <!-- #ifdef H5 -->

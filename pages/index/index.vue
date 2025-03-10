@@ -2,11 +2,13 @@
 import { _deepCopy, _get, _haveCommonElements } from "@/utils";
 
 import mixins from "@/mixins/mixins";
-import { CONFIG, MENU_LIST } from "@/utils/config";
+import { CONFIG, MENU_LIST, PageEnums } from "@/utils/config";
 import KoNotice from "@/components/Notice/Notice.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
+
+import Dayjs from "@/utils/dayjs";
 
 export default {
   components: {
@@ -24,15 +26,29 @@ export default {
     // #endif
 
     return {
-      gridList: MENU_LIST,
+      // 过滤掉不显示在首页的数据
+      gridList: _deepCopy(MENU_LIST).filter(item => !item.noShowInHome),
       disabled,
 
       // #ifdef MP
       menuButton: uni.getMenuButtonBoundingClientRect(),
       // #endif
+
+      // 系统是否过期了
+      isExpired: false,
+
+      // 有效天数
+      expiredDays: 0,
     };
   },
+  onShow() {
+    this.$nextTick(() => {
+      this.validShopDate();
+    });
+  },
   onLoad() {
+    uni.$on("$__get_config_info_success__", this.validShopDate);
+
     uni.$__FIELD_LIST__ = [];
 
     // console.log("用户权限", this.GET_USER_ROLE);
@@ -47,30 +63,6 @@ export default {
       }, 600);
     } */
     // #endif
-  },
-  computed: {
-    getMenuButtonStyle() {
-      const {top, height} = this.menuButton || {};
-      return {
-        "--ko-menu-top": (top || 0) + "px",
-        "--ko-menu-height": (height || 0) + "px",
-      };
-    },
-    getMenuList() {
-      return _deepCopy(this.gridList)
-        .flatMap(item => {
-          const role = this.GET_USER_ROLE;
-
-          // 判断是否有单独的字段校验
-          const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
-
-          if ((_haveCommonElements(role, item.role) && checkField) || item.role.includes("*")) {
-            return [item];
-          } else {
-            return [];
-          }
-        });
-    },
   },
   // #ifdef H5
   watch: {
@@ -96,9 +88,144 @@ export default {
     },
     onJumpStore() {
       uni.navigateTo({
-        url: "/admin/admin/store",
+        url: PageEnums.adminStore,
       });
     },
+
+    onJumpMessage() {
+      uni.navigateTo({
+        url: PageEnums.messageList,
+      });
+    },
+
+    // 判断商户是否过期
+    validShopDate(obj) {
+      // date: 系统时间
+      // validDate： 有效期时间
+      const {validDate, date} = {...this.GET_CONFIG_INFO, ...(obj || {})};
+
+      if (validDate && date) {
+        const V = Dayjs(validDate);
+        const D = Dayjs(date);
+        // 判断是否过期了， V 是不是在 D 之前，
+        this.isExpired = V.isBefore(D, "day");
+
+        // 获取有效的天数
+        const day = V.diff(D, "d");
+        this.expiredDays = day;
+
+        /* if (day <= 30 && day >= 15) {
+        } else */
+
+        const isNot = uni.getStorageSync("__EXPIRED__");
+
+        if (day < 15 && day >= 3 && !isNot) {
+          uni.showModal({
+            title: "重要提醒",
+            content: `您好！您的服务即将在${day}天后到期。为了确保业务的连续性，请尽快续期。`,
+            confirmText: "我已知晓",
+            cancelText: "关闭",
+            success: (res) => {
+              if (res.confirm) {
+                uni.setStorageSync("__EXPIRED__", true);
+              }
+            },
+          });
+        } else if (day < 3 && day >= 0) {
+          uni.showModal({
+            title: "重要提醒",
+            content: `您好！您的服务即将到期。请在接下来的${day}天内联系我们或自助续费，以确保服务的无缝延续。`,
+            // #ifdef MP
+            confirmText: "续费",
+            // #endif
+            cancelText: "关闭",
+            success: (res) => {
+              // #ifdef MP
+              if (res.confirm) {
+                this.onJumpRenewal();
+              }
+              // #endif
+            },
+          });
+        } else if (day < 0) {
+          uni.showModal({
+            title: "重要提醒",
+            content: `您好！您的服务已过期${Math.abs(day)}天，请尽快自助续费。`,
+            // #ifdef MP
+            confirmText: "续费",
+            // #endif
+            cancelText: "关闭",
+            success: (res) => {
+              // #ifdef MP
+              if (res.confirm) {
+                this.onJumpRenewal();
+              }
+              // #endif
+            },
+          });
+        }
+      }
+    },
+
+    // 跳转到续费
+    onJumpRenewal() {
+      // #ifdef MP
+      uni.navigateTo({
+        url: PageEnums.adminRenewal,
+      });
+      // #endif
+    },
+  },
+  computed: {
+    // 获取按钮位置
+    getMenuButtonStyle() {
+      const {top, height} = this.menuButton || {};
+      return {
+        "--ko-menu-top": (top || 0) + "px",
+        "--ko-menu-height": (height || 0) + "px",
+      };
+    },
+    // 获取菜单列表
+    getMenuList() {
+      return _deepCopy(this.gridList)
+        .flatMap(item => {
+          const role = this.GET_USER_ROLE;
+
+          // 判断是否有单独的字段校验
+          const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
+
+          if ((_haveCommonElements(role, item.role) && checkField && !this.isExpired) || item.role.includes("*")) {
+            return [item];
+          } else {
+            return [];
+          }
+        });
+    },
+
+    // 显示过期描述
+    showExpiredDesc() {
+      return this.isExpired || this.expiredDays <= 30;
+    },
+
+    // 获取过期描述
+    getExpiredDesc() {
+      const day = this.expiredDays;
+      if (day <= 30 && day >= 15) {
+        return `距离服务到期还剩${day}天，请及时处理！`;
+      } else if (day < 15 && day >= 3) {
+        return `您的服务即将在${day}天后到期。为了确保业务的连续性，请尽快续期。`;
+      } else if (day < 3 && day >= 0) {
+        return `您的服务即将到期。请在接下来的${day}天内联系我们或自助续费，以确保服务的无缝延续。`;
+      } else if (day < 0) {
+        // 当前功能因服务过期无法使用，请检查授权状态
+        return `重要提醒：您的服务已过期${Math.abs(day)}天，请尽快自助续费。`;
+      } else {
+        return "";
+      }
+    },
+  },
+  onUnload() {
+    uni.$off("$__get_config_info_success__", this.validShopDate);
   },
 };
 </script>
@@ -109,9 +236,26 @@ export default {
 
     <MerchantsHeader ref="MHRef" :disabled="disabled" />
 
-    <button class="ko-home__store" @click="onJumpStore" v-if="isBusiness || isAdmin">
-      <i class="iconfont icon-shezhi"></i>
-    </button>
+    <view class="ko-home__store">
+      <button class="ko-home__store--shezhi" @click="onJumpStore" v-if="isBusiness || isAdmin">
+        <i class="iconfont icon-shezhi"></i>
+      </button>
+
+      <button
+        class="ko-home__store--notification"
+        @click="onJumpMessage"
+        v-if="isPerm('MESSAGE_LIST')"
+      >
+        <view style="position: relative;">
+          <uni-icons
+            type="notification-filled"
+            size="28"
+          />
+
+          <text v-if="false" class="ko-home__store--notification--badge"></text>
+        </view>
+      </button>
+    </view>
 
     <!-- #ifdef MP -->
     <UniRow
@@ -153,10 +297,112 @@ export default {
     <view class="ko-home__not-role" v-if="!getMenuList.length">
       您还没有任何权限，请联系管理员给您授权！
     </view>
+
+    <view class="ko-home__expired" v-if="showExpiredDesc" @click.stop="onJumpRenewal">
+      {{ getExpiredDesc }}
+      <!-- #ifdef MP -->
+      <button style="font-size: 14px;" class="ko-link">续费</button>
+      <!-- #endif -->
+    </view>
   </view>
 </template>
 
 <style lang="scss" scoped>
+.ko-home {
+  position: relative;
+
+  &__expired {
+    font-size: 12px;
+    color: #e43d33;
+    text-align: center;
+    position: fixed;
+    bottom: 10vh;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  &__store {
+    display: flex;
+    align-items: center;
+    font-size: 26px;
+
+    &--notification {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &--badge {
+        position: absolute;
+        z-index: 99;
+        top: 20px;
+        right: 0;
+
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #e43d33;
+      }
+    }
+  }
+
+  // #ifdef MP
+  &__store {
+    position: fixed;
+    top: var(--ko-menu-top);
+    left: var(--ko-menu-left);
+    height: var(--ko-menu-height, 32px);
+    z-index: 88;
+
+    .icon-shezhi {
+      height: var(--ko-menu-height, 32px);
+      font-size: 26px;
+    }
+
+    &--notification {
+      margin-left: 10px;
+    }
+  }
+
+  // #endif
+
+  // #ifndef MP
+  &__store {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    z-index: 88;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &--shezhi {
+      order: 2;
+    }
+
+    .icon-shezhi {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    &--notification {
+      margin-right: 20px;
+      order: 1;
+
+      .uni-icons.uniui-notification-filled {
+        color: #fff !important;
+        font-size: 32px !important;
+      }
+    }
+  }
+
+  // #endif
+}
 
 // #ifdef MP
 .ko-home {
@@ -227,23 +473,9 @@ export default {
       margin-bottom: 20px;
     }
   }
-
-  &__store {
-    position: fixed;
-    top: var(--ko-menu-top);
-    left: var(--ko-menu-left);
-    height: var(--ko-menu-height, 32px);
-    z-index: 88;
-
-    .icon-shezhi {
-      height: var(--ko-menu-height, 32px);
-      font-size: 26px;
-    }
-  }
 }
 
 // #endif
-
 
 // #ifdef H5
 .ko-home {
@@ -365,17 +597,6 @@ export default {
     }
   }
 
-  &__store {
-    position: fixed;
-    top: 50px;
-    right: 50px;
-    z-index: 88;
-
-    .icon-shezhi {
-      font-size: 30px;
-      color: #fff;
-    }
-  }
 }
 
 // #endif
