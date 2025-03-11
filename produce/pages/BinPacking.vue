@@ -1800,7 +1800,7 @@ export default {
       margin-bottom: 10px;
       overflow-y: auto;
 
-      /deep/ .ko-basic-table--cell {
+      ::v-deep .ko-basic-table--cell {
         padding: 4px 4px;
       }
     }
@@ -1810,7 +1810,7 @@ export default {
     // #ifdef H5
     width: 600px;
 
-    /deep/ .uni-forms .uni-forms-item .uni-forms-item__content {
+    ::v-deep .uni-forms .uni-forms-item .uni-forms-item__content {
       width: auto !important;
     }
 
@@ -2015,7 +2015,7 @@ export default {
     }
   }
 
-  /deep/ .uv-popup__content.bottom {
+  ::v-deep .uv-popup__content.bottom {
     width: 1024px;
     margin: 0 auto;
   }

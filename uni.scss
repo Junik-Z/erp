@@ -15,10 +15,6 @@ body {
 
 $base-font-size: 136.6; // var(--ko-html-size);
 
-@function px2rem ($px, $base: $base-font-size) {
-  @return ($px / $base) * 1rem
-}
-
 * {
   padding: 0;
   margin: 0;
@@ -335,17 +331,17 @@ $--ko-print-font-size: 11pt;
 
 .ko-basic-count {
   &__label {
-    font-size: px2rem(18);
-    padding: px2rem(20) 0 0;
+    font-size: 18px;
+    padding: 20px 0 0;
   }
 
   &__info {
-    padding: px2rem(20) 0;
+    padding: 20px 0;
   }
 
-  /deep/ .uv-count-num {
+  ::v-deep .uv-count-num {
     span {
-      font-size: px2rem(30)
+      font-size: 30px
     }
   }
 }
@@ -363,14 +359,11 @@ $--ko-print-font-size: 11pt;
 // 打印模块的样式
 @mixin print-style() {
   font-family: "华文楷体", "KaiTi", sans-serif;
-  //font-family: "Microsoft YaHei", Arial, sans-serif;
-  //font-weight: 500;
-  font-size: 11pt;
+  font-size: calc(var(--ko-paper-min-height, 16px) - 2px);
 }
 
 // 打印模块标题的样式
 @mixin print-header-style() {
-  //font-family: "华文楷体", "KaiTi", sans-serif;
   font-family: "Microsoft YaHei", Arial, sans-serif;
   font-weight: bold;
   font-size: 18pt;
@@ -388,43 +381,6 @@ $--ko-print-font-size: 11pt;
   font-size: 14px;
   min-height: 16px;
   line-height: 16px;
-}
-
-.ko-p-table {
-  width: 100%;
-  border-collapse: collapse;
-  @include print-style();
-  border-left: 1px solid #000;
-  border-top: 1px solid #000;
-
-  &.not-border {
-    border-left: none;
-    border-top: none;
-
-    th, td {
-      border-bottom: none;
-      border-right: none;
-    }
-  }
-
-  &__cell {
-    min-height: 22px;
-
-    &.not-data {
-      color: #c7c9ce;
-    }
-  }
-
-  th, td {
-    border-bottom: 1px solid #000;
-    border-right: 1px solid #000;
-  }
-
-  tr {
-    td {
-      min-height: 22px;
-    }
-  }
 }
 
 // #endif

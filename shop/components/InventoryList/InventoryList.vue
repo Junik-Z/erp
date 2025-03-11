@@ -188,7 +188,7 @@ export default {
     }
   }
 
-  /deep/ .uni-col {
+  ::v-deep .uni-col {
     height: 100% !important;
   }
 }

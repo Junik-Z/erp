@@ -475,7 +475,7 @@ export default {
 <style lang="scss">
 .ko-lucky-sheet {
   // #ifdef H5
-  /deep/ #luckysheet-copy-content {
+  ::v-deep #luckysheet-copy-content {
     padding-left: 0 !important;
   }
 

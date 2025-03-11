@@ -274,6 +274,8 @@ export default {
                 type="client"
                 ref="UserRef"
 
+                :placeholder-label="GET_FUNC(form, 'customer.name')"
+
                 :is-long-list="isClient"
                 :options="bindList"
                 @input="onSupplierId"

@@ -909,7 +909,7 @@ export default {
     display: flex;
     overflow: hidden;
 
-    /deep/ .el-tree {
+    ::v-deep .el-tree {
       width: 260px;
       margin-right: 20px;
       border: 1px solid #EBEEF5;
@@ -962,7 +962,7 @@ export default {
 }
 
 // #ifdef H5
-/deep/ .ko-table-checked {
+::v-deep .ko-table-checked {
   font-size: 20px;
 
   &__warp {

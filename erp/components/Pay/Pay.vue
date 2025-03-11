@@ -262,7 +262,7 @@ export default {
   // #ifdef H5
   width: 600px;
 
-  /deep/ .uv-popup__content.bottom {
+  ::v-deep .uv-popup__content.bottom {
     max-width: 800px;
     margin: 0 auto;
   }

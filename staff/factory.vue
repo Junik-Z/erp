@@ -171,6 +171,7 @@ export default {
       this.nodeIndex = index;
       const node = _deepCopy(item);
       node.price = this.toYuan(node.price);
+      node._placeholder_label_ = (node.staffs || [])?.map(v => v.name)?.join("、");
 
       this.form = node;
       this.visible = true;
@@ -772,6 +773,8 @@ export default {
                 multiple
                 is-confirm
                 ref="UserRef"
+
+                :placeholder-label="form._placeholder_label_"
               />
               <view v-if="!isPerm('STAFF_LIST')" style="font-size: 10px;color: #e43d33; margin-top: 5px;">
                 您没有获取员工信息权限，请联系管理员授权。

@@ -341,7 +341,7 @@ export default {
   }
 
   // #ifdef H5
-  /deep/ .uni-searchbar {
+  ::v-deep .uni-searchbar {
     width: 1024px;
     margin: 0 auto;
   }

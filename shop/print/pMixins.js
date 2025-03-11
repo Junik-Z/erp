@@ -8,14 +8,12 @@ import { getPayableDetailApi, getReceivableDetailApi } from "@/api/erp/finance";
 import { _get, _isEmpty, _isEqual, _keys, addUnit } from "@/utils";
 import { getProductFieldApi } from "@/api/erp/product";
 import { VuePrintLast } from "@/shop/print/vue-print-last";
-import { cmToPx, pointToPx } from "@/shop/print/utils";
+import { cmToPx } from "@/shop/print/utils";
 import mixins from "@/mixins/mixins";
 
 // 纸张大小
 const PaperWidth = cmToPx(21.5);
 const PaperHeight = cmToPx(14);
-// 设置纸张的上下间隙的和
-const UpperAndLowerClearance = cmToPx(2);
 
 const PageType = {
   inbound: "入库单",
@@ -197,7 +195,7 @@ export default {
             total: item.price * item.productQuantity,
           }));
 
-          // list.details = list.details.slice(0, 18);
+          // list.details = list.details.slice(0, 35);
 
           this.feesList = _keys(list.fees).map((key) => ({
             key,
@@ -315,8 +313,7 @@ export default {
       return {
         "--ko-paper-width": addUnit(PaperWidth),
         "--ko-paper-height": addUnit(PaperHeight),
-        "--ko-paper-title-font-size": pointToPx(18),
-        "--ko-paper-font-size": pointToPx(11),
+        "--ko-paper-min-height": "16px",
       };
     },
 

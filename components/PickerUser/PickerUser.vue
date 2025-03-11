@@ -117,6 +117,9 @@ export default {
 
     // 只显示标记为未选中的用户
     isNotSelected: Boolean,
+
+    // 空数据显示占位
+    placeholderLabel: String,
   },
   created() {
     if ((this.isInput && !this.isLongList && !this.isExternalOpen) && !this.notCreatedRequest) {
@@ -399,9 +402,18 @@ export default {
 
     // 显示label
     getShowLabel() {
-      return this.multiple
-        ? (Array.isArray(this?.checkNode) ? this?.checkNode : [])?.map(v => v.label)?.join("、")
-        : this.checkNode?.label;
+      if (this.multiple) {
+        const V = _isEmpty(this?.checkNode) && _isEmpty(this.value);
+        return V ? this.placeholderLabel : (Array.isArray(this?.checkNode) ? this?.checkNode : [])?.map(v => v.label)?.join("、");
+      } else {
+        const label = this.checkNode?.label;
+
+        if (this.isInput) {
+          return label || (this.value && this.placeholderLabel) || "";
+        }
+
+        return label;
+      }
     },
 
     // 需要自动勾选的类型
@@ -498,7 +510,7 @@ export default {
     flex-direction: column;
   }
 
-  /deep/ input[disabled] {
+  ::v-deep input[disabled] {
     color: #333; /* 文本颜色 */
   }
 

@@ -412,7 +412,7 @@ export default {
   }
 
 
-  /deep/ .el-input-number .el-input__inner {
+  ::v-deep .el-input-number .el-input__inner {
     text-align: left;
   }
 }

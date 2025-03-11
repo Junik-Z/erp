@@ -14,10 +14,8 @@ import { _get, _isEqual, _sum } from "@/utils";
 // 纸张大小
 const PaperHeight = cmToPx(14);
 
-// 设置纸张的上下间隙的和
-const UpperAndLowerClearance = cmToPx(2);
-
-const CellHeight = 23;
+// 获取出来的每行高度
+const CellHeight = 17;
 
 const SummaryText = {
   inbound3: "实收",
@@ -92,7 +90,6 @@ export default {
   data() {
     return {
       groupList: [],
-      maxHeight: 0,
     };
   },
   methods: {
@@ -100,35 +97,37 @@ export default {
     getGroupList() {
       // 获取表格每行的高度
       const rect = this.$refs.PTableRef?.getListSize?.() || {};
+      // 产考元素的高度 - 上下的边框线
+      const RHeight = (this.$refs.RRef?.offsetHeight || (PaperHeight - 20)) - 4;
 
       // 表头总高度
-      const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
+      const headerHeight = ((rect.slotThead || 0) + (rect?.thead || 0));
       // 表尾的高度
       const footerHeight = (rect.slotTFoot || 0);
 
-      // 纸张高度
-      const totalHeight = PaperHeight - UpperAndLowerClearance;
+      // 内容高度
+      const CHeight = RHeight - headerHeight - footerHeight;
 
-      // 最大高度
-      const maxHeight = totalHeight - headerHeight - footerHeight;
-
+      // 最终的数据
       const pages = [];
 
+      // 临时存储的数据
       let vessel = [];
+
       // 各个数据项加起来的高度
       let count = 0;
-      let pageNumberSize = 0;
 
-      ;(this.data || []).forEach((row) => {
+      // 数据列表
+      const data = (this.data || []);
+
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+
         const h = rect[row.id] || CellHeight;
 
         const obj = {...row, __height__: h};
 
-        if (!pageNumberSize) {
-          pageNumberSize = Math.floor(maxHeight / h);
-        }
-
-        if (count + h <= maxHeight) {
+        if (count + h <= CHeight) {
           vessel.push(obj);
           count += h;
         } else {
@@ -136,56 +135,53 @@ export default {
           vessel = [obj];
           count = h;
         }
+      }
 
-        pageNumberSize = pageNumberSize < vessel.length ? vessel.length : pageNumberSize;
-      });
+      // 剩余内容的总高度
+      const VTotalHeight = _sum(vessel.map(v => (v.__height__)));
 
-      const CountVHeight = _sum(vessel.map(v => v.__height__));
+      // 剩余空白高度
+      const lastHeight = CHeight - VTotalHeight;
 
-      // 还要补多少个空行 - 1 是因为要放一行统计的数据
-      const fill = Math.floor((maxHeight - CountVHeight - (rect.fees || 0)) / CellHeight) - 1;
+      // 最后页要填补的条数
+      const fill = Math.floor(lastHeight / CellHeight);
 
-      if (fill > 0) {
+      let balance = 0;
+      // 是否有其它费用
+      if (rect.fees) balance += 1;
+
+      // 是否有统计
+      if (rect.summary) balance += 1;
+
+      // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
+      if (fill > 0 && fill < balance) {
         for (let i = 0; i < fill; i++) {
+          vessel.push({__height__: CellHeight});
+        }
+      } else if (fill > 0) {
+        for (let i = 0; i < (fill - balance); i++) {
           vessel.push({__height__: CellHeight});
         }
       }
 
       pages.push(vessel);
-      const PageSize = Math.floor(maxHeight / CellHeight);
 
-      if (fill < 0) {
+      // 最后一页的总高度
+      const VTHeight = _sum(vessel.map(v => (v.__height__)));
+
+      if (fill < 0 || ((CHeight - (VTHeight + (rect.fees || 0))) < 0)) {
+        // 每页的条数
+        const pageLength = Math.floor((CHeight - (rect.fees || 0) - (rect.summary || 0)) / CellHeight);
+
         const end = [];
-        for (let i = 0; i < (PageSize - ((rect.fees) ? 2 : 1)); i++) {
+        for (let i = 0; i < pageLength; i++) {
           end.push({__height__: CellHeight});
         }
         pages.push(end);
       }
 
-      /*  if (vessel.length < pageNumberSize) {
-         let number = pageNumberSize - vessel.length - 2;
-
-         for (let i = 0; i < number; i++) {
-           vessel.push({__label__: ""});
-         }
-       }
-
-       // 当最后一页小于最大高度时直接渲染 否则就新开一页
-       if ((count + footerHeight + (rect.fees || 0)) <= maxHeight) {
-         pages.push(vessel);
-       } else {
-         const foot = pageNumberSize - 2;
-         const li = [];
-         for (let i = 0; i < foot; i++) {
-           li.push({__label__: ""});
-         }
-         pages.push(vessel, li);
-       } */
-
-      this.maxHeight = maxHeight;
       this.groupList = pages;
     },
-
     onPrint() {
       const el = this.isA4 ? this.$refs.A4Ref : this.$refs.PrintRef;
 
@@ -263,9 +259,9 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <div class="ko-print" :style="rootStyle">
-    <div class="ko-print__picker ko-basic-box-shadow">
-      <div class="ko-print__check">
+  <div class="ko-n-print" :style="[rootStyle]">
+    <div class="ko-n-print__picker ko-basic-box-shadow">
+      <div class="ko-n-print__check">
         <label>打印字段：</label>
         <div>
           <Checkbox
@@ -291,8 +287,8 @@ export default {
       </div>
     </div>
 
-    <div class="ko-print__wrap">
-      <div class="ko-print__content" ref="A4Ref" :class="{'is-a4': isA4}">
+    <div class="ko-n-print__wrap">
+      <div class="ko-n-print__content" ref="A4Ref" :class="{'is-a4': isA4}">
         <PrintTable
           ref="PTableRef"
           is-summary
@@ -312,10 +308,17 @@ export default {
       </div>
     </div>
 
-    <div class="ko-print__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
-      <div class="ko-print__pages--wrap" ref="PrintRef">
-        <div class="ko-print__pages--item" v-for="(item, index) of groupList" :key="'print' + index">
-          <div class="ko-print__pages--center">
+    <div class="ko-n-print__item ko-n-print__refer">
+      <div
+        ref="RRef"
+        class="ko-n-print__item--content"
+      ></div>
+    </div>
+
+    <div class="ko-n-print__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
+      <div class="ko-n-print__pages--wrap" ref="PrintRef">
+        <div class="ko-n-print__item" v-for="(item, index) of groupList" :key="'print' + index">
+          <div class="ko-n-print__item--content">
             <PrintTable
               :columns="filterColumnList"
               :data="item || []"
@@ -331,7 +334,6 @@ export default {
                 <PrintFooter :out-name="GET_USER_INFO.nickName" :info="GET_CONFIG_INFO" />
               </template>
             </PrintTable>
-
           </div>
         </div>
       </div>
@@ -342,23 +344,13 @@ export default {
 
 <style scoped lang="scss">
 // #ifdef H5
-/*@media print {
-  .ko-print__pages--center {
-    margin: 0; !* 移除外边距 *!
-    padding: 0 5px; !* 移除内边距 *!
-    box-sizing: border-box; !* 确保边框包含在宽度内 *!
-    width: 100%;
-  }
-}*/
 
-.ko-print {
+.ko-n-print {
   padding-top: 120px;
   padding-bottom: 80px;
   background: #fff;
   min-height: calc(100vh - 65px);
   position: relative;
-
-  @include print-style();
 
   &__wrap {
     width: var(--ko-paper-width);
@@ -385,40 +377,44 @@ export default {
     border-top: none;
     border-bottom: none;
 
-    /deep/ .ko-print-header {
+    ::v-deep .ko-n-print-header {
       border: none;
     }
 
-    /deep/ .ko-print-footer {
+    ::v-deep .ko-n-print-footer {
       border: none;
     }
   }
 
-  &__pages {
-    @include print-style();
+  // 参考的元素
+  &__refer {
     position: absolute;
-    left: -999999999px;
+    left: -9999999px;
+    top: 0;
+  }
 
-    &--wrap {
-      width: 100%;
+  &__item {
+    height: var(--ko-paper-height);
+    width: var(--ko-paper-width);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ::v-deep .ko-print-table {
+      height: 100%;
     }
 
-    &--item {
-      height: var(--ko-paper-height);
-      width: var(--ko-paper-width);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    &--center {
-      width: calc(var(--ko-paper-width) - 2cm);
+    &--content {
+      width: calc(100% - 6px);
+      height: calc(100% - 16mm - 14px);
       padding: 0 4px;
     }
+  }
 
-    /deep/ .ko-print-table {
-      height: var(--ko-paper-max-height, 100%);
-    }
+  &__pages {
+    position: absolute;
+    left: -999999999px;
+    top: 0;
   }
 }
 

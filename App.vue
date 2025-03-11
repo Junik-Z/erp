@@ -1,7 +1,6 @@
 <script>
-import { getConfigApi, getMyInfoApi, getScanQrCodeApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
-import { _deepCopy, _get, _isDev, _isEnv, _isEqual, _omit } from "@/utils";
-import dayjs from "@/utils/dayjs";
+import { getConfigApi, getMyInfoApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
+import { _deepCopy, _get, _isEnv, _isEqual, _omit } from "@/utils";
 import { CONFIG, PageEnums } from "@/utils/config";
 
 export default {
@@ -37,6 +36,10 @@ export default {
 
     uni.$on("$__update_config_info__", this.getConfig);
 
+    // #ifdef MP-WEIXIN
+    !_isEnv() && uni.$on("$__request_message__", this.requestSubscribeMessage);
+    // #endif
+
     // #ifdef MP
     // 当进入的不是 [首页, 自助绑定] 时需要先获取用户信息
     if (!["pages/home/home", "client/binding/binding", PageEnums.editSale, PageEnums.editPurchase].includes(option.path)) {
@@ -45,7 +48,7 @@ export default {
     // #endif
 
     // #ifdef MP-WEIXIN
-    !_isEnv() && this.requestSubscribeMessage();
+    /* !_isEnv() && this.requestSubscribeMessage(); */
     // #endif
   },
   onShow() {
@@ -84,6 +87,8 @@ export default {
         .then((res) => {
           uni.setStorageSync("__USER_INFO__", res.data);
           uni.$emit("$__get_user_info_success__", res.data);
+
+          uni.$emit("$__request_message__");
           return res.data;
         });
     },
@@ -126,7 +131,7 @@ export default {
               if (!msg) {
                 uni.showModal({
                   title: "温馨提示",
-                  content: `亲，授权消息我们会在预约变化时第一时间发通知给你！`,
+                  content: `亲，授权消息我们会在订单变化时第一时间发通知给你！`,
                   success: (res) => {
                     if (res.confirm) {
                       fn(tmplIds);
@@ -140,6 +145,8 @@ export default {
               // 获取所有的状态
               const allEnabled = tmplIds?.map(key => _get(msg, key)) || [];
 
+              console.log(tmplIds);
+
               if (allEnabled.includes("reject")) {
                 uni.showModal({
                   title: "温馨提示",
@@ -150,7 +157,17 @@ export default {
               if (!allEnabled.every(key => _isEqual("accept", key))) {
                 uni.showModal({
                   title: "温馨提示",
-                  content: `亲，授权消息我们会在预约变化时第一时间发通知给你！`,
+                  content: `亲，授权消息我们会在订单变化时第一时间发通知给你！`,
+                  success: (res) => {
+                    if (res.confirm) {
+                      fn(tmplIds);
+                    }
+                  },
+                });
+              } else if (allEnabled.some(key => _isEqual("accept", key))) {
+                uni.showModal({
+                  title: "温馨提示",
+                  content: `亲，授权消息我们会在订单变化时第一时间发通知给你！`,
                   success: (res) => {
                     if (res.confirm) {
                       fn(tmplIds);

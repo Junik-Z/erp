@@ -160,7 +160,7 @@ export default {
     width: 1024px;
   }
 
-  /deep/ .uv-popup__content.bottom {
+  ::v-deep .uv-popup__content.bottom {
     max-width: 1024px;
     margin: 0 auto;
 

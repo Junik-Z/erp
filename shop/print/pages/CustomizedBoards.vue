@@ -8,12 +8,14 @@ import { Button } from "@/uni_modules/element-ui/element.min";
 import { VuePrintLast } from "../vue-print-last";
 import mixins from "@/mixins/mixins";
 import { cmToPx } from "@/shop/print/utils";
+import { _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
-// 设置纸张的上下间隙的和
-const UpperAndLowerClearance = cmToPx(2);
+
 let TimeVm = null;
+
+const CellHeight = 17;
 
 export default {
   name: "CustomizedBoards",
@@ -98,38 +100,35 @@ export default {
     // 获取各个元素的大小
     getGroupList() {
       // 获取表格每行的高度
-      const rect = this.$refs.PTableRef.getListSize();
+      const rect = this.$refs.PTableRef?.getListSize?.() || {};
+
+      // 产考元素的高度 - 上下的边框线
+      const RHeight = (this.$refs.RRef?.offsetHeight || (PaperHeight - 20)) - 4;
 
       // 表头总高度
-      const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
+      const headerHeight = ((rect.slotThead || 0) + (rect?.thead || 0));
       // 表尾的高度
       const footerHeight = (rect.slotTFoot || 0);
 
-      // 纸张高度
-      const totalHeight = PaperHeight - UpperAndLowerClearance;
-
-      // 最大高度
-      const maxHeight = totalHeight - headerHeight - footerHeight;
+      // 内容高度
+      const CHeight = RHeight - headerHeight - footerHeight;
 
       const pages = [];
 
       let vessel = [];
       // 各个数据项加起来的高度
       let count = 0;
-      let pageNumberSize = 0;
 
-      console.log(this.getTableList);
+      const data = (this.getTableList || []);
 
-      ;(this.getTableList || []).forEach((row) => {
-        const h = rect[row.id] || 0;
+      console.log(data);
+
+      data.forEach((row) => {
+        const h = rect[row.id] || CellHeight;
 
         const obj = {...row, __height__: h};
 
-        if (!pageNumberSize) {
-          pageNumberSize = Math.floor(maxHeight / h);
-        }
-
-        if (count + h <= maxHeight) {
+        if (count + h <= CHeight) {
           vessel.push(obj);
           count += h;
         } else {
@@ -137,31 +136,51 @@ export default {
           vessel = [obj];
           count = h;
         }
-
-        pageNumberSize = pageNumberSize < vessel.length ? vessel.length : pageNumberSize;
       });
 
-      if (vessel.length < pageNumberSize) {
-        let number = pageNumberSize - vessel.length - 2;
+      // 剩余内容的总高度
+      const VTotalHeight = _sum(vessel.map(v => (v.__height__)));
 
-        for (let i = 0; i < number; i++) {
-          vessel.push({__label__: ""});
+      // 剩余空白高度
+      const lastHeight = CHeight - VTotalHeight;
+
+      // 最后页要填补的条数
+      const fill = Math.floor(lastHeight / CellHeight);
+
+      let balance = 0;
+      // 是否有其它费用
+      if (rect.fees) balance += 1;
+
+      // 是否有统计
+      if (rect.summary) balance += 2;
+
+      // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
+      if (fill > 0 && fill < balance) {
+        for (let i = 0; i < fill; i++) {
+          vessel.push({__height__: CellHeight});
+        }
+      } else if (fill > 0) {
+        for (let i = 0; i < (fill - balance); i++) {
+          vessel.push({__height__: CellHeight});
         }
       }
 
-      // 当最后一页小于最大高度时直接渲染 否则就新开一页
-      if ((count + footerHeight + (rect.fees || 0) + (rect.result || 0)) <= maxHeight) {
-        pages.push(vessel);
-      } else {
-        const foot = pageNumberSize - 2;
-        const li = [];
-        for (let i = 0; i < foot; i++) {
-          li.push({__label__: ""});
+      pages.push(vessel);
+
+      // 最后一页的总高度
+      const VTHeight = _sum(vessel.map(v => (v.__height__)));
+
+      if (fill < 0 || ((CHeight - (VTHeight + (rect.fees || 0))) < 0)) {
+        // 每页的条数
+        const pageLength = Math.floor((CHeight - (rect.fees || 0) - (rect.summary || 0)) / CellHeight);
+
+        const end = [];
+        for (let i = 0; i < pageLength; i++) {
+          end.push({__height__: CellHeight});
         }
-        pages.push(vessel, li);
+        pages.push(end);
       }
 
-      this.maxHeight = maxHeight;
       this.groupList = pages;
     },
 
@@ -267,7 +286,7 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <div class="ko-print-customized-boards" :style="rootStyle">
+  <div class="ko-print-customized-boards" :style="[rootStyle]">
     <div class="ko-print-customized-boards__header ko-basic-box-shadow">
       <div>
         <Button type="primary" size="mini" @click="onPrint">打印</Button>
@@ -299,7 +318,15 @@ export default {
       </div>
     </div>
 
-    <div class="ko-print-customized-boards__pages" :style="rootStyle" :key="JSON.stringify(groupList)">
+    <div class="ko-print-customized-boards__item ko-print-customized-boards__refer">
+      <div
+        ref="RRef"
+        class="ko-print-customized-boards__item--content"
+      ></div>
+    </div>
+
+
+    <div class="ko-print-customized-boards__pages" :style="[rootStyle]" :key="JSON.stringify(groupList)">
       <div class="ko-print-customized-boards__pages--wrap" ref="PrintRef">
         <div class="ko-print-customized-boards__pages--item" v-for="(item, index) of groupList" :key="'print' + index">
           <div class="ko-print-customized-boards__pages--center">
@@ -330,12 +357,8 @@ export default {
   <!-- #endif -->
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 // #ifdef H5
-//@page Triple {
-//  size: 216mm 140mm;
-//  margin: 0;
-//}
 
 .ko-print-customized-boards {
   padding-top: 70px;
@@ -369,40 +392,44 @@ export default {
     border-top: none;
     border-bottom: none;
 
-    /deep/ .ko-print-header {
+    ::v-deep .ko-print-header {
       border: none;
     }
 
-    /deep/ .ko-print-footer {
+    ::v-deep .ko-print-footer {
       border: none;
     }
   }
 
-  &__pages {
-    @include print-style();
+  // 参考的元素
+  &__refer {
     position: absolute;
-    left: -999999999px;
+    left: -9999999px;
+    top: 0;
+  }
 
-    &--wrap {
-      width: 100%;
+  &__item {
+    height: var(--ko-paper-height);
+    width: var(--ko-paper-width);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ::v-deep .ko-print-table {
+      height: 100%;
     }
 
-    &--item {
-      height: var(--ko-paper-height);
-      width: var(--ko-paper-width);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    &--center {
-      width: calc(var(--ko-paper-width) - 2cm);
+    &--content {
+      width: calc(100% - 6px);
+      height: calc(100% - 16mm - 14px);
       padding: 0 4px;
     }
+  }
 
-    /deep/ .ko-print-table {
-      height: var(--ko-paper-max-height, 100%);
-    }
+  &__pages {
+    position: absolute;
+    left: -999999999px;
+    top: 0;
   }
 }
 

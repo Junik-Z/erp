@@ -626,6 +626,8 @@ export default {
                       :type="isPurchase ? 'supplier' : 'client'"
                       ref="UserRef"
                       @input="onSupplierId"
+
+                      :placeholder-label="GET_FUNC(form, 'customer.name')"
                     />
                   </uni-forms-item>
                 </block>
@@ -701,6 +703,8 @@ export default {
 
                   :is-long-list="isClient"
                   :options="bindList"
+
+                  :placeholder-label="GET_FUNC(form, 'customer.name')"
                 />
               </uni-forms-item>
             </block>

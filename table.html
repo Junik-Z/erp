@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "STKaiti", "KaiTi", sans-serif;
+      font-size: 14px;
+      padding-top: 20px;
+    }
+
+    tr th, tr td {
+      border-bottom: 1px solid #000;
+      border-right: 1px solid #000;
+      line-height: 16px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      border-left: 1px solid #000;
+      border-top: 1px solid #000;
+    }
+
+    .title {
+      position: relative;
+      border: 1px solid #000;
+      padding-bottom: 8px;
+    }
+
+    .title__wrap {
+      padding-top: 10px;
+    }
+
+    .cell {
+      min-height: 16px;
+      text-align: center;
+    }
+
+    .cell--item {
+      text-align: left;
+    }
+
+    .cell--item label {
+      white-space: nowrap;
+    }
+
+    .cell--item span {
+      display: inline-block;
+      white-space: nowrap;
+      border-bottom: 1px solid #000;
+      width: 60%;
+      vertical-align: bottom;
+      text-align: center;
+    }
+
+    .feet {
+      text-align: center;
+    }
+
+    .feet-item {
+      width: 24%;
+      display: inline-block;
+      padding: 0 10px;
+    }
+
+    .feet-item label {
+      white-space: nowrap;
+    }
+
+    .feet-item span {
+      display: inline-block;
+      white-space: nowrap;
+      width: 52%;
+      border-bottom: 1px solid #000;
+      text-align: center;
+      vertical-align: bottom;
+    }
+
+    .footer {
+    }
+
+    .footer-item {
+      width: 50%;
+    }
+
+    .footer-item span {
+      display: inline-block;
+      white-space: nowrap;
+      width: 60%;
+      border-bottom: 1px solid #000;
+    }
+
+    .parent::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    @page {
+      size: 216mm 140mm;
+      margin: 10mm;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+<div
+  style="width: 196mm; margin: 0 auto; font-family: 'STKaiti', 'KaiTi', sans-serif;"
+>
+  <table class="table">
+    <thead>
+    <tr>
+      <th
+        class="title"
+        colspan="6"
+      >
+        <div class="title__wrap">
+          <h2 style="text-align: center;">夸欧科技采购订单</h2>
+
+          <div style="margin-top: 8px; padding: 0 10px;" class="parent">
+            <div
+              class="cell--item"
+              style="width: 37%; padding: 0 5px;float: left; box-sizing: border-box;"
+            >
+              <label style="white-space: nowrap;">订单编号：</label>
+              <span></span>
+            </div>
+            <div
+              class="cell--item"
+              style="width: 33%; padding: 0 5px;float: left;box-sizing: border-box;"
+            >
+              <label style="white-space: nowrap;">订单日期：</label>
+              <span></span>
+            </div>
+            <div
+              class="cell--item"
+              style="width: 29%; padding: 0 5px;float: left;box-sizing: border-box;"
+            >
+              <label style="white-space: nowrap;">客户名称：</label>
+              <span></span>
+            </div>
+            <div
+              class="cell--item"
+              style="width: 37%; padding: 0 5px;float: left;box-sizing: border-box;"
+            >
+              <label style="white-space: nowrap;">联系电话：</label>
+              <span></span>
+            </div>
+            <div
+              class="cell--item"
+              style="width: 62%; padding: 0 5px;float: left; box-sizing: border-box;"
+            >
+              <label style="white-space: nowrap;">配送地址：</label>
+              <span style="width: 82%;"></span>
+            </div>
+          </div>
+        </div>
+      </th>
+    </tr>
+    <tr>
+      <th width="50" style="border-bottom: 1px solid #000; border-left: 1px solid #000;">
+        <div class="cell">序号</div>
+      </th>
+      <th width="auto" style="border-bottom: 1px solid #000; border-left: 1px solid #000;">
+        <div class="cell">类型</div>
+      </th>
+      <th width="auto" style="border-bottom: 1px solid #000; border-left: 1px solid #000;">
+        <div class="cell">名称</div>
+      </th>
+      <th width="auto" style="border-bottom: 1px solid #000; border-left: 1px solid #000;">
+        <div class="cell">数量</div>
+      </th>
+      <th width="auto" style="border-bottom: 1px solid #000; border-left: 1px solid #000;">
+        <div class="cell">金额</div>
+      </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>
+        <div class="cell"></div>
+      </td>
+      <td>
+        <div class="cell"></div>
+      </td>
+      <td>
+        <div class="cell"></div>
+      </td>
+      <td>
+        <div class="cell"></div>
+      </td>
+      <td>
+        <div class="cell"></div>
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="2">
+        <div class="cell">大写合计</div>
+      </td>
+      <td colspan="1">
+        <div class="cell"></div>
+      </td>
+      <td colspan="1">
+        <div class="cell">合计</div>
+      </td>
+      <td colspan="2">
+        <div class="cell"></div>
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="6" style="border-bottom: none;">
+        <div style="padding: 0 10px;" class="parent feet">
+          <div class="feet-item">
+            <label>上楼费：</label>
+            <span></span>
+          </div>
+          <div class="feet-item">
+            <label>上楼费：</label>
+            <span></span>
+          </div>
+          <div class="feet-item">
+            <label>上楼费：</label>
+            <span></span>
+          </div>
+          <div class="feet-item">
+            <label>上楼费：</label>
+            <span></span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    </tbody>
+    <tfoot>
+    <tr>
+      <td colspan="6">
+        <div style="padding: 8px;">
+          <div style="padding: 0 10%; text-align: center;" class="parent footer">
+            <div
+              class="footer-item" style="float: left;">
+              <label style="white-space: nowrap">出库人：</label>
+              <span></span>
+            </div>
+            <div
+              class="footer-item" style="float: left;">
+              <label style="white-space: nowrap">客户确认：</label>
+              <span></span>
+            </div>
+          </div>
+          <div>
+            <p style="text-align: center;">
+              说明：本销售单一式三联，其中红联为结算联，经客户确认后视为欠款凭证，具有同等法律效力！
+            </p>
+            <p style="text-align: center;">
+              开户行
+            </p>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tfoot>
+  </table>
+</div>
+</body>
+</html>

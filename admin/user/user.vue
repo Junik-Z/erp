@@ -328,7 +328,7 @@ export default {
       width: 260px;
     }
 
-    /deep/ .ko-long-press-button {
+    ::v-deep .ko-long-press-button {
       width: 260px;
     }
 

@@ -37,12 +37,11 @@ export default {
         <div>联系电话：</div>
         <div>{{ node.orderPhone }}</div>
 
-        <div>联系人：</div>
-        <div></div>
-
         <div>地址：</div>
         <div>{{ node.orderAddress }}</div>
 
+        <div>联系人：</div>
+        <div></div>
       </div>
     </div>
   </div>

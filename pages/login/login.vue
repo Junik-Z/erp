@@ -219,7 +219,7 @@ export default {
     }
   }
 
-  /deep/ .uni-card {
+  ::v-deep .uni-card {
     width: 500px;
     height: 500px;
 
@@ -248,7 +248,7 @@ export default {
     }
   }
 
-  /deep/ .uni-card__actions {
+  ::v-deep .uni-card__actions {
     padding: 0 10px 16px;
   }
 

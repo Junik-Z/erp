@@ -53,8 +53,13 @@ export default {
   mixins: [mixins],
   onLoad() {
     this.getList(true);
+    uni.$on("$__get_config_info_success__", this.reRequest);
   },
   methods: {
+    reRequest() {
+      this.getList(true);
+    },
+
     // 请求下一页数据
     RequestNextPage() {
       if (this.noMore) return false;
@@ -197,6 +202,10 @@ export default {
       return {client: "请选中客户", supplier: "请选择供应商"}[this.pType];
     },
   },
+
+  onUnload() {
+    uni.$off("$__get_config_info_success__", this.reRequest);
+  },
 };
 </script>
 
@@ -305,12 +314,12 @@ export default {
     margin: 0 auto;
     // #endif
 
-    /deep/ .uni-swipe_button-group {
+    ::v-deep .uni-swipe_button-group {
       top: 5px;
       bottom: 5px;
     }
 
-    /deep/ .uni-swipe_button {
+    ::v-deep .uni-swipe_button {
       border-radius: 6px;
     }
   }

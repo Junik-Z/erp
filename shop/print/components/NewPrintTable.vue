@@ -334,30 +334,7 @@ export default {
   </table>
 </template>
 
-<style lang="scss">
-/*@media print {
-  body {
-    //@include print-style();
-  }
-
-  tbody {
-    //page-break-before: always;
-    //@include print-style();
-  }
-
-  tr {
-    td, th {
-      //@include print-style();
-    }
-  }
-
-  @page {
-    color: #000;
-    //size: 126mm 140mm;
-    //margin: 10mm; !* 可以根据需要设置边距 *!
-  }
-}*/
-
+<style scoped lang="scss">
 .ko-print-table {
   width: 100%;
   border-collapse: collapse;
@@ -399,6 +376,7 @@ export default {
       @include print-style();
       border-bottom: 1px solid #000;
       border-right: 1px solid #000;
+      line-height: 1.4;
     }
 
     td {

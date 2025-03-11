@@ -329,7 +329,7 @@ export default {
       this.$refs.TPRef.open({
         ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId", "totalAmount"]),
         isReceivable: true,
-        FORM: 'RECEIVABLE'
+        FORM: "RECEIVABLE",
       });
 
       /*
@@ -511,11 +511,11 @@ export default {
           >
             <template #operate="{item, index}">
               <view
-                v-if="isPerm('Finance_Write') && !GET_PAGE_MENU_FUNC"
+                v-if="!GET_PAGE_MENU_FUNC"
                 style="display: flex; align-items: center; justify-content: center;"
               >
                 <button
-                  v-if="item.confirmable"
+                  v-if="item.confirmable && isPerm('FINANCE_RECEIVABLE_FINISH')"
                   class="ko-basic-button__card"
                   @click.stop="onConfirm(item, index)"
                 >
@@ -524,13 +524,14 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onAddedTicket(item, index)"
+                  v-if="isPerm('FINANCE_ADD_PAID_ORDER') || isPerm('FINANCE_PAID_ORDER')"
                 >
                   添加单据
                 </button>
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onCancel(item, index)"
-                  v-if="['CREATED'].includes(item.status)"
+                  v-if="['CREATED'].includes(item.status) && isPerm('FINANCE_RECEIVABLE_CANCEL')"
                 >
                   取消订单
                 </button>

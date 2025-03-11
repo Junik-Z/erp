@@ -269,7 +269,7 @@ export default {
   <!-- #endif -->
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 // #ifdef H5
 //@page Triple {
 //  size: 216mm 140mm;
@@ -308,11 +308,11 @@ export default {
     border-top: none;
     border-bottom: none;
 
-    /deep/ .ko-print-header {
+    ::v-deep .ko-print-header {
       border: none;
     }
 
-    /deep/ .ko-print-footer {
+    ::v-deep .ko-print-footer {
       border: none;
     }
   }
@@ -335,11 +335,11 @@ export default {
     }
 
     &--center {
-      width: calc(var(--ko-paper-width) - 2cm);
+      width: calc(var(--ko-paper-width));
       padding: 0 4px;
     }
 
-    /deep/ .ko-print-table {
+    ::v-deep .ko-print-table {
       height: var(--ko-paper-max-height, 100%);
     }
   }

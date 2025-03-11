@@ -389,6 +389,8 @@ export default {
       const node = _deepCopy(this.node);
 
       node.price = _isNotUnNil(node.price) ? this.toYuan(node.price) : null;
+
+      node.placeholderLabel = (node.staffs || []).map(v => v.name).join("、");
       this.form = node;
 
       // #ifdef MP
@@ -559,6 +561,8 @@ export default {
                 is-confirm
                 ref="UserRef"
                 @check-node="onCheckNode"
+
+                :placeholder-label="form.placeholderLabel"
               />
               <view v-if="!isPerm('STAFF_LIST')" style="font-size: 10px;color: #e43d33; margin-top: 5px;">
                 您没有获取员工信息权限，请联系管理员授权。
@@ -626,7 +630,7 @@ export default {
   }
 }
 
-/deep/ .uni-ec-canvas {
+::v-deep .uni-ec-canvas {
   width: 100%;
   height: var(--wrap-height, 400px);
   display: block;
@@ -635,7 +639,7 @@ export default {
 }
 
 // #ifdef H5
-/deep/ .uv-popup__content.bottom {
+::v-deep .uv-popup__content.bottom {
   max-width: 1024px;
   margin: 0 auto;
 }

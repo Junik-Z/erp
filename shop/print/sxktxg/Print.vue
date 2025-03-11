@@ -50,8 +50,6 @@ export default {
       // 产考元素的高度
       const RHeight = this.$refs.RRef.offsetHeight || (PaperHeight - 20);
 
-      console.log(rect, RHeight);
-
       // 表头总高度
       const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
       // 表尾的高度
@@ -372,6 +370,7 @@ export default {
   &__refer {
     position: absolute;
     left: -9999999px;
+    top: 0;
   }
 
   &__item {
@@ -382,7 +381,7 @@ export default {
     justify-content: center;
 
     &--content {
-      width: calc(100% - 10mm);
+      width: calc(100% - 6px);
       height: calc(100% - 10mm - 8px);
       padding: 4px;
     }
@@ -394,6 +393,7 @@ export default {
 
     position: absolute;
     left: -99999999px;
+    top: 0;
   }
 }
 

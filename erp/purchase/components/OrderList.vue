@@ -448,7 +448,7 @@ export default {
             return this.isEditorButton(node) && isStatus;
           }
 
-          return isStatus;
+          return isStatus && isPerm;
         });
     },
 

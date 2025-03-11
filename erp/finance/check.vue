@@ -991,7 +991,7 @@ export default {
 }
 
 // #ifdef H5
-/deep/ .ko-table-checked {
+::v-deep .ko-table-checked {
   font-size: 20px;
 
   &__warp {

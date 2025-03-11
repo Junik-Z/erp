@@ -96,7 +96,7 @@ export default {
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  max-height: calc(var(--ko-popup-max-height), 98vh);
+  max-height: calc(var(--ko-popup-max-height, 98vh));
 
   // #ifdef H5
   margin: 0 auto;

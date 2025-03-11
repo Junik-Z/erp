@@ -278,6 +278,8 @@ export default {
                 :is-long-list="isClient"
                 :options="bindList"
                 @input="onSupplierId"
+
+                :placeholder-label="GET_FUNC(form, 'customer.name')"
               />
             </UniFormsItem>
           </template>

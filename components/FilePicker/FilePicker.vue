@@ -269,7 +269,7 @@ export default {
   min-width: 50px;
   min-height: 50px;
 
-  /deep/ .uni-file-picker {
+  ::v-deep .uni-file-picker {
     height: calc(100% - 0.5px);
     width: calc(100% - 0.5px);
   }

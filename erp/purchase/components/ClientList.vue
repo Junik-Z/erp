@@ -602,7 +602,7 @@ export default {
   }
 
   // #ifdef H5
-  /deep/ .ko-history {
+  ::v-deep .ko-history {
     width: 100%;
   }
 

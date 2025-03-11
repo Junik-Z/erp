@@ -208,7 +208,7 @@ export default {
         <view class="ko-admin-authorization__wrap--label">授权功能：</view>
 
         <BasicCard :spacing="10" v-for="item of getTreeList" :key="item.id">
-          <view class="ko-admin-authorization__item" :style="getTableStyle">
+          <view class="ko-admin-authorization__item" :style="[getTableStyle]">
             <view class="ko-admin-authorization__item--title" @click="onClickTitle(item)">
               <block v-if="!!userId">
                 <view

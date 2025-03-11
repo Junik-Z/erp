@@ -292,6 +292,7 @@ export default {
     onEdit(row) {
       const node = _deepCopy(row);
       node.totalAmount = this.toYuan(node.totalAmount);
+
       this.isEdit = true;
       this.visible = true;
       this.$nextTick(() => {
@@ -432,10 +433,21 @@ export default {
             no-more
           >
             <template #operate="{item}">
-              <view style="display: flex; align-items: center; justify-content: center;"
-                    v-if="isPerm('Finance_Write')">
-                <button class="ko-basic-button__card" @click.stop="onEdit(item)">修改</button>
-                <button class="ko-basic-button__card" @click.stop="onRemove(item)">删除</button>
+              <view style="display: flex; align-items: center; justify-content: center;">
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onEdit(item)"
+                  v-if="isPerm('COST_UPDATE')"
+                >
+                  修改
+                </button>
+                <button
+                  v-if="isPerm('COST_DELETE')"
+                  class="ko-basic-button__card"
+                  @click.stop="onRemove(item)"
+                >
+                  删除
+                </button>
               </view>
             </template>
           </KoTable>
@@ -567,7 +579,7 @@ export default {
       flex: none;
       /* #endif */
 
-      /deep/ .uni-select__input-text {
+      ::v-deep .uni-select__input-text {
         text-align: center !important;
       }
     }

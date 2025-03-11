@@ -100,7 +100,7 @@ export default {
         if (!this.isRouter) {
           this.currentIndex = index;
         }
-        
+
         this.$emit("clickItem", {
           currentIndex: index,
         });
@@ -112,7 +112,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/deep/ .ko-segmented-control__scroll {
+::v-deep .ko-segmented-control__scroll {
   &::-webkit-scrollbar {
     display: none !important;
   }

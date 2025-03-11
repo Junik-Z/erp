@@ -73,6 +73,8 @@ export default {
 // #ifdef H5
 .ko-print-wrap {
   padding: 0;
+
+  @include print-style();
 }
 
 // #endif

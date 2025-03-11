@@ -614,7 +614,7 @@ export default {
       display: flex;
       padding: 10px;
 
-      /deep/ .el-tree {
+      ::v-deep .el-tree {
         width: 260px;
         margin-right: 20px;
         border: 1px solid #EBEEF5;

@@ -451,12 +451,12 @@ $border-color: #e9e9eb;
 .ko-salary {
   padding-top: 10px;
 
-  /deep/ .uv-calendar__header {
+  ::v-deep .uv-calendar__header {
     height: 32px;
     padding-bottom: 10px;
   }
 
-  /deep/ .uv-calendar__backtoday {
+  ::v-deep .uv-calendar__backtoday {
     display: none;
   }
 

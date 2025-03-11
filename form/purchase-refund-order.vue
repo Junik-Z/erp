@@ -206,6 +206,8 @@ export default {
               ref="UserRef"
               @input="onSupplierId"
               v-if="isClient ? bindList.length : true"
+
+              :placeholder-label="GET_FUNC(form, 'customer.name')"
             />
             <UniEasyinput
               v-else
@@ -237,6 +239,8 @@ export default {
                 :is-long-list="isClient"
                 :options="bindList"
                 @input="onSupplierId"
+
+                :placeholder-label="GET_FUNC(form, 'customer.name')"
               />
             </UniFormsItem>
           </template>

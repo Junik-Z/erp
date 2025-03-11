@@ -461,18 +461,18 @@ export default {
 <style scoped lang="scss">
 $border-color: #000;
 
-/deep/ .uni-easyinput__content.is-input-border, /deep/ .el-textarea__inner, /deep/ .el-input__inner {
+::v-deep .uni-easyinput__content.is-input-border, ::v-deep .el-textarea__inner, ::v-deep .el-input__inner {
   border: none;
 }
 
-/deep/ .el-table--border,
-/deep/ .el-table--group,
-/deep/ .el-table td.el-table__cell,
-/deep/ .el-table th.el-table__cell.is-leaf {
+::v-deep .el-table--border,
+::v-deep .el-table--group,
+::v-deep .el-table td.el-table__cell,
+::v-deep .el-table th.el-table__cell.is-leaf {
   border-color: $border-color;
 }
 
-/deep/ .el-table .el-table__cell {
+::v-deep .el-table .el-table__cell {
   padding: 0 0;
   height: 41px;
 
@@ -486,7 +486,7 @@ $border-color: #000;
   }
 }
 
-/deep/ .el-table .cell, /deep/ .el-table th.el-table__cell > .cell {
+::v-deep .el-table .cell, ::v-deep .el-table th.el-table__cell > .cell {
   padding-left: 0 !important;
   padding-right: 0 !important;
   height: 100%;
@@ -496,12 +496,12 @@ $border-color: #000;
   justify-content: center;
 }
 
-/deep/ .el-table--border::after, /deep/ .el-table--group::after, /deep/ .el-table::before {
+::v-deep .el-table--border::after, ::v-deep .el-table--group::after, ::v-deep .el-table::before {
   background: $border-color;
 }
 
 
-/deep/ .ko-table__cell {
+::v-deep .ko-table__cell {
   padding: 6px 10px;
 }
 
