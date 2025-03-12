@@ -207,6 +207,10 @@ export default {
                 props: {
                   value: row.remark,
                 },
+                attrs: {
+                  maxlength: 7,
+                  showWordLimit: true,
+                },
                 on: {
                   input: (val) => {
                     _this.$set(row, "remark", val);

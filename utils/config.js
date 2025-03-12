@@ -233,6 +233,9 @@ export const PageEnums = {
 
   // 员工工艺工资
   salary: "/staff/salary",
+
+  // ——————————————— 智能客服 ————————————————
+  smart: "/smart/smart"
 };
 
 /**

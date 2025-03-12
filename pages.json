@@ -382,6 +382,17 @@
           }
         }
       ]
+    },
+    {
+      "root": "smart",
+      "pages": [
+        {
+          "path": "smart",
+          "style": {
+            "navigationBarTitleText": "智能客服"
+          }
+        }
+      ]
     }
   ],
   "globalStyle": {

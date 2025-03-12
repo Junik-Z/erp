@@ -87,24 +87,41 @@ export default {
       // 剩余内容的总高度
       const VTotalHeight = _sum(vessel.map(v => v.__height__));
 
-      // 最后页要填补的条数
-      const fill = Math.floor((CHeight - VTotalHeight) / CellHeight) - 1;
+      // 剩余空白高度
+      const lastHeight = CHeight - VTotalHeight;
 
-      // 当要补的要大于 1 条的时候则正常补空行
-      if (fill > 0) {
+      // 最后页要填补的条数
+      const fill = Math.floor(lastHeight / CellHeight) - 1;
+
+      let balance = 0;
+      // 是否有其它费用
+      if (rect.statistics) balance += 1;
+
+      // 是否有统计
+      if (rect.summary) balance += 1;
+
+      // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
+      if (fill > 0 && fill < balance) {
         for (let i = 0; i < fill; i++) {
+          vessel.push({__height__: CellHeight});
+        }
+      } else if (fill > 0) {
+        for (let i = 0; i < (fill - balance); i++) {
           vessel.push({__height__: CellHeight});
         }
       }
 
       pages.push(vessel);
 
-      // 每页的条数
-      const pageLength = Math.floor(CHeight / CellHeight);
+      // 最后一页的总高度
+      const VTHeight = _sum(vessel.map(v => (v.__height__)));
 
-      if (fill < 0) {
+      if (fill < 0 || ((CHeight - (VTHeight + (rect.statistics || 0))) < 0)) {
+        // 每页的条数
+        const pageLength = Math.floor((CHeight - (rect.statistics || 0) - (rect.summary || 0)) / CellHeight);
+
         const end = [];
-        for (let i = 0; i < (pageLength - 2); i++) {
+        for (let i = 0; i < pageLength; i++) {
           end.push({__height__: CellHeight});
         }
         pages.push(end);
@@ -138,8 +155,7 @@ export default {
             label: "编号",
             headAlign: "center",
             headStyle: {
-              // "letter-spacing": "1em",
-              // paddingLeft: "1em",
+              "white-space": "nowrap",
             },
             align: "center",
             width: 70,
@@ -151,6 +167,7 @@ export default {
             headStyle: {
               "letter-spacing": "1em",
               paddingLeft: "1em",
+              "white-space": "nowrap",
             },
             prop: "name",
           },
@@ -158,6 +175,7 @@ export default {
             label: "单位",
             headAlign: "center",
             headStyle: {
+              "white-space": "nowrap",
               "letter-spacing": "10px",
               paddingLeft: "10px",
             },
@@ -173,6 +191,7 @@ export default {
             headAlign: "center",
             prop: "productQuantity",
             headStyle: {
+              "white-space": "nowrap",
               "letter-spacing": "10px",
               paddingLeft: "10px",
             },
@@ -183,6 +202,7 @@ export default {
             label: "单价",
             headAlign: "center",
             headStyle: {
+              "white-space": "nowrap",
               "letter-spacing": "10px",
               paddingLeft: "10px",
             },
@@ -201,16 +221,18 @@ export default {
             },
             align: "right",
             headStyle: {
+              "white-space": "nowrap",
               "letter-spacing": "10px",
               paddingLeft: "10px",
             },
           },
           {
             label: "备注",
-            width: 100,
+            width: 110,
             headAlign: "center",
             prop: "remark",
             headStyle: {
+              "white-space": "nowrap",
               "letter-spacing": "1em",
               paddingLeft: "1em",
             },
