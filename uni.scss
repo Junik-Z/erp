@@ -383,4 +383,12 @@ $--ko-print-font-size: 11pt;
   line-height: 16px;
 }
 
+.ko-pointer {
+  cursor: pointer;
+}
+
+.el-table .el-table__cell {
+  padding: 6px 0;
+}
+
 // #endif

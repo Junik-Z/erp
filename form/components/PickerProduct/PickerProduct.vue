@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import { InputNumber, Popover } from "@/uni_modules/element-ui/element.min";
+import { Input, InputNumber, Popover } from "@/uni_modules/element-ui/element.min";
 
 // #endif
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -73,7 +73,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "images")),
-                  size: 64,
+                  size: 38,
                   text: _get(row, "images"),
                   shape: "square",
                 },
@@ -185,6 +185,32 @@ export default {
                 on: {
                   change: (val) => {
                     _this.$set(row, "productQuantity", val);
+                    _this.$nextTick(() => {
+                      _this.onFocus();
+                    });
+                  },
+                },
+              },
+            );
+          },
+        },
+        {
+          label: "备注",
+          prop: "remark",
+          render: (h, {row}) => {
+            if (_this.readonly) return h("span", row.remark);
+
+            return h(
+              Input,
+              {
+                style: {width: "100%"},
+                props: {
+                  value: row.remark,
+                },
+                on: {
+                  input: (val) => {
+                    _this.$set(row, "remark", val);
+
                     _this.$nextTick(() => {
                       _this.onFocus();
                     });
@@ -352,7 +378,10 @@ export default {
 
     // #ifdef H5
     getTableColumns() {
-      return this.columns?.filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
+      const col = this.columns?.filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
+
+      // 如果是天科的则需要显示备注
+      return col.filter(item => _isEqual(item.prop, "remark") ? this.isTkCustom : true);
     },
     // #endif
   },

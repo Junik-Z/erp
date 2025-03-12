@@ -156,7 +156,7 @@ export default {
                 return h(
                   "div",
                   {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 64}})],
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 42}})],
                 );
               },
             },

@@ -66,7 +66,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "avatar")),
-                  size: 64,
+                  size: 38,
                   text: _get(row, "nickName"),
                   shape: "square",
                 },

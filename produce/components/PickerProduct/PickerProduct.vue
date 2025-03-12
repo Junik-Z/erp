@@ -11,7 +11,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import { PageEnums } from "@/utils/config";
 
 // #ifdef H5
-import { InputNumber } from "@/uni_modules/element-ui/element.min";
+import { Input, InputNumber } from "@/uni_modules/element-ui/element.min";
 
 // #endif
 
@@ -44,105 +44,9 @@ export default {
     isWork: Boolean,
   },
   data() {
-    const _this = this;
     return {
       list: [],
       loading: false,
-      // #ifdef H5
-      columns: [
-        {
-          label: "序号",
-          type: "index",
-          width: 55,
-        },
-        {
-          label: "产品图片",
-          prop: "images",
-          width: 80,
-          render: (h, {row}) => {
-            return h(
-              "div",
-              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-              [h(UvAvatar, {
-                props: {
-                  src: _this.getImageUrl(_get(row, "images")),
-                  size: 64,
-                  text: _get(row, "images"),
-                  shape: "square",
-                },
-              })],
-            );
-          },
-        },
-        {
-          label: "产品名称",
-          prop: "name",
-        },
-        {
-          label: "单价",
-          prop: "price",
-          render: (h, {row}) => {
-            if (_this.isClient || (_this.isWork && _this.type !== "sale")) {
-              return h(
-                "label",
-                {class: "ko-basic-money"},
-                [_this.toYuan(row.price)],
-              );
-            } else {
-              return h(
-                InputNumber,
-                {
-                  class: "ko-basic-money",
-                  style: {cursor: "pointer", width: "100%"},
-                  props: {
-                    min: 0,
-                    value: _this.toYuan(row.price),
-                  },
-                  on: {
-                    change: (val) => {
-                      _this.$set(row, "price", _this.toFen(val));
-                      _this.$nextTick(() => {
-                        _this.onFocus();
-                      });
-                    },
-                  },
-                },
-              );
-            }
-          },
-        },
-        {
-          label: "数量",
-          prop: "productQuantity",
-          render: (h, {row}) => {
-            return h(
-              InputNumber,
-              {
-                class: "ko-basic-money",
-                style: {cursor: "pointer", width: "100%"},
-                props: {
-                  value: row.productQuantity,
-                  min: 0,
-                },
-                on: {
-                  change: (val) => {
-                    _this.$set(row, "productQuantity", val);
-                    _this.$nextTick(() => {
-                      _this.onFocus();
-                    });
-                  },
-                },
-              },
-            );
-          },
-        },
-        {
-          label: "操作",
-          slot: "operate",
-          width: 80,
-        },
-      ],
-      // #endif
 
       takeOverName: "",
     };
@@ -245,7 +149,127 @@ export default {
 
     // #ifdef H5
     getTableColumns() {
-      return this.columns?.filter(item => {
+      const Col = [
+        {
+          label: "序号",
+          type: "index",
+          width: 55,
+        },
+        {
+          label: "产品图片",
+          prop: "images",
+          width: 80,
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: this.getImageUrl(_get(row, "images")),
+                  size: 42,
+                  text: _get(row, "images"),
+                  shape: "square",
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "产品名称",
+          prop: "name",
+        },
+        {
+          label: "单价",
+          prop: "price",
+          render: (h, {row}) => {
+            if (this.isClient || (this.isWork && this.type !== "sale")) {
+              return h(
+                "label",
+                {class: "ko-basic-money"},
+                [this.toYuan(row.price)],
+              );
+            } else {
+              return h(
+                InputNumber,
+                {
+                  class: "ko-basic-money",
+                  style: {cursor: "pointer", width: "100%"},
+                  props: {
+                    min: 0,
+                    value: this.toYuan(row.price),
+                  },
+                  on: {
+                    change: (val) => {
+                      this.$set(row, "price", this.toFen(val));
+                      this.$nextTick(() => {
+                        this.onFocus();
+                      });
+                    },
+                  },
+                },
+              );
+            }
+          },
+        },
+        {
+          label: "数量",
+          prop: "productQuantity",
+          render: (h, {row}) => {
+            return h(
+              InputNumber,
+              {
+                class: "ko-basic-money",
+                style: {cursor: "pointer", width: "100%"},
+                props: {
+                  value: row.productQuantity,
+                  min: 0,
+                },
+                on: {
+                  change: (val) => {
+                    this.$set(row, "productQuantity", val);
+                    this.$nextTick(() => {
+                      this.onFocus();
+                    });
+                  },
+                },
+              },
+            );
+          },
+        },
+        ...(this.isTkCustom ? [{
+          label: "备注",
+          prop: "remark",
+          render: (h, {row}) => {
+            if (this.readonly) return h("span", row.remark);
+
+            return h(
+              Input,
+              {
+                style: {width: "100%"},
+                props: {
+                  value: row.remark,
+                },
+                on: {
+                  input: (val) => {
+                    this.$set(row, "remark", val);
+
+                    this.$nextTick(() => {
+                      this.onFocus();
+                    });
+                  },
+                },
+              },
+            );
+          },
+        }] : []),
+        {
+          label: "操作",
+          slot: "operate",
+          width: 80,
+        },
+      ];
+
+      return Col?.filter(item => {
         return this.isWork || !(this.hidePrices && _isEqual(item.prop, "price"));
       });
     },

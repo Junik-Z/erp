@@ -142,6 +142,7 @@ export default {
 
   &__footer {
     // #ifdef H5
+    box-shadow: $uni-shadow-base;
     padding-bottom: 20px;
 
     &.no-padding {

@@ -118,7 +118,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "images")),
-                  size: 64,
+                 size: 42,
                   text: _get(row, "name") || _this.GET_SHOP_NAME,
                   shape: "square",
                 },
@@ -177,7 +177,11 @@ export default {
       <view class="ko-details__item">
         <view class="ko-details__cell">
           <label class="ko-basic-label">编号：</label>
-          <text class="ko-details__cell--text">{{ node.orderCode }}</text>
+          <text
+            class="ko-details__cell--text"
+            @click.stop="onCopyText(node.orderCode)"
+          >{{ node.orderCode }}
+          </text>
         </view>
         <view class="ko-details__cell" v-if="node.orderType">
           <label class="ko-basic-label">类型：</label>
@@ -189,11 +193,16 @@ export default {
         </view>
         <view class="ko-details__cell">
           <label class="ko-basic-label">下单时间：</label>
-          <text class="ko-details__cell--text">{{ node.createTime || "-" }}</text>
+          <text class="ko-details__cell--text" @click.stop="onCopyText(node.createTime)">{{
+              node.createTime || "-"
+            }}
+          </text>
         </view>
         <view class="ko-details__cell" v-if="!isPurchase">
           <label class="ko-basic-label">计划完工日期：</label>
-          <text class="ko-details__cell--text">{{ node.planFinishDate || "-" }}</text>
+          <text class="ko-details__cell--text" @click.stop="onCopyText(node.planFinishDate)">
+            {{ node.planFinishDate || "-" }}
+          </text>
         </view>
       </view>
     </UniSection>
@@ -279,7 +288,11 @@ export default {
 
         <view class="ko-details__cell" style="margin-top: 10px;">
           <label class="ko-basic-label">共计：</label>
-          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getCountByProductDetails) }}元</text>
+          <text
+            class="ko-details__cell--text ko-basic-money"
+            @click.stop="onCopyText(toYuan(getCountByProductDetails))"
+          > {{ toYuan(getCountByProductDetails) }}元
+          </text>
         </view>
       </view>
     </UniSection>
@@ -292,7 +305,11 @@ export default {
 
         <view class="ko-details__cell">
           <label class="ko-basic-label">实收：</label>
-          <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
+          <text
+            class="ko-details__cell--text ko-basic-money"
+            @click.stop="onCopyText(toYuan(node.totalAmount))"
+          > {{ toYuan(node.totalAmount) }}元
+          </text>
         </view>
       </view>
     </UniSection>
@@ -327,19 +344,33 @@ export default {
           <UniCol :span="24">
             <view class="ko-details__cell">
               <label class="ko-basic-label">电话：</label>
-              <text class="ko-details__cell--text">{{ node.orderPhone || "-" }}</text>
+              <text
+                class="ko-details__cell--text"
+                @click.stop="onCopyText(node.orderPhone)"
+              >
+                {{ node.orderPhone || "-" }}
+              </text>
             </view>
           </UniCol>
           <UniCol :span="24">
             <view class="ko-details__cell">
               <label class="ko-basic-label">地址：</label>
-              <text class="ko-details__cell--text">{{ node.orderAddress || "-" }}</text>
+              <text
+                class="ko-details__cell--text"
+                @click.stop="onCopyText(node.orderAddress)"
+              >{{ node.orderAddress || "-" }}
+              </text>
             </view>
           </UniCol>
           <UniCol :span="24">
             <view class="ko-details__cell">
               <label class="ko-basic-label">备注：</label>
-              <text class="ko-details__cell--text">{{ node.remark || "-" }}</text>
+              <text
+                class="ko-details__cell--text"
+                @click.stop="onCopyText(node.remark)"
+              >
+                {{ node.remark || "-" }}
+              </text>
             </view>
           </UniCol>
         </UniRow>

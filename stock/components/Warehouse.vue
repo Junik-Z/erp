@@ -114,7 +114,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                      size: 64,
+                     size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -139,7 +139,7 @@ export default {
                 return h(
                   "div",
                   {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 64}})],
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 42}})],
                 );
               },
             },

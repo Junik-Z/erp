@@ -12,7 +12,6 @@ import { _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
-
 let TimeVm = null;
 
 const CellHeight = 17;
@@ -255,7 +254,6 @@ export default {
             piece: {colspan: 0},
           },
         },
-
         ...this.GET_FUNC(this.node || {}, "_result_").map((item, index) => {
           const name = item.name || "";
 

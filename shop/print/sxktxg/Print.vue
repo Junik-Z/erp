@@ -209,7 +209,7 @@ export default {
             label: "备注",
             width: 100,
             headAlign: "center",
-            prop: "desc",
+            prop: "remark",
             headStyle: {
               "letter-spacing": "1em",
               paddingLeft: "1em",

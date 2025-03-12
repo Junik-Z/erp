@@ -60,7 +60,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "logo")),
-                  size: 64,
+                 size: 42,
                   text: _get(row, "name") || _this.GET_SHOP_NAME,
                 },
               })],
@@ -94,7 +94,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "users.0.avatar")),
-                  size: 64,
+                 size: 42,
                   text: _get(row, "users.0.nickName"),
                 },
               })],

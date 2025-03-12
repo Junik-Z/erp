@@ -308,6 +308,24 @@ export default {
         }
       }
     },
+
+    // 处理拷贝文本
+    onCopyText(data) {
+      if (data) {
+        uni.setClipboardData({
+          data,
+          success() {
+            uni.showToast({
+              title: "复制成功",
+              icon: "none",
+            });
+          },
+          fail(err) {
+            console.error("复制失败：", err);
+          },
+        });
+      }
+    },
   },
   components: {
     // #ifdef H5
@@ -616,9 +634,14 @@ export default {
       return this.GET_MOVABLE_LIST?.length;
     },
 
-    // 天科装饰定制打印
+    // 默认企业
+    isDefault() {
+      return _isEqual(this.GET_CONFIG_INFO?.name, "default");
+    },
+
+    // 天科装饰有限公司 定制功能
     isTkCustom() {
-      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg");
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || this.isDefault;
     },
   },
 };

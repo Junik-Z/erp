@@ -114,7 +114,12 @@ export default {
         </block>
 
         <view class="ko-order-card__item">
-          <view style="font-size: 15px; font-weight: bold;">{{ item.orderCode || "-" }}</view>
+          <view
+            style="font-size: 15px; font-weight: bold;"
+            @click.stop="onCopyText(item.orderCode)"
+          >
+            {{ item.orderCode || "-" }}
+          </view>
 
           <view class="ko-order-card__status" v-if="!isHideStatus" :class="[item.status]">
             <block v-if="isCustomStatusName && customStatusName">

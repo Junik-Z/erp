@@ -158,7 +158,7 @@ export default {
 
         <UniCol :span="24">
           <view class="ko-product-card__item--name">
-            <text>{{ node.name || "-" }}</text>
+            <text @click.stop="onCopyText(node.name)">{{ node.name || "-" }}</text>
           </view>
         </UniCol>
 

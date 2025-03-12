@@ -36,8 +36,6 @@ export default {
       this.type = option.customer_type;
       this.option = option;
 
-      console.log(option);
-
       this.visible = true;
       this.getList();
     },
@@ -74,16 +72,14 @@ export default {
   computed: {
     // 获取表格格子
     getGridTemplateColumnsStyle() {
-
       let span = "auto auto auto auto";
 
       // #ifdef H5
-      span = "200px 200px 200px 200px";
+      span = "100px 200px 200px 100px 200px";
       // #endif
 
-
       return {
-        "--ko-basic-table-grid-col": span,
+        "grid-template-columns": span,
       };
     },
 
@@ -107,14 +103,6 @@ export default {
       return (item) => item.totalAmount - _sum((item.proofs || []).map(v => v.totalAmount || 0));
     },
 
-    // 合计的样式
-    getTotalStyle() {
-      const rowLength = this.getMaxRowLength;
-      return {
-        "grid-area": `${rowLength}/1/${rowLength}/4`,
-      };
-    },
-
     // 最大表格数
     getMaxRowLength() {
       return 1 + this.checked.length + 1;
@@ -134,6 +122,44 @@ export default {
       return {sale: "收", purchase: "付"}[this.option.customer_type];
     },
 
+    // 左边通用的合并表格
+    leftColspan() {
+      return (next) => {
+        const rowLength = this.getMaxRowLength + next;
+        let span = `${rowLength}/1/${rowLength}/3`;
+
+        // #ifdef H5
+        span = `${rowLength}/1/${rowLength}/4`;
+        // #endif
+
+        return {"grid-area": span};
+      };
+    },
+
+    // 右边边通用的合并表格
+    rightColspan() {
+      return (next) => {
+        const rowLength = this.getMaxRowLength + next;
+
+        let span = `${rowLength}/3/${rowLength}/5`;
+
+        // #ifdef H5
+        span = `${rowLength}/4/${rowLength}/6`;
+        // #endif
+
+        return {"grid-area": span};
+      };
+    },
+
+    // 合计的样式
+    getTotalStyle() {
+      const rowLength = this.getMaxRowLength;
+      return {
+        "grid-area": `${rowLength}/1/${rowLength}/4`,
+      };
+    },
+
+
   },
 };
 </script>
@@ -143,7 +169,6 @@ export default {
     <scroll-view
       scroll-y="true"
       scroll-x="true"
-      :style="[getGridTemplateColumnsStyle]"
       class="ko-check-popup"
     >
       <view class="ko-check-popup__wrap">
@@ -168,18 +193,11 @@ export default {
             <uni-easyinput v-model="form.buyer" placeholder="请输入" />
             <!-- #endif -->
           </view>
-          <view class="ko-check-popup__row--item">
-            <text style="width: 10em;text-align: right;">地址：</text>
-            <!-- #ifdef MP -->
-            {{ form.address }}
-            <!-- #endif -->
-
-            <!-- #ifdef H5 -->
-            <uni-easyinput v-model="form.address" placeholder="请输入" />
-            <!-- #endif -->
-          </view>
         </view>
-        <view class="ko-basic-table">
+        <view
+          class="ko-basic-table"
+          :style="[getGridTemplateColumnsStyle]"
+        >
           <view class="ko-basic-table--cell">
             单据日期
           </view>
@@ -192,9 +210,12 @@ export default {
           <view class="ko-basic-table--cell">
             金额
           </view>
-          <!-- <view class="ko-basic-table&#45;&#45;cell">
-             剩余
-           </view>-->
+
+          <!-- #ifdef H5 -->
+          <view class="ko-basic-table--cell">
+            地址
+          </view>
+          <!-- #endif -->
 
           <block v-for="(item) of checked" :key="item.id">
             <view class="ko-basic-table--cell">
@@ -204,77 +225,95 @@ export default {
               {{ ORDER_TYPE_ENUMS(item.orderType) }}
             </view>
             <view class="ko-basic-table--cell">
-              {{ item.orderCode }}
+              <view style="text-align: center;">
+                {{ item.orderCode }}
+                <!-- #ifdef MP -->
+                <view
+                  v-if="item.orderAddress"
+                  style="font-size: 8px; color: #c7c9ce;"
+                >
+                  ({{ item.orderAddress }})
+                </view>
+                <!-- #endif -->
+              </view>
             </view>
-            <!--<view class="ko-basic-table&#45;&#45;cell">
-              {{ toYuan(item.totalAmount) }}
-            </view>-->
             <view class="ko-basic-table--cell">
               {{ toYuan(getUnsettled(item)) }}
             </view>
+
+            <!-- #ifdef H5 -->
+            <view class="ko-basic-table--cell">
+              {{ item.orderAddress }}
+            </view>
+            <!-- #endif -->
           </block>
 
+          <!-- 合计 -->
           <block>
             <view class="ko-basic-table--cell" :style="[getTotalStyle]">
               合计
             </view>
-            <view class="ko-basic-table--cell">
+            <view
+              class="ko-basic-table--cell"
+            >
               {{ toYuan(totalAmount) }}
             </view>
-            <!-- <view class="ko-basic-table&#45;&#45;cell">
-               {{ toYuan(totalAmount) }}
-             </view>-->
+
+            <!-- #ifdef H5 -->
+            <view class="ko-basic-table--cell"></view>
+            <!-- #endif -->
           </block>
 
+          <!-- 初期余额 -->
           <block>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 1}/1/${getMaxRowLength + 1}/3`}]"
+              :style="[leftColspan(1)]"
             >
               期初应{{ getShowText }}余额
             </view>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 1}/3/${getMaxRowLength + 1}/5`}]"
+              :style="[rightColspan(1)]"
               style="text-align: right;"
             >
               {{ toYuan(Math.abs(info.amount || 0)) }}
             </view>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 2}/1/${getMaxRowLength + 2}/3`}]"
+              :style="[leftColspan(2)]"
             >
               本期应{{ getShowText }}金额
             </view>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 2}/3/${getMaxRowLength + 2}/5`}]"
+              :style="[rightColspan(2)]"
               style="text-align: right;"
             >
               {{ toYuan(totalAmount) }}
             </view>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 3}/1/${getMaxRowLength + 3}/3`}]"
+              :style="[leftColspan(3)]"
             >
               本期{{ getShowText }}款金额
             </view>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 3}/3/${getMaxRowLength + 3}/5`}]"
+              :style="[rightColspan(3)]"
               style="text-align: right;"
             >
               {{ toYuan(totalAmount) }}
             </view>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 4}/1/${getMaxRowLength + 4}/3`}]"
+              :style="[leftColspan(4)]"
             >
               期末应{{ getShowText }}余额
             </view>
             <view
               class="ko-basic-table--cell"
-              :style="[{'grid-area': `${getMaxRowLength + 4}/3/${getMaxRowLength + 4}/5`}]"
+              :style="[rightColspan(4)]"
               style="text-align: right;"
             >
               {{ toYuan(Math.abs((info || {}).amount) - totalAmount) }}
@@ -289,12 +328,12 @@ export default {
             <table class="ko-check-popup__table--content">
               <thead>
               <tr>
-                <th colspan="5" style="text-align: center; padding: 10px; border-bottom: none;">
+                <th colspan="6" style="text-align: center; padding: 10px; border-bottom: none;">
                   <h2>对账单</h2>
                 </th>
               </tr>
               <tr>
-                <th colspan="5" style="text-align: left; padding: 10px;">
+                <th colspan="6" style="text-align: left; padding: 10px;">
                   <div>
                     <span style="display: inline-block; width: 10em; text-align: right;">
                       对账单位(卖方)：
@@ -307,12 +346,6 @@ export default {
                     </span>
                     {{ form.buyer }}
                   </div>
-                  <div>
-                    <span style="display: inline-block; width: 10em; text-align: right;">
-                      地址：
-                    </span>
-                    {{ form.address }}
-                  </div>
                 </th>
               </tr>
               <tr>
@@ -320,6 +353,7 @@ export default {
                 <th>单据类型</th>
                 <th>单据编号</th>
                 <th>金额</th>
+                <th style="min-width: 100px">地址</th>
                 <th style="width: 100px"></th>
               </tr>
               </thead>
@@ -330,30 +364,32 @@ export default {
                 <td>{{ ORDER_TYPE_ENUMS(item.orderType) }}</td>
                 <td>{{ item.orderCode }}</td>
                 <td>{{ toYuan(getUnsettled(item)) }}</td>
+                <td>{{ item.orderAddress }}</td>
                 <td></td>
               </tr>
               <tr>
                 <td colspan="3">合计</td>
                 <td>{{ toYuan(totalAmount) }}</td>
                 <td></td>
+                <td></td>
               </tr>
               <tr>
-                <td colspan="2">期初应{{ getShowText }}余额</td>
+                <td colspan="3">期初应{{ getShowText }}余额</td>
                 <td colspan="2">{{ toYuan(Math.abs(info.amount || 0)) }}</td>
                 <td></td>
               </tr>
               <tr>
-                <td colspan="2">本期应{{ getShowText }}金额</td>
+                <td colspan="3">本期应{{ getShowText }}金额</td>
                 <td colspan="2">{{ toYuan(totalAmount) }}</td>
                 <td></td>
               </tr>
               <tr>
-                <td colspan="2">本期{{ getShowText }}款金额</td>
+                <td colspan="3">本期{{ getShowText }}款金额</td>
                 <td colspan="2">{{ toYuan(totalAmount) }}</td>
                 <td></td>
               </tr>
               <tr>
-                <td colspan="2">期末应{{ getShowText }}余额</td>
+                <td colspan="3">期末应{{ getShowText }}余额</td>
                 <td colspan="2">{{ toYuan(Math.abs((info || {}).amount) - totalAmount) }}</td>
                 <td></td>
               </tr>
@@ -409,7 +445,8 @@ export default {
   &__table {
     width: 210mm;
 
-    position: absolute;
+    position: fixed;
+    top: 0;
     left: 99999999px;
 
     &--content {

@@ -158,6 +158,8 @@ export default {
           params.totalAmount = yuanToPoints(params.totalAmount);
           // params.details = this.$refs.PPRef.getDiscountedPrices();
 
+          console.log(params.details);
+
           this.loading = true;
 
           const Func = this.isAgain ? reOrderSaleApi : (this.isEdit ? updateSaleApi : addedSaleApi);

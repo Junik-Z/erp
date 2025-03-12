@@ -103,7 +103,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "voucher")),
-                  size: 64,
+                 size: 42,
                   shape: "square",
                 },
               })],
