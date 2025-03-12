@@ -151,16 +151,6 @@ export default {
       // 内部向外部更新数据的阀门
       isToOutsideFlag: false,
 
-      // 圆角设置
-      radiusVisible: false,
-      rsForm: {
-        angleType: 0,
-        radius: null,
-        width: null,
-        height: null,
-      },
-      rsIndex: 0,
-
       takeOverName: "",
       ScrollTop: 0,
 

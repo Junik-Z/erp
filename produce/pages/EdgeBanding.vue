@@ -20,10 +20,33 @@ export default {
   },
   data() {
     return {
+      // 圆角设置
       radiusVisible: false,
-      rsForm: {},
+      rsForm: {
+        angleType: 0,
+        radius: null,
+        width: null,
+        height: null,
+      },
+      rsIndex: 0,
 
-      form: {},
+      form: {
+        height: null,
+        width: null,
+        rid: "",
+        x: 0,
+        y: 0,
+        radius: [0, 0, 0, 0],
+        // 夹角类型
+        angleType: [0, 0, 0, 0],
+        edges: [0, 0, 0, 0],
+        straight: [[0, 0], [0, 0], [0, 0], [0, 0]],
+        weight: 18,
+        texture: false, // 纹理
+        rotate: false, // 转90度
+        quantity: 1,
+        color: "",
+      },
 
       isEmit: false,
       isOn: false,

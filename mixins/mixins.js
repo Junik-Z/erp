@@ -8,6 +8,7 @@ import {
   _get,
   _haveCommonElements,
   _isEmpty,
+  _isEnv,
   _isEqual,
   _isString,
   _keys,
@@ -641,7 +642,7 @@ export default {
 
     // 天科装饰有限公司 定制功能
     isTkCustom() {
-      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || this.isDefault;
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || (_isEnv() && this.isDefault);
     },
   },
 };

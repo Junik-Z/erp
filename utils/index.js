@@ -498,6 +498,9 @@ export function _haveCommonElements(arr1, arr2) {
 
 // 是否是开发者工具
 export function _isEnv() {
+  // #ifdef H5
+  return _isEqual(process.env.NODE_ENV, "development");
+  // #endif
   return _isEqual(uni.getDeviceInfo()?.platform, "devtools");
 }
 
