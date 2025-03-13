@@ -16,7 +16,7 @@ export default {
   data() {
     return {
       msgList: [
-        {
+        /* {
           "label": "怎么修改订单",
           "type": "user",
           "time": "2025-03-12 18:38:09",
@@ -30,7 +30,7 @@ export default {
           "__id__": "8fdcb362-324d-4793-b353-b5a352234a63",
           "loading": false,
           "status": 200,
-        },
+        },*/
       ],
 
       basicList: [
@@ -137,6 +137,11 @@ export default {
     onComplete() {
       this.loading = false;
     },
+
+    // 直接跳转到底部
+    onToEnd() {
+      this.scrollTop += (this.scrollTop || 999);
+    },
   },
 };
 </script>
@@ -173,7 +178,12 @@ export default {
               <UserMsg :item="item" />
             </view>
             <view v-if="isEqual(item.type, 'ai')">
-              <AiMsg :item="item" @change="onChange" @complete="onComplete" />
+              <AiMsg
+                :item="item"
+                @change="onChange"
+                @complete="onComplete"
+                @to-end="onToEnd"
+              />
             </view>
             <view style="height: 10px;"></view>
           </block>
@@ -191,6 +201,7 @@ export default {
           @confirm="getAiAsk(msg)"
           cursor-spacing="20"
           maxlength="-1"
+          :disabled="loading"
         >
         <button
           :disabled="loading"

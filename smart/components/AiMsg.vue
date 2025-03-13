@@ -11,6 +11,7 @@ export default {
         return {};
       },
     },
+    isTyper: Boolean,
   },
   components: {
     ZeroMarkdownView,
@@ -46,7 +47,13 @@ export default {
   },
   methods: {
     initTyper(to) {
-      this.typerVm = new EasyTyper(this.obj, to, this.completeAsEnd, this.changeOutput);
+      if (this.isTyper) {
+        this.typerVm = new EasyTyper(this.obj, to, this.completeAsEnd, this.changeOutput);
+      } else {
+        this.label = to;
+        this.completeAsEnd();
+        this.$emit("to-end");
+      }
     },
 
     completeAsEnd() {
