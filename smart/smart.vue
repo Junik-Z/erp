@@ -52,7 +52,6 @@ export default {
     // 请求对话
     getAiAsk(question) {
       if (!question) return false;
-
       const __id__ = _generateUUID();
 
       this.scrollTop += this.scrollTop;
@@ -119,10 +118,11 @@ export default {
               loading: false,
             },
           );
+
+          this.loading = false;
         })
         .finally(() => {
           this.$set(node, "loading", false);
-          this.loading = false;
         });
 
       this.msg = "";
@@ -131,6 +131,11 @@ export default {
     // 处理文字变化
     onChange() {
       this.scrollTop += 1;
+    },
+
+    // 文本输入完毕时触发
+    onComplete() {
+      this.loading = false;
     },
   },
 };
@@ -146,7 +151,7 @@ export default {
     >
       <view class="ko-smart__scroll--wrap">
         <view class="ko-smart__basic ko-basic-box-shadow">
-          <view style="font-size: 12px; color: #8f939c; margin-bottom: 10px;">有什么想咨询的，都可以跟我说</view>
+          <view style="font-size: 12px; color: #8f939c; margin-bottom: 5px;">有什么想咨询的，都可以跟我说</view>
           <view
             class="ko-basic-table ko-basic-table__not-border"
             style="grid-template-columns: auto auto;"
@@ -168,7 +173,7 @@ export default {
               <UserMsg :item="item" />
             </view>
             <view v-if="isEqual(item.type, 'ai')">
-              <AiMsg :item="item" @change="onChange" />
+              <AiMsg :item="item" @change="onChange" @complete="onComplete" />
             </view>
             <view style="height: 10px;"></view>
           </block>
@@ -182,8 +187,10 @@ export default {
           v-model="msg"
           placeholder="输入你想问的问题吧"
           class="ko-smart__submit--input"
-          confirm-type="发送"
+          confirm-type="send"
           @confirm="getAiAsk(msg)"
+          cursor-spacing="20"
+          maxlength="-1"
         >
         <button
           :disabled="loading"

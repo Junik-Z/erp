@@ -51,6 +51,7 @@ export default {
 
     completeAsEnd() {
       console.log("输出完毕！长官！");
+      this.$emit("complete");
     },
 
     changeOutput(text) {
