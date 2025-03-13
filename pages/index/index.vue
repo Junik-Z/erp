@@ -313,9 +313,11 @@ export default {
       <!-- #endif -->
     </view>
 
+    <!-- #ifdef MP -->
     <Movable @click="onFabClick">
       Ai
     </Movable>
+    <!-- #endif -->
   </view>
 </template>
 
