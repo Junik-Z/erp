@@ -10,7 +10,7 @@ import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import OrderCard from "./OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _groupBy, _isEmpty, CustomToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _keys, CustomToast } from "@/utils";
 import PrintList from "./PrintList/PrintList.vue";
 import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -121,7 +121,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -259,7 +259,11 @@ export default {
           if (res.confirm) {
             confirmOutboundApi(item)
               .then((resp) => {
-                this.inadequate = _deepCopy(_groupBy(resp.data, (item) => item.className));
+                const list = _deepCopy(_groupBy(resp.data, (item) => item.className));
+                this.inadequate = _keys(list).map(key => ({
+                  key,
+                  children: list[key],
+                }));
 
                 if (_isEmpty(resp.data)) {
                   uni.showToast({title: "出库成功"});
@@ -441,10 +445,10 @@ export default {
     <BasicPopup :visible.sync="visible" title="库存不足">
       <view class="ko-out__popup">
         <view v-for="(item, key) of inadequate" :key="key">
-          <UniSection :title="key" type="line">
+          <UniSection :title="item.key" type="line">
             <BasicCard>
               <view
-                v-for="child of item" :key="child.id"
+                v-for="child of item.children" :key="child.id"
                 style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
               >
                 <view style="flex: 1;">

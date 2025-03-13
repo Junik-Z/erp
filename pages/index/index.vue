@@ -8,13 +8,11 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 import Movable from "@/components/Movable/index.vue";
-import KoMovable from "@/components/Movable/index.vue";
 
 import Dayjs from "@/utils/dayjs";
 
 export default {
   components: {
-    KoMovable,
     MerchantsHeader,
     UniCol,
     UniRow,
@@ -88,15 +86,18 @@ export default {
         });
         return false;
       }
+      this.onMsg();
       uni.navigateTo({url: item.value});
     },
     onJumpStore() {
+      this.onMsg();
       uni.navigateTo({
         url: PageEnums.adminStore,
       });
     },
 
     onJumpMessage() {
+      this.onMsg();
       uni.navigateTo({
         url: PageEnums.messageList,
       });
@@ -178,6 +179,15 @@ export default {
         url: PageEnums.adminRenewal,
       });
       // #endif
+    },
+
+    // 发起通知请求
+    onMsg() {
+      console.log("发起授权通知", uni.$__ASK_SUBSCRIBE_MSG__ && !_isEmpty(uni.__TMPL_IDS__));
+
+      if (uni.$__ASK_SUBSCRIBE_MSG__ && !_isEmpty(uni.__TMPL_IDS__)) {
+        uni.$emit("$__ask_request_message__");
+      }
     },
 
     onFabClick() {
