@@ -16,6 +16,7 @@ import IndexList from "@/components/IndexList/IndexList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
+import { PageEnums } from "@/utils/config";
 
 export default {
   name: "ClientList",
@@ -308,7 +309,7 @@ export default {
       if (this.isPerm("FINANCE_RECEIVABLE_CHECK") || this.isPerm("FINANCE_PAYABLE_CHECK")) {
         this.noRefresh = true;
         uni.navigateTo({
-          url: "/erp/finance/check" + `?id=${item.id}&customer_type=purchase&FORM=purchase`,
+          url: PageEnums.financeCheck + `?id=${item.id}&customer_type=purchase&FORM=purchase`,
         });
       }
     },

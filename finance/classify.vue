@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import KoTable from "@/erp/components/KoTable/KoTable.vue";
+import KoTable from "./components/KoTable/KoTable.vue";
 // #endif
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";

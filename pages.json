@@ -74,33 +74,38 @@
           }
         },
         {
-          "path": "finance/finance",
+          "path": "qrcode/qrcode",
+          "style": {
+            "navigationBarTitleText": "登录确认"
+          }
+        }
+      ]
+    },
+    {
+      "root": "finance",
+      "pages": [
+        {
+          "path": "finance",
           "style": {
             "navigationBarTitleText": "财务"
           }
         },
         {
-          "path": "finance/ticket",
+          "path": "ticket",
           "style": {
             "navigationBarTitleText": "单据凭证"
           }
         },
         {
-          "path": "finance/check",
+          "path": "check",
           "style": {
             "navigationBarTitleText": "核对款项"
           }
         },
         {
-          "path": "finance/reconcile",
+          "path": "reconcile",
           "style": {
             "navigationBarTitleText": "对账客户"
-          }
-        },
-        {
-          "path": "qrcode/qrcode",
-          "style": {
-            "navigationBarTitleText": "登录确认"
           }
         }
       ]

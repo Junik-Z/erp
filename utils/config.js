@@ -133,8 +133,6 @@ export const ROLE_LIST_ENUMS = {
 export const PageEnums = {
   home: "/pages/home/home",
 
-  // 添加付款单据
-  ticket: "/erp/finance/ticket",
   // 新增修改销售订单
   editSale: "/form/sale-order",
   // 添加销售退货单
@@ -166,6 +164,20 @@ export const PageEnums = {
 
   // 批量分享
   shareProduct: "/shop/binding/share",
+
+  // ———————————— 财务管理 ————————————————————
+  finance: "/finance/finance",
+
+  // 添加付款单据
+  financeTicket: "/finance/ticket",
+  // 核对款项
+  financeCheck: "/finance/check",
+  // 核对款项
+  financeReconcile: "/finance/reconcile",
+
+
+
+  // ———————————— 生产管理 ————————————————————
 
   // 生产
   produceLoading: "/produce/loading",
@@ -235,7 +247,7 @@ export const PageEnums = {
   salary: "/staff/salary",
 
   // ——————————————— 智能客服 ————————————————
-  smart: "/smart/smart"
+  smart: "/smart/smart",
 };
 
 /**
@@ -287,7 +299,7 @@ export const MENU_LIST = [
   {
     label: "财务",
     icon: "icon-tubiao-05",
-    value: "/erp/finance/finance",
+    value: PageEnums.finance,
     modelKey: "finance",
     role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
     isUpRole: true,

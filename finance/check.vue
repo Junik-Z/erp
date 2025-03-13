@@ -12,7 +12,7 @@ import {
   getPayableCheckApi,
   getReceivableCheckApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -468,7 +468,7 @@ export default {
         isDetails: true,
       });
       uni.navigateTo({
-        url: `${PageEnums.ticket}${q}`,
+        url: `${PageEnums.financeTicket}${q}`,
       });
     },
 

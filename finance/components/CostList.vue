@@ -2,7 +2,7 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
 // #endif
-import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "./uv-count-to/uv-count-to.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";

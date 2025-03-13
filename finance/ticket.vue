@@ -24,7 +24,7 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { _deepCopy, _get, _isEmpty, _pick, CustomToast, transferYuan, yuanToPoints } from "@/utils";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import KoMovable from "@/components/Movable/index.vue";
 

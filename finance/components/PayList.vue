@@ -1,5 +1,5 @@
 <script>
-import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "./uv-count-to/uv-count-to.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import {
@@ -10,16 +10,16 @@ import {
   getPayableHistoryListApi,
   getPayableListApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "./OrderCard/OrderCard.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import KoTable from "@/erp/components/KoTable/KoTable.vue";
+import KoTable from "./KoTable/KoTable.vue";
 import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { CONFIG } from "@/utils/config";
+import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import Pay from "@/erp/components/Pay/Pay.vue";
+import Pay from "./Pay/Pay.vue";
 
 const PageMenu = [
   {
@@ -341,14 +341,14 @@ export default {
          isReceivable: false,
        });
        uni.navigateTo({
-         url: `${PageEnums.ticket}${q}`,
+         url: `${PageEnums.financeTicket}${q}`,
        }); */
     },
 
     // 跳转到对账客户页面
     onJumpReconcile() {
       uni.navigateTo({
-        url: "/erp/finance/reconcile",
+        url: PageEnums.financeReconcile,
       });
     },
 

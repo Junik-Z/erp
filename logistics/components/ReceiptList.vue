@@ -279,7 +279,7 @@ export default {
     onJumpInfo(item) {
       if (this.isPerm("DELIVERY_CHECK_LIST")) {
         uni.navigateTo({
-          url: "/erp/finance/check" + `?id=${item.id}&customer_type=logistics`,
+          url: PageEnums.financeCheck + `?id=${item.id}&customer_type=logistics`,
         });
       }
     },
