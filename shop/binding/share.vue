@@ -22,25 +22,22 @@ export default {
           label: "",
           key: "",
           isCheck: true,
-          span: 2,
+          width: "40px",
         },
         {
           label: "名称",
           key: "name",
           isField: true,
-          span: 12,
         },
         {
           label: "采购",
           key: "purchasePrice",
           isPrice: true,
-          span: 5,
         },
         {
           label: "销售",
           key: "salePrice",
           isPrice: true,
-          span: 5,
         },
       ],
       FieldList: [],
@@ -158,7 +155,6 @@ export default {
         :loading="loading"
       />
     </view>
-
     <view class="ko-share__checked ko-basic-box-shadow">
       <button class="ko-basic-button__card" @click="onUnshare">
         全选

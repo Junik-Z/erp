@@ -1,6 +1,6 @@
 <script>
 import { getConfigApi, getMyInfoApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
-import { _deepCopy, _get, _isEnv, _isEqual, _omit } from "@/utils";
+import { _deepCopy, _get, _isEqual, _omit } from "@/utils";
 import { CONFIG, PageEnums } from "@/utils/config";
 
 export default {
@@ -37,7 +37,9 @@ export default {
     uni.$on("$__update_config_info__", this.getConfig);
 
     // #ifdef MP-WEIXIN
-    !_isEnv() && uni.$on("$__request_message__", this.requestSubscribeMessage);
+    uni.$on("$__ask_request_message__", this.askSubscribeMessage);
+
+    uni.$on("$__request_message__", this.requestSubscribeMessage);
     // #endif
 
     // #ifdef MP
@@ -103,23 +105,29 @@ export default {
         });
     },
 
+    // 发起授权通知消息
+    askSubscribeMessage() {
+      uni.requestSubscribeMessage({
+        tmplIds: uni.__TMPL_IDS__,
+        success: (res) => {
+          console.log(res);
+          uni.$__ASK_SUBSCRIBE_MSG__ = false;
+        },
+        fail: (err) => {
+          console.log(err);
+        },
+      });
+    },
+
     // 获取订阅消息
     requestSubscribeMessage() {
-      function fn(tmplIds) {
-        uni.requestSubscribeMessage({
-          tmplIds: tmplIds,
-          success: (res) => {
-            console.log(res);
-          },
-          fail: (err) => {
-            console.log(err);
-          },
-        });
-      }
-
       getSubscribeApi()
         .then(req => {
           const tmplIds = req.data;
+
+          uni.__TMPL_IDS__ = tmplIds;
+
+          uni.$__ASK_SUBSCRIBE_MSG__ = false;
 
           console.log("订阅通知消息", tmplIds);
 
@@ -134,7 +142,7 @@ export default {
                   content: `亲，授权消息我们会在订单变化时第一时间发通知给你！`,
                   success: (res) => {
                     if (res.confirm) {
-                      fn(tmplIds);
+                      this.askSubscribeMessage();
                     }
                   },
                 });
@@ -144,8 +152,6 @@ export default {
 
               // 获取所有的状态
               const allEnabled = tmplIds?.map(key => _get(msg, key)) || [];
-
-              console.log(tmplIds);
 
               if (allEnabled.includes("reject")) {
                 uni.showModal({
@@ -160,20 +166,22 @@ export default {
                   content: `亲，授权消息我们会在订单变化时第一时间发通知给你！`,
                   success: (res) => {
                     if (res.confirm) {
-                      fn(tmplIds);
+                      this.askSubscribeMessage();
                     }
                   },
                 });
               } else if (allEnabled.some(key => _isEqual("accept", key))) {
-                uni.showModal({
+                uni.$__ASK_SUBSCRIBE_MSG__ = true;
+
+                /* uni.showModal({
                   title: "温馨提示",
                   content: `亲，授权消息我们会在订单变化时第一时间发通知给你！`,
                   success: (res) => {
                     if (res.confirm) {
-                      fn(tmplIds);
+                      this.askSubscribeMessage();
                     }
                   },
-                });
+                }); */
               }
             },
           });

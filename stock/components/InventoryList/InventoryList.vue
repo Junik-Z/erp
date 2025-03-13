@@ -2,7 +2,7 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import KoList from "@/components/List/List.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
-import { _deepCopy, _get, _groupBy } from "@/utils";
+import { _deepCopy, _get, _groupBy, _keys } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -43,7 +43,11 @@ export default {
   },
   computed: {
     groupList() {
-      return _groupBy(_deepCopy(this.list) || [], (item) => item.className);
+      const list = _groupBy(_deepCopy(this.list) || [], (item) => item.className);
+      return _keys(list).map(key => ({
+        key,
+        children: list[key],
+      }));
     },
 
     getFieldListText() {
@@ -83,7 +87,7 @@ export default {
       >
         <view class="ko-inventory-list__wrap">
           <view v-for="(item, key) of groupList" :key="key">
-            <UniSection :title="key || ''" type="line">
+            <UniSection :title="item.key || ''" type="line">
               <BasicCard>
                 <view class="ko-basic-table">
                   <view
@@ -95,7 +99,7 @@ export default {
                   </view>
 
                   <block
-                    v-for="child of item"
+                    v-for="child of item.children"
                     :key="child.id"
                   >
                     <view
