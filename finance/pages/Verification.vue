@@ -1,5 +1,5 @@
 <script>
-import PickerClass from "./PickerClass/PickerClass.vue";
+import PickerClass from "../components/PickerClass/PickerClass.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
