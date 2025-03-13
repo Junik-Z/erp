@@ -627,7 +627,7 @@ export default {
 
     // 获取右下角添加按钮列表数据
     GET_MOVABLE_LIST() {
-      return this.content?.filter(item => this.isPerm(item.perm));
+      return (this.MIXINS_CONTENT || [])?.filter(item => this.isPerm(item.perm));
     },
 
     // 是否显示添加按钮

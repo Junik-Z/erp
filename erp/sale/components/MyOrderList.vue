@@ -199,7 +199,7 @@ export default {
       PAGE_MENU: _deepCopy(PageMenu),
 
 
-      content: [
+      MIXINS_CONTENT: [
         // #ifdef H5
         {
           text: "定制",

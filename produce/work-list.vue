@@ -85,7 +85,7 @@ export default {
 
       node: {},
 
-      content: [
+      MIXINS_CONTENT: [
         /* {
           text: "快捷",
           iconfont: "icon-shiliangzhinengduixiang6",

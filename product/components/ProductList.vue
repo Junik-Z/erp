@@ -37,7 +37,7 @@ export default {
   },
   data() {
     return {
-      content: [
+      MIXINS_CONTENT: [
         // #ifdef MP
         {
           text: "分享",

@@ -62,7 +62,7 @@ export default {
     const _this = this;
 
     return {
-      content: [
+      MIXINS_CONTENT: [
         // #ifdef MP
         {
           text: "分享",
