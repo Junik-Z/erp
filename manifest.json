@@ -72,9 +72,9 @@
       "disableHostCheck": true,
       "proxy": {
         "/api": {
-          "target": "http://192.168.0.7:8093/api/",
-          "//target": "https://erp.kuaouyun.cn/api/",
-          "//secure": false,
+          "//target": "http://192.168.0.7:8093/api/",
+          "target": "https://erp.kuaouyun.cn/api/",
+          "secure": false,
           "changeOrigin": true,
           "ws": true,
           "pathRewrite": {

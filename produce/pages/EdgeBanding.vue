@@ -59,6 +59,7 @@ export default {
         this.form = _deepCopy(this.value);
       },
       immediate: true,
+      deep: true,
     },
     form: {
       handler() {
@@ -67,7 +68,7 @@ export default {
         this.$emit("input", _deepCopy(this.form));
         this.emitTime = setTimeout(() => {
           this.isEmit = false;
-        }, 10);
+        }, 0);
       },
       deep: true,
     },
