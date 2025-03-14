@@ -133,8 +133,6 @@ export const ROLE_LIST_ENUMS = {
 export const PageEnums = {
   home: "/pages/home/home",
 
-  // 添加付款单据
-  ticket: "/erp/finance/ticket",
   // 新增修改销售订单
   editSale: "/form/sale-order",
   // 添加销售退货单
@@ -155,18 +153,25 @@ export const PageEnums = {
   // 采购供应商下单返回地址
   purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
 
-
+  // ———————————— 产品管理 ————————————————————
   // 添加产品
   addedProduct: "/product/added",
   // 添加产品
   product: "/product/product",
 
-  // 分享出去进来
-  shareAddedProduct: "/shop/binding/binding",
+  // ———————————— 财务管理 ————————————————————
+  finance: "/finance/finance",
+  // 添加付款单据
+  financeTicket: "/finance/ticket",
+  // 核对款项
+  financeCheck: "/finance/check",
+  // 核对款项
+  financeReconcile: "/finance/reconcile",
+  // 财务报表
+  financeReports: "/finance/reports",
 
-  // 批量分享
-  shareProduct: "/shop/binding/share",
 
+  // ———————————— 生产管理 ————————————————————
   // 生产
   produceLoading: "/produce/loading",
   // 生产
@@ -177,8 +182,6 @@ export const PageEnums = {
   produceWork: "/produce/work",
   // 生产详情
   produceDetails: "/produce/details",
-
-
   // 考勤
   attend: "/attend/attend",
   // 考勤记录
@@ -186,32 +189,36 @@ export const PageEnums = {
   // 打卡二维码
   attendCheckIn: "/attend/check-in",
 
+  // ———————————— 通用产品选择 ————————
   // 选择产品页面
   pickerProduct: "/shop/list/list",
 
+  // 分享出去进来
+  shareAddedProduct: "/shop/binding/binding",
+  // 批量分享
+  shareProduct: "/shop/binding/share",
+
+  // ———————————— 授权管理 ————————————
   // 授权页面
   adminAuthorization: "/admin/merchants/authorization",
-
   // 服务续费
   adminRenewal: "/admin/renewal/renewal",
   // 系统设置
   adminStore: "/admin/admin/store",
 
+  // ———————————— 消息管理 ————————————
   // 消息列表
   messageList: "/message/list/list",
 
   // ———————————— 物流管理 ————————————
-
   // 物流
   logistics: "/logistics/logistics",
-
   // 物流商
   logisticsClient: "/logistics/logistics?TO_REF=RLRef",
   // 物流上
   logisticsClientList: "/logistics/client",
 
   // ———————————— 库存管理 ————————————
-
   // 库存管理
   stock: "/stock/stock",
   // 核销库存
@@ -229,13 +236,11 @@ export const PageEnums = {
   factory: "/staff/factory",
   // 员工的已完结工单列表
   produceStaffCompleteProcess: "/staff/complete-process",
-
-
   // 员工工艺工资
   salary: "/staff/salary",
 
   // ——————————————— 智能客服 ————————————————
-  smart: "/smart/smart"
+  smart: "/smart/smart",
 };
 
 /**
@@ -287,8 +292,16 @@ export const MENU_LIST = [
   {
     label: "财务",
     icon: "icon-tubiao-05",
-    value: "/erp/finance/finance",
+    value: PageEnums.finance,
     modelKey: "finance",
+    role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
+    isUpRole: true,
+  },
+  {
+    label: "财务报表",
+    icon: "icon-caiwubaobiao",
+    value: PageEnums.financeReports,
+    modelKey: "finance_reports",
     role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
     isUpRole: true,
   },

@@ -1,5 +1,5 @@
 <script>
-import PickerClass from "../../components/PickerClass/PickerClass.vue";
+import PickerClass from "../components/PickerClass/PickerClass.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -14,6 +14,7 @@ import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import { _get, _isEmpty } from "@/utils";
+import { PageEnums } from "@/utils/config";
 
 export default {
   name: "Verification",
@@ -96,7 +97,7 @@ export default {
       this.noRefresh = true;
       if ([this.isPerm("FINANCE_RECEIVABLE_CHECK"), this.isPerm("FINANCE_PAYABLE_CHECK")][+this.getCurrent]) {
         uni.navigateTo({
-          url: "/erp/finance/check" + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.getCurrent]}&FORM=${["F_SALE", "F_PURCHASE"][+this.getCurrent]}`,
+          url: PageEnums.financeCheck + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.getCurrent]}&FORM=${["F_SALE", "F_PURCHASE"][+this.getCurrent]}`,
         });
       } else {
         this.noRefresh = false;

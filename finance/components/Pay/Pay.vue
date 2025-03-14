@@ -1,6 +1,6 @@
 <script>
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import TicketMixins from "./TicketMixins";
+import TicketMixins from "../../TicketMixins";
 import KoList from "@/components/List/List.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -8,11 +8,11 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "../OrderCard/OrderCard.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { _deepCopy, _get, _isEqual } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "../../components/PrintList/PrintList.vue";
+import PrintList from "../PrintList/PrintList.vue";
 
 export default {
   name: "ToPay",

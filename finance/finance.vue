@@ -1,16 +1,22 @@
 <script>
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
-import Receivable from "./components/Receivable.vue";
-import PayList from "./components/PayList.vue";
-import CostList from "./components/CostList.vue";
-import Verification from "./components/Verification.vue";
+import Receivable from "./pages/Receivable.vue";
+import PayList from "./pages/PayList.vue";
+import CostList from "./pages/CostList.vue";
+import Verification from "./pages/Verification.vue";
 import { _deepCopy } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 export default {
   name: "finance",
-  components: {Verification, CostList, PayList, Receivable, UniSegmentedControl},
+  components: {
+    Verification,
+    CostList,
+    PayList,
+    Receivable,
+    UniSegmentedControl,
+  },
   mixins: [mixins],
   data() {
     return {
@@ -36,7 +42,7 @@ export default {
           roles: ["CUSTOMER_LIST", "SUPPLIER_LIST"],
         },
       ],
-      // TAB: 3,
+      // TAB: 4,
     };
   },
   onLoad(option) {
@@ -71,8 +77,8 @@ export default {
 </script>
 
 <template>
-  <view class="ko-purchase">
-    <view class="ko-purchase__tabs" v-if="GET_TAB_LIST.length > 1">
+  <view class="ko-finance">
+    <view class="ko-finance__tabs" v-if="GET_TAB_LIST.length > 1">
       <UniSegmentedControl
         :values="GET_TAB_LIST"
         label-key="label"
@@ -94,13 +100,13 @@ export default {
 </template>
 
 <style scoped lang="scss">
-.ko-purchase {
+.ko-finance {
   width: 100%;
 
   &__tabs {
     padding: 10px;
     // #ifdef H5
-    width: 400px;
+    width: 500px;
     // #endif
   }
 }

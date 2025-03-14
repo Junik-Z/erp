@@ -88,7 +88,6 @@ export default {
       MIXINS_CONTENT: [
         /* {
           text: "快捷",
-          iconfont: "icon-shiliangzhinengduixiang6",
           type: "fast",
         }, */
         {

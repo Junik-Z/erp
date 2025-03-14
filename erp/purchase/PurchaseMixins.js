@@ -99,7 +99,7 @@ export default {
       this?.$refs?.TPRef?.open(query);
       /* const q = this.getQueryString(query);
       uni.navigateTo({
-        url: `${PageEnums.ticket}${q}`,
+        url: `${PageEnums.financeTicket}${q}`,
       }); */
     },
 

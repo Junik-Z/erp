@@ -12,7 +12,7 @@ import {
   getPayableCheckApi,
   getReceivableCheckApi,
 } from "@/api/erp/finance";
-import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -25,7 +25,7 @@ import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import CheckPopup from "./CheckPopup.vue";
+import CheckPopup from "./components/CheckPopup.vue";
 import { addedSalePaidOrderApi } from "@/api/erp/sale";
 import { addedSPurchaseReturnedOrderApi } from "@/api/erp/purchase";
 
@@ -468,7 +468,7 @@ export default {
         isDetails: true,
       });
       uni.navigateTo({
-        url: `${PageEnums.ticket}${q}`,
+        url: `${PageEnums.financeTicket}${q}`,
       });
     },
 
