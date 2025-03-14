@@ -32,7 +32,7 @@ export default {
           roles: ["FINANCE_PAYABLE_COUNT", "FINANCE_PAYABLE_LIST", "FINANCE_PAYABLE_HISTORY"],
         },
         {
-          label: "成本统计",
+          label: "其他支出",
           ref: "CLRef",
           roles: ["COST_STATISTICS", "COST_GET_LIST", "COST_GET_CATEGORY_LIST"],
         },

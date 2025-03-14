@@ -282,6 +282,9 @@ export default {
                 type="purchase"
                 :is-client="isClient"
                 is-actual
+                
+                :is-show-recent="isPerm('PURCHASE_RECENT_PRICE')"
+                :supplier-id="form.supplierId"
               />
             </view>
           </UniFormsItem>
