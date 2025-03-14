@@ -7,7 +7,6 @@ import KoNotice from "@/components/Notice/Notice.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
-import Movable from "@/components/Movable/index.vue";
 
 import Dayjs from "@/utils/dayjs";
 
@@ -17,7 +16,6 @@ export default {
     UniCol,
     UniRow,
     KoNotice,
-    Movable,
   },
   mixins: [mixins],
   data() {
@@ -189,10 +187,6 @@ export default {
         uni.$emit("$__ask_request_message__");
       }
     },
-
-    onFabClick() {
-      uni.navigateTo({url: PageEnums.smart});
-    },
   },
   computed: {
     // 获取按钮位置
@@ -322,12 +316,6 @@ export default {
       <button style="font-size: 14px;" class="ko-link">续费</button>
       <!-- #endif -->
     </view>
-
-    <!-- #ifdef MP -->
-    <Movable @click="onFabClick">
-      Ai
-    </Movable>
-    <!-- #endif -->
   </view>
 </template>
 
