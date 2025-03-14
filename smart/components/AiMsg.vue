@@ -99,7 +99,7 @@ export default {
   &__content {
     border-radius: 10px;
     padding: 10px;
-    background: #B7E8C0;
+    background: rgba(183, 232, 192, 0.76);
     max-width: 80vw;
     margin-left: 22px;
   }

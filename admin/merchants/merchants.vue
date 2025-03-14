@@ -181,14 +181,15 @@ export default {
     getAvatarList() {
       return (type, item) => {
         const role = (item?.role || []).find(v => v.indexOf(type) > -1);
-        return (_get(this.premList || {}, role) || []).map(v => this.getImageUrl(v.avatar));
+        if (role) return (_get(this.premList || {}, role) || []).map(v => this.getImageUrl(v.avatar));
+        return [];
       };
     },
 
     getNameList() {
       return (type, item) => {
         const role = (item?.role || []).find(v => v.indexOf(type) > -1);
-        return (_get(this.premList || {}, role) || []).map(v => v.nickName);
+        return role ? (_get(this.premList || {}, role) || []).map(v => v.nickName) : [];
       };
     },
   },
