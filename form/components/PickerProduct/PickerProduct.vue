@@ -144,26 +144,6 @@ export default {
                   ),
                 ],
               );
-
-              /* return h(
-                InputNumber,
-                {
-                  class: "ko-basic-money",
-                  style: {cursor: "pointer", width: "100%"},
-                  props: {
-                    min: 0,
-                    value: _this.toYuan(row.price),
-                  },
-                  on: {
-                    change: (val) => {
-                      _this.$set(row, "price", _this.toFen(val));
-                      _this.$nextTick(() => {
-                        _this.onFocus();
-                      });
-                    },
-                  },
-                },
-              ); */
             }
           },
         },
@@ -308,6 +288,8 @@ export default {
 
     // 获取到的请求最近成交价格
     onPriceFocus(item) {
+      if (!this.isShowRecent) return false;
+
       const Func = {purchase: getPurchaseRecentPriceApi, sale: getRecentPriceApi}[this.type];
 
       if (!Func) return false;
