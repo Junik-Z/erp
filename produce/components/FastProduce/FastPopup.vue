@@ -33,8 +33,11 @@ export default {
       this.from = {name: ""};
       this.visible = true;
 
-      this.$nextTick(() => {
-        !isNew && this.$refs.FPRef?.getList?.(true);
+
+      setTimeout(() => {
+        this.$nextTick(() => {
+          !isNew && this.$refs.FPRef?.getList?.(true);
+        }, 180);
       });
     },
 

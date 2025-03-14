@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _haveCommonElements } from "@/utils";
+import { _deepCopy, _get, _haveCommonElements, _isEmpty } from "@/utils";
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST, PageEnums } from "@/utils/config";
@@ -84,15 +84,18 @@ export default {
         });
         return false;
       }
+      this.onMsg();
       uni.navigateTo({url: item.value});
     },
     onJumpStore() {
+      this.onMsg();
       uni.navigateTo({
         url: PageEnums.adminStore,
       });
     },
 
     onJumpMessage() {
+      this.onMsg();
       uni.navigateTo({
         url: PageEnums.messageList,
       });
@@ -174,6 +177,15 @@ export default {
         url: PageEnums.adminRenewal,
       });
       // #endif
+    },
+
+    // 发起通知请求
+    onMsg() {
+      console.log("发起授权通知", uni.$__ASK_SUBSCRIBE_MSG__ && !_isEmpty(uni.__TMPL_IDS__));
+
+      if (uni.$__ASK_SUBSCRIBE_MSG__ && !_isEmpty(uni.__TMPL_IDS__)) {
+        uni.$emit("$__ask_request_message__");
+      }
     },
   },
   computed: {

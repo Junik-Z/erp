@@ -2,7 +2,7 @@
 import { getWarningListApi } from "@/api/erp/stock";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
-import KoTable from "@/erp/components/KoTable/KoTable.vue";
+import KoTable from "./components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _get, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
@@ -132,7 +132,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: this.getImageUrl(_get(row, "images")),
-                 size: 42,
+                  size: 42,
                   text: _get(row, "images"),
                   shape: "square",
                 },
@@ -188,7 +188,6 @@ export default {
       />
     </view>
     <!-- #endif -->
-
 
     <!-- #ifdef H5 -->
     <view style="padding: 10px;">
