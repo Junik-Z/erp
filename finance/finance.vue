@@ -7,7 +7,6 @@ import CostList from "./pages/CostList.vue";
 import Verification from "./pages/Verification.vue";
 import { _deepCopy } from "@/utils";
 import mixins from "@/mixins/mixins";
-import Reports from "./pages/Reports.vue";
 
 export default {
   name: "finance",
@@ -17,7 +16,6 @@ export default {
     PayList,
     Receivable,
     UniSegmentedControl,
-    Reports,
   },
   mixins: [mixins],
   data() {
@@ -43,13 +41,8 @@ export default {
           ref: "VRef",
           roles: ["CUSTOMER_LIST", "SUPPLIER_LIST"],
         },
-        {
-          label: "财务表表",
-          ref: "RRef",
-          roles: ["CUSTOMER_LIST"],
-        },
       ],
-      TAB: 4,
+      // TAB: 4,
     };
   },
   onLoad(option) {
@@ -101,8 +94,6 @@ export default {
     <CostList ref="CLRef" v-if="isEqual(GET_TABS_REF_NAME,'CLRef')" />
 
     <Verification ref="VRef" v-if="isEqual(GET_TABS_REF_NAME,'VRef')" />
-
-    <Reports ref="VRef" v-if="isEqual(GET_TABS_REF_NAME,'RRef')" />
 
     <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>

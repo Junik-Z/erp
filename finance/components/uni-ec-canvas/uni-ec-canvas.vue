@@ -28,7 +28,7 @@
 
 <script>
 import WxCanvas from "./wx-canvas";
-import * as echarts from "./echarts_v5.6.0";
+import * as echarts from "./echarts";
 
 let ctx;
 
@@ -228,8 +228,7 @@ export default {
 
           const canvasDpr = wx.getSystemInfoSync().pixelRatio;
           const canvasWidth = res[0].width;
-
-          const canvasHeight = res[0].height - 140;
+          const canvasHeight = res[0].height;
 
           const ctx = canvasNode.getContext("2d");
 

@@ -1,13 +1,13 @@
+.icon-caiwubaobiao:before {
+  content: "\e676";
+}
+
 .icon-shengchan:before {
   content: "\e61e";
 }
 
 .icon-zt-01-02:before {
   content: "\e705";
-}
-
-.icon-shiliangzhinengduixiang6:before {
-  content: "\e61c";
 }
 
 .icon-dingzhishengchan:before {
@@ -30,10 +30,6 @@
   content: "\e61b";
 }
 
-.icon-duigoux:before {
-  content: "\ec9e";
-}
-
 .icon-jiantou:before {
   content: "\e601";
 }
@@ -44,26 +40,6 @@
 
 .icon-xianshi:before {
   content: "\e611";
-}
-
-.icon-bianzu:before {
-  content: "\e677";
-}
-
-.icon-close:before {
-  content: "\e65a";
-}
-
-.icon-Close:before {
-  content: "\e61a";
-}
-
-.icon-gengduocaozuo:before {
-  content: "\e683";
-}
-
-.icon-dashboard:before {
-  content: "\e78b";
 }
 
 .icon-shuaxin:before {
@@ -88,10 +64,6 @@
 
 .icon-chaojiguanliyuan:before {
   content: "\e72e";
-}
-
-.icon-xiangmu-diannaoduandengluyemian:before {
-  content: "\e615";
 }
 
 .icon-menhu-diannaoduandenglu:before {

@@ -88,7 +88,6 @@ export default {
       content: [
         /* {
           text: "快捷",
-          iconfont: "icon-shiliangzhinengduixiang6",
           type: "fast",
         }, */
         {

@@ -25,7 +25,7 @@ import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import CheckPopup from "./CheckPopup.vue";
+import CheckPopup from "./components/CheckPopup.vue";
 import { addedSalePaidOrderApi } from "@/api/erp/sale";
 import { addedSPurchaseReturnedOrderApi } from "@/api/erp/purchase";
 

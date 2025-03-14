@@ -107,6 +107,12 @@
           "style": {
             "navigationBarTitleText": "对账客户"
           }
+        },
+        {
+          "path": "reports",
+          "style": {
+            "navigationBarTitleText": "财务报表"
+          }
         }
       ]
     },

@@ -167,6 +167,8 @@ export const PageEnums = {
   financeCheck: "/finance/check",
   // 核对款项
   financeReconcile: "/finance/reconcile",
+  // 财务报表
+  financeReports: "/finance/reports",
 
 
   // ———————————— 生产管理 ————————————————————
@@ -292,6 +294,14 @@ export const MENU_LIST = [
     icon: "icon-tubiao-05",
     value: PageEnums.finance,
     modelKey: "finance",
+    role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
+    isUpRole: true,
+  },
+  {
+    label: "财务报表",
+    icon: "icon-caiwubaobiao",
+    value: PageEnums.financeReports,
+    modelKey: "finance_reports",
     role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
     isUpRole: true,
   },
