@@ -59,6 +59,9 @@ export default {
 
     // 获取列表
     getList(reset) {
+
+      console.log(reset);
+
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];

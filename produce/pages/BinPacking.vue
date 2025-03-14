@@ -755,7 +755,6 @@ export default {
         if (_isEqual(this.tab, 1)) {
           this.$set(this.residue[this.H5TableIndex], "color", color);
         }
-
       }
 
       this.form.color = color;
@@ -769,6 +768,11 @@ export default {
     // 选中材料的名称
     onSelectName(item) {
       this.form.name = _deepCopy(item.name);
+    },
+
+    // 添加行
+    onAddedRow() {
+      this.rectangles.push(_deepCopy(this.itemsForm));
     },
   },
   mounted() {
@@ -1189,7 +1193,8 @@ export default {
               Button,
               {
                 props: {
-                  type: "text",
+                  type: row.color ? "text" : "primary",
+                  ...(row.color ? {} : {size: "mini"}),
                 },
                 on: {
                   click: () => {
@@ -1198,7 +1203,7 @@ export default {
                   },
                 },
               },
-              [row.color],
+              [row.color || "选择颜色"],
             );
           },
           // #endif
@@ -1487,6 +1492,7 @@ export default {
               @click-more="onClickMore"
               not-edit
               :no-more="!rectangles.length"
+              no-padding-bottom
             >
               <template #operate="{item, index}">
                 <view style="display: flex; align-items: center;justify-content: center;">
@@ -1495,8 +1501,17 @@ export default {
                 </view>
               </template>
             </KoTable>
+
+            <view
+              @click.stop="onAddedRow"
+              style="display: flex; align-items: center; justify-content: flex-end; padding: 10px;"
+            >
+              <button class="ko-basic-button__card">添加行</button>
+            </view>
             <!-- #endif -->
           </view>
+
+
         </uni-section>
 
         <view class="ko-bin__added" v-if="!readonly">
