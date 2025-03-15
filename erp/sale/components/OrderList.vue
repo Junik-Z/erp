@@ -7,10 +7,11 @@ import {
   getSaleListApi,
   getSaleWaitPaymentListApi,
   printSaleApi,
+  quickOutApi,
 } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/erp/components/PrintList/PrintList.vue";
@@ -236,6 +237,9 @@ export default {
       isNewList: false,
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      visible: false,
+      inadequate: [],
     };
   },
   methods: {
@@ -395,6 +399,34 @@ export default {
         });
     },
 
+    // 快捷出库
+    onQuickOut(item, index) {
+      this.inadequate = [];
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后扣除库存。`,
+        confirmText: "确认",
+        success: (res) => {
+          if (res.confirm) {
+            quickOutApi(item)
+              .then((resp) => {
+                const list = _deepCopy(_groupBy(resp.data, (item) => item.className));
+                this.inadequate = _keys(list).map(key => ({
+                  key,
+                  children: list[key],
+                }));
+
+                if (_isEmpty(resp.data)) {
+                  uni.showToast({title: "出库成功"});
+                  // this.list.splice(index, 1);
+                } else {
+                  this.visible = true;
+                }
+              });
+          }
+        },
+      });
+    },
   },
   computed: {
     actionList() {
@@ -405,6 +437,13 @@ export default {
           func: "onReturn",
           status: ["FINISHED"],
           perm: "SALE_RETURN_ADD",
+        },
+        {
+          name: "快捷出库",
+          func: "onQuickOut",
+          status: ["FINISHED"],
+          perm: "SALE_QUICK_OUT",
+          color: "#e43d33",
         },
         {
           name: "取消订单",
@@ -437,6 +476,10 @@ export default {
 
           if (_isEqual("onReturn", item.func)) {
             return isPerm && isStatus && !_isEqual(node.orderType, "PRODUCTION");
+          }
+
+          if (_isEqual("onQuickOut", item.func)) {
+            return isPerm && isStatus && _isEqual(this.GET_PAGE_MENU_FUNC, 1);
           }
 
           return isPerm && isStatus;
@@ -593,6 +636,13 @@ export default {
               打印单据
             </button>
             <button
+              v-if="['FINISHED'].includes(item.status) && isPerm('SALE_QUICK_OUT') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              class="ko-basic-button__card"
+              @click.stop="onQuickOut(item, index)"
+            >
+              快捷出库
+            </button>
+            <button
               v-if="['CREATED'].includes(item.status) && isPerm('SALE_SUBMIT')"
               class="ko-basic-button__card"
               @click.stop="submitSale(item, index)"
@@ -648,6 +698,46 @@ export default {
     />
     <!-- #endif -->
 
+    <BasicPopup :visible.sync="visible" title="库存不足">
+      <view class="ko-order__popup">
+        <view v-for="(item, key) of inadequate" :key="key">
+          <uni-section :title="item.key" type="line">
+            <BasicCard>
+              <view
+                v-for="child of item.children" :key="child.id"
+                style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
+              >
+                <view style="flex: 1;">
+                  <label class="ko-basic-label">名称：</label>
+                  <text>{{ child.name }}</text>
+                </view>
+                <!-- <view style="padding: 0 10px">
+                   <label class="ko-basic-label">库存：</label>
+                   <text class="ko-basic-money">{{ child.sequence }}</text>
+                 </view>-->
+                <view style="padding: 0 10px">
+                  <label class="ko-basic-label">数量：</label>
+                  <text class="ko-basic-money">{{ child.productQuantity }}</text>
+                </view>
+                <view style="width: 40px;">
+                  <UvAvatar
+                    v-if="child.images"
+                    :src="getImageUrl(child.images)"
+                    shape="square"
+                  />
+                </view>
+              </view>
+            </BasicCard>
+          </uni-section>
+        </view>
+      </view>
+      <template #footer>
+        <view style="padding: 0 10% 10px;">
+          <button class="ko-basic-button__card" @click="visible = false">确认</button>
+        </view>
+      </template>
+    </BasicPopup>
+
     <Pay
       ref="TPRef"
       @success="updateList(true)"
@@ -696,5 +786,12 @@ export default {
   display: flex;
   flex-direction: column;
   // #endif
+
+  &__popup {
+    // #ifdef MP
+    width: 98vw;
+    // #endif
+    padding: 16px;
+  }
 }
 </style>

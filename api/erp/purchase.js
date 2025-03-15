@@ -590,13 +590,36 @@ export function addedSPurchaseReturnedPaidOrderApi(data) {
   });
 }
 
-
 /**
  * @description 修改已经付款
  */
 export function editPurchaseReturnedPaidOrderApi(data) {
   return request({
     url: "/purchase/return/edit-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+
+// ———————————————————— 快捷出入库 ————————————————————
+/**
+ * @description 快捷出库
+ */
+export function quickOutApi(data) {
+  return request({
+    url: "/purchase/return/quick-out",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 快捷入库
+ */
+export function quickInApi(data) {
+  return request({
+    url: "/purchase/quick-in",
     method: "post",
     data,
   });

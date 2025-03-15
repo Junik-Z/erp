@@ -149,7 +149,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],

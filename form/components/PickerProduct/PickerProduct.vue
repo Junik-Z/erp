@@ -17,7 +17,6 @@ import { getRecentPriceApi } from "@/api/erp/sale";
 import { getPurchaseRecentPriceApi } from "@/api/erp/purchase";
 import LatestPrice from "./LatestPrice";
 
-
 export default {
   name: "PickerProduct",
   components: {
@@ -447,7 +446,7 @@ export default {
                 <text v-else>{{ item.productQuantity }}</text>
               </view>
             </UniCol>
-            <UniCol :span="24" v-if="!isNotAdded && !readonly">
+            <UniCol :span="24" v-if="!readonly">
               <view style="display: flex;justify-content: flex-end; align-items: center; margin-top: 8px;">
                 <button class="ko-basic-button__card" @click="onRemove(index)">
                   移除

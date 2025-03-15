@@ -536,13 +536,36 @@ export function addedSaleReturnedOrderApi(data) {
   });
 }
 
-
 /**
  * @description 修改已经付款
  */
 export function editSaleReturnedOrderApi(data) {
   return request({
     url: "/sale/return/edit-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+
+// ———————————————————— 快捷出入库 ————————————————————
+/**
+ * @description 快捷出库
+ */
+export function quickOutApi(data) {
+  return request({
+    url: "/sale/quick-out",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 快捷入库
+ */
+export function quickInApi(data) {
+  return request({
+    url: "/sale/return/quick-in",
     method: "post",
     data,
   });

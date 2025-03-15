@@ -6,6 +6,7 @@ import {
   getPurchaseWaitPaymentListApi,
   printA4PurchaseApi,
   printPurchaseApi,
+  quickInApi,
 } from "@/api/erp/purchase";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
@@ -157,7 +158,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -393,6 +394,23 @@ export default {
         });
     },
 
+    // 快捷入库
+    onQuickIn(item, index) {
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后增加库存。`,
+        confirmText: "确认",
+        success: (res) => {
+          if (res.confirm) {
+            quickInApi({orderCode: item.orderCode})
+              .then(() => {
+                uni.showToast({title: "入库成功"});
+              });
+          }
+        },
+      });
+    },
+
     // #ifdef H5
     // 生成销售单
     onGenerateSale(item) {
@@ -409,6 +427,13 @@ export default {
           func: "onPrint",
           perm: "PURCHASE_PRINT",
           status: [],
+        },
+        {
+          name: "快捷入库",
+          func: "onQuickIn",
+          status: ["FINISHED"],
+          perm: "PURCHASE_QUICK_IN",
+          color: "#e43d33",
         },
         {
           name: "申请退货",
@@ -446,6 +471,10 @@ export default {
 
           if (_isEqual(item.func, "onJump")) {
             return this.isEditorButton(node) && isStatus;
+          }
+
+          if (_isEqual(item.func, "onQuickIn")) {
+            return (_isEqual(this.GET_PAGE_MENU_FUNC, 1) && isStatus) && isPerm;
           }
 
           return isStatus && isPerm;
@@ -603,6 +632,14 @@ export default {
               :loading="item.__s_loading__"
             >
               提交订单
+            </button>
+
+            <button
+              v-if="['FINISHED'].includes(item.status)  && isPerm('PURCHASE_QUICK_IN') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              class="ko-basic-button__card"
+              @click.stop="onQuickIn(item, index)"
+            >
+              快捷入库
             </button>
 
             <button

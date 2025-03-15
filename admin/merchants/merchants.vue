@@ -148,6 +148,8 @@ export default {
     onJumpCustom(type, item, custom) {
       if (item.role.includes("CNC_MEMBER")) {
         this.onCncEnable(type, item, custom);
+      } else if (item.role.includes("FINANCE_RECENT")) {
+        uni.navigateTo({url: `${PageEnums.adminAuthorization}?model_key=${item.modelKey}&role=FINANCE_RECENT&isCustom=true`});
       } else {
         const role = (item?.role || []).find(v => v.indexOf(type) > -1);
         role && uni.navigateTo({url: `${PageEnums.adminAuthorization}?model_key=${item.modelKey}&role=${role}&isCustom=true`});
@@ -181,14 +183,23 @@ export default {
     getAvatarList() {
       return (type, item) => {
         const role = (item?.role || []).find(v => v.indexOf(type) > -1);
-        return (_get(this.premList || {}, role) || []).map(v => this.getImageUrl(v.avatar));
+
+        if (role) {
+          return (_get(this.premList || {}, role) || []).map(v => this.getImageUrl(v.avatar));
+        } else {
+          return [];
+        }
       };
     },
 
     getNameList() {
       return (type, item) => {
         const role = (item?.role || []).find(v => v.indexOf(type) > -1);
-        return (_get(this.premList || {}, role) || []).map(v => v.nickName);
+        if (role) {
+          return (_get(this.premList || {}, role) || []).map(v => v.nickName);
+        } else {
+          return [];
+        }
       };
     },
   },
@@ -200,7 +211,8 @@ export default {
 
     <BasicCard :spacing="10" v-for="(item, index) of getMenuList" :key="index">
       <view class="ko-role__item">
-        <button class="ko-basic-button__card ko-role__custom" @click="onJumpCustom('WRITE', item, 'custom')">定制我的
+        <button class="ko-basic-button__card ko-role__custom" @click="onJumpCustom('WRITE', item, 'custom')">
+          定制我的
         </button>
 
         <uni-section :title="item.label">
@@ -212,10 +224,66 @@ export default {
         </uni-section>
 
         <view class="ko-role__item--user">
-          <block v-if="!isCustom">
-            <view class="ko-role__item--read" v-if="item.noShowInHome && item.role.includes('CNC_MEMBER')">
+          <!-- 板材定制 -->
+          <view class="ko-role__item--read" v-if="item.noShowInHome && item.role.includes('CNC_MEMBER')">
+            <view class="ko-role__item--read--wrap">
+              <label class="ko-basic-label">板材定制：</label>
+              <UvAvatarGroup
+                :size="avatarGroupSize"
+                gap="0.4"
+                :max-count="8"
+                :urls="getAvatarList('MEMBER', item)"
+                :names="getNameList('MEMBER', item)"
+              />
+              <button
+                class="ko-basic-button__card added"
+                @click.stop="onCncEnable('MEMBER', item, 'role')"
+              >
+                +
+              </button>
+            </view>
+            <button
+              class="ko-basic-button__card"
+              v-if="getNameList('MEMBER', item).length"
+              @click.stop="onCncEnable('MEMBER', item, 'more')"
+            >
+              更多
+            </button>
+          </view>
+
+          <!-- 财务报表 -->
+          <block v-else-if="item.role.includes('FINANCE_RECENT')">
+            <view class="ko-role__item--read">
               <view class="ko-role__item--read--wrap">
-                <label class="ko-basic-label">板材定制：</label>
+                <label class="ko-basic-label">财务报表：</label>
+                <UvAvatarGroup
+                  :size="avatarGroupSize"
+                  gap="0.4"
+                  :max-count="8"
+                  :urls="getAvatarList('RECENT', item)"
+                  :names="getNameList('RECENT', item)"
+                />
+                <button
+                  class="ko-basic-button__card added"
+                  @click.stop="onCncEnable('RECENT', item, 'role')"
+                >
+                  +
+                </button>
+              </view>
+              <button
+                class="ko-basic-button__card"
+                v-if="getNameList('RECENT', item).length"
+                @click.stop="onCncEnable('RECENT', item, 'more')"
+              >
+                更多
+              </button>
+            </view>
+          </block>
+
+          <block v-else>
+            <view class="ko-role__item--read" v-if="item.isMember">
+              <view class="ko-role__item--read--wrap">
+                <label class="ko-basic-label">{{ item.memberLabel || "会员" }}：</label>
                 <UvAvatarGroup
                   :size="avatarGroupSize"
                   gap="0.4"
@@ -225,7 +293,7 @@ export default {
                 />
                 <button
                   class="ko-basic-button__card added"
-                  @click.stop="onCncEnable('MEMBER', item, 'role')"
+                  @click.stop="onJumpMember('MEMBER', item)"
                 >
                   +
                 </button>
@@ -233,119 +301,87 @@ export default {
               <button
                 class="ko-basic-button__card"
                 v-if="getNameList('MEMBER', item).length"
-                @click.stop="onCncEnable('MEMBER', item, 'more')"
+                @click.stop="onToAuth('MEMBER', item)"
               >
                 更多
               </button>
             </view>
-
-            <block v-else>
-              <view class="ko-role__item--read" v-if="item.isMember">
-                <view class="ko-role__item--read--wrap">
-                  <label class="ko-basic-label">{{ item.memberLabel || "会员" }}：</label>
-                  <UvAvatarGroup
-                    :size="avatarGroupSize"
-                    gap="0.4"
-                    :max-count="8"
-                    :urls="getAvatarList('MEMBER', item)"
-                    :names="getNameList('MEMBER', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card added"
-                    @click.stop="onJumpMember('MEMBER', item)"
-                  >
-                    +
-                  </button>
-                </view>
+            <view class="ko-role__item--read" v-if="item.role.includes('STOCK_TAKING')">
+              <view class="ko-role__item--read--wrap">
+                <label class="ko-basic-label">盘点：</label>
+                <UvAvatarGroup
+                  :size="avatarGroupSize"
+                  gap="0.4"
+                  :max-count="8"
+                  :urls="getAvatarList('TAKING', item)"
+                  :names="getNameList('TAKING', item)"
+                />
                 <button
-                  class="ko-basic-button__card"
-                  v-if="getNameList('MEMBER', item).length"
-                  @click.stop="onToAuth('MEMBER', item)"
+                  class="ko-basic-button__card added"
+                  @click.stop="onSetRole('TAKING', item)"
                 >
-                  更多
+                  +
                 </button>
               </view>
-              <view class="ko-role__item--read" v-if="item.role.includes('STOCK_TAKING')">
-                <view class="ko-role__item--read--wrap">
-                  <label class="ko-basic-label">盘点：</label>
-                  <UvAvatarGroup
-                    :size="avatarGroupSize"
-                    gap="0.4"
-                    :max-count="8"
-                    :urls="getAvatarList('TAKING', item)"
-                    :names="getNameList('TAKING', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card added"
-                    @click.stop="onSetRole('TAKING', item)"
-                  >
-                    +
-                  </button>
-                </view>
+              <button
+                class="ko-basic-button__card"
+                v-if="getNameList('TAKING', item).length"
+                @click.stop="onToAuth('TAKING', item)"
+              >
+                更多
+              </button>
+            </view>
+            <view class="ko-role__item--read">
+              <view class="ko-role__item--read--wrap">
+                <label class="ko-basic-label">查看：</label>
+                <UvAvatarGroup
+                  :size="avatarGroupSize"
+                  gap="0.4"
+                  :max-count="8"
+                  :urls="getAvatarList('READ', item)"
+                  :names="getNameList('READ', item)"
+                />
                 <button
-                  class="ko-basic-button__card"
-                  v-if="getNameList('TAKING', item).length"
-                  @click.stop="onToAuth('TAKING', item)"
+                  class="ko-basic-button__card added"
+                  @click.stop="onSetRole('READ', item)"
                 >
-                  更多
+                  +
                 </button>
               </view>
-              <view class="ko-role__item--read">
-                <view class="ko-role__item--read--wrap">
-                  <label class="ko-basic-label">查看：</label>
-                  <UvAvatarGroup
-                    :size="avatarGroupSize"
-                    gap="0.4"
-                    :max-count="8"
-                    :urls="getAvatarList('READ', item)"
-                    :names="getNameList('READ', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card added"
-                    @click.stop="onSetRole('READ', item)"
-                  >
-                    +
-                  </button>
-                </view>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onToAuth('READ', item)"
+                v-if="getNameList('READ', item).length"
+              >
+                更多
+              </button>
+            </view>
+            <view class="ko-role__item--read">
+              <view class="ko-role__item--read--wrap">
+                <label class="ko-basic-label">管理：</label>
+                <UvAvatarGroup
+                  :max-count="8"
+                  :size="avatarGroupSize"
+                  gap="0.4"
+                  :urls="getAvatarList('WRITE', item)"
+                  :names="getNameList('WRITE', item)"
+                />
                 <button
-                  class="ko-basic-button__card"
-                  @click.stop="onToAuth('READ', item)"
-                  v-if="getNameList('READ', item).length"
+                  class="ko-basic-button__card added"
+                  @click.stop="onSetRole('WRITE', item)"
                 >
-                  更多
+                  +
                 </button>
               </view>
-              <view class="ko-role__item--read">
-                <view class="ko-role__item--read--wrap">
-                  <label class="ko-basic-label">管理：</label>
-                  <UvAvatarGroup
-                    :max-count="8"
-                    :size="avatarGroupSize"
-                    gap="0.4"
-                    :urls="getAvatarList('WRITE', item)"
-                    :names="getNameList('WRITE', item)"
-                  />
-                  <button
-                    class="ko-basic-button__card added"
-                    @click.stop="onSetRole('WRITE', item)"
-                  >
-                    +
-                  </button>
-                </view>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onToAuth('WRITE', item)"
-                  v-if="getNameList('WRITE', item).length"
-                >
-                  更多
-                </button>
-              </view>
-            </block>
+              <button
+                class="ko-basic-button__card"
+                @click.stop="onToAuth('WRITE', item)"
+                v-if="getNameList('WRITE', item).length"
+              >
+                更多
+              </button>
+            </view>
           </block>
-
-          <view v-else style="display: flex;justify-content: flex-end;align-items: center;">
-            <button class="ko-basic-button__card" @click="onJumpCustom('WRITE', item)">定制</button>
-          </view>
         </view>
       </view>
     </BasicCard>

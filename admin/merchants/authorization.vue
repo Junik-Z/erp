@@ -4,6 +4,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import {
   CNC_PERM_TREE,
   FINANCE_PERM_TREE,
+  FINANCE_REPORTS_PERM_TREE,
   LOGISTICS_PERM_TREE,
   PRODUCE_PERM_TREE,
   PRODUCT_PERM_TREE,
@@ -24,6 +25,7 @@ const TREE_DATA = {
   logistics: LOGISTICS_PERM_TREE,
   product: PRODUCT_PERM_TREE,
   cnc: CNC_PERM_TREE,
+  finance_reports: FINANCE_REPORTS_PERM_TREE,
 };
 
 export default {

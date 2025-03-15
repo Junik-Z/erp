@@ -51,8 +51,19 @@ export default {
     };
   },
   mixins: [mixins],
-  onLoad() {
-    this.getList(true);
+
+  onLoad(option) {
+    console.log("消息列表的参数：", option);
+    const scene = uni.getStorageSync("__APP_SCENE__") || "";
+    if (option.scene && !_isEqual(option.scene, scene)) {
+      this.onLogInAgain({scene: option.scene}, true)
+        .then(() => {
+          console.log(option, uni.getStorageSync("__USER_INFO__"));
+        });
+    } else {
+      this.getList(true);
+    }
+
     uni.$on("$__get_config_info_success__", this.reRequest);
   },
   methods: {

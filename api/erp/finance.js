@@ -412,3 +412,49 @@ export function getPayableCheckBillApi(data) {
     data,
   });
 }
+
+
+// ——————————————— 财务报表 —————————————————
+/**
+ * @description 获取收支趋势
+ */
+export function getReportTrendApi(data) {
+  return request({
+    url: "/finance/report/trend",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取最近交易
+ */
+export function getReportRecentApi(data) {
+  return request({
+    url: "/finance/report/recent",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取资产统计
+ */
+export function getReportAssetsApi(data) {
+  return request({
+    url: "/finance/report/assets",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取最近交易列表
+ */
+export function getReportRecentListApi(data) {
+  return request({
+    url: "/finance/report/recentList",
+    method: "get",
+    data,
+  });
+}

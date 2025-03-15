@@ -113,6 +113,12 @@
           "style": {
             "navigationBarTitleText": "财务报表"
           }
+        },
+        {
+          "path": "lately",
+          "style": {
+            "navigationBarTitleText": "最近交易"
+          }
         }
       ]
     },

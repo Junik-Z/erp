@@ -274,7 +274,6 @@ export default {
         </view>
       </UniSection>
 
-
       <UniSection title="退货产品明细" type="line">
         <view style="padding: 10px;">
           <UniFormsItem name="details" label-width="0">

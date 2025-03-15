@@ -1,11 +1,32 @@
 <script>
+// #ifdef H5
+import { DatePicker } from "@/uni_modules/element-ui/element.min";
+// #endif
 import UvDatetimePicker from "./uv-datetime-picker/uv-datetime-picker.vue";
 
 import dayjs from "@/utils/dayjs";
+import advancedFormat from "../advancedFormat";
+import weekOfYear from "../weekOfYear";
+
+dayjs.extend(weekOfYear);
+dayjs.extend(advancedFormat);
+
+let visibleItemCount = 6;
+
+// #ifdef H5
+visibleItemCount = 15;
+// #endif
+
 
 export default {
   name: "PickerDate",
-  components: {UvDatetimePicker},
+  components: {
+    // #ifdef H5
+    DatePicker,
+    // #endif
+
+    UvDatetimePicker,
+  },
   props: {
     placeholder: {
       type: String,
@@ -25,9 +46,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    showFormat: String,
   },
   data() {
-    return {};
+    return {visibleItemCount};
   },
   methods: {
     onOpen() {
@@ -35,10 +57,11 @@ export default {
     },
 
     // 时间转换
-    onConversionTime(time) {
+    onConversionTime(time, isShow = false) {
+      console.log(time);
       const day = dayjs(time);
       if (day.isValid()) {
-        return day.format(this.format);
+        return day.format(isShow && this.showFormat ? this.showFormat : this.format);
       }
       return time;
     },
@@ -51,23 +74,48 @@ export default {
       }
 
       this.$emit("input", val);
-      this.$emit("change", {...event, formatValue: val});
+      this.$emit("change", {...event, formatValue: val, value: event.value});
     },
   },
   computed: {
     getValue() {
-      return this.value ? this.onConversionTime(this.value) : "";
+      return this.value ? this.onConversionTime(this.value, true) : "";
     },
 
     getPValue() {
       return this.value ? this.onConversionTime(this.value) : +new Date();
     },
+
+    // #ifdef H5
+    ElDateType() {
+      return {
+        datetime: "date",//	年月日时分选择
+        date: "date",//		年月日选择
+        time: "date",//		时分选择，mode="time"时value的格式应该类似00:00
+        "year-month": "month",//		年月选择
+        year: "year",//		年选择
+      }[this.mode] || this.mode;
+    },
+    modelValue: {
+      get() {
+        return this.value;
+      },
+      set(val) {
+        this.$emit("input", val);
+      },
+    },
+
+    getFormat() {
+      return this.format?.replace("YYYY", "yyyy");
+    },
+    // #endif
   },
 };
 </script>
 
 <template>
   <view class="ko-picker-date">
+    <!-- #ifdef MP | H5 -->
     <view class="ko-picker-date__input" @click="onOpen">
       <uni-easyinput
         :placeholder="placeholder"
@@ -85,7 +133,19 @@ export default {
       :title="placeholder"
       :value="getPValue"
       @confirm="onConfirm"
+      :visible-item-count="visibleItemCount"
     />
+    <!-- #endif -->
+
+    <!-- #ifdef H5 -->
+    <DatePicker
+      v-if="false"
+      :placeholder="placeholder"
+      :type="ElDateType"
+      :format="getFormat"
+      v-model="modelValue"
+    ></DatePicker>
+    <!-- #endif -->
   </view>
 </template>
 
@@ -106,5 +166,13 @@ export default {
       z-index: 9;
     }
   }
+
+  // #ifdef H5
+  ::v-deep .uv-popup__content.bottom {
+    width: 800px;
+    margin: 0 auto;
+  }
+
+  // #endif
 }
 </style>

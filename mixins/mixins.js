@@ -460,7 +460,7 @@ export default {
           CHECK_IN: "库存盘点",
           CUSTOMIZED: "采购定制",
         };
-        return _get(obj, type) || "-";
+        return _get(obj, type) || type;
       };
     },
 
