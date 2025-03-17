@@ -13,13 +13,14 @@ export default {
     },
     showPage: Boolean,
     page: [Number, String],
+    header: String,
   },
 };
 </script>
 
 <template>
   <div class="ko-tk-header" style="--ko-basic-table-grid-col: 80px auto 80px auto 80px auto;">
-    <h3>天科板材五金批发部</h3>
+    <h3>天科板材{{ header }}</h3>
 
     <div class="ko-tk-header__page" v-if="showPage">第{{ page }}</div>
 

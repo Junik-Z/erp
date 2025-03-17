@@ -301,7 +301,7 @@ export default {
           is-show-summary
         >
           <template #thead>
-            <TkHeader :node="node" />
+            <TkHeader :node="node" :header="header" />
           </template>
           <template #tfoot>
             <TkFooter :node="node" />
@@ -333,7 +333,12 @@ export default {
               :is-show-summary="isEqual(groupList.length - 1, index)"
             >
               <template #thead>
-                <TkHeader :node="node" show-page :page="`${index + 1}/${groupList.length || 0}`" />
+                <TkHeader
+                  :node="node"
+                  show-page
+                  :page="`${index + 1}/${groupList.length || 0}`"
+                  :header="header"
+                />
               </template>
               <template #tfoot>
                 <TkFooter :node="node" />

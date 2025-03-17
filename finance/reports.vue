@@ -145,7 +145,7 @@ export default {
       getReportRecentApi(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
-          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize || true;
         })
         .catch(() => {
           this.noMore = true;
