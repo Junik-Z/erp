@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _omit, _pick, _reverse, xlsxCellStyle } from "@/utils";
+import { _deepCopy, _get, _keys, _omit, _pick, _reverse, xlsxCellStyle } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 // #ifdef H5
@@ -19,6 +19,7 @@ const JSList = [
 function loadScript(url, callback) {
   const script = document.createElement("script");
   script.type = "text/javascript";
+  script.className = "__script__";
   script.src = url;
 
   script.onload = () => {
@@ -40,6 +41,7 @@ function loadCss(url, callback) {
   const link = document.createElement("link");
   link.rel = "stylesheet";
   link.href = url;
+  link.className = "__script__";
 
   link.onload = () => {
     if (callback) {
@@ -240,6 +242,8 @@ export default {
       notUpdate: false,
 
       node: {},
+
+      key_date: +new Date(),
     };
   },
   methods: {
@@ -316,7 +320,6 @@ export default {
     },
     setList() {
       const data = this.getTableList();
-
       if (!window.luckysheet) {
         TVM = setTimeout(() => {
           this.setList();
@@ -365,9 +368,23 @@ export default {
 
     uninstall() {
       // #ifdef H5
-      window.luckysheet && window.luckysheet.destroy();
+      if (window.luckysheet) {
+        window.luckysheet.destroy();
+
+        const LKeys = _keys(window).filter(k => /^luckysheet/.test(k));
+
+        for (let i = 0; i < LKeys.length; i++) {
+          window[LKeys[i]] = null;
+        }
+
+        const S = document.querySelectorAll(".__script__");
+        for (let i = 0; i < S.length; i++) {
+          const sElement = S[i];
+          sElement.remove();
+        }
+      }
       console.log("销毁了吗");
-      window.luckysheet = null;
+      // location.reload();
       // #endif
     },
   },
@@ -397,8 +414,13 @@ export default {
     },
   },
   created() {
+
+  },
+  mounted() {
     // #ifdef H5
     if (!window.luckysheet) {
+      this.key_date = +new Date();
+
       Promise.all([
         ...CSS.map(url => new Promise(resolve => loadCss(url, resolve))),
         ...JSList.map(url => new Promise(resolve => loadScript(url, resolve))),
@@ -409,12 +431,12 @@ export default {
     }
     // #endif
   },
-  mounted() {
-  },
   beforeDestroy() {
     // #ifdef H5
     this.$emit("change", this.getList());
-    this.uninstall();
+    setTimeout(() => {
+      this.uninstall();
+    }, 10);
     // #endif
   },
   onUnload() {
@@ -426,7 +448,7 @@ export default {
   <view class="ko-lucky-sheet">
     <!-- #ifdef H5 -->
     <!--<button class="ko-basic-button__card" @click="getTest">数据</button>-->
-    <div id="lucky-sheet" />
+    <div id="lucky-sheet" :key="key_date" />
     <!-- #endif -->
 
     <!-- #ifndef H5 -->

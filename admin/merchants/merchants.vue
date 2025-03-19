@@ -9,7 +9,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { _deepCopy, _get, _isEqual } from "@/utils";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import Billing from "./../components/billing/billing.vue";
+import Billing from "../components/billing/billing.vue";
 
 export default {
   name: "SetRole",
@@ -265,7 +265,7 @@ export default {
                 />
                 <button
                   class="ko-basic-button__card added"
-                  @click.stop="onCncEnable('RECENT', item, 'role')"
+                  @click.stop="onSetRole('RECENT', item, 'role')"
                 >
                   +
                 </button>
@@ -273,7 +273,7 @@ export default {
               <button
                 class="ko-basic-button__card"
                 v-if="getNameList('RECENT', item).length"
-                @click.stop="onCncEnable('RECENT', item, 'more')"
+                @click.stop="onToAuth('RECENT', item, 'more')"
               >
                 更多
               </button>

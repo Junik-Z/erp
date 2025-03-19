@@ -772,12 +772,12 @@ export default {
 
     // 添加行
     onAddedRow() {
-      this.rectangles.push(_deepCopy(this.itemsForm));
+      const at = _deepCopy(this.rectangles.at(-1)) || {};
+      this.rectangles.push({..._deepCopy(this.itemsForm), ..._pick(at, ["color", "name"])});
     },
   },
   mounted() {
     this.getRectByRoot();
-
     // this.$refs.PRef.open();
   },
   computed: {
@@ -1196,6 +1196,7 @@ export default {
                   type: row.color ? "text" : "primary",
                   ...(row.color ? {} : {size: "mini"}),
                 },
+                class: "ko-bin-packing__color",
                 on: {
                   click: () => {
                     this.H5TableIndex = index;
@@ -1976,6 +1977,11 @@ export default {
   ::v-deep .uv-popup__content.bottom {
     width: 1024px;
     margin: 0 auto;
+  }
+
+  ::v-deep .ko-bin-packing__color {
+    white-space: wrap;
+    line-height: 1.3;
   }
 
   // #endif

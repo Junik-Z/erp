@@ -263,7 +263,9 @@ export default {
             params.produceType = "customized";
           }
 
-          if (_isEqual(this.type, "xlsx") && _isEqual(this.getCurrentValue, "type")) {
+          if (_isEqual(this.type, "xlsx") || _isEqual(this.getCurrentValue, "type")) {
+            console.log(this.$refs?.CTRef?.getList?.() || this.customizedMaterials);
+
             _set(params, "customizedMaterials.0",
               {
                 sequence: 1,
@@ -308,6 +310,7 @@ export default {
     // 更新表格数据
     onUpdateXlsx(data) {
       // console.log("数据更新了", data);
+
       this.customizedMaterials = data;
       /*  if (_isEqual(this.type, "xlsx") && this.$refs.CTRef) {
          const params = _deepCopy(this.form);
