@@ -12,7 +12,7 @@ export default {
 
     let query = _deepCopy(_query);
     // 是要进入扫码登录页面
-    const isQrcodePage = [PageEnums.qrcode, PageEnums.messageList].includes("/" + option.path);// _isEqual(option.path, "erp/qrcode/qrcode");
+    const isQrcodePage = [PageEnums.qrcode].includes("/" + option.path);// _isEqual(option.path, "erp/qrcode/qrcode");
 
     if (isQrcodePage) {
       query.login_code = query.scene;

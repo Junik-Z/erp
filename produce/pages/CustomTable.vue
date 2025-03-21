@@ -3,6 +3,8 @@ import { _deepCopy, _get, _keys, _omit, _pick, _reverse, xlsxCellStyle } from "@
 import mixins from "@/mixins/mixins";
 
 // #ifdef H5
+import { loadCss, loadScript } from "@/utils/index.js";
+
 const CSS = [
   "/static/libs/LuckySheet/plugins/css/pluginsCss.css",
   "/static/libs/LuckySheet/plugins/plugins.css",
@@ -15,46 +17,6 @@ const JSList = [
   "/static/libs/LuckySheet/luckysheet.umd.js",
 ];
 
-// 动态添加 js
-function loadScript(url, callback) {
-  const script = document.createElement("script");
-  script.type = "text/javascript";
-  script.className = "__script__";
-  script.src = url;
-
-  script.onload = () => {
-    console.log("Script loaded successfully");
-    if (callback) {
-      callback();
-    }
-  };
-
-  script.onerror = () => {
-    console.error("Script failed to load");
-  };
-
-  document.head.appendChild(script);
-}
-
-// 动态添加 css
-function loadCss(url, callback) {
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = url;
-  link.className = "__script__";
-
-  link.onload = () => {
-    if (callback) {
-      callback();
-    }
-  };
-
-  link.onerror = () => {
-    console.error("Script failed to load");
-  };
-
-  document.head.appendChild(link);
-}
 
 let TVM = null;
 let TVM1 = null;

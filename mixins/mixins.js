@@ -8,7 +8,6 @@ import {
   _get,
   _haveCommonElements,
   _isEmpty,
-  _isEnv,
   _isEqual,
   _isString,
   _keys,
@@ -43,6 +42,8 @@ export default {
       PAGE_MENU: [],
 
       PAGE_MENU_INDEX: 0,
+
+      TK_FILL_INFO: {},
     };
   },
   onShow() {
@@ -327,6 +328,37 @@ export default {
         });
       }
     },
+
+    // 判断是否要提示回填的价格
+    isTxFillPrices() {
+      return new Promise((resolve, reject) => {
+        // 没有回填数据的时候不需要判断 或者 不是天科定制时
+        if (_isEmpty(this.TK_FILL_INFO) || !this.isTkCustom) {
+          resolve();
+          return false;
+        }
+
+        const isCheck = ["supplierId", "orderAddress"]
+          .every(key => _isEqual(
+            _get(this.form, key) || "",
+            _get(this.TK_FILL_INFO, key) || "",
+          ));
+
+        if (isCheck) {
+          return resolve();
+        } else {
+          uni.showModal({
+            title: "温馨提示",
+            content: "当前价格是上一位客户/供应商的成交价格，是否继续保存？",
+            confirmText: "继续保存",
+            success: (res) => {
+              if (res.confirm) resolve();
+              if (res.cancel) reject();
+            },
+          });
+        }
+      });
+    },
   },
   components: {
     // #ifdef H5
@@ -457,7 +489,8 @@ export default {
           SALE_RETURN: "销售退货订单",
           PURCHASE: "采购订单",
           PURCHASE_RETURN: "采购退货订单",
-          CHECK_IN: "库存盘点",
+          CHECK_IN: "盘点入库",
+          CHECK_OUT: "盘点出库",
           CUSTOMIZED: "采购定制",
         };
         return _get(obj, type) || type;
@@ -642,7 +675,7 @@ export default {
 
     // 天科装饰有限公司 定制功能
     isTkCustom() {
-      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || (_isEnv() && this.isDefault);
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || (/* _isEnv() &&  */this.isDefault);
     },
   },
 };

@@ -1,55 +1,56 @@
 <script>
 import Dayjs from "@/utils/dayjs";
 import mixins from "@/mixins/mixins";
-import { _keys } from "@/utils";
+import { _get, _keys } from "@/utils";
 
 export default {
   name: "LatestPrice",
   mixins: [mixins],
   props: {
-    type: String,
-
-    recentPrice: {
-      type: Object,
-      default() {
-        return {};
-      },
-    },
-    userRecent: {
-      type: Object,
-      default() {
-        return {};
-      },
+    node: Object,
+  },
+  methods: {
+    transformData(obj) {
+      return _keys(obj)
+          .sort()
+          ?.map(key => ({
+            label: Dayjs(key).format("YYYY-MM-DD"),
+            value: this.toYuan(obj[key] || 0),
+          }))
+        || [];
     },
   },
   computed: {
-    // 获取售卖采购描述
-    getRecentText() {
-      return {purchase: "采购", sale: "销售"}[this.type];
+    isSale() {
+      return _get(this.saleObj, "show");
+    },
+    isPurchase() {
+      return _get(this.purchaseObj, "show");
     },
 
-    // 获取售卖采购描述
-    getKhText() {
-      return {purchase: "供应商", sale: "客户"}[this.type];
+    saleObj() {
+      return _get(this.node, "sale") || {};
     },
 
-    // 获取其它价格
-    getRecentPrice() {
-      return _keys((this.recentPrice)).sort()?.map(key => {
-        return {
-          label: Dayjs(key).format("YYYY-MM-DD"),
-          value: this.toYuan(this.recentPrice?.[key] || 0),
-        };
-      });
+    sRecent() {
+      return this.transformData(_get(this.saleObj, "recent") || {});
     },
-    // 获取其它价格
-    getUserRecent() {
-      return _keys((this.userRecent)).sort()?.map(key => {
-        return {
-          label: Dayjs(key).format("YYYY-MM-DD"),
-          value: this.toYuan(this.userRecent?.[key] || 0),
-        };
-      });
+
+    sUser() {
+      return this.transformData(_get(this.saleObj, "user") || {});
+    },
+
+    purchaseObj() {
+      return _get(this.node, "purchase") || {};
+    },
+
+
+    pRecent() {
+      return this.transformData(_get(this.purchaseObj, "recent") || {});
+    },
+
+    pUser() {
+      return this.transformData(_get(this.purchaseObj, "user") || {});
     },
   },
 };
@@ -57,39 +58,84 @@ export default {
 
 <template>
   <view class="ko-latest-price" style="--ko-basic-table-grid-col: auto auto;">
-    <view class="ko-latest-price__item">
-      <view style="font-size: 12px; margin-bottom: 10px;">
-        其它{{ getRecentText }}价格：
-      </view>
-      <view class="ko-basic-table">
-        <!--<view class="ko-basic-table&#45;&#45;th">时间</view>-->
-        <!--<view class="ko-basic-table&#45;&#45;th">金额</view>-->
-        <block style="color: #c7c9ce;" v-for="(cv, k) of getRecentPrice" :key="k">
-          <view class="ko-basic-table--cell">{{ cv.label }}</view>
-          <view class="ko-basic-table--cell">{{ cv.value }}</view>
-        </block>
-      </view>
+    <!-- 销售 -->
+    <view class="ko-latest-price__wrap" v-if="isSale">
+      <block v-if="(sRecent.length || sUser.length)">
+        <view class="ko-latest-price__item" v-if="sRecent.length">
+          <view style="font-size: 12px; margin-bottom: 4px;">
+            最近售价：
+          </view>
+          <view class="ko-basic-table">
+            <block style="color: #c7c9ce;" v-for="(cv, k) of sRecent" :key="k">
+              <view class="ko-basic-table--cell">{{ cv.label }}</view>
+              <view class="ko-basic-table--cell">{{ cv.value }}</view>
+            </block>
+          </view>
+        </view>
+        <view class="ko-latest-price__item" v-if="sUser.length">
+          <view style="font-size: 12px; margin-bottom: 4px;">
+            当前客户售价：
+          </view>
+          <view class="ko-basic-table">
+            <block style="color: #c7c9ce;" v-for="(cv, k) of sUser" :key="k">
+              <view class="ko-basic-table--cell">{{ cv.label }}</view>
+              <view class="ko-basic-table--cell">{{ cv.value }}</view>
+            </block>
+          </view>
+        </view>
+      </block>
+      <block v-else>
+        <view style="font-size: 12px; color:#c7c9ce;">暂无最近售价</view>
+      </block>
     </view>
-    <view class="ko-latest-price__item">
-      <view style="font-size: 12px; margin-bottom: 10px;">
-        当前{{ getKhText }}{{ getRecentText }}价格：
-      </view>
-      <view class="ko-basic-table">
-        <!--<view class="ko-basic-table&#45;&#45;th">时间</view>-->
-        <!--<view class="ko-basic-table&#45;&#45;th">金额</view>-->
-        <block style="color: #c7c9ce;" v-for="(cv, k) of getUserRecent" :key="k">
-          <view class="ko-basic-table--cell">{{ cv.label }}</view>
-          <view class="ko-basic-table--cell">{{ cv.value }}</view>
-        </block>
-      </view>
+
+    <!-- 采购 -->
+    <view class="ko-latest-price__wrap" v-if="isPurchase">
+      <block v-if="(pRecent.length || pUser.length)">
+        <view class="ko-latest-price__item" v-if="pRecent.length">
+          <view style="font-size: 12px; margin-bottom: 4px;">
+            最近采购价：
+          </view>
+          <view class="ko-basic-table">
+            <block style="color: #c7c9ce;" v-for="(cv, k) of pRecent" :key="k">
+              <view class="ko-basic-table--cell">{{ cv.label }}</view>
+              <view class="ko-basic-table--cell">{{ cv.value }}</view>
+            </block>
+          </view>
+        </view>
+        <view class="ko-latest-price__item" v-if="pUser.length">
+          <view style="font-size: 12px; margin-bottom: 4px;">
+            当前供应商采购价：
+          </view>
+          <view class="ko-basic-table">
+            <block style="color: #c7c9ce;" v-for="(cv, k) of pUser" :key="k">
+              <view class="ko-basic-table--cell">{{ cv.label }}</view>
+              <view class="ko-basic-table--cell">{{ cv.value }}</view>
+            </block>
+          </view>
+        </view>
+      </block>
+      <block v-else>
+        <view style="font-size: 12px; color:#c7c9ce;">暂无最近采购价</view>
+      </block>
     </view>
   </view>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .ko-latest-price {
   width: 100%;
   height: 100%;
+
+  display: flex;
+
+  &__wrap + &__wrap {
+    margin-left: 6px;
+  }
+
+  &__wrap {
+    flex: 1;
+  }
 
   &__item {
     padding: 5px 0;

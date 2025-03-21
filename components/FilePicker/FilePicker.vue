@@ -23,9 +23,13 @@ export default {
       type: String,
       default: "object",
     },
-    fileExtname: {
+    fileMediatype: {
       type: String,
       default: "image",
+    },
+    fileExtname: {
+      type: String,
+      default: "",
     },
     mode: {
       type: String,
@@ -33,6 +37,7 @@ export default {
     },
     disabled: Boolean,
     readonly: Boolean,
+    showUpdateList: Boolean,
   },
   data: () => ({
     imageValue: [],
@@ -74,7 +79,29 @@ export default {
 
     // 获取上传状态
     select(e) {
-      this.onCrop(e.tempFilePaths);
+      console.log("选中的文件", e);
+      const tempFiles = e.tempFiles;
+
+      const image = [];
+      const files = [];
+
+      for (let i = 0; i < tempFiles.length; i++) {
+        const tempFile = tempFiles[i];
+        const d = tempFile.extname;
+        if (["JPEG", "JPG", "PNG", "GIF", "BMP"].includes(d.toUpperCase())) {
+          image.push(tempFile);
+        } else {
+          files.push(tempFile);
+        }
+      }
+
+      if (image.length) {
+        this.onCropImage(image);
+      }
+
+      if (files.length) {
+        this.onCropFile(files);
+      }
     },
     // 获取上传进度
     progress(e) {
@@ -90,16 +117,16 @@ export default {
     },
     async onUploadBase64(base64) {
       uni.showLoading({
-        title: "图片上传中",
+        title: "上传中...",
         mask: true,
       });
       return uploadBase64Api({base64}).finally(() => uni.hideLoading());
     },
-
-    onCrop(images) {
+    onCropImage(images) {
       const that = this;
+
       uni.showLoading({
-        title: "图片处理中",
+        title: "处理中...",
         mask: true,
       });
 
@@ -109,11 +136,13 @@ export default {
 
       const up = [];
       for (let i in images) {
+        const item = images[i];
+
         const base64 = new Promise((resolve, reject) => {
 
           // #ifdef APP
           plus.io.resolveLocalFileSystemURL(
-            images[i],
+            item.url,
             function (entry) {
               entry?.file(function (file) {
                 const reader = new plus.io.FileReader();
@@ -122,7 +151,7 @@ export default {
                   //保存文件
                   const uploadBase64 =
                     new Promise((resolve2, reject) => {
-                      that.onUploadBase64(base).then(e => resolve2(e));
+                      that.onUploadBase64(base).then(e => resolve2({...e, _file_: item}));
                     });
                   resolve(uploadBase64);
                 };
@@ -137,7 +166,7 @@ export default {
 
           // #ifdef H5
           uni.getImageInfo({
-            src: images[i],
+            src: item.url,
             success: res => {
               let w, h;
               if (res.width > res.height) {
@@ -161,7 +190,7 @@ export default {
                     const uploadBase64 =
                       new Promise((resolve2, reject) => {
                         that.onUploadBase64(base)
-                          .then(e => resolve2(e));
+                          .then(e => resolve2({...e, _file_: item}));
                       });
                     resolve(uploadBase64);
                   };
@@ -186,14 +215,13 @@ export default {
 
           // #ifdef MP
           fs.readFile({
-            filePath: images[i],
+            filePath: item.url,
             encoding: "base64",
             success: (e) => {
               //保存文件
               const uploadBase64 = new Promise((resolve2) => {
                 that.onUploadBase64("data:image/png;base64," + e.data)
-                  .then(
-                    e => resolve2(e));
+                  .then(e => resolve2({...e, _file_: item}));
               });
               resolve(uploadBase64);
             },
@@ -203,18 +231,12 @@ export default {
             },
           });
           // #endif
-
         });
         up.push(base64);
-
       }
 
       Promise.all(up).then(e => {
-        const data = e.filter((v, i) => {
-          if (v) {
-            return v;
-          }
-        });
+        const data = e.filter((v) => !!v);
         if (data.length > 0) {
           uni.hideLoading();
           const value = data.map(v => v.data);
@@ -223,16 +245,90 @@ export default {
           } else {
             that.$emit("input", value);
           }
+
+          this.$emit("files", data);
         }
       });
     },
-
     onRemove(item) {
       if (this.limit === 1) {
         this.$emit("input", "");
       } else {
         // this.$emit("remove", item);
       }
+    },
+
+    // 上传文件
+    onCropFile(list) {
+      uni.showLoading({
+        title: "处理中...",
+        mask: true,
+      });
+
+      const fn = [];
+
+      // #ifdef MP
+      const fs = uni.getFileSystemManager();
+      // #endif
+
+      for (const index in list) {
+        const item = list[index];
+        const base64 = new Promise((resolve, reject) => {
+          // #ifdef H5
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const base64 = e.target.result;
+            console.log("Base64结果:", base64);
+            this.onUploadBase64(base64).then((res) => {
+              resolve({
+                ...res,
+                _file_: item,
+              });
+            }).catch(reject);
+          };
+          reader.readAsDataURL(item.file);
+          // #endif
+
+          // #ifdef MP
+          fs.readFile({
+            filePath: item.url,
+            encoding: "base64",
+            success: (e) => {
+              //保存文件
+              this.onUploadBase64("data:image/png;base64," + e.data)
+                .then(res => {
+                  resolve({...res, _file_: item});
+                })
+                .catch(reject);
+            },
+            fail: (e) => {
+              console.error(e);
+              reject("文件保存失败");
+            },
+          });
+          // #endif
+        });
+
+        fn.push(base64);
+      }
+
+      Promise.all(fn)
+        .then(res => {
+          const data = res.filter((v) => !!v);
+          if (data.length > 0) {
+            const value = data.map(v => v.data);
+            if (that.limit === 1) {
+              this.$emit("input", value[0]);
+            } else {
+              this.$emit("input", value);
+            }
+
+            this.$emit("files", data);
+          }
+        })
+        .finally(() => {
+          uni.hideLoading();
+        });
     },
   },
   computed: {
@@ -256,10 +352,12 @@ export default {
       :limit="limit"
       :image-styles="getImageStyle"
       :return-type="returnType"
-      :file-mediatype="fileExtname"
+      :file-mediatype="fileMediatype"
+      :file-extname="fileExtname"
       :auto-upload="false"
       :disabled="disabled"
       :readonly="readonly"
+      :show-update-list="showUpdateList"
     />
   </view>
 </template>

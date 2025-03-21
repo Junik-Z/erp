@@ -624,3 +624,34 @@ export function quickInApi(data) {
     data,
   });
 }
+
+
+// ———————————————————— 供应商地址 ————————————————————
+export function getSupplierAddressListApi(data) {
+  return request({
+    url: "/supplier/supplierAddressList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除供应商地址
+ */
+export function removeSupplierAddressApi(data) {
+  return request({
+    url: "/supplier/deleteAddress",
+    method: "get",
+    data,
+  });
+}
+
+
+// ————————————————————— 回填上次采购价格 —————————————————————
+export function fillSupplierPriceApi(data) {
+  return request({
+    url: "/purchase/fillSupplierPrice",
+    method: "post",
+    data,
+  });
+}

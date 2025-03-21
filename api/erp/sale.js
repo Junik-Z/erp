@@ -570,3 +570,35 @@ export function quickInApi(data) {
     data,
   });
 }
+
+
+// ————————————————————— 客户地址 —————————————————————
+export function getCustomerAddressListApi(data) {
+  return request({
+    url: "/customer/customerAddressList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除客户地址
+ */
+export function removeCustomerAddressApi(data) {
+  return request({
+    url: "/customer/deleteAddress",
+    method: "post",
+    data,
+  });
+}
+
+
+// ————————————————————— 回填上次销售价格 —————————————————————
+export function fillCustomerPriceApi(data) {
+  return request({
+    url: "/sale/fillCustomerPrice",
+    method: "post",
+    data,
+  });
+}
+

@@ -174,7 +174,7 @@ export default {
       const lKey = {default: "nickName", "noBindStaff": "nickName", perm: "nickName"}[this.type] || "name";
       const logoKey = {default: "avatar", "noBindStaff": "avatar", perm: "avatar"}[this.type] || "logo";
 
-      Func({...this.queryList, ...this.query})
+      Func({...this.queryList, [lKey]: this.queryList.nickName, ...this.query})
         .then(res => {
           const originalList = (res.data).map(item => ({
             ...item,
@@ -298,12 +298,12 @@ export default {
       this.modelVisible = false;
     },
 
-
     onLower() {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
     },
+
     // 根据索引搜索
     onSearchToNameIndex(key) {
       this.queryList.nameIndex = key;
@@ -442,7 +442,7 @@ export default {
       :type="isInput ? 'bottom' : 'center'"
     >
       <view v-if="modelVisible" class="ko-picker-user__popup" :class="{'is-input': isInput}">
-        <view v-if="isAutoCheckType || ['staffUserList'].includes(type)">
+        <view>
           <uni-search-bar
             v-model="queryList.nickName"
             placeholder="请输入"
@@ -468,8 +468,6 @@ export default {
             @lower="onLower"
             :no-more="noMore"
             @search="onSearchToNameIndex"
-
-            not-index
           />
         </view>
       </view>

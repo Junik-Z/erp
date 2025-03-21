@@ -6,15 +6,15 @@ import { Input, InputNumber, Popover } from "@/uni_modules/element-ui/element.mi
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _set, _sum, getRect } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _set, _sum, CustomToast, getRect } from "@/utils";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import mixins from "@/mixins/mixins";
 import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { PageEnums } from "@/utils/config";
-import { getRecentPriceApi } from "@/api/erp/sale";
-import { getPurchaseRecentPriceApi } from "@/api/erp/purchase";
+import { fillCustomerPriceApi, getRecentPriceApi } from "@/api/erp/sale";
+import { fillSupplierPriceApi, getPurchaseRecentPriceApi } from "@/api/erp/purchase";
 import LatestPrice from "./LatestPrice";
 
 export default {
@@ -46,7 +46,15 @@ export default {
     readonly: Boolean,
     // 显示最近的价格
     isShowRecent: Boolean,
+    // 客户/供应商
     supplierId: String,
+    // 客户/供应商地址
+    orderAddress: String,
+
+    // 是否回填价格
+    isFill: Boolean,
+    // 回填商户信息
+    fillInfo: [Object],
   },
   data() {
     const _this = this;
@@ -103,16 +111,15 @@ export default {
                   props: {
                     placement: "top",
                     trigger: "manual",
-                    value: _get(_this.itemList, `${row.productId}.__show__`),
+                    value: _this.isShowPrice(row.productId),
+                    width: 260,
                   },
                 },
                 [
                   h(LatestPrice, {
                     slot: "default",
                     props: {
-                      type: _this.type,
-                      recentPrice: _get(_this.itemList, `${row.productId}.recentPrice`),
-                      userRecent: _get(_this.itemList, `${row.productId}.userRecent`),
+                      node: _get(_this.itemList, `${row.productId}`),
                     },
                   }),
                   h(
@@ -217,6 +224,8 @@ export default {
       userRecent: {},
 
       itemList: {},
+
+      fLoading: false,
     };
   },
   created() {
@@ -289,35 +298,67 @@ export default {
     onPriceFocus(item) {
       if (!this.isShowRecent) return false;
 
-      const Func = {purchase: getPurchaseRecentPriceApi, sale: getRecentPriceApi}[this.type];
-
-      if (!Func) return false;
-
       // #ifdef MP
       getRect(`#P_${item.productId}`, this).then(rect => {
-        const maxWidth = (Math.min(rect.left, rect.right) - 20) + rect.width;
+        const maxWidth = (Math.min(rect.left, rect.right) - 8) + rect.width;
         // #endif
 
-        Func({productId: item.productId, supplierId: this.supplierId})
+        // 请求列表
+        const RList = [
+          // 显示最近销售价
+          {
+            func: getRecentPriceApi,
+            type: "sale",
+            params: {
+              ...(
+                _isEqual(this.type, "sale")
+                  ? {supplierId: this.supplierId}
+                  : {}
+              ),
+            },
+            perm: "SALE_RECENT_PRICE",
+          },
+          // 显示最近采购价
+          {
+            func: getPurchaseRecentPriceApi,
+            type: "purchase",
+            params: {
+              ...(
+                _isEqual(this.type, "purchase")
+                  ? {supplierId: this.supplierId}
+                  : {}
+              ),
+            },
+            perm: "PURCHASE_RECENT_PRICE",
+          },
+        ]
+          .filter(v => this.isPerm(v.perm));
+
+
+        Promise.all(
+          RList.map(v => v.func({...v.params, productId: item.productId})),
+        )
           .then(res => {
-            const data = res.data;
-
             const obj = _deepCopy(this.itemList);
-            const show = !(_isEmpty(data.recentPrice) && _isEmpty(data.userRecent));
 
-            _set(obj, `${item.productId}.__show__`, show);
-            _set(obj, `${item.productId}.recentPrice`, data.recentPrice);
-            _set(obj, `${item.productId}.userRecent`, data.userRecent);
+            for (let i = 0; i < RList.length; i++) {
+              const RItem = RList[i];
+              const DItem = _get(res, `${i}.data`) || {};
+              const show = !(_isEmpty(DItem.recentPrice) && _isEmpty(DItem.userRecent)) || true;
+              const recent = DItem.recentPrice || {};
+              const user = DItem.userRecent || {};
+              _set(obj, `${item.productId}.${RItem.type}`, {show, recent, user});
+            }
 
             // #ifdef MP
-            _set(obj, `${item.productId}.__style__`, {
-              "--ko-picker-product-max-width": maxWidth + "px",
-            });
+            _set(
+              obj,
+              `${item.productId}.__style__`,
+              {"--ko-picker-product-max-width": maxWidth + "px"},
+            );
             // #endif
 
             this.itemList = obj;
-
-            console.log(obj);
           });
 
         // #ifdef MP
@@ -328,8 +369,51 @@ export default {
     // 隐藏
     onPriceBlur(item) {
       const obj = _deepCopy(this.itemList);
-      _set(obj, `${item.productId}.__show__`, false);
+
+      _set(
+        obj,
+        `${item.productId}`,
+        {
+          ...obj,
+          purchase: {
+            ...obj.purchase,
+            show: false,
+          },
+          sale: {
+            ...obj.sale,
+            show: false,
+          },
+        },
+      );
       this.itemList = obj;
+    },
+
+    // 回填客户价格
+    onFillPrice() {
+      const Func = {sale: fillCustomerPriceApi, purchase: fillSupplierPriceApi}[this.type];
+      if (!Func) return false;
+
+      this.fLoading = true;
+      Func({
+        supplierId: this.supplierId,
+        orderAddress: this.orderAddress,
+        details: this.list,
+      })
+        .then(res => {
+          const obj = res.data;
+          this.list = this.list
+            .map(item => ({...item, price: obj[item.productId] || item.price}));
+
+          this.$emit("update:fill-info", {
+            supplierId: _deepCopy(this.supplierId),
+            orderAddress: _deepCopy(this.orderAddress),
+          });
+
+          CustomToast({title: "价格回填成功"});
+        })
+        .finally(() => {
+          this.fLoading = false;
+        });
     },
   },
   watch: {
@@ -359,6 +443,25 @@ export default {
       set(val) {
         this.$emit("update:total", val);
       },
+    },
+
+    // 是否显示最近价格
+    isShowPrice() {
+      return (id) => {
+        const obj = _get(this.itemList, id);
+        return obj && (_get(obj, "sale.show") || _get(obj, "purchase.show"));
+      };
+    },
+    // 是否显示两个价格
+    isTwoPrice() {
+      return (id) => {
+        const obj = _get(this.itemList, id);
+        return obj && (_get(obj, "sale.show") && _get(obj, "purchase.show"));
+      };
+    },
+
+    showFillText() {
+      return {sale: "回填上次售价", purchase: "回填上次采购价"}[this.type];
     },
 
     // #ifdef H5
@@ -406,15 +509,11 @@ export default {
                     style="margin-right: 5px; position: relative;"
                   >
                     <view
-                      :class="{'is-show': GET_FUNC(itemList, `${item.productId}.__show__`)}"
+                      :class="{'is-show': isShowPrice(item.productId), 'is-show-two': isTwoPrice(item.productId)}"
                       class="ko-picker__price ko-basic-box-shadow"
                       v-if="isShowRecent"
                     >
-                      <LatestPrice
-                        :type="type"
-                        :recent-price="GET_FUNC(itemList, `${item.productId}.recentPrice`)"
-                        :user-recent="GET_FUNC(itemList, `${item.productId}.userRecent`)"
-                      />
+                      <LatestPrice :node="GET_FUNC(itemList, `${item.productId}`)" />
                     </view>
 
                     <view :id="`P_${item.productId}`">
@@ -444,6 +543,18 @@ export default {
                   @change="onFocus"
                 />
                 <text v-else>{{ item.productQuantity }}</text>
+              </view>
+            </UniCol>
+            <UniCol :span="24" v-if="isTkCustom">
+              <view style="display: flex; align-items: center;">
+                <label class="ko-basic-label">备注：</label>
+                <uni-easyinput
+                  v-if="!readonly"
+                  v-model="item.remark"
+                  placeholder="请输入备注"
+                  maxlength="7"
+                />
+                <text v-else>{{ item.remark }}</text>
               </view>
             </UniCol>
             <UniCol :span="24" v-if="!readonly">
@@ -476,8 +587,21 @@ export default {
     </KoTable>
     <!-- #endif -->
 
-    <view style="display: flex; align-items: center; margin-top: 8px;" v-if="!isNotAdded && !readonly">
+    <view
+      style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;"
+      v-if="!isNotAdded && !readonly"
+    >
       <button class="ko-basic-button__card" @click="onAdded()">添加</button>
+
+      <button
+        class="ko-basic-button__card"
+        v-if="isFill && supplierId && list.length"
+        @click="onFillPrice"
+        :loading="fLoading"
+        :disabled="fLoading"
+      >
+        {{ showFillText }}
+      </button>
     </view>
 
     <view style="margin-top: 10px;" v-if="getTotalMoney !== 0 && !hidePrices">
@@ -536,7 +660,7 @@ export default {
   &__price {
     position: absolute;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-40%);
     background: #fff;
     padding: 6px 10px;
     border-radius: 6px;
@@ -554,6 +678,10 @@ export default {
       opacity: 1;
     }
 
+    &.is-show-two {
+      width: 70vw;
+    }
+
     &::before {
       content: "";
       display: inline-block;
@@ -566,7 +694,7 @@ export default {
 
       position: absolute;
       bottom: -2px;
-      left: 50%;
+      left: 40%;
       background: #fff;
     }
   }

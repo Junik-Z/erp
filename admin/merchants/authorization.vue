@@ -132,7 +132,22 @@ export default {
   },
   computed: {
     getTreeList() {
-      return _get(TREE_DATA, this.option.model_key) || [];
+      return (_get(TREE_DATA, this.option.model_key) || [])
+        .map(item => {
+          item.children = item.children.flatMap(child => {
+            // 判断生效的商户
+            if (child?.mixinKeys) {
+              if (child?.mixinKeys.some(v => this[v])) {
+                return [child];
+              } else {
+                return [];
+              }
+            } else {
+              return [child];
+            }
+          });
+          return item;
+        });
     },
 
     // 获取请求用户列表

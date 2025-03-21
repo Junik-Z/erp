@@ -67,7 +67,6 @@ export default {
   width: 100%;
 
   &__wrap {
-
     &.safe {
       padding-bottom: env(safe-area-inset-bottom);
     }

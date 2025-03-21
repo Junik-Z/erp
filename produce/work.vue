@@ -1,4 +1,7 @@
 <script>
+// #ifdef H5
+import FilePreview from "./pages/FilePreview.vue";
+// #endif
 import UniDatetimePicker from "./components/uni-datetime-picker/components/uni-datetime-picker/uni-datetime-picker.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
@@ -43,6 +46,8 @@ import { getMyInfoApi } from "@/api/user";
 import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
 import { getBindInfoApi } from "@/api/erp/sale";
+import FeesList from "./components/FeesList/FeesList.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 export default {
   name: "Work",
@@ -64,6 +69,11 @@ export default {
     CraftProcesses,
     PickerUser,
     FastPopup,
+    FeesList,
+    FilePicker,
+    // #ifdef H5
+    FilePreview,
+    // #endif
   },
   mixins: [mixins],
   data() {
@@ -140,6 +150,8 @@ export default {
       isClient: false,
 
       bindList: [],
+
+      file: [],
     };
   },
   onLoad(option) {
@@ -483,19 +495,24 @@ export default {
           }
         });
     },
+
+    // 获取到的文件
+    onFiles(list) {
+      console.log(list);
+    },
   },
   computed: {
     getStartDate() {
       return +new Date();
     },
 
-    getTotalAmount() {
-      return (this.form.totalProductAmount || 0) - (this.form.totalRawMaterialAmount || 0);
-    },
-
     // 获取步骤
     getStepsList() {
       return [
+        {
+          label: "上传",
+          value: "update",
+        },
         {
           label: "工单类型",
           value: "type",
@@ -508,22 +525,23 @@ export default {
           label: "其它信息",
           value: "other",
         },
-      ].filter(item => {
-        if (this.isSale || this.isPurchase) {
-          return _isEqual(this.type, "xlsx")
-            ? _isEqual(item.value, "type")
-            : this.isSale
-              ? !_isEqual(item.value, "crafts")
-              : item.value;
+      ].flatMap(item => {
+        // 从销售或者采购进入页面时
+        if ((this.isSale || this.isPurchase) && ["crafts"].includes(item.value)) return [];
+
+        if (_isEqual(this.type, "xlsx")) {
+          // if (_isEqual(item.value, "type")) item.label = "预览";
+
+          if (_isEqual("update", item.value)) return [];
+
+          return [item];
         } else {
-          return this.isSale
-            ? !_isEqual(item.value, "crafts")
-            : _isEqual(this.type, "xlsx")
-              ? !_isEqual(item.value, "other")
-              : item.value;
+          if (_isEqual("update", item.value)) return [];
+          return [item];
         }
       });
     },
+
     // 当前选中的页面地址
     getCurrentValue() {
       return _get(this.getStepsList, this.current + ".value");
@@ -556,8 +574,27 @@ export default {
       :rules="rules"
     >
       <view style="padding: 10px;">
+        <!-- 上传文件 -->
+        <block v-if="isEqual(getCurrentValue, 'update')">
+          <FilePicker
+            v-if="false"
+            mode="list"
+            file-mediatype="all"
+            file-extname="png,jpg,jpeg,pdf,xls,xlsx,doc,docx"
+            @files="onFiles"
+          />
+          <!-- #ifdef H5 -->
+          <FilePreview v-if="false" />
+          <!-- #endif -->
+        </block>
+
         <block v-if="isEqual(getCurrentValue, 'type')">
-          <UniSection title="所需物料" type="line" v-if="isEqual(type, 'common')">
+          <!-- 所需物料 -->
+          <UniSection
+            title="所需物料"
+            type="line"
+            v-if="isEqual(type, 'common')"
+          >
             <view style="padding: 10px;">
               <uni-forms-item label-width="0" name="materialDetails">
                 <view style="width: 100%;">
@@ -588,8 +625,13 @@ export default {
             </KoMovable>
           </UniSection>
 
+          <!-- 文件预览 -->
           <block v-if="isEqual(type, 'xlsx')">
-            <CustomTable :value="customizedMaterials" ref="CTRef" @change="onUpdateXlsx" />
+            <CustomTable
+              :value="customizedMaterials"
+              ref="CTRef"
+              @change="onUpdateXlsx"
+            />
 
             <!-- #ifdef H5 -->
             <KoMovable
@@ -607,65 +649,9 @@ export default {
               </view>
             </KoMovable>
             <!-- #endif -->
-
-            <UniSection :title="`${isPurchase ? '供应商' : '客户'}信息`" type="line">
-              <view style="padding: 10px 0 0;">
-                <view style="margin: 0 10px 10px;" v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
-                  <uni-segmented-control
-                    :current.sync="clientType"
-                    :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
-                    style-type="text"
-                    @clickItem="onTabItem"
-                  />
-                </view>
-
-                <block v-if="clientType === 0 && isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
-                  <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
-                    <PickerUser
-                      style="width: 100%;"
-                      is-input
-                      :title="`选择${isPurchase ? '供应商' : '客户'}`"
-                      v-model="form.supplierId"
-                      :type="isPurchase ? 'supplier' : 'client'"
-                      ref="UserRef"
-                      @input="onSupplierId"
-
-                      :placeholder-label="GET_FUNC(form, 'customer.name')"
-                    />
-                  </uni-forms-item>
-                </block>
-
-                <block v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
-                  <uni-forms-item label="姓名" name="otherSupplier">
-                    <UniEasyinput
-                      v-model="form.otherSupplier"
-                      style="width: 100%;"
-                      placeholder="请输入"
-                    />
-                  </uni-forms-item>
-                </block>
-              </view>
-            </UniSection>
-
-            <uni-forms-item label="联系电话：" name="orderPhone">
-              <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
-            </uni-forms-item>
-
-            <uni-forms-item label="配送地址：" name="orderAddress">
-              <uni-easyinput v-model="form.orderAddress" placeholder="请输入" />
-            </uni-forms-item>
-
-            <UniSection title="工单总价" type="line">
-              <view style="padding: 10px;">
-                <uni-forms-item key="xlsx-total-amount" label-width="90px" label="实收总价：" name="totalAmount">
-                  <view style="width: 100%;">
-                    <uni-easyinput type="digit" v-model="form.totalAmount" placeholder="请输入" />
-                  </view>
-                </uni-forms-item>
-              </view>
-            </UniSection>
           </block>
 
+          <!-- 板材定制 -->
           <block v-if="isEqual(type, 'packing')">
             <BinPacking
               :is-customized.sync="isCustomized"
@@ -681,7 +667,6 @@ export default {
         </block>
 
         <block v-if="isEqual(getCurrentValue, 'other')">
-
           <view style="padding: 10px 0 0;">
             <view style="margin: 0 10px 10px;"
                   v-if="isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient">

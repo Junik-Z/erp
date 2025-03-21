@@ -195,7 +195,18 @@ export default {
             total: item.price * item.productQuantity,
           }));
 
-          // list.details = list.details.slice(0, 35);
+          /* list.details = [
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details
+          ].slice(0, 40); */
 
           this.feesList = _keys(list.fees).map((key) => ({
             key,

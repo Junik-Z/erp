@@ -467,6 +467,19 @@ export const SALE_PERM_TREE = [
         perm: "FINANCE_PAYABLE_CHECK",
         id: "541",
       },
+
+      {
+        label: "客户地址列表",
+        type: 2,
+        perm: "CUSTOMER_ADDRESS_LIST",
+        id: "327",
+      },
+      {
+        label: "删除地址",
+        type: 2,
+        perm: "CUSTOMER_ADDRESS_DELETE",
+        id: "328",
+      },
     ],
   },
   {
@@ -652,11 +665,29 @@ export const SALE_PERM_TREE = [
         perm: "SALE_RECENT_PRICE",
         id: "346",
       },
+
+      {
+        label: "显示最近采购价",
+        type: 2,
+        perm: "PURCHASE_RECENT_PRICE",
+        id: "611",
+        color: "#e43d33",
+      },
       {
         label: "分享下单",
         type: 2,
         perm: "SALE_SHARE",
         id: "303",
+      },
+
+      {
+        label: "回填上次价格",
+        type: 2,
+        perm: "FILL_CUSTOMER_PRICE",
+        id: "001",
+        // 需要判断 mixin
+        mixinKeys: ["isTkCustom"],
+        color: "#e43d33",
       },
     ],
   },
@@ -844,6 +875,19 @@ export const PURCHASE_PERM_TREE = [
         perm: "FINANCE_PAYABLE_CHECK",
         id: "541",
       },
+
+      {
+        label: "供应商地址列表",
+        type: 2,
+        perm: "SUPPLIER_ADDRESS_LIST",
+        id: "636",
+      },
+      {
+        label: "删除地址",
+        type: 2,
+        perm: "SUPPLIER_ADDRESS_DELETE",
+        id: "328",
+      },
     ],
   },
   {
@@ -1030,10 +1074,28 @@ export const PURCHASE_PERM_TREE = [
         id: "611",
       },
       {
+        label: "提示最近销售价格",
+        type: 2,
+        perm: "SALE_RECENT_PRICE",
+        id: "346",
+        color: "#e43d33",
+      },
+
+      {
         label: "分享下单",
         type: 2,
         perm: "PURCHASE_SHARE",
         id: "604",
+      },
+
+      {
+        label: "回填上次价格",
+        type: 2,
+        perm: "FILL_SUPPLIER_PRICE",
+        id: "002",
+        // 生效的商户
+        mixinKeys: ["isTkCustom"],
+        color: "#e43d33",
       },
     ],
   },

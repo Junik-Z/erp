@@ -747,3 +747,46 @@ export function xlsxCellStyle(node, rIndex, cIndex, config, isChild = false) {
 
   return style;
 }
+
+// #ifdef H5
+// 动态添加 js
+export function loadScript(url, callback) {
+  const script = document.createElement("script");
+  script.type = "text/javascript";
+  script.className = "__script__";
+  script.src = url;
+
+  script.onload = () => {
+    console.log("Script loaded successfully");
+    if (callback) {
+      callback();
+    }
+  };
+
+  script.onerror = () => {
+    console.error("Script failed to load");
+  };
+
+  document.head.appendChild(script);
+}
+
+// 动态添加 css
+export function loadCss(url, callback) {
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = url;
+  link.className = "__script__";
+
+  link.onload = () => {
+    if (callback) {
+      callback();
+    }
+  };
+
+  link.onerror = () => {
+    console.error("Script failed to load");
+  };
+
+  document.head.appendChild(link);
+}
+// #endif

@@ -21,12 +21,14 @@ import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import { PageEnums } from "@/utils/config";
+import PickerAddress from "@/form/components/PickerAddress.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "Order",
   components: {
+    PickerAddress,
     OrderCard,
     LoadMore,
     FeesList,
@@ -156,9 +158,12 @@ export default {
         });
     },
     onSubmit() {
-      this.$refs.FormRef.validate(valid => {
+      this.$refs.FormRef.validate(async (valid) => {
         if (!valid) {
           const params = _deepCopy(this.form);
+
+          await this.isTxFillPrices();
+
           params.totalAmount = yuanToPoints(params.totalAmount);
           // params.details = this.$refs.PPRef.getDiscountedPrices();
 
@@ -302,7 +307,15 @@ export default {
             <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
           </UniFormsItem>
           <UniFormsItem label="地址：" name="orderAddress">
-            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+            <view style="display: flex; align-items: center; width: 100%">
+              <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+              <PickerAddress
+                v-if="form.supplierId && isPerm('SUPPLIER_ADDRESS_LIST')"
+                :supplierId="form.supplierId"
+                v-model="form.orderAddress"
+                type="purchase"
+              />
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
@@ -318,8 +331,13 @@ export default {
                 :is-client="isClient"
                 is-actual
                 ref="PPRef"
-                :is-show-recent="isPerm('PURCHASE_RECENT_PRICE')"
+
+                is-show-recent
                 :supplier-id="form.supplierId"
+                :order-address="form.orderAddress"
+
+                :is-fill="isTkCustom && isPerm('FILL_SUPPLIER_PRICE')"
+                :fill-info.sync="TK_FILL_INFO"
               />
             </view>
           </UniFormsItem>
