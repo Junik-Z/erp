@@ -472,7 +472,7 @@ export const SALE_PERM_TREE = [
         label: "客户地址列表",
         type: 2,
         perm: "CUSTOMER_ADDRESS_LIST",
-        id: "327",
+        id: "004",
       },
       {
         label: "删除地址",
@@ -880,7 +880,7 @@ export const PURCHASE_PERM_TREE = [
         label: "供应商地址列表",
         type: 2,
         perm: "SUPPLIER_ADDRESS_LIST",
-        id: "636",
+        id: "005",
       },
       {
         label: "删除地址",

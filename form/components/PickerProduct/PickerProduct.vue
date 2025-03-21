@@ -642,12 +642,12 @@ export default {
 
   &__node {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     //overflow: hidden;
 
     &--image {
-      height: 120px;
-      width: 120px;
+      height: 80px;
+      width: 80px;
       border-radius: 6px;
       overflow: hidden;
     }
@@ -662,7 +662,7 @@ export default {
   &__price {
     position: absolute;
     left: 50%;
-    transform: translateX(-40%);
+    transform: translateX(-50%);
     background: #fff;
     padding: 6px 10px;
     border-radius: 6px;
@@ -696,7 +696,7 @@ export default {
 
       position: absolute;
       bottom: -2px;
-      left: 40%;
+      left: 50%;
       background: #fff;
     }
   }

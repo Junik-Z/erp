@@ -42,6 +42,8 @@ export default {
 
       // 备份原始已经选中的用户
       backupChecked: [],
+
+      loading: false,
     };
   },
   mixins: [mixins],
@@ -462,6 +464,7 @@ export default {
             :disabled="disabled"
             :is-receipt-list="type === 'logistics'"
             :safe-area-inset-bottom="false"
+            :loading="loading"
 
             :is-staff="isEqual('staff', type)"
 
