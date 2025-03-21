@@ -17,6 +17,7 @@ import {
   dealBigMoney,
   transferYuan,
   yuanToPoints,
+  _isEnv
 } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG, PageEnums } from "@/utils/config";
@@ -675,7 +676,7 @@ export default {
 
     // 天科装饰有限公司 定制功能
     isTkCustom() {
-      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || (/* _isEnv() &&  */this.isDefault);
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || (_isEnv() && this.isDefault);
     },
   },
 };

@@ -57,175 +57,17 @@ export default {
     fillInfo: [Object],
   },
   data() {
-    const _this = this;
     return {
       list: [],
       loading: false,
 
-      // #ifdef H5
-      columns: [
-        {
-          label: "序号",
-          type: "index",
-          width: 55,
-        },
-        {
-          label: "产品图片",
-          prop: "images",
-          width: 80,
-          render: (h, {row}) => {
-            return h(
-              "div",
-              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-              [h(UvAvatar, {
-                props: {
-                  src: _this.getImageUrl(_get(row, "images")),
-                  size: 38,
-                  text: _get(row, "images"),
-                  shape: "square",
-                },
-              })],
-            );
-          },
-        },
-        {
-          label: "产品名称",
-          prop: "name",
-        },
-        /* {
-          label: "产品分类",
-          prop: "className",
-        }, */
-        {
-          label: "单价(元)",
-          prop: "price",
-          render: (h, {row}) => {
-            if (_this.isClient || _this.readonly) {
-              return h(
-                "label",
-                {class: "ko-basic-money"},
-                [_this.toYuan(row.price)],
-              );
-            } else {
-              return h(Popover, {
-                  props: {
-                    placement: "top",
-                    trigger: "manual",
-                    value: _this.isShowPrice(row.productId),
-                    width: 260,
-                  },
-                },
-                [
-                  h(LatestPrice, {
-                    slot: "default",
-                    props: {
-                      node: _get(_this.itemList, `${row.productId}`),
-                    },
-                  }),
-                  h(
-                    InputNumber,
-                    {
-                      slot: "reference",
-                      class: "ko-basic-money",
-                      style: {cursor: "pointer", width: "100%"},
-                      props: {
-                        min: 0,
-                        value: _this.toYuan(row.price),
-                      },
-                      on: {
-                        change: (val) => {
-                          _this.$set(row, "price", _this.toFen(val));
-                          _this.$nextTick(() => {
-                            _this.onFocus();
-                          });
-                        },
-                        focus: () => {
-                          _this.onPriceFocus(row);
-                        },
-                        blur: () => {
-                          _this.onPriceBlur(row);
-                        },
-                      },
-                    },
-                  ),
-                ],
-              );
-            }
-          },
-        },
-        {
-          label: "数量",
-          prop: "productQuantity",
-          render: (h, {row}) => {
-            if (_this.readonly) return h("span", row.productQuantity);
-
-            return h(
-              InputNumber,
-              {
-                class: "ko-basic-money",
-                style: {cursor: "pointer", width: "100%"},
-                props: {
-                  value: row.productQuantity,
-                  min: 0,
-                },
-                on: {
-                  change: (val) => {
-                    _this.$set(row, "productQuantity", val);
-                    _this.$nextTick(() => {
-                      _this.onFocus();
-                    });
-                  },
-                },
-              },
-            );
-          },
-        },
-        {
-          label: "备注",
-          prop: "remark",
-          render: (h, {row}) => {
-            if (_this.readonly) return h("span", row.remark);
-
-            return h(
-              Input,
-              {
-                style: {width: "100%"},
-                props: {
-                  value: row.remark,
-                },
-                attrs: {
-                  maxlength: 7,
-                  showWordLimit: true,
-                },
-                on: {
-                  input: (val) => {
-                    _this.$set(row, "remark", val);
-
-                    _this.$nextTick(() => {
-                      _this.onFocus();
-                    });
-                  },
-                },
-              },
-            );
-          },
-        },
-        {
-          label: "操作",
-          slot: "operate",
-          width: 80,
-        },
-      ],
-      // #endif
-
       takeOverName: "",
-
-      recentPrice: {},
-      userRecent: {},
 
       itemList: {},
 
       fLoading: false,
+
+      STimeVm: null,
     };
   },
   created() {
@@ -334,12 +176,12 @@ export default {
         ]
           .filter(v => this.isPerm(v.perm));
 
+        const obj = _deepCopy(this.itemList);
 
         Promise.all(
           RList.map(v => v.func({...v.params, productId: item.productId})),
         )
           .then(res => {
-            const obj = _deepCopy(this.itemList);
 
             for (let i = 0; i < RList.length; i++) {
               const RItem = RList[i];
@@ -347,8 +189,11 @@ export default {
               const show = !(_isEmpty(DItem.recentPrice) && _isEmpty(DItem.userRecent)) || true;
               const recent = DItem.recentPrice || {};
               const user = DItem.userRecent || {};
-              _set(obj, `${item.productId}.${RItem.type}`, {show, recent, user});
+
+              const chileObj = {show, recent, user};
+              _set(obj, `${item.productId}.${RItem.type}`, chileObj);
             }
+
 
             // #ifdef MP
             _set(
@@ -358,7 +203,7 @@ export default {
             );
             // #endif
 
-            this.itemList = obj;
+            this.$set(this, "itemList", obj);
           });
 
         // #ifdef MP
@@ -369,18 +214,18 @@ export default {
     // 隐藏
     onPriceBlur(item) {
       const obj = _deepCopy(this.itemList);
-
+      const iObj = _get(obj, item.productId) || {};
       _set(
         obj,
         `${item.productId}`,
         {
-          ...obj,
+          ...iObj,
           purchase: {
-            ...obj.purchase,
+            ...iObj.purchase,
             show: false,
           },
           sale: {
-            ...obj.sale,
+            ...iObj.sale,
             show: false,
           },
         },
@@ -408,6 +253,8 @@ export default {
             supplierId: _deepCopy(this.supplierId),
             orderAddress: _deepCopy(this.orderAddress),
           });
+
+          this.onFocus();
 
           CustomToast({title: "价格回填成功"});
         })
@@ -448,14 +295,14 @@ export default {
     // 是否显示最近价格
     isShowPrice() {
       return (id) => {
-        const obj = _get(this.itemList, id);
+        const obj = _get(_deepCopy(this.itemList), id);
         return obj && (_get(obj, "sale.show") || _get(obj, "purchase.show"));
       };
     },
     // 是否显示两个价格
     isTwoPrice() {
       return (id) => {
-        const obj = _get(this.itemList, id);
+        const obj = _get(_deepCopy(this.itemList), id);
         return obj && (_get(obj, "sale.show") && _get(obj, "purchase.show"));
       };
     },
@@ -466,7 +313,162 @@ export default {
 
     // #ifdef H5
     getTableColumns() {
-      const col = this.columns?.filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
+      const col = [
+        {
+          label: "序号",
+          type: "index",
+          width: 55,
+        },
+        {
+          label: "产品图片",
+          prop: "images",
+          width: 80,
+          render: (h, {row}) => {
+            return h(
+              "div",
+              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+              [h(UvAvatar, {
+                props: {
+                  src: this.getImageUrl(_get(row, "images")),
+                  size: 38,
+                  text: _get(row, "images"),
+                  shape: "square",
+                },
+              })],
+            );
+          },
+        },
+        {
+          label: "产品名称",
+          prop: "name",
+        },
+        /* {
+          label: "产品分类",
+          prop: "className",
+        }, */
+        {
+          label: "单价(元)",
+          prop: "price",
+          render: (h, {row}) => {
+            if (this.isClient || this.readonly) {
+              return h(
+                "label",
+                {class: "ko-basic-money"},
+                [this.toYuan(row.price)],
+              );
+            } else {
+              return h(Popover, {
+                  props: {
+                    placement: "top",
+                    trigger: "manual",
+                    value: this.isShowPrice(row.productId),
+                    width: 260,
+                  },
+                },
+                [
+                  h(LatestPrice, {
+                    slot: "default",
+                    props: {
+                      node: _get(this.itemList, `${row.productId}`),
+                    },
+                  }),
+                  h(
+                    InputNumber,
+                    {
+                      slot: "reference",
+                      class: "ko-basic-money",
+                      style: {cursor: "pointer", width: "100%"},
+                      props: {
+                        min: 0,
+                        value: this.toYuan(row.price),
+                      },
+                      on: {
+                        change: (val) => {
+                          this.$set(row, "price", this.toFen(val));
+                          this.$nextTick(() => {
+                            this.onFocus();
+                          });
+                        },
+                        focus: () => {
+                          this.STimeVm && clearTimeout(this.STimeVm);
+                          this.STimeVm = setTimeout(() => {
+                            this.onPriceFocus(row);
+                          }, 300);
+                        },
+                        blur: () => {
+                          this.onPriceBlur(row);
+                        },
+                      },
+                    },
+                  ),
+                ],
+              );
+            }
+          },
+        },
+        {
+          label: "数量",
+          prop: "productQuantity",
+          render: (h, {row}) => {
+            if (this.readonly) return h("span", row.productQuantity);
+
+            return h(
+              InputNumber,
+              {
+                class: "ko-basic-money",
+                style: {cursor: "pointer", width: "100%"},
+                props: {
+                  value: row.productQuantity,
+                  min: 0,
+                },
+                on: {
+                  change: (val) => {
+                    this.$set(row, "productQuantity", val);
+                    this.$nextTick(() => {
+                      this.onFocus();
+                    });
+                  },
+                },
+              },
+            );
+          },
+        },
+        {
+          label: "备注",
+          prop: "remark",
+          render: (h, {row}) => {
+            if (this.readonly) return h("span", row.remark);
+
+            return h(
+              Input,
+              {
+                style: {width: "100%"},
+                props: {
+                  value: row.remark,
+                },
+                attrs: {
+                  maxlength: 7,
+                  showWordLimit: true,
+                },
+                on: {
+                  input: (val) => {
+                    this.$set(row, "remark", val);
+
+                    this.$nextTick(() => {
+                      this.onFocus();
+                    });
+                  },
+                },
+              },
+            );
+          },
+        },
+        {
+          label: "操作",
+          slot: "operate",
+          width: 80,
+        },
+      ]?.filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
 
       // 如果是天科的则需要显示备注
       return col.filter(item => _isEqual(item.prop, "remark") ? this.isTkCustom : true);

@@ -660,14 +660,14 @@ export const SALE_PERM_TREE = [
         id: "309",
       },
       {
-        label: "提示最近销售价格",
+        label: "提示最近售价",
         type: 2,
         perm: "SALE_RECENT_PRICE",
         id: "346",
       },
 
       {
-        label: "显示最近采购价",
+        label: "提示最近采购价",
         type: 2,
         perm: "PURCHASE_RECENT_PRICE",
         id: "611",
@@ -1068,13 +1068,13 @@ export const PURCHASE_PERM_TREE = [
         id: "610",
       },
       {
-        label: "显示最近采购价",
+        label: "提示最近采购价",
         type: 2,
         perm: "PURCHASE_RECENT_PRICE",
         id: "611",
       },
       {
-        label: "提示最近销售价格",
+        label: "提示最近售价",
         type: 2,
         perm: "SALE_RECENT_PRICE",
         id: "346",

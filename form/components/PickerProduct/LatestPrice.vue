@@ -85,7 +85,7 @@ export default {
         </view>
       </block>
       <block v-else>
-        <view style="font-size: 12px; color:#c7c9ce;">暂无最近售价</view>
+        <view style="font-size: 12px; color:#c7c9ce;text-align: center;">暂无最近售价</view>
       </block>
     </view>
 
@@ -116,7 +116,7 @@ export default {
         </view>
       </block>
       <block v-else>
-        <view style="font-size: 12px; color:#c7c9ce;">暂无最近采购价</view>
+        <view style="font-size: 12px; color:#c7c9ce;text-align: center;">暂无最近采购价</view>
       </block>
     </view>
   </view>

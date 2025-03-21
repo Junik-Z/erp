@@ -1,4 +1,5 @@
 import dayjs from "./dayjs";
+import LodashSet from "./lodash/set";
 
 export const weekHan = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -237,25 +238,7 @@ export function _get(obj, path, defaultValue = undefined) {
   return result;
 }
 
-export function _set(obj, path, value, customizer) {
-  if (obj == null) return obj;
-  if (typeof path === "string") path = path.split(".");
-  let current = obj;
-  for (let i = 0; i < path.length - 1; i++) {
-    const key = path[i];
-    if (current[key] == null) {
-      current[key] = Array.isArray(path[i + 1]) ? [] : {};
-    }
-    current = current[key];
-  }
-  const lastKey = path[path.length - 1];
-  if (customizer) {
-    customizer(current, lastKey, value);
-  } else {
-    current[lastKey] = value;
-  }
-  return obj;
-}
+export const _set = LodashSet;
 
 export function _chunk(array, size) {
   if (size < 1) {
