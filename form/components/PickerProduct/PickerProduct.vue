@@ -100,7 +100,7 @@ export default {
     },
     onRemove(index) {
       this.list.splice(index, 1);
-      this.$emit("input", this.list);
+      this.onFocus();
     },
     onChange(node, value) {
       this.$set(node, "price", this.toFen(value));
@@ -110,15 +110,13 @@ export default {
     // 获取选中的产品列表
     getTakList({list, total}) {
       this.list = _deepCopy(list);
-      this.totalModel = _deepCopy(this.toYuan(total));
-      this.$emit("input", _deepCopy(list));
+      // this.totalModel = _deepCopy(this.toYuan(total));
+      this.onFocus();
     },
 
     onFocus() {
       this.totalModel = this.toYuan(_deepCopy(this.getTotalMoney));
-
       this.$emit("input", _deepCopy(this.list));
-
       // this.$emit("update:total", this.toYuan(_deepCopy(this.getTotalMoney)));
     },
 

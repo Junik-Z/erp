@@ -29,7 +29,7 @@ export default {
     },
     fileExtname: {
       type: String,
-      default: "",
+      default: "png,jpg,jpeg,gif,heif,heic,raw,webp,bmp",
     },
     mode: {
       type: String,
