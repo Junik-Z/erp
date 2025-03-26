@@ -457,15 +457,17 @@ export default {
       </view>
 
       <template #footer>
-        <button
-          class="ko-basic-button"
-          style="margin: 0 40px 10px;"
-          @click="onSubmit"
-          :loading="sLoading"
-          :disabled="sLoading"
-        >
-          {{ confirmationList.length ? "完成" : (isEdit ? "修改" : "添加") }}
-        </button>
+        <view style="display: flex; justify-content: center; align-items: center">
+          <button
+            class="ko-basic-button"
+            style="width: 120px"
+            @click="onSubmit"
+            :loading="sLoading"
+            :disabled="sLoading"
+          >
+            {{ confirmationList.length ? "完成" : (isEdit ? "修改" : "添加") }}
+          </button>
+        </view>
       </template>
     </BasicPopup>
 

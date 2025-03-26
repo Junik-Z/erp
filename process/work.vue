@@ -742,17 +742,20 @@ export default {
                     <radio
                       :checked="isEqual(form.produceType, 'internal')"
                       value="internal"
-                    />
-
-                    是
+                      color="#4177f6"
+                    >
+                      是
+                    </radio>
                   </label>
                   <view style="width: 20px"></view>
                   <label>
                     <radio
                       :checked="isEqual(form.produceType, 'customized')"
                       value="customized"
-                    />
-                    否
+                      color="#4177f6"
+                    >
+                      否
+                    </radio>
                   </label>
                 </view>
               </radio-group>

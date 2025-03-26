@@ -225,11 +225,12 @@ export default {
       <view class="ko-custom-files__no-file">您还未上传文件</view>
     </block>
 
+    <!-- #ifdef H5 -->
     <view class="ko-custom-files__update" v-if="!readonly">
       <FilePicker
         mode="list"
         file-mediatype="all"
-        file-extname="png,jpg,jpeg,pdf,xls,xlsx,doc,docx"
+        file-extname="png,jpg,jpeg,pdf,xls,xlsx,doc,docx,dwg,dxf,dwt,dak"
         @files="onSuccessFiles"
       >
         <button class="ko-basic-button__card">
@@ -240,6 +241,7 @@ export default {
         </button>
       </FilePicker>
     </view>
+    <!-- #endif -->
 
     <FilePreview ref="FPRef" />
   </view>

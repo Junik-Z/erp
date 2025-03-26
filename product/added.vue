@@ -381,8 +381,6 @@ export default {
       display: flex;
       align-items: center;
       justify-content: space-around;
-      padding-bottom: 10px;
-      padding-top: 10px;
     }
   }
 }

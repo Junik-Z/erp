@@ -7,7 +7,7 @@ import "./libs/js-preview-lib/excel.css";
 import "./libs/js-preview-lib/docx.css";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 // #endif
-import { CustomToast, isExcelType, isImageType, isPdfType, isWordType } from "@/utils";
+import { CustomToast, isCDAType, isExcelType, isImageType, isPdfType, isWordType } from "@/utils";
 import { getFileUrl } from "@/api/user";
 import { downFileApi } from "@/request";
 import mixins from "@/mixins/mixins";
@@ -84,6 +84,12 @@ export default {
           } else if (isExcelType(extname)) {
             const EVM = ExcelVm.init(this.$refs.RRef);
             EVM.preview(getFileUrl(id));
+          } else if (isCDAType(id)) {
+            uni.showModal({
+              title: "温馨提示",
+              content: "抱歉，当前不支持预览CDA相关文件！",
+              showCancel: false,
+            });
           }
         });
       }, 100);

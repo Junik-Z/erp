@@ -45,7 +45,6 @@ export default {
       uni.setNavigationBarTitle({title: "采购定制工单详情"});
     }
 
-
     this.getFieldList();
     this.getList();
   },
@@ -75,9 +74,9 @@ export default {
         "receivable",
         "payable",
         "logistics",
-      ].includes(this.option.page_type);
+      ].includes(this.option.page_type) && !isSale;
 
-      const Func = this.isPurchase ? getPurchaseInfoApi : isSale ? isStockAndFinance ? getProduceOrderCodeDetailApi : getProduceOrderDetailApi : getProduceDetailApi;
+      const Func = this.isPurchase ? getPurchaseInfoApi : isSale ? (isStockAndFinance ? getProduceOrderCodeDetailApi : getProduceOrderDetailApi) : getProduceDetailApi;
 
       Func({[isSale || this.isPurchase ? "orderCode" : "id"]: this.option.id})
         .then(res => {

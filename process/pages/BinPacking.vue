@@ -1948,7 +1948,6 @@ export default {
       display: flex;
       align-items: center;
       justify-content: space-around;
-      padding: 10px 10px 12px;
 
       .ko-basic-button__card {
         width: 100px;

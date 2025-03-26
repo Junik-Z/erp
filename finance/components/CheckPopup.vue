@@ -403,9 +403,9 @@ export default {
     <!-- #ifdef H5 -->
     <template #footer>
       <view
-        style="display: flex; align-items: center; justify-content: center; padding-bottom: 10px; padding-top: 10px;"
+        style="display: flex; align-items: center; justify-content: center;"
       >
-        <button class="ko-basic-button__card" style="width: 100px;" @click="onPrint">打印</button>
+        <button class="ko-basic-button__card" style="width: 120px;" @click="onPrint">打印</button>
       </view>
     </template>
     <!-- #endif -->

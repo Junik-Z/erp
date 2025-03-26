@@ -397,7 +397,6 @@ export default {
     }
 
     &--footer {
-      padding: 10px 10px 20px;
 
       .ko-basic-button__card {
         padding: 8px 16px;

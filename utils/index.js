@@ -795,9 +795,14 @@ export function isWordType(suffix) {
   return ["DOCX", "DOC", "DOT", "DOTX"].includes(suffix.toUpperCase());
 }
 
-
 // 判断是不是 XLS
 export function isExcelType(suffix) {
   if (!suffix) return false;
   return ["XLS", "XLSX"].includes(suffix.toUpperCase());
+}
+
+// 判断是不是 CDA 文件
+export function isCDAType(suffix) {
+  if (!suffix) return false;
+  return ["DWG", "DXF", "DWT", "BAK"].includes(suffix.toUpperCase());
 }
