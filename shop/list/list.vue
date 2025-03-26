@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { Checkbox, InputNumber, Tree } from "@/uni_modules/element-ui/element.min";
-// #endif
 import { getProductClassApi, getProductFieldApi, getProductListApi } from "@/api/erp/product";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -126,9 +123,6 @@ export default {
     UniNumberBox,
     BasicCard,
     UniSearchBar,
-    // #ifdef H5
-    Tree,
-    // #endif
   },
   methods: {
     // 外部传入的商品列表
@@ -490,7 +484,7 @@ export default {
               );
             } else {
               return h(
-                InputNumber,
+                'el-Input-number',
                 {
                   class: "ko-basic-money",
                   style: {cursor: "pointer", width: "100%"},
@@ -515,7 +509,7 @@ export default {
           width: 220,
           render: (h, {row}) => {
             return h(
-              InputNumber,
+              'el-Input-number',
               {
                 class: "ko-basic-money",
                 style: {cursor: "pointer", width: "100%"},
@@ -563,7 +557,7 @@ export default {
               render: (h, {row}) => {
                 return h("span", {class: "ko-table-checked__warp"}, [
                   h(
-                    Checkbox,
+                    'el-checkbox',
                     {
                       class: `ko-table-checked ${!this.multiple ? "ko-table-checked__single" : ""}`,
                       props: {
@@ -656,7 +650,7 @@ export default {
       <!-- #ifdef H5 -->
       <div class="ko-shop-list__center" style="flex: 1; height: 100%;">
         <div style="height: 100%; overflow-y: auto">
-          <Tree
+          <el-tree
             node-key="id"
             ref="TreeRef"
             :data="classList"

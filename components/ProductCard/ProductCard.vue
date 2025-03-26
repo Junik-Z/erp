@@ -229,7 +229,7 @@ export default {
 
           <template v-else>
             <template v-if="readonly">
-              <UniCol :span="12" v-if="!hidePrices && node.price">
+              <UniCol :span="12" v-if="!hidePrices && node.price && !isWork">
                 <view class="ko-product-card__item">
                   <label class="ko-basic-label">单价：</label>
                   <text class="ko-basic-money"> {{ toYuan(node.price) }}元</text>
@@ -264,7 +264,6 @@ export default {
                   <label class="ko-basic-label">单价：</label>
                   <text class="ko-basic-money" v-if="!isEditPrice"> {{ toYuan(node.price) }}元</text>
                   <view class="ko-basic-money" style="flex: 1; display: flex;align-items: center;" v-else>
-
                     <UniNumberBox
                       :max="9999999999999999"
                       :value="toYuan(node.price)"
@@ -337,7 +336,7 @@ export default {
               <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
             </view>
           </UniCol>
-          <UniCol :span="24" v-if="!hidePrices">
+          <UniCol :span="24" v-if="!hidePrices && !isWork">
             <label class="ko-basic-label">单价：</label>
             <text class="ko-basic-money"> {{ toYuan(getPrice(node)) }}元</text>
           </UniCol>

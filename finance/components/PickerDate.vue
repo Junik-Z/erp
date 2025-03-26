@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { DatePicker } from "@/uni_modules/element-ui/element.min";
-// #endif
 import UvDatetimePicker from "./uv-datetime-picker/uv-datetime-picker.vue";
 
 import dayjs from "@/utils/dayjs";
@@ -21,10 +18,6 @@ visibleItemCount = 15;
 export default {
   name: "PickerDate",
   components: {
-    // #ifdef H5
-    DatePicker,
-    // #endif
-
     UvDatetimePicker,
   },
   props: {
@@ -138,13 +131,13 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <DatePicker
+    <el-date-picker
       v-if="false"
       :placeholder="placeholder"
       :type="ElDateType"
       :format="getFormat"
       v-model="modelValue"
-    ></DatePicker>
+    ></el-date-picker>
     <!-- #endif -->
   </view>
 </template>

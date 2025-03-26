@@ -1,8 +1,9 @@
 <script>
 import UniFilePicker from "@/uni_modules/uni-file-picker/components/uni-file-picker/uni-file-picker.vue";
-import { _isEmpty, _merge, getFileExtension } from "@/utils";
+import { _isEmpty, _merge, getFileExtension, isImageType } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 import { uploadBase64Api } from "@/api/user";
+import { requestUploadFileApi } from "@/request";
 
 export default {
   name: "FilePicker",
@@ -45,9 +46,10 @@ export default {
       width: 100,
       height: 100,
       border: {
-        width: 0.5,
+        width: 1,
         style: "dashed",
         radius: "6px",
+        color: '#8f939c'
       },
     },
   }),
@@ -88,7 +90,8 @@ export default {
       for (let i = 0; i < tempFiles.length; i++) {
         const tempFile = tempFiles[i];
         const d = tempFile.extname;
-        if (["JPEG", "JPG", "PNG", "GIF", "BMP"].includes(d.toUpperCase())) {
+
+        if (isImageType(d)) {
           image.push(tempFile);
         } else {
           files.push(tempFile);
@@ -116,17 +119,17 @@ export default {
       console.log("上传失败：", e);
     },
     async onUploadBase64(base64) {
-      uni.showLoading({
-        title: "上传中...",
-        mask: true,
-      });
-      return uploadBase64Api({base64}).finally(() => uni.hideLoading());
+      return uploadBase64Api({base64});
+    },
+    // 文件上传接口
+    async onUploadFile(item) {
+      return requestUploadFileApi(item);
     },
     onCropImage(images) {
       const that = this;
 
       uni.showLoading({
-        title: "处理中...",
+        title: "上传中...",
         mask: true,
       });
 
@@ -235,20 +238,23 @@ export default {
         up.push(base64);
       }
 
-      Promise.all(up).then(e => {
-        const data = e.filter((v) => !!v);
-        if (data.length > 0) {
-          uni.hideLoading();
-          const value = data.map(v => v.data);
-          if (that.limit === 1) {
-            that.$emit("input", value[0]);
-          } else {
-            that.$emit("input", value);
-          }
+      Promise.all(up)
+        .then(e => {
+          const data = e.filter((v) => !!v);
+          if (data.length > 0) {
+            const value = data.map(v => v.data);
+            if (that.limit === 1) {
+              that.$emit("input", value[0]);
+            } else {
+              that.$emit("input", value);
+            }
 
-          this.$emit("files", data);
-        }
-      });
+            this.$emit("files", data);
+          }
+        })
+        .finally(() => {
+          uni.hideLoading();
+        });
     },
     onRemove(item) {
       if (this.limit === 1) {
@@ -261,7 +267,7 @@ export default {
     // 上传文件
     onCropFile(list) {
       uni.showLoading({
-        title: "处理中...",
+        title: "上传中...",
         mask: true,
       });
 
@@ -274,38 +280,32 @@ export default {
       for (const index in list) {
         const item = list[index];
         const base64 = new Promise((resolve, reject) => {
-          // #ifdef H5
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const base64 = e.target.result;
-            console.log("Base64结果:", base64);
-            this.onUploadBase64(base64).then((res) => {
-              resolve({
-                ...res,
-                _file_: item,
-              });
-            }).catch(reject);
-          };
-          reader.readAsDataURL(item.file);
+          // #ifdef H5 | MP
+          this.onUploadFile(item).then(res => {
+            resolve({
+              ...res,
+              _file_: item,
+            });
+          }).catch(reject);
           // #endif
 
           // #ifdef MP
-          fs.readFile({
-            filePath: item.url,
-            encoding: "base64",
-            success: (e) => {
-              //保存文件
-              this.onUploadBase64("data:image/png;base64," + e.data)
-                .then(res => {
-                  resolve({...res, _file_: item});
-                })
-                .catch(reject);
-            },
-            fail: (e) => {
-              console.error(e);
-              reject("文件保存失败");
-            },
-          });
+          /*  fs.readFile({
+             filePath: item.url,
+             encoding: "base64",
+             success: (e) => {
+               //保存文件
+               this.onUploadBase64("data:image/png;base64," + e.data)
+                 .then(res => {
+                   resolve({...res, _file_: item});
+                 })
+                 .catch(reject);
+             },
+             fail: (e) => {
+               console.error(e);
+               reject("文件保存失败");
+             },
+           }); */
           // #endif
         });
 
@@ -317,7 +317,7 @@ export default {
           const data = res.filter((v) => !!v);
           if (data.length > 0) {
             const value = data.map(v => v.data);
-            if (that.limit === 1) {
+            if (this.limit === 1) {
               this.$emit("input", value[0]);
             } else {
               this.$emit("input", value);
@@ -358,7 +358,9 @@ export default {
       :disabled="disabled"
       :readonly="readonly"
       :show-update-list="showUpdateList"
-    />
+    >
+      <slot></slot>
+    </UniFilePicker>
   </view>
 </template>
 

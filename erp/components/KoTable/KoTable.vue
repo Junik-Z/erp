@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import { InfiniteScroll, Loading, Table, TableColumn } from "@/uni_modules/element-ui/element.min";
+import { Table, TableColumn } from "@/uni_modules/element-ui/element.min";
 import { _deepCopy, _keys, _pick } from "@/utils";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
@@ -49,10 +49,6 @@ export default {
 
     noPaddingBottom: Boolean,
   },
-  directives: {
-    InfiniteScroll,
-    Loading,
-  },
   watch: {
     data: {
       handler(to, form) {
@@ -73,8 +69,6 @@ export default {
   },
   components: {
     UvLoadingIcon,
-    ElTable: Table,
-    ElTableColumn: TableColumn,
     RenderDom,
   },
   methods: {
@@ -127,7 +121,7 @@ export default {
     ref="WrapRef"
   >
     <div :style="{paddingBottom: noPaddingBottom ? 0 : '40px'}">
-      <ElTable
+      <el-table
         v-bind="getElementTableProps"
         @row-click="onRowClick"
         @row-contextmenu="onRowContextmenu"
@@ -135,7 +129,7 @@ export default {
         @cell-click="onCellClick"
         @header-click="onHeaderClick"
       >
-        <ElTableColumn
+        <el-table-column
           v-for="(item, index) of columns"
           :key="index"
           v-bind="getColBind(item)"
@@ -157,7 +151,7 @@ export default {
           </template>
 
           <template v-if="(item || {}).children">
-            <ElTableColumn
+            <el-table-column
               v-for="(child, jIndex) of item.children"
               :key="index + '————' + jIndex"
               v-bind="getColBind(child)"
@@ -176,10 +170,10 @@ export default {
                   :render="child.render"
                 />
               </template>
-            </ElTableColumn>
+            </el-table-column>
           </template>
-        </ElTableColumn>
-      </ElTable>
+        </el-table-column>
+      </el-table>
 
       <view class="ko-table__loading" v-if="loading">
         <UvLoadingIcon size="40" />
@@ -197,7 +191,7 @@ export default {
   height: 100%;
   width: 100%;
   overflow-y: auto;
-  
+
   &__loading {
     height: 80px;
     display: flex;

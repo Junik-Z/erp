@@ -2,7 +2,6 @@
 // #ifdef H5
 import CNC from "./components/CNC.vue";
 import PrintLabels from "@/produce/components/PrintLabels.vue";
-
 // #endif
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -25,10 +24,9 @@ import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sh
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
-import TopMenus from "@/produce/components/TopMenus.vue";
-import { TabList } from "@/produce/define";
+import TopMenus from "./components/TopMenus.vue";
+import { TabList } from "./define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import FastPopup from "./components/FastProduce/FastPopup.vue";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import MaterialPopup from "./components/MaterialPopup.vue";
 
@@ -53,7 +51,6 @@ const PageMenu = [
 export default {
   name: "WorkList",
   components: {
-    FastPopup,
     TopMenus,
     KoList,
     KoMovable,
@@ -74,22 +71,24 @@ export default {
     const _this = this;
     return {
       TabList,
-
-      list: [],
-      loading: false,
-      queryList: {
-        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
-        pageNum: 0,
-      },
-      noMore: false,
-
-      node: {},
-
-      content: [
-        /* {
-          text: "快捷",
-          type: "fast",
+      MOVABLE_LIST: [
+        // #ifdef MP
+       /*  {
+          text: "板材",
+          iconfont: "icon-icon-test",
+          path: "share",
+          openType: "share",
+          params: {
+            title: `邀请您来下单啦！`,
+            path: PageEnums.produceWork,
+            query: {
+              PAGE_TYPE: "ADDED_PRODUCE_PACKING",
+              ADDED_TYPE: "packing",
+            },
+          },
+          perm: "SALE_SHARE",
         }, */
+        // #endif
         {
           text: "常规",
           iconfont: "icon-tianjia",
@@ -111,6 +110,17 @@ export default {
         },
         // #endif
       ],
+
+      list: [],
+      loading: false,
+      queryList: {
+        pageSize: CONFIG.DEFAULT_PAGE_SIZE,
+        pageNum: 0,
+      },
+      noMore: false,
+
+      node: {},
+
 
       tableKey: +new Date(),
 
@@ -194,7 +204,7 @@ export default {
   onLoad() {
   },
   onShow() {
-    if (!uni.getStorageSync("TO_DETAILS") && !this.noRefresh) {
+    if (!uni.getStorageSync("TO_DETAILS")) {
       this.getList(true);
     }
 
@@ -379,10 +389,6 @@ export default {
     // 处理新增
     onAddedJump({item}) {
       this.noRefresh = true;
-      if (_isEqual(item.type, "fast")) {
-        this.$refs.FPRef.open("quick");
-        return false;
-      }
       uni.navigateTo({
         url: item.path,
       });
@@ -402,15 +408,6 @@ export default {
           this.noRefresh = false;
           uni.setStorageSync("TENP_ORDER_INFO", null);
         });
-    },
-
-    // 快捷生产
-    onApplyFast(item) {
-      this.$refs.FPRef.close();
-
-      uni.navigateTo({
-        url: PageEnums.produceWork + `?fastId=${item.id}`,
-      });
     },
 
     // 修改工艺
@@ -475,6 +472,17 @@ export default {
           return item?.status?.includes(node.status) && isPerm;
         });
     },
+  },
+
+
+  // 分享相关
+  onShareAppMessage(res) {
+    const obj = res.target.dataset.params;
+    return new Promise(async (resolve) => {
+      const query = await this._GET_SHARE_APP_PARAMS_(obj);
+      if (query.title) query.title = `${this.GET_SHOP_NAME || ""} ${query.title}`;
+      resolve(query);
+    });
   },
 };
 </script>
@@ -664,6 +672,7 @@ export default {
     <CNC ref="CncRef" @print-label="onPrintLabel" />
 
     <PrintLabels ref="PLRef" />
+
     <!-- #endif -->
 
     <MaterialPopup ref="MPRef" @close="noRefresh = false" />
@@ -673,8 +682,6 @@ export default {
       v-if="isShowMovable"
       @click="onAddedJump"
     />
-
-    <FastPopup v-if="false" ref="FPRef" @apply-fast="onApplyFast" />
 
     <!-- #ifdef MP -->
     <UvActionSheet

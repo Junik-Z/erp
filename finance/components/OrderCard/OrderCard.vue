@@ -435,7 +435,7 @@ export default {
           </block>
 
           <UniCol :span="24">
-            <label class="ko-basic-label">时间：</label>
+            <label class="ko-basic-label">日期：</label>
             {{ item.updateTime || "-" }}
           </UniCol>
 

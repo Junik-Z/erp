@@ -1,6 +1,5 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
 
 // #endif
 import {
@@ -8,6 +7,7 @@ import {
   _get,
   _haveCommonElements,
   _isEmpty,
+  _isEnv,
   _isEqual,
   _isString,
   _keys,
@@ -17,7 +17,6 @@ import {
   dealBigMoney,
   transferYuan,
   yuanToPoints,
-  _isEnv
 } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG, PageEnums } from "@/utils/config";
@@ -70,11 +69,6 @@ export default {
       });
     });
   },
-  // #ifdef H5
-  directives: {
-    InfiniteScroll,
-  },
-  // #endif
   mounted() {
   },
   methods: {
@@ -97,9 +91,19 @@ export default {
         SHARE_USER_ID: this.GET_USER_INFO?.userId,
       };
 
-      if (["ADDED_SALE", "ADDED_PURCHASE"].includes(query.PAGE_TYPE)) {
+      // 添加分享出去唯一的下单ID
+      if ([
+        "ADDED_SALE",
+        "ADDED_PURCHASE",
+        "ADDED_PRODUCE_PACKING",
+      ].includes(query.PAGE_TYPE)) {
         try {
-          const Func = {ADDED_SALE: getSaleShareIdApi, ADDED_PURCHASE: getPurchaseShareIdApi}[query.PAGE_TYPE];
+          const Func = {
+            ADDED_SALE: getSaleShareIdApi,
+            ADDED_PRODUCE_PACKING: getSaleShareIdApi,
+            ADDED_PURCHASE: getPurchaseShareIdApi,
+          }[query.PAGE_TYPE];
+
           const res = await Func?.();
           query.SHARE_ID = res.data;
         } catch (e) {
@@ -133,29 +137,23 @@ export default {
       });
 
       // 采购定制订单详情
-      if (_isEqual("CUSTOMIZED", node.orderType)) {
+      if (
+        _isEqual("CUSTOMIZED", node.orderType)
+        &&
+        (_isEqual("purchase", page_type) || /^G/.test(node.orderCode))
+      ) {
         uni.navigateTo({
-          url: PageEnums.produceDetails + `?${
-            QS.stringify({
-              page_type,
-              id: node.orderCode,
-              FORM: "PURCHASE",
-            })
-          }`,
+          url: PageEnums.produceDetails
+            + `?${QS.stringify({page_type, id: node.orderCode, FORM: "PURCHASE"})}`,
         });
         return false;
       }
 
       // 销售生产订单详情
-      if (_isEqual("PRODUCTION", node.orderType) && !_isEqual("produce", page_type)) {
+      if (["PRODUCTION", "CUSTOMIZED"].includes(node.orderType) && !_isEqual("produce", page_type)) {
         uni.navigateTo({
-          url: PageEnums.produceDetails + `?${
-            QS.stringify({
-              page_type,
-              id: node.orderCode,
-              FORM: "SALE",
-            })
-          }`,
+          url: PageEnums.produceDetails
+            + `?${QS.stringify({page_type, id: node.orderCode, FORM: "SALE"})}`,
         });
         // page_type=outbound&id=C2025012117412171451&FORM=SALE
         return false;
@@ -492,7 +490,7 @@ export default {
           PURCHASE_RETURN: "采购退货订单",
           CHECK_IN: "盘点入库",
           CHECK_OUT: "盘点出库",
-          CUSTOMIZED: "采购定制",
+          CUSTOMIZED: "定制订单",
         };
         return _get(obj, type) || type;
       };
@@ -661,7 +659,7 @@ export default {
 
     // 获取右下角添加按钮列表数据
     GET_MOVABLE_LIST() {
-      return this.content?.filter(item => this.isPerm(item.perm));
+      return this.MOVABLE_LIST?.filter(item => this.isPerm(item.perm));
     },
 
     // 是否显示添加按钮

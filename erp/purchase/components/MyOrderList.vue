@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
-// #endif
 import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -81,8 +78,8 @@ export default {
           width: 210,
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -186,12 +183,6 @@ export default {
       PAGE_MENU: _deepCopy(PageMenu),
     };
   },
-
-  // #ifdef H5
-  directives: {
-    InfiniteScroll,
-  },
-  // #endif
   created() {
     this.getCount();
   },

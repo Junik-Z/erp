@@ -99,8 +99,8 @@ export default {
           width: 55,
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
         },
         {
           label: "凭证",
@@ -370,7 +370,7 @@ export default {
                   </view>
                 </UniCol>
                 <UniCol :span="24">
-                  <label class="ko-basic-label">时间：</label>
+                  <label class="ko-basic-label">日期：</label>
                   <text>{{ item.updateTime || "-" }}</text>
                 </UniCol>
                 <UniCol :span="24">

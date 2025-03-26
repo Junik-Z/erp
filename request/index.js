@@ -1,4 +1,4 @@
-import { goLogin } from "@/api/user";
+import { getFileUrl, goLogin, uploadFileApi } from "@/api/user";
 import { CONFIG } from "@/utils/config";
 import { _isDev, _isEqual } from "@/utils";
 
@@ -202,6 +202,203 @@ export default function request(config, isLoading = false, whole = false) {
 
       complete() {
         isLoading && uni.hideLoading();
+      },
+    });
+  });
+}
+
+/**
+ * @description 文件上传API
+ */
+export function requestUploadFileApi(item, whole = false) {
+  return new Promise((resolve, reject) => {
+    // #ifndef H5
+    const Cookie = uni.getStorageSync("Cookie");
+    // #endif
+
+    const scene = uni.getStorageSync("__APP_SCENE__") || "";
+
+    uni.uploadFile({
+      url: uploadFileApi(),
+      filePath: item.path,
+      name: "file",
+      timeout: 20 * 60 * 1000,
+      header: {
+        // #ifndef H5
+        ...(Cookie ? {Cookie} : {}),
+        // #endif
+        "X-MiniApp-Env": CONFIG.SystemVersion,
+        "X-MiniApp-ID": CONFIG.APP_ID,
+        "X-Tenant-ID": scene || "",
+        "T-VERSION": CONFIG.T_VERSION,
+      },
+      success: async (res) => {
+        // #ifndef H5
+        const cookie = res.header["set-cookie"] || res.header["Set-Cookie"];
+        if (cookie) {
+          uni.setStorageSync("Cookie", cookie);
+        }
+        // #endif
+
+        let data = {};
+
+        try {
+          data = JSON.parse(res.data || "{}");
+        } catch (e) {
+          return reject(res);
+        }
+
+        const {code, msg} = data;
+
+        if ([502, 500].includes(res.statusCode)) {
+          uni.showModal({
+            title: "温馨提示",
+            content: "系统维护中，请稍后再试！",
+            showCancel: false,
+            confirmText: "确定",
+          });
+          reject("服务器维护中。请稍后再试！");
+          return false;
+        }
+
+        console.log(res, msg, code);
+
+        if (whole) {
+          resolve(data);
+          return false;
+        }
+
+        if (res.statusCode === 200 && code === 200) {
+          // #ifdef H5
+          uni.$__IS_LOGOUT_FLAG__ = false;
+          // #endif
+          resolve(data);
+        } else if (_isEqual(code, 402)) {
+          uni.showModal({
+            title: "过期提醒",
+            content: msg,
+            showCancel: false,
+            confirmText: "重试",
+            success: async (resp) => {
+              await goLogin();
+              uni.$emit("$__get_all_info__");
+
+              if (resp.confirm) {
+                uni.reLaunch({url: "/pages/home/home"});
+              }
+            },
+          });
+          reject(res);
+        } else if (_isEqual(code, 401)) {
+          // #ifdef H5
+          uni.setStorageSync("__APP_SCENE__", "");
+          uni.setStorageSync("Cookie", "");
+
+          uni.reLaunch({
+            url: "/pages/login/login",
+          });
+
+          if ("true") return false;
+          // #endif
+
+          if (uni.$__IS_LOGOUT_FLAG__) return false;
+
+          if (!isFlag) {
+            isFlag = true;
+            uni.setStorageSync("Cookie", "");
+
+            try {
+              // #ifdef MP
+              await goLogin();
+              console.log("重新登录了");
+              query?.scene && (uni.__FLAG__ = false);
+
+              uni.$emit("$__get_all_info__");
+              isFlag = false;
+              // #endif
+            } catch (e) {
+              console.log("登录报错", e);
+              isFlag = true;
+              reject(res);
+            }
+          } else {
+            if (!_isEqual(config["url"], "/index/wx/login")) {
+              reqList.push({
+                config,
+                isLoading,
+                resolve,
+                reject,
+              });
+            }
+          }
+        } else if (code === 403) {
+          uni.showToast({
+            title: msg,
+            icon: "none",
+          });
+          reject(res);
+        } else {
+          uni.showToast({title: msg, icon: "none"});
+          reject(res);
+        }
+      },
+      fail(res) {
+        reject(res);
+        if (uni.__WIFI_ERROR_MODEL__) return false;
+        uni.__WIFI_ERROR_MODEL__ = true;
+        // console.log(res)
+        uni.showModal({
+          title: "网络错误",
+          content: "请求出错了，请检查WI-FI/数据流量或请稍后再试！",
+          showCancel: false,
+          success() {
+            uni.__WIFI_ERROR_MODEL__ = false;
+          },
+        });
+      },
+      complete() {
+      },
+    });
+  });
+}
+
+/**
+ * @description 文件上传API
+ */
+export function downFileApi(url) {
+  return new Promise((resolve, reject) => {
+    // #ifndef H5
+    const Cookie = uni.getStorageSync("Cookie");
+    // #endif
+    const scene = uni.getStorageSync("__APP_SCENE__") || "";
+    uni.downloadFile({
+      url: getFileUrl(url),
+      header: {
+        // #ifndef H5
+        ...(Cookie ? {Cookie} : {}),
+        // #endif
+        "X-MiniApp-Env": CONFIG.SystemVersion,
+        "X-MiniApp-ID": CONFIG.APP_ID,
+        "X-Tenant-ID": scene || "",
+        "T-VERSION": CONFIG.T_VERSION,
+      },
+      success: async (res) => {
+        resolve(res);
+      },
+      fail(res) {
+        reject(res);
+
+        if (uni.__WIFI_ERROR_MODEL__) return false;
+        uni.__WIFI_ERROR_MODEL__ = true;
+
+        uni.showModal({
+          title: "文件下载失败",
+          content: "文件下载失败了，请检查WI-FI/数据流量或请稍后再试！",
+          showCancel: false,
+          success() {
+            uni.__WIFI_ERROR_MODEL__ = false;
+          },
+        });
       },
     });
   });

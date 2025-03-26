@@ -48,7 +48,7 @@ export default {
     computeGroup() {
       const rect = this.$refs.TTRef?.getListSize?.() || {};
       // 产考元素的高度
-      const RHeight = this.$refs.RRef.offsetHeight || (PaperHeight - 20);
+      const RHeight = this.$refs.RRef?.offsetHeight || (PaperHeight - 20);
 
       // 表头总高度
       const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);

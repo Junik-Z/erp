@@ -132,8 +132,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {

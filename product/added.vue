@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { Cascader } from "@/uni_modules/element-ui/element.min";
-// #endif
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
@@ -38,10 +35,6 @@ export default {
     UniSection,
 
     PickerClass,
-
-    // #ifdef H5
-    Cascader,
-    // #endif
   },
   data: () => ({
     form: {

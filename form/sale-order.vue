@@ -92,7 +92,7 @@ export default {
       isNormal: false,
     };
   },
-  onLoad(option) {
+  async onLoad(option) {
     // PAGE_TYPE=ADDED_SALE&scene=default&SHARE_USER_ID=ad41944d8cb44faea09da9d69fe67d26
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
@@ -106,11 +106,20 @@ export default {
     this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
 
     if (this.isClient) {
+      this.current = 1;
+      await this.onLogInAgain(this.option)
+        .finally(() => {
+          setTimeout(() => {
+            this.form.otherSupplier = this.GET_USER_INFO.nickName;
+            this.getBindInfo();
+          }, 10);
+        });
+
       if (this.option.SHARE_ID) {
-        getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
           .then(res => {
-            console.log(res);
             this.form.id = decodeURIComponent(this.option.SHARE_ID);
+
             if (res.data) {
               uni.redirectTo({
                 url: PageEnums.saleClientAddedBack,
@@ -121,15 +130,6 @@ export default {
             }
           });
       }
-
-      this.current = 1;
-      this.onLogInAgain(this.option)
-        .finally(() => {
-          setTimeout(() => {
-            this.form.otherSupplier = this.GET_USER_INFO.nickName;
-            this.getBindInfo();
-          }, 10);
-        });
     } else {
       this.current = 0;
     }

@@ -63,7 +63,7 @@ export default {
     const _this = this;
 
     return {
-      content: [
+      MOVABLE_LIST: [
         // #ifdef MP
         {
           text: "分享",
@@ -123,8 +123,8 @@ export default {
           width: 210,
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -466,6 +466,10 @@ export default {
           const isStatus = item?.status?.includes(node.status);
 
           if (_isEqual(item.func, "onPrint")) {
+            return isPerm && !_isEqual(node.orderType, "CUSTOMIZED");
+          }
+
+          if (_isEqual(item.func, "onReturn")) {
             return isPerm && !_isEqual(node.orderType, "CUSTOMIZED");
           }
 

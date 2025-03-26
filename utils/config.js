@@ -24,7 +24,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // BASE_URL = "https://erp.kuaouyun.cn/api";
   // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
   // #endif
@@ -182,10 +182,12 @@ export const PageEnums = {
   produce: "/produce/produce",
   // 生产工单
   produceWorkList: "/produce/work-list",
+
   // 新的生产工单
-  produceWork: "/produce/work",
+  produceWork: "/process/work",
   // 生产详情
-  produceDetails: "/produce/details",
+  produceDetails: "/process/details",
+
   // 考勤
   attend: "/attend/attend",
   // 考勤记录
@@ -384,6 +386,7 @@ export const HOME_PAGE_TYPE_ENUMS = {
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
   BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修",
   BINDING_PRODUCT: "分享出去批量绑定产品",
+  ADDED_PRODUCE_PACKING: "分享出去下单板材",
 };
 
 /**

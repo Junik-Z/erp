@@ -1,6 +1,6 @@
 <script>
 import UniEcCanvas from "./uni-ec-canvas/uni-ec-canvas.vue";
-import * as echarts from "./uni-ec-canvas/echarts";
+import * as echarts from "./uni-ec-canvas/echarts.min";
 import { _deepCopy, _get, _isEmpty, _set } from "@/utils";
 import mixins from "@/mixins/mixins";
 

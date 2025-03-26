@@ -15,12 +15,12 @@
       @choose="choose"
       @delFile="delFile"
     >
-      <slot>
+      <!--<slot>
         <view class="is-add">
           <view class="icon-add"></view>
           <view class="icon-add rotate"></view>
         </view>
-      </slot>
+      </slot>-->
     </upload-image>
     <upload-file
       v-if="fileMediatype !== 'image' || showType !== 'grid'"
@@ -32,7 +32,6 @@
       @uploadFiles="uploadFiles"
       @choose="choose"
       @delFile="delFile"
-
     >
       <slot>
         <button type="primary" size="mini">选择文件</button>

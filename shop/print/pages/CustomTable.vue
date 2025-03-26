@@ -3,7 +3,6 @@
 import PrintTable from "../components/NewPrintTable.vue";
 import PrintFooter from "../components/PrintFooter.vue";
 import PrintHeader from "../components/PrintHeader.vue";
-import { Button } from "@/uni_modules/element-ui/element.min";
 
 import { VuePrintLast } from "../vue-print-last";
 import mixins from "@/mixins/mixins";
@@ -22,7 +21,6 @@ export default {
     PrintTable,
     PrintFooter,
     PrintHeader,
-    Button,
   },
   props: {
     isA4: Boolean,
@@ -218,7 +216,7 @@ export default {
   <div class="ko-print-custom-table" :style="rootStyle">
     <div class="ko-print-custom-table__header ko-basic-box-shadow">
       <div>
-        <Button type="primary" size="mini" @click="onPrint">打印</Button>
+        <el-button type="primary" size="mini" @click="onPrint">打印</el-button>
       </div>
     </div>
 

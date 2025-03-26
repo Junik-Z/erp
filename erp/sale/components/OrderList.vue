@@ -1,6 +1,6 @@
 <script>
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import BasicMixins from "@/mixins/mixins";
+import mixins from "@/mixins/mixins";
 import {
   getSaleDetailApi,
   getSaleHistoryApi,
@@ -58,18 +58,17 @@ export default {
     HistoryBar,
     BasicCard,
   },
-  mixins: [BasicMixins, SaleMixins],
+  mixins: [mixins, SaleMixins],
   data() {
     const _this = this;
     return {
-      content: [
+      MOVABLE_LIST: [
         // #ifdef MP
         {
           text: "分享",
           iconfont: "icon-icon-test",
           path: "share",
           openType: "share",
-          perm: "SALE_SHARE",
           params: {
             title: `邀请您来下单啦！`,
             path: PageEnums.editSale,
@@ -77,6 +76,23 @@ export default {
               PAGE_TYPE: "ADDED_SALE",
             },
           },
+          perm: "SALE_SHARE",
+        },
+        {
+          text: "板材",
+          iconfont: "icon-icon-test",
+          path: "share",
+          openType: "share",
+          params: {
+            title: `邀请您来下单啦！`,
+            path: PageEnums.produceWork,
+            query: {
+              PAGE_TYPE: "ADDED_PRODUCE_PACKING",
+              ADDED_TYPE: "packing",
+              FORM: "SALE",
+            },
+          },
+          perm: "SALE_SHARE",
         },
         // #endif
         /*  {
@@ -132,8 +148,8 @@ export default {
           width: 210,
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -297,20 +313,20 @@ export default {
       this.nodeIndex = index;
       // #endif
 
-      if (_isEqual(item.orderType, "PRODUCTION")) {
-        this.noRefresh = true;
+      this.noRefresh = true;
+
+      if (this.isProductionOrder(item.orderType)) {
         uni.navigateTo({
           url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE`,
         });
         return false;
       }
 
-      this.noRefresh = true;
       this.jumpAddedSale({id: item.id}, this.nodeIndex);
     },
 
     onToDetails(item) {
-      if (_isEqual(item.orderType, "PRODUCTION")) {
+      if (this.isProductionOrder(item.orderType)) {
         uni.setStorageSync("TO_DETAILS", true);
 
         uni.navigateTo({
@@ -337,7 +353,7 @@ export default {
       this.nodeIndex = index;
       this.noRefresh = true;
       this.jumpSaleAddedDocuments({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount", "orderType"]),
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         FORM: "SALE",
         noUnable: true,
       });
@@ -388,7 +404,8 @@ export default {
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
 
       const Func = _isEqual("customized", info.produceType) ? getOrderCodeDetailApi : getSaleDetailApi;
-      Func({id})
+
+      id && Func({id})
         .then(res => {
           const data = res.data || {};
           this.onProcessingListData(data, isPayment);
@@ -475,7 +492,7 @@ export default {
           const isPerm = this.isPerm(item.perm);
 
           if (_isEqual("onReturn", item.func)) {
-            return isPerm && isStatus && !_isEqual(node.orderType, "PRODUCTION");
+            return isPerm && isStatus && !this.isProductionOrder(item.orderType);
           }
 
           if (_isEqual("onQuickOut", item.func)) {
@@ -489,13 +506,13 @@ export default {
     // 判断是不是要显示编辑按钮
     isEditorButton() {
       return (node) => {
-        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && _isEqual(node.orderType, "PRODUCTION")) {
+        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && this.isProductionOrder(node.orderType)) {
           return this.isPerm("SALE_PRODUCE_UPDATE");
         }
 
         if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
           // 待付款生产工单不能编辑
-          if (_isEqual(node.orderType, "PRODUCTION")) {
+          if (this.isProductionOrder(node.orderType)) {
             return false;
           }
 
@@ -622,7 +639,7 @@ export default {
               付款
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !isEqual(item.orderType, 'PRODUCTION')"
+              v-if="['FINISHED'].includes(item.status) && !isProductionOrder(item.orderType)"
               class="ko-basic-button__card"
               @click.stop="onReturn(item, index)"
             >

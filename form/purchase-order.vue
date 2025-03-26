@@ -99,7 +99,7 @@ export default {
   },
   created() {
   },
-  onLoad(option) {
+  async onLoad(option) {
     this.option = option;
     this.isEdit = !!option.id;
     if (this.isEdit) this.getInfo();
@@ -109,9 +109,17 @@ export default {
     this.isClient = _isEqual("ADDED_PURCHASE", option.PAGE_TYPE);
 
     if (this.isClient) {
+      this.current = 1;
+      await this.onLogInAgain(this.option)
+        .finally(() => {
+          setTimeout(() => {
+            this.form.otherSupplier = this.GET_USER_INFO.nickName;
+            this.getBindInfo();
+          }, 10);
+        });
 
       if (this.option.SHARE_ID) {
-        getPurchaseCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getPurchaseCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
           .then(res => {
             this.form.id = decodeURIComponent(this.option.SHARE_ID);
             console.log(res);
@@ -125,16 +133,6 @@ export default {
             }
           });
       }
-
-      this.current = 1;
-
-      this.onLogInAgain(this.option)
-        .finally(() => {
-          setTimeout(() => {
-            this.form.otherSupplier = this.GET_USER_INFO.nickName;
-            this.getBindInfo();
-          }, 10);
-        });
     } else {
       this.current = 0;
     }

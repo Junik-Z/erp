@@ -90,8 +90,8 @@ export default {
           width: 55,
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
         },
         {
           label: "凭证",

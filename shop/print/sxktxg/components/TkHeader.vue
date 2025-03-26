@@ -30,7 +30,7 @@ export default {
         <div>{{ GET_FUNC(node || {}, "customer.name") }}</div>
 
         <div>录单日期：</div>
-        <div>{{ node.createTime }}</div>
+        <div>{{ node.updateTime }}</div>
 
         <div>单据编号：</div>
         <div>{{ node.orderCode }}</div>

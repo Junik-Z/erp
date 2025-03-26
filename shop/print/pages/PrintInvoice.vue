@@ -2,8 +2,6 @@
 // #ifdef H5
 import { VuePrintLast } from "../vue-print-last";
 
-import { Button, Checkbox } from "@/uni_modules/element-ui/element.min";
-
 import PrintHeader from "../components/PrintHeader.vue";
 import PrintFooter from "../components/PrintFooter.vue";
 import PrintTable from "../components/PrintTable.vue";
@@ -38,8 +36,6 @@ export default {
     PrintTable,
     PrintFooter,
     PrintHeader,
-    Button,
-    Checkbox,
   },
   props: {
     isA4: Boolean,
@@ -264,7 +260,7 @@ export default {
       <div class="ko-n-print__check">
         <label>打印字段：</label>
         <div>
-          <Checkbox
+          <el-checkbox
             :disabled="item.disabled"
             :label="item.label"
             v-for="(item, index) of columns"
@@ -272,7 +268,7 @@ export default {
             v-model="item.isPrint"
             v-if="!(isA4 && item.notA4)"
           />
-          <Checkbox
+          <el-checkbox
             :disabled="item.disabled"
             :label="item.label"
             v-for="(item, index) of feesList"
@@ -283,7 +279,7 @@ export default {
         </div>
       </div>
       <div>
-        <Button type="primary" size="mini" @click="onPrint">打印</Button>
+        <el-button type="primary" size="mini" @click="onPrint">打印</el-button>
       </div>
     </div>
 

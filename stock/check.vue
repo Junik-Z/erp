@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { Col, Row } from "@/uni_modules/element-ui/element.min";
-// #endif
 import KoNotice from "@/components/Notice/Notice.vue";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
@@ -10,12 +7,11 @@ import { getInboundDetailListApi, getOutboundDetailListApi } from "@/api/erp/sto
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _flattenDeep, _get } from "@/utils";
-import KoTable from "./components/KoTable/KoTable.vue";
 import mixins from "@/mixins/mixins";
 
 export default {
   name: "check",
-  components: {KoTable, OrderCard, LoadMore, UniSegmentedControl, KoNotice},
+  components: {OrderCard, LoadMore, UniSegmentedControl, KoNotice},
   mixins: [mixins],
   data() {
     const _this = this;
@@ -61,7 +57,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -113,7 +109,7 @@ export default {
               },
               [
                 h(
-                  Col,
+                  "el-col",
                   {props: {span: 4}},
                   [
                     h(UvAvatar, {
@@ -127,12 +123,12 @@ export default {
                   ],
                 ),
                 h(
-                  Col,
+                  "el-col",
                   {props: {span: 14}, style: {textAlign: "left"}},
                   ["产品名称：" + item.name],
                 ),
                 h(
-                  Col,
+                  "el-col",
                   {props: {span: 6}, style: {color: "red"}},
                   ["数量：" + item.productQuantity],
                 ),
@@ -141,12 +137,12 @@ export default {
 
             console.log(list);
 
-            return h(Row, {props: {gutter: 10}}, list);
+            return h("el-row", {props: {gutter: 10}}, list);
           },
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {

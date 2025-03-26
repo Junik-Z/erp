@@ -157,7 +157,7 @@ export default {
           ],
         },
         {
-          label: "时间",
+          label: "日期",
           prop: "createTime",
         },
         {

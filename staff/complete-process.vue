@@ -157,7 +157,7 @@ export default {
           },
         },
         {
-          label: "时间",
+          label: "日期",
           prop: "updateTime",
         },
         {
@@ -229,7 +229,7 @@ export default {
               <view class="ko-basic-table--th">价格</view>
               <view class="ko-basic-table--th">数量</view>
               <view class="ko-basic-table--th">结算</view>
-              <view class="ko-basic-table--th">时间</view>
+              <view class="ko-basic-table--th">日期</view>
 
               <block v-for="item of child" :key="item.id">
                 <view class="ko-basic-table--cell">

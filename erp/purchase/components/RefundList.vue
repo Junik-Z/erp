@@ -83,8 +83,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {

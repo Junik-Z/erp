@@ -19,7 +19,7 @@ import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/erp/components/PrintList/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import { CONFIG, PageEnums } from "@/utils/config";
+import { CONFIG } from "@/utils/config";
 import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
@@ -66,27 +66,6 @@ export default {
   data() {
     const _this = this;
     return {
-      content: [
-        // #ifdef MP
-        {
-          text: "分享",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: "填写信息",
-            content: "邀请您填写信息，方便下次联系。",
-            path: PageEnums.saleRefund,
-          },
-        },
-        // #endif
-        {
-          text: "新增",
-          iconfont: "icon-tianjia",
-          path: PageEnums.saleRefund,
-        },
-      ],
-
       loading: false,
       list: [],
 
@@ -112,8 +91,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {

@@ -3,7 +3,6 @@
 import PrintTable from "../components/BoardsPrint.vue";
 import PrintFooter from "../components/PrintFooter.vue";
 import PrintHeader from "../components/PrintHeader.vue";
-import { Button } from "@/uni_modules/element-ui/element.min";
 
 import { VuePrintLast } from "../vue-print-last";
 import mixins from "@/mixins/mixins";
@@ -23,7 +22,6 @@ export default {
     PrintTable,
     PrintFooter,
     PrintHeader,
-    Button,
   },
   props: {
     isA4: Boolean,
@@ -254,27 +252,28 @@ export default {
             piece: {colspan: 0},
           },
         },
-        ...this.GET_FUNC(this.node || {}, "_result_").map((item, index) => {
-          const name = item.name || "";
+        ...(this.GET_FUNC(this.node || {}, "_result_") || [])
+          .map((item, index) => {
+            const name = item.name || "";
 
-          const numbers = name?.match?.(/\d+/g); // 匹配所有数字
-          const description = name?.match?.(/\(([^)]+)\)/); // 匹配括号内的内容
+            const numbers = name?.match?.(/\d+/g); // 匹配所有数字
+            const description = name?.match?.(/\(([^)]+)\)/); // 匹配括号内的内容
 
-          return {
-            ...item,
-            name: description?.[1] || name || "",
-            color: this.toYuan(item.price),
-            width: numbers?.[0] || "",
-            height: numbers?.[1] || "",
-            weight: numbers?.[2] || "",
-            piece: this.toYuan(item.price * item.quantity),
-            __index__: index + 1,
-            /*  _config_: {
-               __index__: {colspan: 0},
-               name: {colspan: 2},
-             }, */
-          };
-        }),
+            return {
+              ...item,
+              name: description?.[1] || name || "",
+              color: this.toYuan(item.price),
+              width: numbers?.[0] || "",
+              height: numbers?.[1] || "",
+              weight: numbers?.[2] || "",
+              piece: this.toYuan(item.price * item.quantity),
+              __index__: index + 1,
+              /*  _config_: {
+                 __index__: {colspan: 0},
+                 name: {colspan: 2},
+               }, */
+            };
+          }),
       ];
     },
   },
@@ -287,7 +286,7 @@ export default {
   <div class="ko-print-customized-boards" :style="[rootStyle]">
     <div class="ko-print-customized-boards__header ko-basic-box-shadow">
       <div>
-        <Button type="primary" size="mini" @click="onPrint">打印</Button>
+        <el-button type="primary" size="mini" @click="onPrint">打印</el-button>
       </div>
     </div>
 

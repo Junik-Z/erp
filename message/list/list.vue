@@ -265,7 +265,7 @@ export default {
       </view>
 
       <template #footer>
-        <view class="ko-message__popup--footer ko-basic-box-shadow" style="--ko-basic-table-grid-col: auto auto;">
+        <view class="ko-message__popup--footer" style="--ko-basic-table-grid-col: auto auto;">
           <view class="ko-basic-table ko-basic-table__not-border">
             <view
               class="ko-basic-table--cell"

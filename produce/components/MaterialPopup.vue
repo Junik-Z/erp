@@ -2,7 +2,7 @@
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { getProduceDetailApi, updateProduceApi } from "@/api/erp/produce";
 import KoMovable from "@/components/Movable/index.vue";
-import PickerProduct from "./PickerProduct/PickerProduct.vue";
+import PickerProduct from "../components/PickerProduct/PickerProduct.vue";
 import { CustomToast } from "@/utils";
 
 export default {
@@ -71,7 +71,7 @@ export default {
     </view>
 
     <template #footer>
-      <view class="ko-material-popup__footer ko-basic-box-shadow">
+      <view class="ko-material-popup__footer">
         <button
           class="ko-basic-button__card"
           @click="onSubmit"
@@ -102,7 +102,6 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 20px 20px;
 
     .ko-basic-button__card {
       width: 120px;

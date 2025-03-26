@@ -772,4 +772,32 @@ export function loadCss(url, callback) {
 
   document.head.appendChild(link);
 }
+
 // #endif
+
+
+// 判断是不是相片
+export function isImageType(suffix) {
+  if (!suffix) return false;
+  return ["JPEG", "JPG", "PNG", "GIF", "BMP", "SVG", "HEIf", "HEIC", "RAW", "WEBP"].includes(suffix.toUpperCase());
+}
+
+
+// 判断是不是PDF
+export function isPdfType(suffix) {
+  if (!suffix) return false;
+  return ["PDF"].includes(suffix.toUpperCase());
+}
+
+// 判断是不是Word
+export function isWordType(suffix) {
+  if (!suffix) return false;
+  return ["DOCX", "DOC", "DOT", "DOTX"].includes(suffix.toUpperCase());
+}
+
+
+// 判断是不是 XLS
+export function isExcelType(suffix) {
+  if (!suffix) return false;
+  return ["XLS", "XLSX"].includes(suffix.toUpperCase());
+}

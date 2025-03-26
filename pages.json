@@ -254,7 +254,12 @@
           "style": {
             "navigationBarTitleText": "生产工单"
           }
-        },
+        }
+      ]
+    },
+    {
+      "root": "process",
+      "pages": [
         {
           "path": "work",
           "style": {
