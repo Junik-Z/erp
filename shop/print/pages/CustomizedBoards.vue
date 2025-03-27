@@ -7,7 +7,7 @@ import PrintHeader from "../components/PrintHeader.vue";
 import { VuePrintLast } from "../vue-print-last";
 import mixins from "@/mixins/mixins";
 import { cmToPx } from "@/shop/print/utils";
-import { _sum } from "@/utils";
+import { _deepCopy, _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
@@ -118,8 +118,6 @@ export default {
 
       const data = (this.getTableList || []);
 
-      console.log(data);
-
       data.forEach((row) => {
         const h = rect[row.id] || CellHeight;
 
@@ -141,8 +139,13 @@ export default {
       // 剩余空白高度
       const lastHeight = CHeight - VTotalHeight;
 
+      const A = Math.ceil((VTotalHeight || 0) / (_deepCopy(vessel).length || 0));
+
+      // 每行平均的高度
+      const averageCellHeight = isNaN(A) ? 19 : A;
+
       // 最后页要填补的条数
-      const fill = Math.floor(lastHeight / CellHeight);
+      const fill = Math.floor(lastHeight / averageCellHeight);
 
       let balance = 0;
       // 是否有其它费用
@@ -154,11 +157,11 @@ export default {
       // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
       if (fill > 0 && fill < balance) {
         for (let i = 0; i < fill; i++) {
-          vessel.push({__height__: CellHeight});
+          vessel.push({__height__: averageCellHeight});
         }
       } else if (fill > 0) {
         for (let i = 0; i < (fill - balance); i++) {
-          vessel.push({__height__: CellHeight});
+          vessel.push({__height__: averageCellHeight});
         }
       }
 
@@ -169,11 +172,11 @@ export default {
 
       if (fill < 0 || ((CHeight - (VTHeight + (rect.fees || 0))) < 0)) {
         // 每页的条数
-        const pageLength = Math.floor((CHeight - (rect.fees || 0) - (rect.summary || 0)) / CellHeight);
+        const pageLength = Math.floor((CHeight - (rect.fees || 0) - (rect.summary || 0)) / averageCellHeight);
 
         const end = [];
         for (let i = 0; i < pageLength; i++) {
-          end.push({__height__: CellHeight});
+          end.push({__height__: averageCellHeight});
         }
         pages.push(end);
       }

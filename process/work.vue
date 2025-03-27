@@ -136,6 +136,8 @@ export default {
       // 是否分享下单
       isShare: false,
       VmKey: +new Date(),
+
+      customizedMoney: 0,
     };
   },
   async onLoad(option) {
@@ -468,7 +470,9 @@ export default {
       setTimeout(() => {
         const P = _sum((_get(this.form, "productDetails") || []).map(v => (v.price || 0) * (v.productQuantity || 0)));
         const C = _sum((_get(this.form, "customizedBoards.0.result") || []).map(v => (v.price || 0) * (v.quantity || 0)));
-        this.form.totalAmount = this.toYuan(P + C);
+        const M = this.customizedMoney || 0;
+
+        this.form.totalAmount = this.toYuan(P + C + M);
       }, 10);
     },
 
@@ -616,6 +620,8 @@ export default {
           <block v-if="isEqual(type, 'xlsx')">
             <CustomFiles
               v-model="customizedMaterials"
+              :money.sync="customizedMoney"
+              @update:money="countTotalAmount"
               ref="CTRef"
             />
 

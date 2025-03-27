@@ -775,13 +775,11 @@ export function loadCss(url, callback) {
 
 // #endif
 
-
 // 判断是不是相片
 export function isImageType(suffix) {
   if (!suffix) return false;
   return ["JPEG", "JPG", "PNG", "GIF", "BMP", "SVG", "HEIf", "HEIC", "RAW", "WEBP"].includes(suffix.toUpperCase());
 }
-
 
 // 判断是不是PDF
 export function isPdfType(suffix) {

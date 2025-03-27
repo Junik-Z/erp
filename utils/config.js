@@ -174,7 +174,6 @@ export const PageEnums = {
   // 最近交易
   financeLately: "/finance/lately",
 
-
   // ———————————— 生产管理 ————————————————————
   // 生产
   produceLoading: "/produce/loading",
@@ -231,7 +230,6 @@ export const PageEnums = {
   stockCheck: "/stock/check",
   // 库存预警
   stockWarning: "/stock/warning",
-
 
   // ———————————— 员工管理 ————————————
   // 员工管理

@@ -169,7 +169,7 @@ export default {
   border-top: 1px solid #000;
 
   &__cell {
-    min-height: calc(var(--ko-paper-min-height, 16px) - 1px);
+    min-height: calc(var(--ko-paper-min-height, 16px));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -181,6 +181,8 @@ export default {
   }
 
   &__tfoot {
+    line-height: var(--ko-paper-min-height, 16px);
+    min-height: var(--ko-paper-min-height, 16px);
     display: flex;
     align-items: center;
     justify-content: flex-end;

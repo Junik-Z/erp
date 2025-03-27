@@ -169,6 +169,8 @@ export default {
           const Func = this.isAgain ? reOrderPurchaseApi : (this.isEdit ? updatePurchaseApi : addedPurchaseApi);
           Func(params)
             .then((res) => {
+              uni.setStorageSync("TENP_ORDER_INFO", res.data);
+
               CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success() {
@@ -186,7 +188,6 @@ export default {
                   }
                 },
               });
-              uni.setStorageSync("TENP_ORDER_INFO", res.data);
             })
             .finally(() => {
               this.loading = false;

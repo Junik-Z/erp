@@ -103,7 +103,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "voucher")),
-                 size: 42,
+                  size: 42,
                   shape: "square",
                 },
               })],
@@ -218,46 +218,60 @@ export default {
       // #endif
     },
 
+    // 请求提交
+    askSubmit() {
+      this.sLoading = true;
+      const Func = this.isEdit
+        ? this.isRefund ? editReturnedOrderApi : editPaidOrderApi
+        : this.isRefund ? addedReturnedOrderApi : addedPaidOrderApi;
+
+      const Event = {
+        SALE: this.isEdit ? editSalePaidOrderApi : addedSalePaidOrderApi,
+        SALE_RETURN: this.isEdit ? editSaleReturnedOrderApi : addedSaleReturnedOrderApi,
+        PURCHASE: this.isEdit ? editPurchaseReturnedOrderApi : addedSPurchaseReturnedOrderApi,
+        PURCHASE_RETURN: this.isEdit ? editPurchaseReturnedPaidOrderApi : addedSPurchaseReturnedPaidOrderApi,
+        RECEIVABLE: this.isEdit ? editPaidOrderApi : addedPaidOrderApi,
+        PAY_LISE: this.isEdit ? editReturnedOrderApi : addedReturnedOrderApi,
+      }[this.option.FORM];
+
+
+      const params = _deepCopy(this.form);
+
+      const obj = _pick(_deepCopy(this.option), ["supplierId", "orderType", "purchaserId", "orderCode"]);
+
+      params.totalAmount = yuanToPoints(params.totalAmount);
+
+      if (!obj.orderType) {
+        obj.orderType = this.option.FORM;
+      }
+
+      ;(Event || Func)({...params, ...obj})
+        .then(() => {
+          uni.showToast({title: "操作成功"});
+          this.getList();
+          this.isEdit = false;
+          setTimeout(() => {
+            this.getLast();
+          }, 10);
+        })
+        .finally(() => {
+          this.sLoading = false;
+        });
+    },
+
     // 添加修改单据
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
         if (!valid) {
-          this.sLoading = true;
-          const Func = this.isEdit
-            ? this.isRefund ? editReturnedOrderApi : editPaidOrderApi
-            : this.isRefund ? addedReturnedOrderApi : addedPaidOrderApi;
-
-          const Event = {
-            SALE: this.isEdit ? editSalePaidOrderApi : addedSalePaidOrderApi,
-            SALE_RETURN: this.isEdit ? editSaleReturnedOrderApi : addedSaleReturnedOrderApi,
-            PURCHASE: this.isEdit ? editPurchaseReturnedOrderApi : addedSPurchaseReturnedOrderApi,
-            PURCHASE_RETURN: this.isEdit ? editPurchaseReturnedPaidOrderApi : addedSPurchaseReturnedPaidOrderApi,
-            RECEIVABLE: this.isEdit ? editPaidOrderApi : addedPaidOrderApi,
-            PAY_LISE: this.isEdit ? editReturnedOrderApi : addedReturnedOrderApi,
-          }[this.option.FORM];
-
-
-          const params = _deepCopy(this.form);
-
-          const obj = _pick(_deepCopy(this.option), ["supplierId", "orderType", "purchaserId", "orderCode"]);
-          params.totalAmount = yuanToPoints(params.totalAmount);
-
-          if (!obj.orderType) {
-            obj.orderType = this.option.FORM;
-          }
-
-          ;(Event || Func)({...params, ...obj})
-            .then(() => {
-              uni.showToast({title: "操作成功"});
-              this.getList();
-              this.isEdit = false;
-              setTimeout(() => {
-                this.getLast();
-              }, 10);
-            })
-            .finally(() => {
-              this.sLoading = false;
-            });
+          uni.showModal({
+            title: "温馨提示",
+            content: `付款金额为 ¥ ${this.form?.totalAmount}，是否正确？`,
+            success: (res) => {
+              if (res.confirm) {
+                this.askSubmit();
+              }
+            },
+          });
         }
       });
     },

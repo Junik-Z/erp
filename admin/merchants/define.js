@@ -389,7 +389,7 @@ export const SALE_PERM_TREE = [
         "label": "快捷出库",
         "type": 2,
         "perm": "SALE_QUICK_OUT",
-        "id": "373",
+        id: "373",
         color: "#e43d33",
       },
     ],

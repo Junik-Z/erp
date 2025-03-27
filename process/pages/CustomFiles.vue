@@ -1,9 +1,20 @@
 <script>
 import FilePreview from "./FilePreview.vue";
 import { CONFIG } from "@/utils/config";
-import { _deepCopy, _isEmpty, CustomToast, isExcelType, isImageType, isPdfType, isWordType } from "@/utils";
+import {
+  _deepCopy,
+  _isEmpty,
+  _sum,
+  CustomToast,
+  isExcelType,
+  isImageType,
+  isPdfType,
+  isWordType,
+  yuanToPoints,
+} from "@/utils";
 import { downFileApi } from "@/request";
 import { getFileUrl } from "@/api/user";
+import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box/uni-number-box.vue";
 
 const ImageList = {
   image: "data:image/png;base64,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",
@@ -20,19 +31,29 @@ ICON_SIZE = 64;
 
 export default {
   name: "CustomTable",
-  components: {FilePreview},
+  components: {FilePreview, UniNumberBox},
   props: {
     value: {
       type: String,
       default: "",
     },
     readonly: Boolean,
+    money: Number,
   },
   watch: {
     value: {
       handler() {
         this.value && this.getList();
       },
+      immediate: true,
+    },
+
+    "objList.list": {
+      handler() {
+        const money = _sum(_deepCopy((this.objList?.list || []).map(v => v.money || 0)));
+        this.$emit("update:money", yuanToPoints(isNaN(money) ? 0 : money));
+      },
+      deep: true,
       immediate: true,
     },
   },
@@ -79,6 +100,7 @@ export default {
           id: file.data,
           extname: file._file_.extname,
           size: file._file_.size,
+          money: 0,
         };
 
         this.objList.list.push(obj);
@@ -164,15 +186,6 @@ export default {
     },
   },
   computed: {
-    getTableStyle() {
-      let col = "50px auto auto 160px";
-      // #ifdef MP
-      col = "50px auto auto auto";
-      // #endif
-
-      return {"grid-template-columns": col};
-    },
-
     // 获取文件类型图片
     getImageAvatar() {
       return item => {
@@ -196,24 +209,50 @@ export default {
     <view class="ko-custom-files__wrap">
       <block v-for="(item, index) of objList.list" :key="index">
         <view class="ko-custom-files__item">
-          <BasicCard @click.stop="onPreview(item)">
+          <BasicCard>
             <view class="ko-custom-files__item--wrap">
               <uv-avatar
                 not-view
                 :src="getImageAvatar(item)"
                 shape="square"
                 :size="iconSize"
+                @click.stop="onPreview(item)"
               />
-              <view class="ko-custom-files__item--name">
+              <view class="ko-custom-files__item--name" @click.stop="onPreview(item)">
                 <text class="ko-custom-files__item--name--text">
                   {{ item.name }}
                 </text>
               </view>
+              <view
+                style="display: flex; align-items: center; width: 80%; margin-bottom: 8px"
+                class="ko-basic-money"
+                @click.stop
+                v-if="!readonly"
+              >
+                <text style="font-size: 16px;padding-right: 10px;">¥</text>
+                <UniNumberBox
+                  v-if="!readonly"
+                  style="flex: 1;"
+                  v-model="item.money"
+                  placeholder="请输入价格"
+                  color="#e43d33"
+                  type="digit"
+                  :max="999999999999999999999"
+                  @change="onEmit"
+                />
+              </view>
+
               <view class="ko-custom-files__item--btns">
-                <!-- #ifdef H5 -->
-                <button class="ko-basic-button__card" @click.stop="onDownload(item)">下载</button>
-                <!-- #endif -->
-                <button class="ko-basic-button__card" @click.stop="onRemove(item, index)" v-if="!readonly">删除</button>
+                <text class="ko-basic-money" v-if="readonly">¥ {{ item.money }}</text>
+
+                <view style="display: flex; align-items: center; justify-content: flex-end; flex: 1;">
+                  <!-- #ifdef H5 -->
+                  <button class="ko-basic-button__card" @click.stop="onDownload(item)">下载</button>
+                  <!-- #endif -->
+                  <button class="ko-basic-button__card" @click.stop="onRemove(item, index)" v-if="!readonly">
+                    删除
+                  </button>
+                </view>
               </view>
             </view>
           </BasicCard>
@@ -283,6 +322,11 @@ export default {
 
   &__item {
     margin: 5px;
+
+    ::v-deep .uni-numbox__value {
+      width: 100% !important;
+    }
+
     // #ifdef MP
     width: calc(50% - 10px);
     // #endif
@@ -311,7 +355,7 @@ export default {
       width: 100%;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
     }
   }
 

@@ -1,6 +1,6 @@
 <script>
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import TicketMixins from "../../TicketMixins";
+import TicketMixins from "./TicketMixins";
 import KoList from "@/components/List/List.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";

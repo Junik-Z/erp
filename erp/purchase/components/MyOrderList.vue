@@ -113,7 +113,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -374,6 +374,9 @@ export default {
           const isStatus = item?.status.includes(node.status);
 
           if (_isEqual(this.GET_PAGE_MENU_FUNC, 0)) {
+
+            if (_isEqual("onReturn", item.func)) return isStatus && this.isPerm(item.perm) && !["CUSTOMIZED"].includes(node.orderType);
+
             return isStatus && this.isPerm(item.perm);
           } else {
             return !_isEqual(item.func, "onReturn") && isStatus && this.isPerm(item.rPerm);

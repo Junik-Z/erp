@@ -77,7 +77,7 @@ export default {
   },
   computed: {
     getTitle() {
-      return (_get(this.list, "0.customer.name") || ["SALE_RETURN"].includes(this.option.FORM) ? "退款" : "付款");
+      return (_get(this.list, "0.customer.name") || (["SALE_RETURN"].includes(this.option.FORM) ? "退款" : "付款"));
     },
 
     actionList() {
