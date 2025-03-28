@@ -13,6 +13,7 @@ import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar
 import IndexList from "../IndexList/IndexList.vue";
 import { getLogisticsListApi, getLogisticsUserListApi } from "@/api/erp/logistics";
 import { getNotBindInfoApi, getStaffListApi, getStaffUserListApi } from "@/api/erp/product";
+import { getReportsUserListApi } from "@/api/erp/finance";
 
 export default {
   name: "PickerUser",
@@ -82,6 +83,8 @@ export default {
       // purchaseUserList: 采购供应商用户列表
       // staffUserList: 员工列表
       // logisticsUserList: 物流商列表
+
+      // reportUser: 财务报表用户列表
       default: "default",
     },
     isInput: Boolean,
@@ -162,6 +165,9 @@ export default {
 
         // 物流商列表
         logisticsUserList: getLogisticsUserListApi,
+
+        // 财务报表用户
+        reportUser: getReportsUserListApi
       }[this.type];
 
       const vKey = {
@@ -172,9 +178,10 @@ export default {
         purchaseUserList: "userId",
         staffUserList: "userId",
         logisticsUserList: "userId",
+        reportUser: "userId",
       }[this.type] || "id";
-      const lKey = {default: "nickName", "noBindStaff": "nickName", perm: "nickName"}[this.type] || "name";
-      const logoKey = {default: "avatar", "noBindStaff": "avatar", perm: "avatar"}[this.type] || "logo";
+      const lKey = {default: "nickName", reportUser: "nickName", "noBindStaff": "nickName", perm: "nickName"}[this.type] || "name";
+      const logoKey = {default: "avatar", reportUser: "avatar", "noBindStaff": "avatar", perm: "avatar"}[this.type] || "logo";
 
       Func({...this.queryList, [lKey]: this.queryList.nickName, ...this.query})
         .then(res => {

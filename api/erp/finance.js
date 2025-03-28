@@ -459,6 +459,39 @@ export function getReportRecentListApi(data) {
   });
 }
 
+/**
+ * @description 获取所有客户列表
+ */
+export function getCustomerListApi(data) {
+  return request({
+    url: "/finance/report/customer-list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取所有供应商列表
+ */
+export function getSupplierListApi(data) {
+  return request({
+    url: "/finance/report/supplier-list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取所有用户
+ */
+export function getReportsUserListApi(data) {
+  return request({
+    url: "/finance/report/user-list",
+    method: "get",
+    data,
+  });
+}
+
 // —————————————— 删除单据 ————————————————————
 /**
  * @description 删除已付款单据

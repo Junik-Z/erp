@@ -114,7 +114,7 @@ export default {
       pages.push(vessel);
 
       // 最后一页的总高度
-      const VTHeight = _sum(vessel.map(v => (v.__height__)));
+      // const VTHeight = _sum(vessel.map(v => (v.__height__)));
 
       /*  if (fill < 0 || ((CHeight - (VTHeight + (rect.statistics || 0))) < 0)) {
          // 每页的条数
@@ -170,7 +170,7 @@ export default {
               "white-space": "nowrap",
             },
             prop: "name",
-            render: (h, {}) => h("div", "水性科天九厘双面背板-展雾漫漫十+松林湖畔"),
+            // render: (h, {}) => h("div", row.name),
           },
           {
             label: "单位",

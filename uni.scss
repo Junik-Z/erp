@@ -378,9 +378,9 @@ $--ko-print-font-size: 11pt;
 // 天科打印模块的样式
 @mixin tk-print-style() {
   font-family: "华文楷体", "KaiTi", sans-serif;
-  font-size: 14px;
-  min-height: 16px;
-  line-height: 16px;
+  font-size: 13px;
+  min-height: 14px;
+  line-height: 14px;
 }
 
 .ko-pointer {

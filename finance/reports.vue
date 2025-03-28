@@ -11,6 +11,9 @@ import { getReportAssetsApi, getReportRecentApi, getReportTrendApi } from "@/api
 import Dayjs from "@/utils/dayjs";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { PageEnums } from "@/utils/config";
+import PickerUser from "@/components/PickerUser/PickerUser.vue";
+import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
+import SelectCustomer from "./components/SelectCustomer.vue";
 
 import advancedFormat from "./advancedFormat";
 import weekOfYear from "./weekOfYear";
@@ -43,6 +46,8 @@ export default {
       TrendQuery: {
         date: Dayjs().format("YYYY-MM-DD HH:mm:ss"),
         timeConstant: timeConstant,
+        supplierId: "",
+        purchaserId: "",
       },
 
       radioList: [
@@ -81,6 +86,21 @@ export default {
       tLoading: false,
 
       isZoom: false,
+
+      // 搜索
+      pValues: [
+        {
+          label: "客户",
+          value: "",
+        },
+        {
+          label: "供应商",
+          value: "",
+        },
+      ],
+
+      pCurrent: 0,
+      show: false,
     };
   },
   onLoad() {
@@ -89,12 +109,15 @@ export default {
     this.getReportTrend();
   },
   components: {
+    SelectCustomer,
     KoList,
     BasicCard,
     TrendChart,
     UvCountTo,
     OrderCard,
     PickerDate,
+    PickerUser,
+    HistoryBar,
   },
   methods: {
     // 请求下一页数据
@@ -107,7 +130,7 @@ export default {
     // 获取资产统计
     getReportAssets() {
       if (!this.isPerm("FINANCE_REPORT_ASSETS")) return false;
-      
+
       getReportAssetsApi()
         .then(res => {
           this.assets = res.data;
@@ -179,6 +202,29 @@ export default {
         url: PageEnums.financeLately,
       });
     },
+
+    // 开启搜索
+    onShowSearch() {
+      this.show = !this.show;
+      if (this.show) {
+        this.$refs.SCRef.open(this.TrendQuery);
+      } else {
+        this.$refs.SCRef.close();
+      }
+    },
+
+    // 开始搜
+    onSearch(obj) {
+      this.TrendQuery = {...this.TrendQuery, ...obj};
+      this.getReportTrend();
+    },
+
+    // 重置搜索
+    onReset() {
+      this.TrendQuery = _deepCopy(this.$options.data().TrendQuery);
+      this.getReportTrend();
+      this.show = false;
+    },
   },
   mounted() {
   },
@@ -220,18 +266,24 @@ export default {
 
     // 支出收入统计
     statistics() {
-      const T = _deepCopy(this.trend);
+      const T = _deepCopy(this.trend) || {};
 
       return [
         {
           title: "收入",
-          money: this.toYuan(T.income),
+          money: this.toYuan(T.income || 0),
           color: "#388E3C",
+          showReceived: T.actualIncome >= 0,
+          received: this.toYuan(T.actualIncome || 0),
+          receivedText: "实收：",
         },
         {
           title: "支出",
           money: this.toYuan(T.expense),
           color: "#D32F2F",
+          showReceived: T.actualExpense >= 0,
+          received: this.toYuan(T.actualExpense || 0),
+          receivedText: "实付：",
         },
         {
           title: "净利润",
@@ -239,6 +291,10 @@ export default {
           color: "#303F9F",
         },
       ];
+    },
+
+    isShowActualIncome() {
+      return this.statistics.some(v => v.showReceived);
     },
 
     // 获取时间选择器的选择类型
@@ -390,6 +446,7 @@ export default {
         </view>
       </view>
 
+      <!-- 收支趋势 -->
       <view class="ko-reports__trend" v-if="isPerm('FINANCE_REPORT_TREND')">
         <view class="ko-reports__title">
           收支趋势
@@ -415,7 +472,24 @@ export default {
               @change="onTrendQuery"
             />
           </view>
+          <button
+            class="ko-basic-button__card"
+            @click.stop="onShowSearch"
+            :class="{show: show}"
+          >
+            <view style="display: flex; align-items: center;">
+              <text style="padding-right: 2px;">搜索</text>
+              <i class="iconfont icon-jiantou"></i>
+            </view>
+          </button>
         </view>
+
+        <SelectCustomer
+          ref="SCRef"
+          @submit="onSearch"
+          @reset="onReset"
+          :s-loading="tLoading"
+        />
 
         <BasicCard not-padding>
           <view class="ko-reports__trend--ec">
@@ -464,6 +538,38 @@ export default {
                   />
                   <!-- #endif -->
                 </view>
+                <view class="ko-reports__trend--item--received" v-if="isShowActualIncome">
+                  <block v-if="item.showReceived">
+                    <text class="ko-basic-label">
+                      {{ item.receivedText }}
+                      <text :style="[{color: item.color}]">¥</text>
+                    </text>
+                    <!-- #ifdef MP -->
+                    <UvCountTo
+                      separator=","
+                      :start-val="0"
+                      :decimals="0"
+                      decimal="."
+                      bold
+                      :end-val="item.money"
+                      :color="item.color"
+                      :font-size="10"
+                    />
+                    <!-- #endif -->
+                    <!-- #ifdef H5 -->
+                    <UvCountTo
+                      separator=","
+                      :start-val="0"
+                      :decimals="0"
+                      decimal="."
+                      bold
+                      :end-val="item.money"
+                      :color="item.color"
+                      :font-size="12"
+                    />
+                    <!-- #endif -->
+                  </block>
+                </view>
                 <view v-if="false" class="ko-reports__trend--item--scale" style="color: #e43d33;">
                   <uni-icons type="arrow-up" color="#e43d33" size="10" />
                   {{ item.scale }}%
@@ -474,6 +580,7 @@ export default {
         </view>
       </view>
 
+      <!-- 最近交易 -->
       <view class="ko-reports__trade" v-if="isPerm('FINANCE_REPORT_RECENT')">
         <view
           class="ko-reports__title"
@@ -525,7 +632,6 @@ export default {
         <!-- #endif -->
       </view>
 
-
       <view
         class="ko-not-perm"
         v-if="!(isPerm('FINANCE_REPORT_ASSETS') && isPerm('FINANCE_REPORT_TREND') && isPerm('FINANCE_REPORT_RECENT'))"
@@ -539,6 +645,7 @@ export default {
 <style scoped lang="scss">
 .ko-reports {
   margin-top: 10px;
+
   // #ifdef MP
   padding-bottom: 30px;
 
@@ -547,10 +654,18 @@ export default {
     align-items: center;
     justify-content: space-between;
     padding-top: 10px;
+    margin-bottom: 10px;
 
     &--input {
       width: 40%;
+      flex: 1;
+      margin-right: 10px
     }
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: bold;
   }
 
   // #endif
@@ -569,21 +684,11 @@ export default {
 
     &--input {
       width: 260px;
+
+      margin-right: 10px;
     }
   }
 
-  // #endif
-
-
-  // #ifndef H5
-  &__title {
-    font-size: 14px;
-    font-weight: bold;
-  }
-
-  // #endif
-
-  // #ifdef H5
   &__title {
     font-size: 18px;
     font-weight: bold;
@@ -595,6 +700,24 @@ export default {
   }
 
   // #endif
+
+  &__search {
+
+
+    .ko-basic-button__card {
+      padding-right: 5px;
+
+      .iconfont {
+        transition: all .3s;
+      }
+
+      &.show {
+        .iconfont {
+          transform: rotate(-180deg);
+        }
+      }
+    }
+  }
 
   &__trend {
     padding: 0 10px 10px;
@@ -624,6 +747,13 @@ export default {
         margin-top: 4px;
         font-size: 10px;
       }
+
+      &--received {
+        font-size: 10px;
+        height: 14px;
+        margin-bottom: 4px;
+      }
+
     }
 
     // #endif
@@ -653,7 +783,14 @@ export default {
         align-items: flex-end;
         justify-content: flex-start;
         font-size: 16px;
-        padding: 0 10px 16px;
+        padding: 10px 10px 8px;
+      }
+
+      &--received {
+        font-size: 12px;
+        padding-left: 10px;
+        height: 14px;
+        margin-bottom: 10px;
       }
 
       &--scale {
@@ -720,6 +857,5 @@ export default {
 
     // #endif
   }
-
 }
 </style>

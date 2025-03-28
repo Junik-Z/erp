@@ -127,7 +127,7 @@ export default {
               .then(() => {
                 uni.showToast({title: "删除成功"});
 
-                // this.getList();
+                this.getList();
               });
           }
         },
