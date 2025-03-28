@@ -305,7 +305,12 @@ export default {
             <PrintHeader ref="HeaderRef" :title="GET_SHOP_NAME + header" :node="node" />
           </template>
           <template #tfoot>
-            <PrintFooter ref="FooterRef" :out-name="GET_USER_INFO.nickName" :info="GET_CONFIG_INFO" />
+            <PrintFooter
+              ref="FooterRef"
+              :out-name="GET_USER_INFO.nickName"
+              :info="GET_CONFIG_INFO"
+              :node="node"
+            />
           </template>
         </PrintTable>
       </div>
@@ -334,7 +339,11 @@ export default {
                 <PrintHeader :title="GET_SHOP_NAME + header" :node="node" />
               </template>
               <template #tfoot>
-                <PrintFooter :out-name="GET_USER_INFO.nickName" :info="GET_CONFIG_INFO" />
+                <PrintFooter
+                  :out-name="GET_USER_INFO.nickName"
+                  :info="GET_CONFIG_INFO"
+                  :node="node"
+                />
               </template>
             </PrintTable>
           </div>
@@ -373,7 +382,7 @@ export default {
     background: #fff;
     padding: 0 30px;
     margin: 0 auto 20px;
-    z-index: 9999;
+    z-index: 999;
   }
 
   &__content {

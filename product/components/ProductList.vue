@@ -145,7 +145,7 @@ export default {
       });
     },
 
-    onRemove(row) {
+    onRemove(row, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要删除 ${row.name} 产品吗？`,
@@ -156,7 +156,7 @@ export default {
               .then(() => {
                 uni.showToast({title: "删除成功"});
                 // this.getList(true);
-                this.list.splice(this.nodeIndex, 1);
+                this.list.splice(index || this.nodeIndex, 1);
               });
           }
         },

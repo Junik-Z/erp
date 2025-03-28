@@ -352,6 +352,7 @@ export default {
       this.node = item;
       this.nodeIndex = index;
       this.noRefresh = true;
+
       this.jumpSaleAddedDocuments({
         ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         FORM: "SALE",
@@ -402,8 +403,7 @@ export default {
     updateList(isPayment = false) {
       const info = uni.getStorageSync("TENP_ORDER_INFO");
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
-
-      const Func = _isEqual("customized", info.produceType) ? getOrderCodeDetailApi : getSaleDetailApi;
+      const Func = _isEqual("customized", info?.produceType) ? getOrderCodeDetailApi : getSaleDetailApi;
 
       id && Func({id})
         .then(res => {
@@ -757,8 +757,7 @@ export default {
 
     <Pay
       ref="TPRef"
-      @success="updateList(true)"
-      @close="noRefresh = false"
+      @close="updateList(true); noRefresh = false"
     />
   </view>
 </template>

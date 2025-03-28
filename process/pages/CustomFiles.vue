@@ -243,7 +243,7 @@ export default {
               </view>
 
               <view class="ko-custom-files__item--btns">
-                <text class="ko-basic-money" v-if="readonly">¥ {{ item.money }}</text>
+                <text class="ko-basic-money" v-if="readonly">¥ {{ item.money || 0 }}</text>
 
                 <view style="display: flex; align-items: center; justify-content: flex-end; flex: 1;">
                   <!-- #ifdef H5 -->

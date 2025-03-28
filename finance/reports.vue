@@ -107,6 +107,7 @@ export default {
     // 获取资产统计
     getReportAssets() {
       if (!this.isPerm("FINANCE_REPORT_ASSETS")) return false;
+      
       getReportAssetsApi()
         .then(res => {
           this.assets = res.data;

@@ -458,3 +458,26 @@ export function getReportRecentListApi(data) {
     data,
   });
 }
+
+// —————————————— 删除单据 ————————————————————
+/**
+ * @description 删除已付款单据
+ */
+export function removeReturnedOrderApi(data) {
+  return request({
+    url: "/finance/delete-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除已收款单据
+ */
+export function removePaidOrderApi(data) {
+  return request({
+    url: "/finance/delete-paid-order",
+    method: "post",
+    data,
+  });
+}

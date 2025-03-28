@@ -721,8 +721,7 @@ export default {
 
     <Pay
       ref="TPRef"
-      @success="updateList(true)"
-      @close="noRefresh = false"
+      @close="updateList(true); noRefresh = false"
     />
   </view>
 </template>

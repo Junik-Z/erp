@@ -375,7 +375,7 @@ export default {
 
           if (_isEqual(this.GET_PAGE_MENU_FUNC, 0)) {
 
-            if (_isEqual("onReturn", item.func)) return isStatus && this.isPerm(item.perm) && !["CUSTOMIZED"].includes(node.orderType);
+            if (["onReturn", "onAdded"].includes(item.func)) return isStatus && this.isPerm(item.perm) && !["CUSTOMIZED"].includes(node.orderType);
 
             return isStatus && this.isPerm(item.perm);
           } else {
@@ -487,7 +487,7 @@ export default {
           <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
-                v-if="['FINISHED'].includes(item.status) && !GET_PAGE_MENU_FUNC && isPerm('PURCHASE_RETURN_ADD')"
+                v-if="['FINISHED'].includes(item.status) && !['CUSTOMIZED'].includes(item.orderType) && !GET_PAGE_MENU_FUNC && isPerm('PURCHASE_RETURN_ADD')"
                 class="ko-basic-button__card"
                 @click.stop="onReturn(item, index)"
               >
@@ -504,7 +504,7 @@ export default {
               <button
                 class="ko-basic-button__card"
                 @click.stop="onAdded(item, index)"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_UPDATE')) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('PURCHASE_RETURN_UPDATE')))"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_UPDATE') && !['CUSTOMIZED'].includes(item.orderType)) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('PURCHASE_RETURN_UPDATE')))"
               >
                 编辑
               </button>

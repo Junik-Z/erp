@@ -54,8 +54,9 @@ export default {
 
   h3 {
     letter-spacing: 1em;
-    font-size: 18px;
+    font-size: 22px;
     text-align: center;
+    margin-bottom: 10px;
   }
 
   &__page {

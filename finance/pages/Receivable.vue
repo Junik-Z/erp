@@ -319,6 +319,7 @@ export default {
         },
       });
     },
+
     // 添加票据
     onAddedTicket(item, index) {
       this.node = _deepCopy(item);
@@ -364,6 +365,7 @@ export default {
       const index = this.nodeIndex;
       getReceivableDetailApi({id: node.id})
         .then(res => {
+          console.log(res);
           this.$set(this.list, index, _pick(res.data, _keys(node)));
         });
     },
@@ -540,7 +542,7 @@ export default {
         <!-- #endif -->
       </view>
 
-      <Pay ref="TPRef" @success="onSuccess" />
+      <Pay ref="TPRef" @close="onSuccess" />
       <!-- #ifdef H5 -->
     </view>
     <!-- #endif -->

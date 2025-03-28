@@ -108,6 +108,7 @@ export default {
         // #ifdef MP
         this.$refs.FormRef.clearValidate();
         // #endif
+
         this.form = _deepCopy(this.$options.data().form);
 
         if (!_isEmpty(row)) {
@@ -125,7 +126,8 @@ export default {
             deleteProductClassApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                this.getList();
+
+                // this.getList();
               });
           }
         },

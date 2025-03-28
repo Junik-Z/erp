@@ -1492,6 +1492,12 @@ export const FINANCE_PERM_TREE = [
         id: "503",
       },
       {
+        label: "删除单据",
+        type: 2,
+        perm: "FINANCE_DELETE_PAID_ORDER",
+        id: "006",
+      },
+      {
         label: "编辑单据",
         type: 2,
         perm: "FINANCE_EDIT_PAID_ORDER",
@@ -1564,6 +1570,12 @@ export const FINANCE_PERM_TREE = [
         type: 2,
         perm: "FINANCE_ADD_RETURNED_ORDER",
         id: "507",
+      },
+      {
+        label: "删除单据",
+        type: 2,
+        perm: "FINANCE_DELETE_RETURNED_ORDER",
+        id: "007",
       },
       {
         label: "编辑单据",

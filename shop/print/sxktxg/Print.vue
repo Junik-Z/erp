@@ -156,9 +156,9 @@ export default {
             headAlign: "center",
             headStyle: {
               "white-space": "nowrap",
+              maxWidth: "70px",
             },
             align: "center",
-            width: 70,
             prop: "__index__",
           },
           {
@@ -170,18 +170,19 @@ export default {
               "white-space": "nowrap",
             },
             prop: "name",
+            render: (h, {}) => h("div", "水性科天九厘双面背板-展雾漫漫十+松林湖畔"),
           },
           {
             label: "单位",
             headAlign: "center",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              maxWidth: "70px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
             },
             prop: "name",
             align: "center",
-            width: 70,
             render: (h, {row}) => {
               return h("span", {}, [_get(row || {}, "extend.dangwei") || ""]);
             },
@@ -192,29 +193,30 @@ export default {
             prop: "productQuantity",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              maxWidth: "70px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
             },
             align: "center",
-            width: 70,
           },
           {
             label: "单价",
             headAlign: "center",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
+              maxWidth: "70px",
             },
             render: (h, {row}) => {
               return h("span", {}, [this.toYuan(row.price) || ""]);
             },
             align: "center",
-            width: 70,
+            // width: 70,
           },
           {
             label: "金额",
-            width: 70,
+            // width: 70,
             headAlign: "center",
             render: (h, {row}) => {
               return h("span", {}, [this.toYuan(row.total) || ""]);
@@ -222,8 +224,9 @@ export default {
             align: "right",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
+              maxWidth: "70px",
             },
           },
           {
@@ -275,6 +278,10 @@ export default {
         "--tk-cell-font-size": FontSize + "px",
       };
     },
+
+    getHeader() {
+      return this.header?.replace("销售退货单", "退货单")?.replace("采购退货单", "退货单");
+    },
   },
 };
 // #endif
@@ -301,7 +308,7 @@ export default {
           is-show-summary
         >
           <template #thead>
-            <TkHeader :node="node" :header="header" />
+            <TkHeader :node="node" :header="getHeader" />
           </template>
           <template #tfoot>
             <TkFooter :node="node" />
@@ -337,7 +344,7 @@ export default {
                   :node="node"
                   show-page
                   :page="`${index + 1}/${groupList.length || 0}`"
-                  :header="header"
+                  :header="getHeader"
                 />
               </template>
               <template #tfoot>

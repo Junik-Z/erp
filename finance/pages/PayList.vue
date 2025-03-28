@@ -543,7 +543,7 @@ export default {
         <!-- #endif -->
       </view>
 
-      <Pay ref="TPRef" @success="onSuccess" />
+      <Pay ref="TPRef" @close="onSuccess" />
       <!-- #ifdef H5 -->
     </view>
     <!-- #endif -->

@@ -138,6 +138,8 @@ export default {
       VmKey: +new Date(),
 
       customizedMoney: 0,
+
+      pTotal: 0,
     };
   },
   async onLoad(option) {
@@ -471,6 +473,7 @@ export default {
         const P = _sum((_get(this.form, "productDetails") || []).map(v => (v.price || 0) * (v.productQuantity || 0)));
         const C = _sum((_get(this.form, "customizedBoards.0.result") || []).map(v => (v.price || 0) * (v.quantity || 0)));
         const M = this.customizedMoney || 0;
+        this.pTotal = P;
 
         this.form.totalAmount = this.toYuan(P + C + M);
       }, 10);
@@ -779,14 +782,16 @@ export default {
                     v-model="form.productDetails"
                     @update:total="countTotalAmount"
                     :type="isPurchase ? 'purchase' : 'sale'"
-                    hide-total-prices
                     :is-work="isPurchase"
+                    :total.sync="pTotal"
+                    hide-total-prices
 
                     is-show-recent
                     :supplier-id="form.supplierId"
                     :order-address="form.orderAddress"
                   />
                 </view>
+
               </uni-forms-item>
             </view>
           </UniSection>
@@ -794,6 +799,19 @@ export default {
           <UniSection title="总价" type="line">
             <block v-if="isEqual(type, 'packing')">
               <BinCount v-model="form.customizedBoards[0]" @change-total="countTotalAmount" />
+            </block>
+
+            <block v-if="isEqual(type, 'xlsx')">
+              <view style="display: flex; align-items: center; padding-left: 20px;">
+                <view style="margin-right: 50px;">
+                  <label class="ko-basic-label">文件总额：</label>
+                  <text class="ko-basic-money">¥ {{ toYuan(customizedMoney) }}</text>
+                </view>
+                <view>
+                  <label class="ko-basic-label">产品总额：</label>
+                  <text class="ko-basic-money">¥ {{ toYuan(pTotal) }}</text>
+                </view>
+              </view>
             </block>
 
             <view style="padding: 10px;">
@@ -901,7 +919,6 @@ export default {
 
 
     //background: #fff;
-
     //height: 70px;
 
     margin-top: 70px;

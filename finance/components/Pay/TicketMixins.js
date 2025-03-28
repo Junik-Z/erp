@@ -11,6 +11,8 @@ import {
   getPaidOrderListApi,
   getPayableAchievableApi,
   getReturnedOrderListApi,
+  removePaidOrderApi,
+  removeReturnedOrderApi,
 } from "@/api/erp/finance";
 import { _deepCopy, _get, _isEmpty, _pick, _sum, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -365,6 +367,31 @@ export default {
           }
         },
       });
+    },
+
+    // 删除未确认单据
+    onRemoveOrder(item, index) {
+      const Func = ({
+        RECEIVABLE: removePaidOrderApi,
+        PAY_LISE: removeReturnedOrderApi,
+      }[this.option.FORM]);
+
+      if (Func) {
+        uni.showModal({
+          title: "温馨提示",
+          content: `您确定要删除改记录吗？`,
+          success: (res) => {
+            if (res.confirm) {
+              Func(item).then(() => {
+                CustomToast({title: "操作成功"});
+                this.list.splice(index, 1);
+              });
+            }
+          },
+        });
+      }
+
+      console.log(item, index);
     },
   },
 };
