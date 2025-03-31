@@ -605,9 +605,9 @@ export default {
   height: calc(100vh - 64px - 50px);
   overflow-y: auto;
 
-  .ko-history {
+  /*.ko-history {
     width: 500px;
-  }
+  }*/
 
   // #endif
 }

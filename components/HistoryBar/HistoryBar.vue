@@ -111,6 +111,7 @@ export default {
   margin-bottom: 10px;
 
   // #ifdef H5
+  width: 1024px;
   max-width: 1024px;
   margin: 0 auto 10px;
   // #endif
@@ -150,6 +151,7 @@ export default {
 
     &--wrap {
       padding: 16px 20px 10px;
+      box-sizing: border-box;
     }
   }
 

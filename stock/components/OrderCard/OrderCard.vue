@@ -196,15 +196,16 @@ export default {
             :key="child.id"
           >
             <view style="display:flex; align-items: center;">
-              <UvAvatar
-                v-if="GET_FUNC(child, 'images')"
-                :size="28"
-                :src="getImageUrl(GET_FUNC(child, 'images'))"
-                shape="square"
-                random-bg-color
-                :font-size="12"
-              />
-              {{ child.name }}
+              <view v-if="GET_FUNC(child, 'images')" style="padding-right: 8px">
+                <UvAvatar
+                  :size="22"
+                  :src="getImageUrl(GET_FUNC(child, 'images'))"
+                  shape="square"
+                  random-bg-color
+                  :font-size="12"
+                />
+              </view>
+              <text>{{ child.name }}</text>
             </view>
             <view>x{{ child.productQuantity }}</view>
           </view>

@@ -220,23 +220,6 @@ export default {
 
     // 解绑
     onUnbind(user) {
-      /*  uni.showModal({
-         title: "温馨提示",
-         content: `您确定要解绑供应商吗？`,
-         success: (res) => {
-           if (res.confirm) {
-             Promise.all(
-               user.map(userId => unbindSupplierApi({
-                 supplierId: this.node.id,
-                 userId,
-               })),
-             )
-               .then(() => {
-                 uni.showToast({title: "解绑成功"});
-               });
-           }
-         },
-       }); */
       Promise.all(
         user.map(userId => unbindSupplierApi({
           supplierId: this.node.id,
@@ -245,7 +228,6 @@ export default {
       )
         .then(() => {
           uni.showToast({title: "操作成功"});
-
           const node = _deepCopy(this.list[this.nodeIndex]);
           node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
           this.$set(this.list, this.nodeIndex, node);
@@ -321,7 +303,7 @@ export default {
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.node));
+      this[item.func](_deepCopy(this.node), this.nodeIndex);
     },
 
     // 供应商转换
@@ -526,7 +508,7 @@ export default {
               </button>
               <button
                 class="ko-basic-button__user"
-                @click.stop="onConvert(item)"
+                @click.stop="onConvert(item, index)"
                 v-if="isPerm('SUPPLIER_CONVERT')"
               >
                 {{ ["转为临时供应商", "转为正式供应商"][+tabIndex] }}

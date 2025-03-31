@@ -1,5 +1,7 @@
 <script>
 import mixins from "@/mixins/mixins";
+import { _deepCopy } from "@/utils";
+import Dayjs from "@/utils/dayjs";
 
 export default {
   name: "TkHeader",
@@ -14,6 +16,25 @@ export default {
     showPage: Boolean,
     page: [Number, String],
     header: String,
+    isPickDate: Boolean,
+  },
+  data() {
+    return {
+      date: "",
+    };
+  },
+  methods: {
+    onChange(event) {
+      this.$set(this.node, "updateTime", Dayjs(event).format("YYYY-MM-DD HH:mm:ss"));
+    },
+  },
+  watch: {
+    node: {
+      handler() {
+        this.date = _deepCopy(this.node?.updateTime || "");
+      },
+      deep: true,
+    },
   },
 };
 </script>
@@ -30,7 +51,18 @@ export default {
         <div>{{ GET_FUNC(node || {}, "customer.name") }}</div>
 
         <div>录单日期：</div>
-        <div>{{ node.updateTime }}</div>
+        <div style="display: flex; align-items: center;">
+          <span v-if="!isPickDate"> {{ node.updateTime || "" }}</span>
+
+          <el-date-picker
+            v-else
+            style="font-size: 12px"
+            type="datetime"
+            placeholder="选择录单时间"
+            @change="onChange"
+            v-model="date"
+          />
+        </div>
 
         <div>单据编号：</div>
         <div>{{ node.orderCode }}</div>
@@ -68,6 +100,26 @@ export default {
   &__center {
     padding: 0 10px;
     @include tk-print-style();
+
+    ::v-deep .el-date-editor.el-input {
+      width: auto;
+
+      .el-input__inner {
+        width: auto;
+        height: auto;
+        line-height: 16px;
+        padding-left: 0;
+        padding-right: 0;
+        border: none;
+        @include tk-print-style();
+        color: #000;
+      }
+
+      .el-input__prefix, .el-input__suffix {
+        display: none;
+      }
+
+    }
   }
 
 }

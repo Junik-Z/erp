@@ -308,7 +308,7 @@ export default {
           is-show-summary
         >
           <template #thead>
-            <TkHeader :node="node" :header="getHeader" />
+            <TkHeader :node.sync="node" :header="getHeader" is-pick-date/>
           </template>
           <template #tfoot>
             <TkFooter :node="node" />

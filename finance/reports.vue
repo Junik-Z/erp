@@ -187,7 +187,7 @@ export default {
 
     // 切换趋势请求类型
     onAskTrend(item) {
-      this.TrendQuery.timeConstant = item.value;
+      this.TrendQuery.timeConstant = _deepCopy(item.value);
       this.getReportTrend();
     },
 
@@ -215,7 +215,7 @@ export default {
 
     // 开始搜
     onSearch(obj) {
-      this.TrendQuery = {...this.TrendQuery, ...obj};
+      this.TrendQuery = {..._deepCopy(this.TrendQuery), ...obj};
       this.getReportTrend();
     },
 
@@ -459,7 +459,7 @@ export default {
               v-for="item of radioList"
               :key="item.value"
               :class="[{'checked': isEqual(item.value, TrendQuery.timeConstant)}]"
-              @click="onAskTrend(item)"
+              @click.stop="onAskTrend(item)"
             >
               {{ item.label }}
             </view>
@@ -551,7 +551,7 @@ export default {
                       :decimals="0"
                       decimal="."
                       bold
-                      :end-val="item.money"
+                      :end-val="item.received"
                       :color="item.color"
                       :font-size="10"
                     />
@@ -563,7 +563,7 @@ export default {
                       :decimals="0"
                       decimal="."
                       bold
-                      :end-val="item.money"
+                      :end-val="item.received"
                       :color="item.color"
                       :font-size="12"
                     />
@@ -819,7 +819,7 @@ export default {
       text-align: center;
       font-size: 12px;
       border-radius: 6px;
-      padding: 4px 10px;
+      padding: 4px 6px;
       position: relative;
       transition: background .3s, color .3s;
 

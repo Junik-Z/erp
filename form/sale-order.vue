@@ -112,6 +112,8 @@ export default {
           setTimeout(() => {
             this.form.otherSupplier = this.GET_USER_INFO.nickName;
             this.getBindInfo();
+
+            this.$refs?.FLRes?.getList?.();
           }, 10);
         });
 
@@ -225,6 +227,8 @@ export default {
             label: item.name,
             logo: item.logo,
           }));
+
+          this.form.supplierId = UserInfo.userId;
 
           if (this.bindList.length) {
             this.current = 0;
@@ -345,7 +349,7 @@ export default {
 
       <UniSection title="其它费用" type="line">
         <view style="padding: 10px;">
-          <FeesList v-model="form.fees" is-form />
+          <FeesList ref="FLRes" v-model="form.fees" is-form />
         </view>
       </UniSection>
 

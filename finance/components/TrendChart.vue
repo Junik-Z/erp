@@ -75,7 +75,7 @@ const ChartBasicOptions = {
               color: "#388E3C", // 100% 处的颜色
             },
           ], false),
-          barBorderRadius: [30, 30, 0, 0],
+          barBorderRadius: 30,
         },
       },
       label: {
@@ -111,7 +111,7 @@ const ChartBasicOptions = {
               color: "#D32F2F", // 100% 处的颜色
             },
           ], false),
-          barBorderRadius: [30, 30, 0, 0],
+          barBorderRadius: 30,
         },
       },
       label: {
@@ -197,7 +197,15 @@ export default {
       // 获取数据
       series.map((item, index) => {
         const data = item.map(v => this.toYuan(v));
-        _set(opt, `series.${index}.data`, data);
+
+        _set(
+          opt,
+          `series.${index}.data`,
+          data.map(value => ({
+            value,
+            label: {position: value < 0 ? "bottom" : "top"},
+          })),
+        );
       });
 
       if (_isEmpty(xAxis) && _isEmpty(series)) {

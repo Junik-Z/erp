@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _isEmpty, _isEqual, getRect } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _pick, getRect } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { getCustomerListApi, getSupplierListApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
@@ -120,10 +120,11 @@ export default {
 
     // 重置操作
     onReset() {
-      this.$emit("reset");
       this.objValue = {};
       this.checked = {};
       this.openVisible = false;
+
+      this.$emit("reset");
     },
 
     close() {
@@ -134,7 +135,7 @@ export default {
 
     // 处理搜索
     onSubmit() {
-      this.$emit("submit", _deepCopy(this.objValue));
+      this.$emit("submit", _pick(_deepCopy(this.objValue), ["supplierId", "purchaserId"]));
     },
   },
   computed: {

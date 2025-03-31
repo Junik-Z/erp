@@ -531,7 +531,7 @@ export default {
   flex-direction: column;
 
   .ko-history {
-    width: 500px;
+    //width: 500px;
   }
 
   // #endif

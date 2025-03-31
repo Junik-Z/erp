@@ -117,7 +117,7 @@ export default {
 </script>
 
 <template>
-  <BasicCard :spacing="spacing" custom-class="ko-order-card" @click="$emit('click')">
+  <BasicCard :spacing="spacing" custom-class="ko-order-card" @click="$emit('click', $event)">
     <view class="ko-order-card__wrap">
       <block v-if="isNew">
         <block v-if="showOrderType">
@@ -135,7 +135,7 @@ export default {
             style="font-size: 15px; font-weight: bold;"
             @click.stop="onCopyText(item.orderCode)"
           >
-            {{ item.orderCode || "-" }}
+            {{ item.orderCode || "" }}
           </view>
 
           <view class="ko-order-card__status" v-if="!isHideStatus" :class="[item.status]">

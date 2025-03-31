@@ -174,7 +174,7 @@ export default {
           </template>
         </el-table-column>
       </el-table>
-
+      
       <view class="ko-table__loading" v-if="loading">
         <UvLoadingIcon size="40" />
       </view>

@@ -553,7 +553,7 @@ export default {
   overflow-y: auto;
 
   .ko-history {
-    width: 500px;
+    //width: 500px;
   }
 
   // #endif
