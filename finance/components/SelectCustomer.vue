@@ -19,6 +19,8 @@ export default {
       queryList: {
         pageSize: 20,
         pageNum: 0,
+        nameIndex: "",
+        name: "",
       },
 
       noMore: false,
@@ -79,7 +81,7 @@ export default {
 
           setTimeout(() => {
             this.$refs.ILRef?.setList?.();
-          }, 100);
+          }, 500);
         });
     },
 
@@ -140,6 +142,13 @@ export default {
     // 处理搜索
     onSubmit() {
       this.$emit("submit", _pick(_deepCopy(this.objValue), ["supplierId", "purchaserId"]));
+    },
+
+    // 切换客户/供应商
+    onChangeType() {
+      this.$refs.ILRef && (this.$refs.ILRef.touchmoveIndex = -1);
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      this.getList(true);
     },
   },
   computed: {
@@ -228,7 +237,7 @@ export default {
             :values="getTabsList"
             v-model="current"
             label-key="label"
-            @change="getList(true)"
+            @change="onChangeType"
           />
 
           <uni-search-bar

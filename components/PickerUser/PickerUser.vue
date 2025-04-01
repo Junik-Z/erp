@@ -167,7 +167,7 @@ export default {
         logisticsUserList: getLogisticsUserListApi,
 
         // 财务报表用户
-        reportUser: getReportsUserListApi
+        reportUser: getReportsUserListApi,
       }[this.type];
 
       const vKey = {
@@ -180,8 +180,18 @@ export default {
         logisticsUserList: "userId",
         reportUser: "userId",
       }[this.type] || "id";
-      const lKey = {default: "nickName", reportUser: "nickName", "noBindStaff": "nickName", perm: "nickName"}[this.type] || "name";
-      const logoKey = {default: "avatar", reportUser: "avatar", "noBindStaff": "avatar", perm: "avatar"}[this.type] || "logo";
+      const lKey = {
+        default: "nickName",
+        reportUser: "nickName",
+        "noBindStaff": "nickName",
+        perm: "nickName",
+      }[this.type] || "name";
+      const logoKey = {
+        default: "avatar",
+        reportUser: "avatar",
+        "noBindStaff": "avatar",
+        perm: "avatar",
+      }[this.type] || "logo";
 
       Func({...this.queryList, [lKey]: this.queryList.nickName, ...this.query})
         .then(res => {
@@ -449,6 +459,7 @@ export default {
       :visible.sync="modelVisible"
       :title="title"
       :type="isInput ? 'bottom' : 'center'"
+      :no-footer="!isConfirm"
     >
       <view v-if="modelVisible" class="ko-picker-user__popup" :class="{'is-input': isInput}">
         <view>
@@ -483,7 +494,9 @@ export default {
       </view>
 
       <template #footer v-if="isConfirm">
-        <view style="padding-bottom: 10px; display: flex;justify-content: center; align-items: center;">
+        <view
+          style="padding-bottom: 10px; display: flex;justify-content: center; align-items: center;"
+        >
           <button
             class="ko-basic-button__card"
             @click="onConfirm"
@@ -501,21 +514,22 @@ export default {
 .ko-picker-user {
   &__popup {
     height: 74vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
     // #ifdef MP
     width: 100vw;
     // #endif
-    position: relative;
-
-    &.is-input {
-      height: 70vh;
-    }
 
     // #ifdef H5
     width: 100%;
     min-width: 600px;
     // #endif
-    display: flex;
-    flex-direction: column;
+
+    &.is-input {
+      height: 80vh;
+    }
   }
 
   ::v-deep input[disabled] {
