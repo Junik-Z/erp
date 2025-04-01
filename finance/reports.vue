@@ -322,7 +322,7 @@ export default {
     // 表格头部
     // #ifdef H5
     columns() {
-      const col = [
+      return [
         {
           label: "序号",
           type: "index",
@@ -402,8 +402,6 @@ export default {
           prop: "remark",
         },
       ];
-
-      return col;
     },
     // #endif
   },
