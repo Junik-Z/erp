@@ -17,7 +17,10 @@ const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 export default {
   name: "IndexList",
   components: {
-    UniRow, UniCol, BasicCard, UvAvatar,
+    UniRow,
+    UniCol,
+    BasicCard,
+    UvAvatar,
     UvLoadingIcon,
     ProductCard,
     UniSkeletons,

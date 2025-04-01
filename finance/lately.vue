@@ -303,7 +303,7 @@ export default {
 
   // #ifdef H5
   &__h5 {
-    height: calc(100vh - 56px - 60px - 10px);
+    height: calc(100vh - 56px - 10px);
     overflow-y: auto;
   }
 

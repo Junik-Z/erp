@@ -76,6 +76,10 @@ export default {
         .finally(() => {
           this.loading = false;
           this.noRefresh = false;
+
+          setTimeout(() => {
+            this.$refs.ILRef?.setList?.();
+          }, 100);
         });
     },
 
@@ -224,7 +228,6 @@ export default {
             :values="getTabsList"
             v-model="current"
             label-key="label"
-
             @change="getList(true)"
           />
 
@@ -234,17 +237,20 @@ export default {
             @confirm="getList(true)"
             @cancel="queryList.name = ''; getList(true)"
             clear-button="none"
+            no-t-b-padding
           />
         </view>
 
         <view class="ko-s-c__popup__content">
           <IndexList
+            ref="ILRef"
             :data="list"
             @click="onClickItem"
             :is-supplier="!!getCurrent"
             :loading="loading"
             is-checked
             :value="getIndexChecked"
+            :safe-area-inset-bottom="false"
 
             @lower="onLower"
             :no-more="noMore"
@@ -308,10 +314,15 @@ export default {
     height: 80vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 
     &__content {
       position: relative;
       flex: 1;
+    }
+
+    ::v-deep .uni-searchbar {
+      padding: 0 10px;
     }
 
     // #ifdef H5
