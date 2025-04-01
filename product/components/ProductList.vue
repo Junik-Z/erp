@@ -564,7 +564,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 0 10px 15px;
+    padding: 0 10px;
     // #ifdef H5
     width: 1000px;
     margin: 0 auto;

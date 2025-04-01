@@ -29,10 +29,10 @@ export default {
         <label>出库人：</label>
         <span>{{ outName || "" }}</span>
       </div>
-      <div class="out-of-stock__item" v-if="node.debt && node.debt < 0">
+      <!--<div class="out-of-stock__item" v-if="node.debt && node.debt < 0">
         <label>累计欠款：</label>
         <span>{{ Math.abs(toYuan(node.debt || 0)) }}</span>
-      </div>
+      </div>-->
       <div class="out-of-stock__item">
         <label>客户确认：</label>
         <span></span>
