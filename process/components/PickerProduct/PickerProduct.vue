@@ -344,10 +344,32 @@ export default {
           label: "产品名称",
           prop: "name",
         },
-        /* {
-          label: "产品分类",
-          prop: "className",
-        }, */
+        {
+          label: "数量",
+          prop: "productQuantity",
+          render: (h, {row}) => {
+            if (this.readonly) return h("span", row.productQuantity);
+            return h(
+              "el-input-number",
+              {
+                class: "ko-basic-money",
+                style: {cursor: "pointer", width: "100%"},
+                props: {
+                  value: row.productQuantity || 0,
+                  min: 0,
+                },
+                on: {
+                  change: (val) => {
+                    this.$set(row, "productQuantity", val);
+                    this.$nextTick(() => {
+                      this.onFocus();
+                    });
+                  },
+                },
+              },
+            );
+          },
+        },
         {
           label: "单价(元)",
           prop: "price",
@@ -409,32 +431,6 @@ export default {
           },
         },
         {
-          label: "数量",
-          prop: "productQuantity",
-          render: (h, {row}) => {
-            if (this.readonly) return h("span", row.productQuantity);
-            return h(
-              "el-input-number",
-              {
-                class: "ko-basic-money",
-                style: {cursor: "pointer", width: "100%"},
-                props: {
-                  value: row.productQuantity || 0,
-                  min: 0,
-                },
-                on: {
-                  change: (val) => {
-                    this.$set(row, "productQuantity", val);
-                    this.$nextTick(() => {
-                      this.onFocus();
-                    });
-                  },
-                },
-              },
-            );
-          },
-        },
-        {
           label: "备注",
           prop: "remark",
           render: (h, {row}) => {
@@ -469,7 +465,8 @@ export default {
           slot: "operate",
           width: 80,
         },
-      ]?.filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
+      ]
+        .filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
 
       // 如果是天科的则需要显示备注
       return col.filter(item => _isEqual(item.prop, "remark") ? this.isTkCustom : true);

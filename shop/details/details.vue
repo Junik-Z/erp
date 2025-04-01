@@ -171,19 +171,19 @@ export default {
           prop: `extend.${item.fieldCode}`,
         }))),
         {
-          label: "单价(元)",
-          prop: "price",
-          width: 80,
-          render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.price)}`);
-          },
-        },
-        {
           label: "数量",
           prop: "productQuantity",
           width: 80,
           render: (h, {row}) => {
             return h("div", {class: "ko-basic-money"}, row.productQuantity);
+          },
+        },
+        {
+          label: "单价(元)",
+          prop: "price",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.price)}`);
           },
         },
         ...(this.isTkCustom ? [

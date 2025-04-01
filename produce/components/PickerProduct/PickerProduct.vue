@@ -344,10 +344,32 @@ export default {
           label: "产品名称",
           prop: "name",
         },
-        /* {
-          label: "产品分类",
-          prop: "className",
-        }, */
+        {
+          label: "数量",
+          prop: "productQuantity",
+          render: (h, {row}) => {
+            if (this.readonly) return h("span", row.productQuantity);
+            return h(
+              "el-input-number",
+              {
+                class: "ko-basic-money",
+                style: {cursor: "pointer", width: "100%"},
+                props: {
+                  value: row.productQuantity || 0,
+                  min: 0,
+                },
+                on: {
+                  change: (val) => {
+                    this.$set(row, "productQuantity", val);
+                    this.$nextTick(() => {
+                      this.onFocus();
+                    });
+                  },
+                },
+              },
+            );
+          },
+        },
         {
           label: "单价(元)",
           prop: "price",
@@ -409,32 +431,6 @@ export default {
           },
         },
         {
-          label: "数量",
-          prop: "productQuantity",
-          render: (h, {row}) => {
-            if (this.readonly) return h("span", row.productQuantity);
-            return h(
-              "el-input-number",
-              {
-                class: "ko-basic-money",
-                style: {cursor: "pointer", width: "100%"},
-                props: {
-                  value: row.productQuantity || 0,
-                  min: 0,
-                },
-                on: {
-                  change: (val) => {
-                    this.$set(row, "productQuantity", val);
-                    this.$nextTick(() => {
-                      this.onFocus();
-                    });
-                  },
-                },
-              },
-            );
-          },
-        },
-        {
           label: "备注",
           prop: "remark",
           render: (h, {row}) => {
@@ -469,7 +465,8 @@ export default {
           slot: "operate",
           width: 80,
         },
-      ]?.filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
+      ]
+        .filter(item => !(this.hidePrices && _isEqual(item.prop, "price")));
 
       // 如果是天科的则需要显示备注
       return col.filter(item => _isEqual(item.prop, "remark") ? this.isTkCustom : true);
@@ -609,11 +606,14 @@ export default {
 
     <view style="margin-top: 10px;" v-if="getTotalMoney !== 0 && !hidePrices && !hideTotalPrices">
       <view style="margin-top: 4px;">
-        <label class="ko-basic-label">产品总额：</label>
+        <label class="ko-basic-label">合计：</label>
         <text class="ko-basic-money"> {{ toYuan(getTotalMoney) }}元</text>
       </view>
 
-      <view style="margin-top: 10px; display: flex; align-items: center;" v-if="isActual && !isClient">
+      <view
+        style="margin-top: 10px; display: flex; align-items: center;"
+        v-if="isActual && !isClient"
+      >
         <label class="ko-basic-label">实付金额：</label>
         <UniEasyinput
           type="digit"
@@ -622,11 +622,6 @@ export default {
           placeholder="请输入实付金额"
         />
         <text style="margin-left: 8px">元</text>
-      </view>
-
-      <view style="margin-top: 4px;" v-if="false">
-        <label class="ko-basic-label">总额大写：</label>
-        <text class="ko-basic-money"> {{ toBigMoney(toYuan(getTotalMoney)) }}</text>
       </view>
     </view>
   </view>
