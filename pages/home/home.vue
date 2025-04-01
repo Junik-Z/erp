@@ -44,14 +44,16 @@ export default {
       uni.$emit("$__init_web_socket__");
       // #endif
 
-      uni.reLaunch({
-        url: "/pages/index/index",
-        /* success: () => {
-          setTimeout(() => {
-            uni.setStorageSync("__APP_QUERY__", {});
-          }, 100);
-        }, */
-      });
+      this.VM_TIME = setTimeout(() => {
+        uni.reLaunch({
+          url: "/pages/index/index",
+          /* success: () => {
+            setTimeout(() => {
+              uni.setStorageSync("__APP_QUERY__", {});
+            }, 100);
+          }, */
+        });
+      }, 100)
     },
 
     // 处理 MP 的信息
@@ -62,12 +64,6 @@ export default {
 
       // 获取所有的用户信息
       uni.$emit("$__get_all_info__");
-
-      this.VM_TIME && clearTimeout(this.VM_TIME);
-
-      /* this.VM_TIME = setTimeout(() => {
-        this.beReady();
-      }, 60 * 1000); */
 
       // 获取成功后跳转到首页
       uni.$on("$__get_info_success__", this.beReady);
