@@ -1,7 +1,7 @@
 <script>
 import { getCheckListApi, refreshStockApi } from "@/api/erp/stock";
 import mixins from "@/mixins/mixins";
-import { getProductFieldApi } from "@/api/erp/product";
+import { getProductClassApi, getProductFieldApi } from "@/api/erp/product";
 import { _isEmpty, _isEqual } from "@/utils";
 import InventoryList from "./InventoryList/InventoryList.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
@@ -28,10 +28,16 @@ export default {
       tableKey: +new Date().getTime(),
 
       noRefresh: false,
+
+      classList: [],
     };
   },
   created() {
     this.getFieldList();
+
+    // #ifdef H5
+    this.getClassList();
+    // #endif
   },
   methods: {
     getList(reset = false) {
@@ -124,6 +130,31 @@ export default {
       console.log("到底了");
       this.onLower();
     },
+
+    // 获取产品粉来
+    getClassList() {
+      // 盘点不需要传上下架数据
+      getProductClassApi({pageNum: 0, pageSize: 1000})
+        .then(res => {
+          this.classList = res.data;
+          uni.$__product_class_list__ = res.data;
+        });
+    },
+
+    onCheck(node) {
+      console.log(node);
+      if (_isEqual(this.queryList.classId, node.id)) {
+        this.queryList.classId = "";
+        this.$refs.TreeRef.setCheckedKeys([]);
+      } else {
+        this.queryList.classId = node.id;
+        this.$refs.TreeRef.setCheckedKeys([node.id]);
+      }
+
+      this.$nextTick(() => {
+        this.getList(true);
+      });
+    },
     // #endif
   },
   computed: {
@@ -214,7 +245,10 @@ export default {
           clear-button="none"
         />
       </view>
+
+      <!-- #ifdef MP -->
       <PickerClass v-model="queryList.classId" @change="getList(true)" />
+      <!-- #endif -->
 
       <button
         class="ko-basic-button__card"
@@ -241,32 +275,48 @@ export default {
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px; height: 100%; overflow: hidden;">
-        <KoTable
-          :key="tableKey"
-          :loading="loading"
-          :columns="columnsList"
-          :data="list"
-          empty-text="暂无数据"
-          stripe
-          @row-click="onJump"
-          @next-load="onRequestNextPage"
-          :no-more="noMore || loading"
-        >
-          <template #operate="{item, index}">
-            <view style="display: flex; align-items: center; justify-content: center;">
-              <button
-                class="ko-basic-button__card"
-                @click.stop="onRefresh(item, index)"
-                :loading="item.__r_loading__"
-                :disabled="item.__r_loading__"
-                v-if="isPerm('STOCK_REFRESH')"
-              >
-                刷新库存
-              </button>
-            </view>
-          </template>
-        </KoTable>
+      <view style="padding: 10px; height: 100%; overflow: hidden; display: flex;">
+        <div style="height: 100%; overflow-y: auto">
+          <el-tree
+            node-key="id"
+            ref="TreeRef"
+            :data="classList"
+            :show-checkbox="true"
+            :props="{label: 'name'}"
+            check-strictly
+            :default-checked-keys="[queryList.classId]"
+            @check="onCheck"
+            style="min-height: 100%;"
+          />
+        </div>
+
+        <div style="height: 100%; overflow: hidden; flex: 1;">
+          <KoTable
+            :key="tableKey"
+            :loading="loading"
+            :columns="columnsList"
+            :data="list"
+            empty-text="暂无数据"
+            stripe
+            @row-click="onJump"
+            @next-load="onRequestNextPage"
+            :no-more="noMore || loading"
+          >
+            <template #operate="{item, index}">
+              <view style="display: flex; align-items: center; justify-content: center;">
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onRefresh(item, index)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                  v-if="isPerm('STOCK_REFRESH')"
+                >
+                  刷新库存
+                </button>
+              </view>
+            </template>
+          </KoTable>
+        </div>
       </view>
       <!-- #endif -->
 
@@ -309,6 +359,19 @@ export default {
   &__wrap {
     flex: 1;
     overflow: hidden;
+
+    // #ifdef H5
+    ::v-deep .el-tree {
+      width: 260px;
+      margin-right: 20px;
+      border: 1px solid #EBEEF5;
+      padding: 10px;
+
+      .el-checkbox {
+        margin-right: 6px;
+      }
+    }
+    // #endif
   }
 
   &__item {
