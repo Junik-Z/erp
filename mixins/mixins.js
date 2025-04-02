@@ -1,6 +1,5 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
 
 // #endif
 import {
@@ -43,6 +42,8 @@ export default {
       PAGE_MENU: [],
 
       PAGE_MENU_INDEX: 0,
+
+      TK_FILL_INFO: {},
     };
   },
   onShow() {
@@ -68,11 +69,6 @@ export default {
       });
     });
   },
-  // #ifdef H5
-  directives: {
-    InfiniteScroll,
-  },
-  // #endif
   mounted() {
   },
   methods: {
@@ -95,9 +91,19 @@ export default {
         SHARE_USER_ID: this.GET_USER_INFO?.userId,
       };
 
-      if (["ADDED_SALE", "ADDED_PURCHASE"].includes(query.PAGE_TYPE)) {
+      // 添加分享出去唯一的下单ID
+      if ([
+        "ADDED_SALE",
+        "ADDED_PURCHASE",
+        "ADDED_PRODUCE_PACKING",
+      ].includes(query.PAGE_TYPE)) {
         try {
-          const Func = {ADDED_SALE: getSaleShareIdApi, ADDED_PURCHASE: getPurchaseShareIdApi}[query.PAGE_TYPE];
+          const Func = {
+            ADDED_SALE: getSaleShareIdApi,
+            ADDED_PRODUCE_PACKING: getSaleShareIdApi,
+            ADDED_PURCHASE: getPurchaseShareIdApi,
+          }[query.PAGE_TYPE];
+
           const res = await Func?.();
           query.SHARE_ID = res.data;
         } catch (e) {
@@ -131,29 +137,23 @@ export default {
       });
 
       // 采购定制订单详情
-      if (_isEqual("CUSTOMIZED", node.orderType)) {
+      if (
+        _isEqual("CUSTOMIZED", node.orderType)
+        &&
+        (_isEqual("purchase", page_type) || /^G/.test(node.orderCode))
+      ) {
         uni.navigateTo({
-          url: PageEnums.produceDetails + `?${
-            QS.stringify({
-              page_type,
-              id: node.orderCode,
-              FORM: "PURCHASE",
-            })
-          }`,
+          url: PageEnums.produceDetails
+            + `?${QS.stringify({page_type, id: node.orderCode, FORM: "PURCHASE"})}`,
         });
         return false;
       }
 
       // 销售生产订单详情
-      if (_isEqual("PRODUCTION", node.orderType) && !_isEqual("produce", page_type)) {
+      if (["PRODUCTION", "CUSTOMIZED"].includes(node.orderType) && !_isEqual("produce", page_type)) {
         uni.navigateTo({
-          url: PageEnums.produceDetails + `?${
-            QS.stringify({
-              page_type,
-              id: node.orderCode,
-              FORM: "SALE",
-            })
-          }`,
+          url: PageEnums.produceDetails
+            + `?${QS.stringify({page_type, id: node.orderCode, FORM: "SALE"})}`,
         });
         // page_type=outbound&id=C2025012117412171451&FORM=SALE
         return false;
@@ -327,6 +327,37 @@ export default {
         });
       }
     },
+
+    // 判断是否要提示回填的价格
+    isTxFillPrices() {
+      return new Promise((resolve, reject) => {
+        // 没有回填数据的时候不需要判断 或者 不是天科定制时
+        if (_isEmpty(this.TK_FILL_INFO) || !this.isTkCustom) {
+          resolve();
+          return false;
+        }
+
+        const isCheck = ["supplierId", "orderAddress"]
+          .every(key => _isEqual(
+            _get(this.form, key) || "",
+            _get(this.TK_FILL_INFO, key) || "",
+          ));
+
+        if (isCheck) {
+          return resolve();
+        } else {
+          uni.showModal({
+            title: "温馨提示",
+            content: "当前价格是上一位客户/供应商的成交价格，是否继续保存？",
+            confirmText: "继续保存",
+            success: (res) => {
+              if (res.confirm) resolve();
+              if (res.cancel) reject();
+            },
+          });
+        }
+      });
+    },
   },
   components: {
     // #ifdef H5
@@ -457,10 +488,11 @@ export default {
           SALE_RETURN: "销售退货订单",
           PURCHASE: "采购订单",
           PURCHASE_RETURN: "采购退货订单",
-          CHECK_IN: "库存盘点",
-          CUSTOMIZED: "采购定制",
+          CHECK_IN: "盘点入库",
+          CHECK_OUT: "盘点出库",
+          CUSTOMIZED: "定制订单",
         };
-        return _get(obj, type) || "-";
+        return _get(obj, type) || type;
       };
     },
 
@@ -627,7 +659,7 @@ export default {
 
     // 获取右下角添加按钮列表数据
     GET_MOVABLE_LIST() {
-      return (this.MIXINS_CONTENT || [])?.filter(item => this.isPerm(item.perm));
+      return this.MOVABLE_LIST?.filter(item => this.isPerm(item.perm));
     },
 
     // 是否显示添加按钮

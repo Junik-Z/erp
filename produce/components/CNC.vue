@@ -1,5 +1,5 @@
-<!-- #ifdef H5 -->
 <script>
+// #ifdef H5
 import {
   generateCNCProperties,
   getCNCProperties,
@@ -8,17 +8,6 @@ import {
   removeNCProgramsApi,
   updateCNCProperties,
 } from "@/api/erp/produce";
-import {
-  Col,
-  Form,
-  FormItem,
-  Input,
-  InputNumber,
-  Loading,
-  Row,
-  TabPane,
-  Tabs,
-} from "@/uni_modules/element-ui/element.min";
 import { _deepCopy, _get, _isEmpty, _isEqual, _omit, _toFinite, CustomToast } from "@/utils";
 import { CncCalculate } from "./cncCalculate";
 import mixins from "@/mixins/mixins";
@@ -55,19 +44,6 @@ export default {
       NCList: [],
       editableTabsValue: null,
     };
-  },
-  directives: {
-    Loading,
-  },
-  components: {
-    Input,
-    Form,
-    FormItem,
-    InputNumber,
-    Row,
-    Col,
-    Tabs,
-    TabPane,
   },
   created() {
     this.CNC = new CncCalculate({});
@@ -257,29 +233,30 @@ export default {
     },
   },
 };
+// #endif
 </script>
 
 <template>
   <BasicPopup :visible.sync="visible" title="NC配置">
     <view class="ko-cnc">
       <div ref="TRef" v-if="false" style="width: 100%; overflow: auto"></div>
-      <Tabs
+      <el-tabs
         type="card"
         :editable="isPerm('CNC_DELETE_PROGRAM')"
         @edit="onAddedTabs"
         v-model="editableTabsValue"
         @tab-click="onTabClick"
       >
-        <TabPane
+        <el-tab-pane
           v-for="(item, index) of NCList"
           :name="item.__id__"
           :key="item.__id__"
           :label="`${index + 1}`"
           :class="{'is-root': item.id == 1}"
         />
-      </Tabs>
+      </el-tabs>
 
-      <Form
+      <el-form
         style="width: calc(100% - 20px);"
         :model="form"
         :rules="rules"
@@ -288,97 +265,99 @@ export default {
         label-position="rigth"
         ref="FRef"
       >
-        <Row>
-          <Col :span="12">
-            <FormItem label="开始代码" prop="startCode">
-              <Input
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="开始代码" prop="startCode">
+              <el-input
                 :autosize="{ minRows: 4, maxRows: 6}"
                 type="textarea" v-model="form.startCode"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="启动主轴代码" prop="spindleStart">
-              <Input
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="启动主轴代码" prop="spindleStart">
+              <el-input
                 :autosize="{ minRows: 4, maxRows: 6}"
                 type="textarea" v-model="form.spindleStart"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="换刀代码" prop="toolChangeCode">
-              <Input
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="换刀代码" prop="toolChangeCode">
+              <el-input
                 :autosize="{ minRows: 4, maxRows: 6}"
                 type="textarea" v-model="form.toolChangeCode"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="停止主轴代码" prop="spindleStop">
-              <Input
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="停止主轴代码" prop="spindleStop">
+              <el-input
                 :autosize="{ minRows: 4, maxRows: 6}"
                 type="textarea" v-model="form.spindleStop"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="XY轴切削速度" prop="xyCutSpeed">
-              <InputNumber style="text-align: left; width: 100%;" controls-position="right" v-model="form.xyCutSpeed" />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="XY轴移动速度" prop="xyRapidSpeed">
-              <InputNumber
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="XY轴切削速度" prop="xyCutSpeed">
+              <el-input-number style="text-align: left; width: 100%;" controls-position="right"
+                               v-model="form.xyCutSpeed" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="XY轴移动速度" prop="xyRapidSpeed">
+              <el-input-number
                 style="text-align: left; width: 100%;"
                 controls-position="right"
                 v-model="form.xyRapidSpeed"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="Z轴切削速度" prop="zcutSpeed">
-              <InputNumber
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Z轴切削速度" prop="zcutSpeed">
+              <el-input-number
                 style="text-align: left; width: 100%;"
                 controls-position="right"
                 v-model="form.zcutSpeed"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="Z轴快速移动速度" prop="zrapidSpeed">
-              <InputNumber
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Z轴快速移动速度" prop="zrapidSpeed">
+              <el-input-number
                 style="text-align: left; width: 100%;"
                 controls-position="right"
                 v-model="form.zrapidSpeed"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="Z轴开始切削高度" prop="zstartCutHeight">
-              <InputNumber
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Z轴开始切削高度" prop="zstartCutHeight">
+              <el-input-number
                 style="text-align: left; width: 100%;"
                 controls-position="right"
                 v-model="form.zstartCutHeight"
               />
-            </FormItem>
-          </Col>
-          <Col :span="12">
-            <FormItem label="Z轴结束切削高度" prop="zendCutHeight">
-              <InputNumber
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Z轴结束切削高度" prop="zendCutHeight">
+              <el-input-number
                 style="text-align: left; width: 100%;"
                 controls-position="right"
                 v-model="form.zendCutHeight"
               />
-            </FormItem>
-          </Col>
+            </el-form-item>
+          </el-col>
 
-          <Col :span="12">
-            <FormItem label="安全高度" prop="safeHeight">
-              <InputNumber style="text-align: left; width: 100%;" controls-position="right" v-model="form.safeHeight" />
-            </FormItem>
-          </Col>
-        </Row>
-      </Form>
+          <el-col :span="12">
+            <el-form-item label="安全高度" prop="safeHeight">
+              <el-input-number style="text-align: left; width: 100%;" controls-position="right"
+                               v-model="form.safeHeight" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
     </view>
     <template #footer>
       <view class="ko-cnc__footer" style="display:flex; align-items: center;justify-content: space-around;">
@@ -417,4 +396,3 @@ export default {
   }
 }
 </style>
-<!-- #endif -->

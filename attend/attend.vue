@@ -358,7 +358,7 @@ export default {
         </uni-forms>
       </view>
       <template #footer>
-        <view style="display: flex; align-items: center; justify-content: center; padding-bottom: 20px;">
+        <view style="display: flex; align-items: center; justify-content: center;">
           <button
             @click="onSubmit"
             style="width: 130px;"

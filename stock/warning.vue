@@ -2,7 +2,6 @@
 import { getWarningListApi } from "@/api/erp/stock";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
-import KoTable from "./components/KoTable/KoTable.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _get, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
@@ -21,7 +20,6 @@ export default {
     UvAvatar,
     BasicCard,
     UniSection,
-    KoTable,
     ProductCard,
     LoadMore,
   },

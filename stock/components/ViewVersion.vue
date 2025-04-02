@@ -1,5 +1,4 @@
 <script>
-import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import QiunDataCharts from "./qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import { getCountApi } from "@/api/erp/stock";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -12,7 +11,7 @@ import { PageEnums } from "@/utils/config";
 
 export default {
   name: "ViewVersion",
-  components: {UniSection, UniCol, UvCountTo, UniRow, QiunDataCharts, UniGrid},
+  components: {UniSection, UniCol, UvCountTo, UniRow, QiunDataCharts},
   mixins: [mixins],
   data() {
     return {

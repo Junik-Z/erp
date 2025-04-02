@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
-// #endif
 import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -81,8 +78,8 @@ export default {
           width: 210,
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -116,7 +113,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -186,12 +183,6 @@ export default {
       PAGE_MENU: _deepCopy(PageMenu),
     };
   },
-
-  // #ifdef H5
-  directives: {
-    InfiniteScroll,
-  },
-  // #endif
   created() {
     this.getCount();
   },
@@ -383,6 +374,9 @@ export default {
           const isStatus = item?.status.includes(node.status);
 
           if (_isEqual(this.GET_PAGE_MENU_FUNC, 0)) {
+
+            if (["onReturn", "onAdded"].includes(item.func)) return isStatus && this.isPerm(item.perm) && !["CUSTOMIZED"].includes(node.orderType);
+
             return isStatus && this.isPerm(item.perm);
           } else {
             return !_isEqual(item.func, "onReturn") && isStatus && this.isPerm(item.rPerm);
@@ -493,7 +487,7 @@ export default {
           <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
               <button
-                v-if="['FINISHED'].includes(item.status) && !GET_PAGE_MENU_FUNC && isPerm('PURCHASE_RETURN_ADD')"
+                v-if="['FINISHED'].includes(item.status) && !['CUSTOMIZED'].includes(item.orderType) && !GET_PAGE_MENU_FUNC && isPerm('PURCHASE_RETURN_ADD')"
                 class="ko-basic-button__card"
                 @click.stop="onReturn(item, index)"
               >
@@ -510,7 +504,7 @@ export default {
               <button
                 class="ko-basic-button__card"
                 @click.stop="onAdded(item, index)"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_UPDATE')) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('PURCHASE_RETURN_UPDATE')))"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status) && ((isEqual(GET_PAGE_MENU_FUNC, 0) && isPerm('PURCHASE_UPDATE') && !['CUSTOMIZED'].includes(item.orderType)) || (isEqual(GET_PAGE_MENU_FUNC, 1) && isPerm('PURCHASE_RETURN_UPDATE')))"
               >
                 编辑
               </button>
@@ -559,7 +553,7 @@ export default {
   overflow-y: auto;
 
   .ko-history {
-    width: 500px;
+    //width: 500px;
   }
 
   // #endif

@@ -69,7 +69,7 @@ export default {
             <text>{{ item.quantity }}</text>
           </uni-col>
           <uni-col :span="24">
-            <label class="ko-basic-label">时间：</label>
+            <label class="ko-basic-label">日期：</label>
             <text>{{ item.updateTime }}</text>
           </uni-col>
         </block>

@@ -536,7 +536,6 @@ export function addedSaleReturnedOrderApi(data) {
   });
 }
 
-
 /**
  * @description 修改已经付款
  */
@@ -547,3 +546,59 @@ export function editSaleReturnedOrderApi(data) {
     data,
   });
 }
+
+
+// ———————————————————— 快捷出入库 ————————————————————
+/**
+ * @description 快捷出库
+ */
+export function quickOutApi(data) {
+  return request({
+    url: "/sale/quick-out",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 快捷入库
+ */
+export function quickInApi(data) {
+  return request({
+    url: "/sale/return/quick-in",
+    method: "post",
+    data,
+  });
+}
+
+
+// ————————————————————— 客户地址 —————————————————————
+export function getCustomerAddressListApi(data) {
+  return request({
+    url: "/customer/customerAddressList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除客户地址
+ */
+export function removeCustomerAddressApi(data) {
+  return request({
+    url: "/customer/deleteAddress",
+    method: "post",
+    data,
+  });
+}
+
+
+// ————————————————————— 回填上次销售价格 —————————————————————
+export function fillCustomerPriceApi(data) {
+  return request({
+    url: "/sale/fillCustomerPrice",
+    method: "post",
+    data,
+  });
+}
+

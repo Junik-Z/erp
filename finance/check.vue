@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { Checkbox } from "@/uni_modules/element-ui/element.min";
-// #endif
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import KoNotice from "@/components/Notice/Notice.vue";
@@ -140,8 +137,8 @@ export default {
           width: 210,
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -260,8 +257,8 @@ export default {
           },
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
         },
         {
           label: "备注",
@@ -524,7 +521,7 @@ export default {
               {class: "ko-table-checked__warp"},
               [
                 h(
-                  Checkbox,
+                  'el-checkbox',
                   {
                     class: `ko-table-checked`,
                     props: {
@@ -625,8 +622,8 @@ export default {
                 </UniCol>
                 <UniCol :span="24">
                   <view>
-                    <label class="ko-basic-label">时间：</label>
-                    <text>{{ child.createTime }}</text>
+                    <label class="ko-basic-label">日期：</label>
+                    <text>{{ child.updateTime }}</text>
                   </view>
                 </UniCol>
               </UniRow>
@@ -766,7 +763,7 @@ export default {
                   </view>
                 </UniCol>
                 <UniCol :span="24">
-                  <label class="ko-basic-label">时间：</label>
+                  <label class="ko-basic-label">日期：</label>
                   <text>{{ item.updateTime || "-" }}</text>
                 </UniCol>
                 <UniCol :span="24">

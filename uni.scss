@@ -7,8 +7,6 @@
 }
 
 // #ifdef H5
-@import "@/uni_modules/element-ui/element.min.css";
-
 body {
   font-size: 14px;
 }
@@ -16,12 +14,14 @@ body {
 $base-font-size: 136.6; // var(--ko-html-size);
 
 * {
-  padding: 0;
-  margin: 0;
   box-sizing: border-box;
 }
 
 .ko-basic-tabs-list {
+}
+
+.el-form-item {
+  //margin-bottom: 22px;
 }
 
 // #endif
@@ -378,9 +378,9 @@ $--ko-print-font-size: 11pt;
 // 天科打印模块的样式
 @mixin tk-print-style() {
   font-family: "华文楷体", "KaiTi", sans-serif;
-  font-size: 14px;
-  min-height: 16px;
-  line-height: 16px;
+  font-size: 13px;
+  min-height: 14px;
+  line-height: 14px;
 }
 
 .ko-pointer {
@@ -396,3 +396,28 @@ $--ko-print-font-size: 11pt;
 }
 
 // #endif
+
+.CREATED {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.PAUSED {
+  background: #fef3c7;
+  color: #dc2626;
+}
+
+.FINISHED {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.CANCELLED {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.APPLY_MATERIAL {
+  background: #e0f2fe;
+  color: #0284c7;
+}

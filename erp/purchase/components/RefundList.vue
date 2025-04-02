@@ -4,12 +4,13 @@ import {
   getPurchaseReturnHistoryListApi,
   getPurchaseReturnListApi,
   getPurchaseReturnWaitPaymentListApi,
+  quickOutApi,
   returnPrintPurchaseApi,
 } from "@/api/erp/purchase";
 import BasicMixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/erp/components/PrintList/PrintList.vue";
@@ -82,8 +83,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -116,7 +117,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -176,6 +177,9 @@ export default {
       isNewList: false,
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      visible: false,
+      inadequate: [],
     };
   },
   methods: {
@@ -304,6 +308,34 @@ export default {
         });
     },
 
+    // 快捷出库
+    onQuickOut(item, index) {
+      this.inadequate = [];
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后扣除库存。`,
+        confirmText: "确认",
+        success: (res) => {
+          if (res.confirm) {
+            quickOutApi(item)
+              .then((resp) => {
+                const list = _deepCopy(_groupBy(resp.data, (item) => item.className));
+                this.inadequate = _keys(list).map(key => ({
+                  key,
+                  children: list[key],
+                }));
+
+                if (_isEmpty(resp.data)) {
+                  uni.showToast({title: "出库成功"});
+                  // this.list.splice(index, 1);
+                } else {
+                  this.visible = true;
+                }
+              });
+          }
+        },
+      });
+    },
   },
   computed: {
     actionList() {
@@ -314,6 +346,13 @@ export default {
           func: "cancelReturnPurchase",
           status: ["CREATED"],
           perm: "PURCHASE_RETURN_CANCEL",
+        },
+        {
+          name: "快捷出库",
+          func: "onQuickOut",
+          status: ["FINISHED"],
+          perm: "PURCHASE_RETURN_QUICK_OUT",
+          color: "#e43d33",
         },
         {
           name: "编辑",
@@ -341,6 +380,10 @@ export default {
             if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) return item.status.includes(node.status) && this.isPerm("PURCHASE_RETURN_RE_ORDER");
 
             return (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && item.status.includes(node.status)) && isPerm;
+          }
+
+          if (_isEqual("onQuickOut", item.func)) {
+            return isPerm && isStatus && _isEqual(this.GET_PAGE_MENU_FUNC, 1);
           }
 
           return item.status.includes(node.status) && isPerm;
@@ -482,6 +525,14 @@ export default {
             </button>
 
             <button
+              v-if="['FINISHED'].includes(item.status) && isPerm('PURCHASE_RETURN_QUICK_OUT') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              class="ko-basic-button__card"
+              @click.stop="onQuickOut(item, index)"
+            >
+              快捷出库
+            </button>
+
+            <button
               v-if="['CREATED'].includes(item.status) && isPerm('PURCHASE_RETURN_CANCEL')"
               class="ko-basic-button__card"
               @click.stop="cancelReturnPurchase(item, index)"
@@ -529,10 +580,49 @@ export default {
     />
     <!-- #endif -->
 
+    <BasicPopup :visible.sync="visible" title="库存不足">
+      <view class="ko-purchase-refund-list__popup">
+        <view v-for="(item, key) of inadequate" :key="key">
+          <uni-section :title="item.key" type="line">
+            <BasicCard>
+              <view
+                v-for="child of item.children" :key="child.id"
+                style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
+              >
+                <view style="flex: 1;">
+                  <label class="ko-basic-label">名称：</label>
+                  <text>{{ child.name }}</text>
+                </view>
+                <!-- <view style="padding: 0 10px">
+                   <label class="ko-basic-label">库存：</label>
+                   <text class="ko-basic-money">{{ child.sequence }}</text>
+                 </view>-->
+                <view style="padding: 0 10px">
+                  <label class="ko-basic-label">数量：</label>
+                  <text class="ko-basic-money">{{ child.productQuantity }}</text>
+                </view>
+                <view style="width: 40px;">
+                  <UvAvatar
+                    v-if="child.images"
+                    :src="getImageUrl(child.images)"
+                    shape="square"
+                  />
+                </view>
+              </view>
+            </BasicCard>
+          </uni-section>
+        </view>
+      </view>
+      <template #footer>
+        <view style="display: flex; align-items: center; justify-content: center;">
+          <button style="width: 120px;" class="ko-basic-button__card" @click="visible = false">确认</button>
+        </view>
+      </template>
+    </BasicPopup>
+
     <Pay
       ref="TPRef"
-      @success="updateList(true)"
-      @close="noRefresh = false"
+      @close="updateList(true); noRefresh = false"
     />
   </view>
 </template>
@@ -555,5 +645,12 @@ export default {
   display: flex;
   flex-direction: column;
   // #endif
+
+  &__popup {
+    // #ifdef MP
+    width: 98vw;
+    // #endif
+    padding: 16px;
+  }
 }
 </style>

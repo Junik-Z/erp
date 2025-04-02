@@ -77,7 +77,7 @@ export default {
   },
   computed: {
     getTitle() {
-      return (_get(this.list, "0.customer.name") || "");
+      return (_get(this.list, "0.customer.name") || (["SALE_RETURN"].includes(this.option.FORM) ? "退款" : "付款"));
     },
 
     actionList() {
@@ -155,7 +155,7 @@ export default {
                     操作人
                   </view>
                   <view class="ko-basic-table--th">
-                    时间
+                    日期
                   </view>
                   <view class="ko-basic-table--th">
                     备注
@@ -293,7 +293,13 @@ export default {
   }
 
   &__footer {
-    padding: 10px 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ko-basic-button__card {
+      width: 120px;
+    }
   }
 }
 </style>

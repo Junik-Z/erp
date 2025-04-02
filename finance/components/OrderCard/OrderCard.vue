@@ -58,6 +58,12 @@ export default {
     isCustomStatusName: Boolean,
     // 自定义的状态名称
     customStatusName: String,
+
+    // 财务报表
+    isReports: Boolean,
+
+    // 隐藏下单用户
+    isHideUser: Boolean,
   },
   methods: {
     onClickOperate(child, item) {
@@ -93,14 +99,25 @@ export default {
     },
 
     getUpdateTime() {
-      return this.item.updateTime ? this.item.updateTime?.split(" ")[0] : "-";
+      const time = this.item.updateTime || this.item.createTime;
+      return time ? time?.split(" ")[0] : "-";
+    },
+
+    // 上面的间隔
+    isShowBorderTop() {
+      return this.isCheckStock
+        || (this.isLogistics && this.item.logisticsNo)
+        || (this.showOrderPhone && this.item.orderPhone)
+        || (this.item.orderAddress)
+        || (this.item.remark)
+        || (!this.isHideUser || this.$slots.operate);
     },
   },
 };
 </script>
 
 <template>
-  <BasicCard :spacing="spacing" custom-class="ko-order-card" @click="$emit('click')">
+  <BasicCard :spacing="spacing" custom-class="ko-order-card" @click="$emit('click', $event)">
     <view class="ko-order-card__wrap">
       <block v-if="isNew">
         <block v-if="showOrderType">
@@ -118,7 +135,7 @@ export default {
             style="font-size: 15px; font-weight: bold;"
             @click.stop="onCopyText(item.orderCode)"
           >
-            {{ item.orderCode || "-" }}
+            {{ item.orderCode || "" }}
           </view>
 
           <view class="ko-order-card__status" v-if="!isHideStatus" :class="[item.status]">
@@ -137,10 +154,19 @@ export default {
           </view>
         </view>
 
-        <view class="ko-order-card__item">
-          <view v-if="false" style="font-weight: bold;">
-            总计
+        <view class="ko-order-card__item" v-if="isReports" style="justify-content: space-around">
+          <view class="ko-basic-money" style="color: #388E3C;">
+            <i class="iconfont icon-qitashouru"></i> ¥ {{ toYuan(item.totalAmount) }}
           </view>
+          <view class="ko-basic-money" style="color: #D32F2F">
+            <i class="iconfont icon-zhichu"></i> ¥ {{ toYuan(item.costAmount) }}
+          </view>
+          <view class="ko-basic-money" style="color: #303F9F;">
+            <i class="iconfont icon-profit2"></i> ¥ {{ toYuan(item.profitAmount) }}
+          </view>
+        </view>
+
+        <view class="ko-order-card__item" v-else>
           <view class="ko-basic-money">
             ¥ {{ toYuan(item.totalAmount) }}
           </view>
@@ -187,7 +213,7 @@ export default {
           </view>
         </view>
 
-        <view class="border-top"></view>
+        <view class="border-top" v-if="isShowBorderTop"></view>
 
         <block v-if="isCheckStock">
           <view
@@ -248,11 +274,14 @@ export default {
           </view>
         </view>
 
-        <!--<view class="border-top"></view>-->
 
-        <view class="ko-order-card__item" style="margin-top: 6px;">
+        <view
+          class="ko-order-card__item"
+          style="margin-top: 6px;"
+          v-if="!isHideUser || $slots.operate"
+        >
           <view style="display: flex; align-items: center;">
-            <block v-if="GET_FUNC(item, 'user.nickName') || GET_FUNC(item, 'user.avatar')">
+            <block v-if="(GET_FUNC(item, 'user.nickName') || GET_FUNC(item, 'user.avatar')) && !isHideUser">
               <view style="margin-right: 10px;" @click.stop>
                 <UvAvatar
                   :size="28"
@@ -406,7 +435,7 @@ export default {
           </block>
 
           <UniCol :span="24">
-            <label class="ko-basic-label">时间：</label>
+            <label class="ko-basic-label">日期：</label>
             {{ item.updateTime || "-" }}
           </UniCol>
 
@@ -472,6 +501,16 @@ export default {
     align-items: center;
     justify-content: space-between;
     padding: 2px 0;
+
+    .ko-basic-money {
+      display: flex;
+      align-items: center;
+
+      .iconfont {
+        margin-right: 4px;
+        font-weight: normal;
+      }
+    }
   }
 
   &__status {

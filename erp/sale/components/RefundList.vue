@@ -7,6 +7,7 @@ import {
   getSaleReturnHistoryApi,
   getSaleReturnListApi,
   getSaleReturnWaitPaymentApi,
+  quickInApi,
   returnPrintSaleApi,
 } from "@/api/erp/sale";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
@@ -18,7 +19,7 @@ import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/erp/components/PrintList/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import { CONFIG, PageEnums } from "@/utils/config";
+import { CONFIG } from "@/utils/config";
 import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
@@ -65,27 +66,6 @@ export default {
   data() {
     const _this = this;
     return {
-      MIXINS_CONTENT: [
-        // #ifdef MP
-        {
-          text: "分享",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: "填写信息",
-            content: "邀请您填写信息，方便下次联系。",
-            path: PageEnums.saleRefund,
-          },
-        },
-        // #endif
-        {
-          text: "新增",
-          iconfont: "icon-tianjia",
-          path: PageEnums.saleRefund,
-        },
-      ],
-
       loading: false,
       list: [],
 
@@ -111,8 +91,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -145,7 +125,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -322,6 +302,23 @@ export default {
         });
 
     },
+
+    // 快捷入库
+    onQuickIn(item, index) {
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后增加库存。`,
+        confirmText: "确认",
+        success: (res) => {
+          if (res.confirm) {
+            quickInApi(item)
+              .then(() => {
+                uni.showToast({title: "入库成功"});
+              });
+          }
+        },
+      });
+    },
   },
   computed: {
     actionList() {
@@ -332,6 +329,13 @@ export default {
           func: "cancelRefundSale",
           status: ["CREATED", "FINISHED"],
           perm: "SALE_RETURN_CANCEL",
+        },
+        {
+          name: "快捷入库",
+          func: "onQuickIn",
+          status: ["FINISHED"],
+          perm: "SALE_RETURN_QUICK_IN",
+          color: "#e43d33",
         },
         {
           name: "编辑",
@@ -358,6 +362,10 @@ export default {
             if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) return item.status.includes(node.status) && this.isPerm("SALE_RETURN_RE_ORDER");
 
             return (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && item.status.includes(node.status)) && isPerm;
+          }
+
+          if (_isEqual(item.func, "onQuickIn")) {
+            return (_isEqual(this.GET_PAGE_MENU_FUNC, 1) && item.status.includes(node.status)) && isPerm;
           }
 
           return item.status.includes(node.status) && isPerm;
@@ -495,13 +503,19 @@ export default {
               提交订单
             </button>
             <button
+              v-if="['FINISHED'].includes(item.status) && isPerm('SALE_RETURN_QUICK_IN') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              class="ko-basic-button__card"
+              @click.stop="onQuickIn(item, index)"
+            >
+              快捷入库
+            </button>
+            <button
               v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_RETURN_ADD_RETURNED_ORDER') || isPerm('SALE_RETURN_RETURNED_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
               退款
             </button>
-
 
             <button
               v-if="['CREATED'].includes(item.status) && isPerm('SALE_RETURN_CANCEL')"
@@ -552,8 +566,7 @@ export default {
 
     <Pay
       ref="TPRef"
-      @success="updateList(true)"
-      @close="noRefresh = false"
+      @close="updateList(true); noRefresh = false"
     />
   </view>
 </template>

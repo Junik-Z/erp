@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { Tree } from "@/uni_modules/element-ui/element.min";
-// #endif
 import {
   deleteProductApi,
   getDetailApi,
@@ -31,13 +28,10 @@ export default {
     IndexList,
     UvActionSheet,
     PickerClass,
-    // #ifdef H5
-    Tree,
-    // #endif
   },
   data() {
     return {
-      MIXINS_CONTENT: [
+      MOVABLE_LIST: [
         // #ifdef MP
         {
           text: "分享",
@@ -151,7 +145,7 @@ export default {
       });
     },
 
-    onRemove(row) {
+    onRemove(row, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要删除 ${row.name} 产品吗？`,
@@ -162,7 +156,7 @@ export default {
               .then(() => {
                 uni.showToast({title: "删除成功"});
                 // this.getList(true);
-                this.list.splice(this.nodeIndex, 1);
+                this.list.splice(index || this.nodeIndex, 1);
               });
           }
         },
@@ -470,7 +464,7 @@ export default {
         <!-- #ifdef H5 -->
         <div class="ko-product__list--center" style="height: 100%;">
           <div style="height: 100%; overflow-y: auto;">
-            <Tree
+            <el-tree
               node-key="id"
               ref="TreeRef"
               :data="classList"
@@ -570,7 +564,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 0 10px 15px;
+    padding: 0 10px;
     // #ifdef H5
     width: 1000px;
     margin: 0 auto;

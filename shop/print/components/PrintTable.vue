@@ -1,6 +1,5 @@
 <script>
 import { _get, _isEmpty, _set } from "@/utils";
-import { Col, Row } from "@/uni_modules/element-ui/element.min";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -26,8 +25,6 @@ export default {
         return this.render(h, params);
       },
     },
-    Col,
-    Row,
   },
   mixins: [mixins],
   props: {
@@ -172,7 +169,7 @@ export default {
   border-top: 1px solid #000;
 
   &__cell {
-    min-height: calc(var(--ko-paper-min-height, 16px) - 1px);
+    min-height: calc(var(--ko-paper-min-height, 16px));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -184,6 +181,8 @@ export default {
   }
 
   &__tfoot {
+    line-height: var(--ko-paper-min-height, 16px);
+    min-height: var(--ko-paper-min-height, 16px);
     display: flex;
     align-items: center;
     justify-content: flex-end;

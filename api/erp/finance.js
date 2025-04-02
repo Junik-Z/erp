@@ -412,3 +412,105 @@ export function getPayableCheckBillApi(data) {
     data,
   });
 }
+
+
+// ——————————————— 财务报表 —————————————————
+/**
+ * @description 获取收支趋势
+ */
+export function getReportTrendApi(data) {
+  return request({
+    url: "/finance/report/trend",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取最近交易
+ */
+export function getReportRecentApi(data) {
+  return request({
+    url: "/finance/report/recent",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取资产统计
+ */
+export function getReportAssetsApi(data) {
+  return request({
+    url: "/finance/report/assets",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取最近交易列表
+ */
+export function getReportRecentListApi(data) {
+  return request({
+    url: "/finance/report/recentList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取所有客户列表
+ */
+export function getCustomerListApi(data) {
+  return request({
+    url: "/finance/report/customer-list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取所有供应商列表
+ */
+export function getSupplierListApi(data) {
+  return request({
+    url: "/finance/report/supplier-list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取所有用户
+ */
+export function getReportsUserListApi(data) {
+  return request({
+    url: "/finance/report/user-list",
+    method: "get",
+    data,
+  });
+}
+
+// —————————————— 删除单据 ————————————————————
+/**
+ * @description 删除已付款单据
+ */
+export function removeReturnedOrderApi(data) {
+  return request({
+    url: "/finance/delete-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 删除已收款单据
+ */
+export function removePaidOrderApi(data) {
+  return request({
+    url: "/finance/delete-paid-order",
+    method: "post",
+    data,
+  });
+}

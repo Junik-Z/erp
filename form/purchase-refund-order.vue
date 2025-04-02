@@ -20,10 +20,12 @@ import UniSegmentedControl
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
 import FeesList from "./components/FeesList/FeesList.vue";
+import PickerAddress from "@/form/components/PickerAddress.vue";
 
 export default {
   name: "refund",
   components: {
+    PickerAddress,
     FeesList,
     PickerUser,
     UniSegmentedControl,
@@ -86,9 +88,12 @@ export default {
   },
   methods: {
     onSubmit() {
-      this.$refs.FormRef.validate(valid => {
+      this.$refs.FormRef.validate(async (valid) => {
         if (!valid) {
           const params = _deepCopy(this.form);
+
+          await this.isTxFillPrices();
+
           console.log(params);
           params.totalAmount = yuanToPoints(params.totalAmount);
           this.loading = true;
@@ -263,7 +268,15 @@ export default {
             <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
           </UniFormsItem>
           <UniFormsItem label="地址：" name="orderAddress">
-            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+            <view style="display: flex; align-items: center; width: 100%">
+              <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+              <PickerAddress
+                v-if="form.supplierId && isPerm('SUPPLIER_ADDRESS_LIST')"
+                :supplierId="form.supplierId"
+                v-model="form.orderAddress"
+                type="purchase"
+              />
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
@@ -282,6 +295,13 @@ export default {
                 type="purchase"
                 :is-client="isClient"
                 is-actual
+
+                is-show-recent
+                :supplier-id="form.supplierId"
+                :order-address="form.orderAddress"
+
+                :is-fill="isTkCustom && isPerm('FILL_SUPPLIER_PRICE')"
+                :fill-info.sync="TK_FILL_INFO"
               />
             </view>
           </UniFormsItem>

@@ -48,7 +48,7 @@ export default {
     computeGroup() {
       const rect = this.$refs.TTRef?.getListSize?.() || {};
       // 产考元素的高度
-      const RHeight = this.$refs.RRef.offsetHeight || (PaperHeight - 20);
+      const RHeight = this.$refs.RRef?.offsetHeight || (PaperHeight - 20);
 
       // 表头总高度
       const headerHeight = (rect.slotThead || 0) + (rect?.thead || 0);
@@ -84,48 +84,48 @@ export default {
         }
       }
 
-      // 剩余内容的总高度
-      const VTotalHeight = _sum(vessel.map(v => v.__height__));
+      /*  // 剩余内容的总高度
+       const VTotalHeight = _sum(vessel.map(v => v.__height__));
 
-      // 剩余空白高度
-      const lastHeight = CHeight - VTotalHeight;
+       // 剩余空白高度
+       const lastHeight = CHeight - VTotalHeight;
 
-      // 最后页要填补的条数
-      const fill = Math.floor(lastHeight / CellHeight) - 1;
+       // 最后页要填补的条数
+       const fill = Math.floor(lastHeight / CellHeight) - 1;
 
-      let balance = 0;
-      // 是否有其它费用
-      if (rect.statistics) balance += 1;
+       let balance = 0;
+       // 是否有其它费用
+       if (rect.statistics) balance += 1;
 
-      // 是否有统计
-      if (rect.summary) balance += 1;
+       // 是否有统计
+       if (rect.summary) balance += 1;
 
-      // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
-      if (fill > 0 && fill < balance) {
-        for (let i = 0; i < fill; i++) {
-          vessel.push({__height__: CellHeight});
-        }
-      } else if (fill > 0) {
-        for (let i = 0; i < (fill - balance); i++) {
-          vessel.push({__height__: CellHeight});
-        }
-      }
+       // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
+       if (fill > 0 && fill < balance) {
+         for (let i = 0; i < fill; i++) {
+           vessel.push({__height__: CellHeight});
+         }
+       } else if (fill > 0) {
+         for (let i = 0; i < (fill - balance); i++) {
+           vessel.push({__height__: CellHeight});
+         }
+       } */
 
       pages.push(vessel);
 
       // 最后一页的总高度
-      const VTHeight = _sum(vessel.map(v => (v.__height__)));
+      // const VTHeight = _sum(vessel.map(v => (v.__height__)));
 
-      if (fill < 0 || ((CHeight - (VTHeight + (rect.statistics || 0))) < 0)) {
-        // 每页的条数
-        const pageLength = Math.floor((CHeight - (rect.statistics || 0) - (rect.summary || 0)) / CellHeight);
+      /*  if (fill < 0 || ((CHeight - (VTHeight + (rect.statistics || 0))) < 0)) {
+         // 每页的条数
+         const pageLength = Math.floor((CHeight - (rect.statistics || 0) - (rect.summary || 0)) / CellHeight);
 
-        const end = [];
-        for (let i = 0; i < pageLength; i++) {
-          end.push({__height__: CellHeight});
-        }
-        pages.push(end);
-      }
+         const end = [];
+         for (let i = 0; i < pageLength; i++) {
+           end.push({__height__: CellHeight});
+         }
+         pages.push(end);
+       } */
 
       this.groupList = pages;
     },
@@ -156,9 +156,9 @@ export default {
             headAlign: "center",
             headStyle: {
               "white-space": "nowrap",
+              maxWidth: "70px",
             },
             align: "center",
-            width: 70,
             prop: "__index__",
           },
           {
@@ -170,18 +170,19 @@ export default {
               "white-space": "nowrap",
             },
             prop: "name",
+            // render: (h, {}) => h("div", row.name),
           },
           {
             label: "单位",
             headAlign: "center",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              maxWidth: "70px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
             },
             prop: "name",
             align: "center",
-            width: 70,
             render: (h, {row}) => {
               return h("span", {}, [_get(row || {}, "extend.dangwei") || ""]);
             },
@@ -192,29 +193,30 @@ export default {
             prop: "productQuantity",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              maxWidth: "70px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
             },
             align: "center",
-            width: 70,
           },
           {
             label: "单价",
             headAlign: "center",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
+              maxWidth: "70px",
             },
             render: (h, {row}) => {
               return h("span", {}, [this.toYuan(row.price) || ""]);
             },
             align: "center",
-            width: 70,
+            // width: 70,
           },
           {
             label: "金额",
-            width: 70,
+            // width: 70,
             headAlign: "center",
             render: (h, {row}) => {
               return h("span", {}, [this.toYuan(row.total) || ""]);
@@ -222,8 +224,9 @@ export default {
             align: "right",
             headStyle: {
               "white-space": "nowrap",
-              "letter-spacing": "10px",
-              paddingLeft: "10px",
+              // "letter-spacing": "10px",
+              // paddingLeft: "10px",
+              maxWidth: "70px",
             },
           },
           {
@@ -263,7 +266,7 @@ export default {
         {
           colspan: 2,
           style: "text-align:right;",
-          label: this.toYuan(this.getTotal),
+          label: this.toYuan(this.getTotal) + "元",
         },
       ];
     },
@@ -274,6 +277,10 @@ export default {
         "--tk-cell-min-height": CellHeight + "px",
         "--tk-cell-font-size": FontSize + "px",
       };
+    },
+
+    getHeader() {
+      return this.header?.replace("销售退货单", "退货单")?.replace("采购退货单", "退货单");
     },
   },
 };
@@ -301,7 +308,7 @@ export default {
           is-show-summary
         >
           <template #thead>
-            <TkHeader :node="node" />
+            <TkHeader :node.sync="node" :header="getHeader" is-pick-date/>
           </template>
           <template #tfoot>
             <TkFooter :node="node" />
@@ -333,7 +340,12 @@ export default {
               :is-show-summary="isEqual(groupList.length - 1, index)"
             >
               <template #thead>
-                <TkHeader :node="node" show-page :page="`${index + 1}/${groupList.length || 0}`" />
+                <TkHeader
+                  :node="node"
+                  show-page
+                  :page="`${index + 1}/${groupList.length || 0}`"
+                  :header="getHeader"
+                />
               </template>
               <template #tfoot>
                 <TkFooter :node="node" />

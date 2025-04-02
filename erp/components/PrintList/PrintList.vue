@@ -84,7 +84,7 @@ export default {
 
     <template #footer>
       <view class="ko-print-list__footer">
-        <button :disabled="isDisabled" class="ko-basic-button" @click="onSubmit">
+        <button style="width: 120px;" :disabled="isDisabled" class="ko-basic-button__card" @click="onSubmit">
           打印
         </button>
       </view>
@@ -126,7 +126,10 @@ export default {
   }
 
   &__footer {
-    padding: 0 50px 20px;
+    padding: 0 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
 }

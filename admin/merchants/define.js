@@ -150,6 +150,12 @@ export const SYS_PERM_TREE = [
     perm: "CNC_MEMBER",
     id: "23",
   },
+  {
+    label: "财务报表",
+    type: 1,
+    perm: "FINANCE_RECENT",
+    id: "24",
+  },
 ];
 
 /**
@@ -379,6 +385,13 @@ export const SALE_PERM_TREE = [
         perm: "SALE_EDIT_PAID_ORDER",
         id: "372",
       },
+      {
+        "label": "快捷出库",
+        "type": 2,
+        "perm": "SALE_QUICK_OUT",
+        id: "373",
+        color: "#e43d33",
+      },
     ],
   },
   {
@@ -453,6 +466,19 @@ export const SALE_PERM_TREE = [
         type: 2,
         perm: "FINANCE_PAYABLE_CHECK",
         id: "541",
+      },
+
+      {
+        label: "客户地址列表",
+        type: 2,
+        perm: "CUSTOMER_ADDRESS_LIST",
+        id: "004",
+      },
+      {
+        label: "删除地址",
+        type: 2,
+        perm: "CUSTOMER_ADDRESS_DELETE",
+        id: "328",
       },
     ],
   },
@@ -534,6 +560,13 @@ export const SALE_PERM_TREE = [
         type: 2,
         perm: "SALE_RETURN_EDIT_RETURNED_ORDER",
         id: "375",
+      },
+      {
+        "label": "快捷入库",
+        "type": 2,
+        "perm": "SALE_RETURN_QUICK_IN",
+        "id": "376",
+        color: "#e43d33",
       },
     ],
   },
@@ -627,16 +660,34 @@ export const SALE_PERM_TREE = [
         id: "309",
       },
       {
-        label: "提示最近销售价格",
+        label: "提示最近售价",
         type: 2,
         perm: "SALE_RECENT_PRICE",
         id: "346",
+      },
+
+      {
+        label: "提示最近采购价",
+        type: 2,
+        perm: "PURCHASE_RECENT_PRICE",
+        id: "611",
+        color: "#e43d33",
       },
       {
         label: "分享下单",
         type: 2,
         perm: "SALE_SHARE",
         id: "303",
+      },
+
+      {
+        label: "回填上次价格",
+        type: 2,
+        perm: "FILL_CUSTOMER_PRICE",
+        id: "001",
+        // 需要判断 mixin
+        mixinKeys: ["isTkCustom"],
+        color: "#e43d33",
       },
     ],
   },
@@ -741,6 +792,14 @@ export const PURCHASE_PERM_TREE = [
         perm: "PURCHASE_EDIT_RETURNED_ORDER",
         id: "662",
       },
+
+      {
+        "label": "快捷入库",
+        "type": 2,
+        "perm": "PURCHASE_QUICK_IN",
+        color: "#e43d33",
+        "id": "663",
+      },
     ],
   },
   {
@@ -815,6 +874,19 @@ export const PURCHASE_PERM_TREE = [
         type: 2,
         perm: "FINANCE_PAYABLE_CHECK",
         id: "541",
+      },
+
+      {
+        label: "供应商地址列表",
+        type: 2,
+        perm: "SUPPLIER_ADDRESS_LIST",
+        id: "005",
+      },
+      {
+        label: "删除地址",
+        type: 2,
+        perm: "SUPPLIER_ADDRESS_DELETE",
+        id: "328",
       },
     ],
   },
@@ -896,6 +968,13 @@ export const PURCHASE_PERM_TREE = [
         type: 2,
         perm: "PURCHASE_RETURN_EDIT_PAID_ORDER",
         id: "665",
+      },
+      {
+        "label": "快捷出库",
+        "type": 2,
+        "perm": "PURCHASE_RETURN_QUICK_OUT",
+        color: "#e43d33",
+        "id": "666",
       },
     ],
   },
@@ -989,16 +1068,34 @@ export const PURCHASE_PERM_TREE = [
         id: "610",
       },
       {
-        label: "显示最近采购价",
+        label: "提示最近采购价",
         type: 2,
         perm: "PURCHASE_RECENT_PRICE",
         id: "611",
       },
       {
+        label: "提示最近售价",
+        type: 2,
+        perm: "SALE_RECENT_PRICE",
+        id: "346",
+        color: "#e43d33",
+      },
+
+      {
         label: "分享下单",
         type: 2,
         perm: "PURCHASE_SHARE",
         id: "604",
+      },
+
+      {
+        label: "回填上次价格",
+        type: 2,
+        perm: "FILL_SUPPLIER_PRICE",
+        id: "002",
+        // 生效的商户
+        mixinKeys: ["isTkCustom"],
+        color: "#e43d33",
       },
     ],
   },
@@ -1395,6 +1492,12 @@ export const FINANCE_PERM_TREE = [
         id: "503",
       },
       {
+        label: "删除单据",
+        type: 2,
+        perm: "FINANCE_DELETE_PAID_ORDER",
+        id: "006",
+      },
+      {
         label: "编辑单据",
         type: 2,
         perm: "FINANCE_EDIT_PAID_ORDER",
@@ -1467,6 +1570,12 @@ export const FINANCE_PERM_TREE = [
         type: 2,
         perm: "FINANCE_ADD_RETURNED_ORDER",
         id: "507",
+      },
+      {
+        label: "删除单据",
+        type: 2,
+        perm: "FINANCE_DELETE_RETURNED_ORDER",
+        id: "007",
       },
       {
         label: "编辑单据",
@@ -1906,6 +2015,44 @@ export const CNC_PERM_TREE = [
         type: 2,
         perm: "CNC_CUSTOMIZED_BOARD_CALCULATE",
         id: "705",
+      },
+    ],
+  },
+];
+
+/**
+ * @description 财务报表
+ */
+export const FINANCE_REPORTS_PERM_TREE = [
+  {
+    label: "财务报表",
+    type: 1,
+    perm: ["FINANCE_REPORT_ASSETS", "FINANCE_REPORT_TREND", "FINANCE_REPORT_RECENT"],
+    id: "931932933",
+    children: [
+      {
+        "label": "资产统计",
+        "type": 3,
+        "perm": "FINANCE_REPORT_ASSETS",
+        "id": "931",
+      },
+      {
+        "label": "收支趋势",
+        "type": 3,
+        "perm": "FINANCE_REPORT_TREND",
+        "id": "932",
+      },
+      {
+        "label": "最近交易",
+        "type": 3,
+        "perm": "FINANCE_REPORT_RECENT",
+        "id": "933",
+      },
+      {
+        "label": "最近列表",
+        "type": 2,
+        "perm": "FINANCE_REPORT_RECENT_LIST",
+        "id": "934",
       },
     ],
   },

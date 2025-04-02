@@ -241,7 +241,7 @@ export default {
           },
         },
         {
-          label: "时间",
+          label: "日期",
           prop: "updateTime",
         },
 
@@ -354,7 +354,7 @@ export default {
                   </block>
 
                   <block v-if="GET_PAGE_MENU_FUNC > 1">
-                    <view class="ko-basic-table--th">时间</view>
+                    <view class="ko-basic-table--th">日期</view>
                   </block>
 
                   <view class="ko-basic-table--th" v-if="GET_PAGE_MENU_FUNC === 0">员工</view>

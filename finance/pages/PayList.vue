@@ -12,7 +12,6 @@ import {
 } from "@/api/erp/finance";
 import OrderCard from "../components/OrderCard/OrderCard.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import KoTable from "../components/KoTable/KoTable.vue";
 import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -47,7 +46,6 @@ export default {
   components: {
     UniEasyinput,
     KoList,
-    KoTable,
     HistoryBar,
     OrderCard,
     UniCol,
@@ -142,8 +140,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -545,7 +543,7 @@ export default {
         <!-- #endif -->
       </view>
 
-      <Pay ref="TPRef" @success="onSuccess" />
+      <Pay ref="TPRef" @close="onSuccess" />
       <!-- #ifdef H5 -->
     </view>
     <!-- #endif -->

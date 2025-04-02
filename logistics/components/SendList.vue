@@ -155,8 +155,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -509,7 +509,9 @@ export default {
         </UniForms>
       </view>
       <template #footer>
-        <button class="ko-basic-button" @click="onSubmit" style="margin: 0 40px 10px;">保存</button>
+        <view style="display: flex; justify-content: center; align-items: center">
+        <button class="ko-basic-button__card" @click="onSubmit" style="width: 120px">保存</button>
+        </view>
       </template>
     </BasicPopup>
   </view>
@@ -529,7 +531,7 @@ export default {
   flex-direction: column;
 
   .ko-history {
-    width: 500px;
+    //width: 500px;
   }
 
   // #endif

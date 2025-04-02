@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
-// #endif
 import UvCountTo from "../../components/uv-count-to/components/uv-count-to/uv-count-to.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -49,13 +46,6 @@ export default {
     UvCountTo,
   },
   mixins: [mixins, SaleMixins],
-
-  // #ifdef H5
-  directives: {
-    InfiniteScroll,
-  },
-  // #endif
-
   data() {
     const _this = this;
     return {
@@ -96,8 +86,8 @@ export default {
           width: 210,
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -131,7 +121,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -198,27 +188,26 @@ export default {
       isReturn: false,
       PAGE_MENU: _deepCopy(PageMenu),
 
-
-      MIXINS_CONTENT: [
+      MOVABLE_LIST: [
         // #ifdef H5
         {
           text: "定制",
           iconfont: "icon-dingzhishengchan",
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE&isClient=true",
           perm: "SALE_PRODUCE_ADD",
-          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE",
         },
         // #endif
         {
           text: "板材",
           iconfont: "icon-ziyuanicon",
-          perm: "CNC_ADD_CUSTOMIZED_BOARD",
           path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE&isClient=true",
+          perm: "CNC_ADD_CUSTOMIZED_BOARD",
         },
         {
           text: "新增",
           iconfont: "icon-tianjia",
-          perm: "SALE_ADD",
           path: PageEnums.editSale + "?PAGE_TYPE=ADDED_SALE&isNormal=true",
+          perm: "SALE_ADD",
         },
       ],
     };
@@ -301,6 +290,14 @@ export default {
           ...(item?.id ? {id: item.id} : {}),
         });
       } else {
+        if (this.isProductionOrder(item.orderType)) {
+          this.noRefresh = true;
+          uni.navigateTo({
+            url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE&isClient=true`,
+          });
+          return false;
+        }
+
         this.jumpAddedSale({
           PAGE_TYPE: "ADDED_SALE",
           isNormal: true,
@@ -369,7 +366,6 @@ export default {
 
     // 处理添加
     onTrigger(event) {
-
       const {path} = event.item || {};
       if (path) {
         this.noRefresh = true;
@@ -423,6 +419,11 @@ export default {
           const isStatus = item?.status.includes(node.status);
 
           if (_isEqual(this.GET_PAGE_MENU_FUNC, 0)) {
+
+            if (_isEqual("onReturn", item.func)) {
+              return isStatus && this.isPerm(item.perm) && !this.isProductionOrder(node.orderType);
+            }
+
             return isStatus && this.isPerm(item.perm);
           } else {
             return !_isEqual(item.func, "onReturn") && isStatus && this.isPerm(item.rPerm);
@@ -576,7 +577,7 @@ export default {
       <KoMovable
         :content="GET_MOVABLE_LIST"
         @click="onTrigger"
-        v-if="!GET_PAGE_MENU_FUNC"
+        v-if="!GET_PAGE_MENU_FUNC && isShowMovable"
       />
 
       <!-- #ifdef MP -->
@@ -604,9 +605,9 @@ export default {
   height: calc(100vh - 64px - 50px);
   overflow-y: auto;
 
-  .ko-history {
+  /*.ko-history {
     width: 500px;
-  }
+  }*/
 
   // #endif
 }

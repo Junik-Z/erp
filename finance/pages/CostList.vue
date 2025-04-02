@@ -537,7 +537,9 @@ export default {
           </UniForms>
         </view>
         <template #footer>
-          <button class="ko-basic-button__card" style="margin: 0 40px 10px;" @click="onSubmit">保存</button>
+          <view style="display: flex;align-items: center;justify-content: center;">
+            <button class="ko-basic-button__card" style="width: 120px;" @click="onSubmit">保存</button>
+          </view>
         </template>
       </BasicPopup>
       <!-- #ifdef H5 -->

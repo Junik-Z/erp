@@ -192,15 +192,17 @@ export default {
         </UniForms>
       </view>
       <template #footer>
-        <button
-          style="margin: 0 20px 20px;"
-          class="ko-basic-button"
-          @click.stop="onSubmit"
-          :loading="loading"
-          :disabled="loading"
-        >
-          提交
-        </button>
+        <view style="display: flex;align-items: center; justify-content: center;">
+          <button
+            class="ko-basic-button__card"
+            @click.stop="onSubmit"
+            style="width: 120px;"
+            :loading="loading"
+            :disabled="loading"
+          >
+            提交
+          </button>
+        </view>
       </template>
     </BasicPopup>
 

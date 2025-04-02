@@ -1,6 +1,5 @@
 <script>
 import { _get, _isEmpty, _isObject, _isUndefined, _set, xlsxCellStyle } from "@/utils";
-import { Col, Row } from "@/uni_modules/element-ui/element.min";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -26,7 +25,6 @@ export default {
         return this.render(h, params);
       },
     },
-    Col, Row,
   },
   mixins: [mixins],
   props: {

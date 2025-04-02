@@ -4,6 +4,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import {
   CNC_PERM_TREE,
   FINANCE_PERM_TREE,
+  FINANCE_REPORTS_PERM_TREE,
   LOGISTICS_PERM_TREE,
   PRODUCE_PERM_TREE,
   PRODUCT_PERM_TREE,
@@ -24,7 +25,10 @@ const TREE_DATA = {
   logistics: LOGISTICS_PERM_TREE,
   product: PRODUCT_PERM_TREE,
   cnc: CNC_PERM_TREE,
+  finance_reports: FINANCE_REPORTS_PERM_TREE,
 };
+
+const User = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "authorization",
@@ -35,14 +39,9 @@ export default {
     this.isCustom = _isEqual(option.isCustom, "true");
 
     if (this.isCustom) {
-      this.userId = this.GET_USER_INFO.userId;
+      this.userId = this.GET_USER_INFO.userId || User.userId;
       this.onChangeUser();
     }
-
-    /* getRolePermApi({role: option.role})
-      .then(res => {
-        console.log(res.data);
-      }); */
   },
   data() {
     return {
@@ -65,10 +64,17 @@ export default {
     // 更新用户了, 获取选中用户的所有权限；
     onChangeUser() {
       if (this.userId) {
+        uni.showLoading({
+          title: "加载中...",
+          mask: true,
+        });
         getRolePermListApi({userId: this.userId})
           .then(res => {
             this.checked = _deepCopy(res.data);
             this.backup = _deepCopy(res.data);
+          })
+          .finally(() => {
+            uni.hideLoading();
           });
       }
     },
@@ -130,7 +136,22 @@ export default {
   },
   computed: {
     getTreeList() {
-      return _get(TREE_DATA, this.option.model_key) || [];
+      return (_get(TREE_DATA, this.option.model_key) || [])
+        .map(item => {
+          item.children = item.children.flatMap(child => {
+            // 判断生效的商户
+            if (child?.mixinKeys) {
+              if (child?.mixinKeys.some(v => this[v])) {
+                return [child];
+              } else {
+                return [];
+              }
+            } else {
+              return [child];
+            }
+          });
+          return item;
+        });
     },
 
     // 获取请求用户列表
@@ -207,7 +228,7 @@ export default {
       <view class="ko-admin-authorization__wrap">
         <view class="ko-admin-authorization__wrap--label">授权功能：</view>
 
-        <BasicCard :spacing="10" v-for="item of getTreeList" :key="item.id">
+        <BasicCard :spacing="10" v-for="(item, index) of getTreeList" :key="index">
           <view class="ko-admin-authorization__item" :style="[getTableStyle]">
             <view class="ko-admin-authorization__item--title" @click="onClickTitle(item)">
               <block v-if="!!userId">
@@ -232,8 +253,8 @@ export default {
               <button
                 class="ko-admin-authorization__item--cell ko-basic-table--cell"
                 :class="{'is-check': getChecked(child)}"
-                v-for="child of item.children"
-                :key="child.id"
+                v-for="(child, c) of item.children"
+                :key="c"
                 @click="onClickChild(child)"
               >
                 <block v-if="!!userId">

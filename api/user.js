@@ -49,6 +49,22 @@ export function getImgUrl(url) {
 }
 
 /**
+ * @description 获取文件链接地址
+ */
+export function getFileUrl(url) {
+  if (/^https?:\/\//.test(url)) return url;
+  return `${CONFIG.BASE_URL}${url}`;
+}
+
+/**
+ * @description 文件上传接口
+ */
+export function uploadFileApi() {
+  return `${CONFIG.BASE_URL}/files/upload`;
+}
+
+
+/**
  * @description 获取我的信息
  */
 export function getMyInfoApi(data) {

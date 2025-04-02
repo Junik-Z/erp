@@ -2,14 +2,12 @@
 // #ifdef H5
 import { VuePrintLast } from "../vue-print-last";
 
-import { Button, Checkbox } from "@/uni_modules/element-ui/element.min";
-
 import PrintHeader from "../components/PrintHeader.vue";
 import PrintFooter from "../components/PrintFooter.vue";
 import PrintTable from "../components/PrintTable.vue";
 import mixins from "@/mixins/mixins";
 import { cmToPx } from "@/shop/print/utils";
-import { _get, _isEqual, _sum } from "@/utils";
+import { _deepCopy, _get, _isEqual, _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
@@ -38,8 +36,6 @@ export default {
     PrintTable,
     PrintFooter,
     PrintHeader,
-    Button,
-    Checkbox,
   },
   props: {
     isA4: Boolean,
@@ -97,11 +93,11 @@ export default {
     getGroupList() {
       // 获取表格每行的高度
       const rect = this.$refs.PTableRef?.getListSize?.() || {};
-      // 产考元素的高度 - 上下的边框线
-      const RHeight = (this.$refs.RRef?.offsetHeight || (PaperHeight - 20)) - 4;
+      // 产考元素的高度 - 上下的边框线 - 上下的高度
+      const RHeight = (this.$refs.RRef?.offsetHeight || (PaperHeight - 20)) - 10;
 
       // 表头总高度
-      const headerHeight = ((rect.slotThead || 0) + (rect?.thead || 0));
+      const headerHeight = ((rect.slotThead || 0) + (rect?.thead || 0) + 1);
       // 表尾的高度
       const footerHeight = (rect.slotTFoot || 0);
 
@@ -140,11 +136,17 @@ export default {
       // 剩余内容的总高度
       const VTotalHeight = _sum(vessel.map(v => (v.__height__)));
 
+      const A = Math.ceil((VTotalHeight || 0) / (_deepCopy(vessel).length || 0));
+
+      // 每行平均的高度
+      const averageCellHeight = isNaN(A) ? 19 : A;
+
+
       // 剩余空白高度
       const lastHeight = CHeight - VTotalHeight;
 
       // 最后页要填补的条数
-      const fill = Math.floor(lastHeight / CellHeight);
+      const fill = Math.floor(lastHeight / averageCellHeight);
 
       let balance = 0;
       // 是否有其它费用
@@ -153,14 +155,15 @@ export default {
       // 是否有统计
       if (rect.summary) balance += 1;
 
+
       // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
       if (fill > 0 && fill < balance) {
         for (let i = 0; i < fill; i++) {
-          vessel.push({__height__: CellHeight});
+          vessel.push({__height__: averageCellHeight});
         }
       } else if (fill > 0) {
         for (let i = 0; i < (fill - balance); i++) {
-          vessel.push({__height__: CellHeight});
+          vessel.push({__height__: averageCellHeight});
         }
       }
 
@@ -171,11 +174,11 @@ export default {
 
       if (fill < 0 || ((CHeight - (VTHeight + (rect.fees || 0))) < 0)) {
         // 每页的条数
-        const pageLength = Math.floor((CHeight - (rect.fees || 0) - (rect.summary || 0)) / CellHeight);
+        const pageLength = Math.floor((CHeight - (rect.fees || 0) - (rect.summary || 0)) / averageCellHeight);
 
         const end = [];
         for (let i = 0; i < pageLength; i++) {
-          end.push({__height__: CellHeight});
+          end.push({__height__: averageCellHeight});
         }
         pages.push(end);
       }
@@ -264,7 +267,7 @@ export default {
       <div class="ko-n-print__check">
         <label>打印字段：</label>
         <div>
-          <Checkbox
+          <el-checkbox
             :disabled="item.disabled"
             :label="item.label"
             v-for="(item, index) of columns"
@@ -272,7 +275,7 @@ export default {
             v-model="item.isPrint"
             v-if="!(isA4 && item.notA4)"
           />
-          <Checkbox
+          <el-checkbox
             :disabled="item.disabled"
             :label="item.label"
             v-for="(item, index) of feesList"
@@ -283,7 +286,7 @@ export default {
         </div>
       </div>
       <div>
-        <Button type="primary" size="mini" @click="onPrint">打印</Button>
+        <el-button type="primary" size="mini" @click="onPrint">打印</el-button>
       </div>
     </div>
 
@@ -302,7 +305,12 @@ export default {
             <PrintHeader ref="HeaderRef" :title="GET_SHOP_NAME + header" :node="node" />
           </template>
           <template #tfoot>
-            <PrintFooter ref="FooterRef" :out-name="GET_USER_INFO.nickName" :info="GET_CONFIG_INFO" />
+            <PrintFooter
+              ref="FooterRef"
+              :out-name="GET_USER_INFO.nickName"
+              :info="GET_CONFIG_INFO"
+              :node="node"
+            />
           </template>
         </PrintTable>
       </div>
@@ -331,7 +339,11 @@ export default {
                 <PrintHeader :title="GET_SHOP_NAME + header" :node="node" />
               </template>
               <template #tfoot>
-                <PrintFooter :out-name="GET_USER_INFO.nickName" :info="GET_CONFIG_INFO" />
+                <PrintFooter
+                  :out-name="GET_USER_INFO.nickName"
+                  :info="GET_CONFIG_INFO"
+                  :node="node"
+                />
               </template>
             </PrintTable>
           </div>
@@ -370,7 +382,7 @@ export default {
     background: #fff;
     padding: 0 30px;
     margin: 0 auto 20px;
-    z-index: 9999;
+    z-index: 999;
   }
 
   &__content {

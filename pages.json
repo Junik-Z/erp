@@ -113,6 +113,12 @@
           "style": {
             "navigationBarTitleText": "财务报表"
           }
+        },
+        {
+          "path": "lately",
+          "style": {
+            "navigationBarTitleText": "最近交易"
+          }
         }
       ]
     },
@@ -248,7 +254,12 @@
           "style": {
             "navigationBarTitleText": "生产工单"
           }
-        },
+        }
+      ]
+    },
+    {
+      "root": "process",
+      "pages": [
         {
           "path": "work",
           "style": {

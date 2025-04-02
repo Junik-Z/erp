@@ -212,27 +212,6 @@ export default {
 
     // 解绑
     onUnbind(user) {
-      /* uni.showModal({
-        title: "温馨提示",
-        content: `您确定要解绑客户吗？`,
-        success: (res) => {
-          if (res.confirm) {
-            Promise.all(
-              user.map(userId => unbindCustomerApi({
-                customerId: this.node.id,
-                userId,
-              })),
-            )
-              .then(() => {
-                uni.showToast({title: "解绑成功"});
-                const node = _deepCopy(this.list[this.nodeIndex]);
-                node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
-                this.$set(this.list, this.nodeIndex, node);
-              });
-          }
-        },
-      }); */
-
       Promise.all(
         user.map(userId => unbindCustomerApi({
           customerId: this.node.id,

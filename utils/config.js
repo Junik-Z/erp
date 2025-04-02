@@ -4,13 +4,13 @@ import { _isDev } from "@/utils/index";
 let BASE_URL = "http://192.168.0.7:8093/api";
 let BASE_WS_URL = "ws://192.168.0.7:8093/api/ws/app";
 
-let DEFAULT_PAGE_SIZE = 5;
+let DEFAULT_PAGE_SIZE = 10;
 
 // #ifdef H5
 BASE_URL = "/api";
 BASE_WS_URL = "/api/ws/app";
 
-DEFAULT_PAGE_SIZE = 10;
+DEFAULT_PAGE_SIZE = 20;
 
 // BASE_URL: "https://erp.kuaouyun.cn/api",
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
@@ -133,6 +133,8 @@ export const ROLE_LIST_ENUMS = {
 export const PageEnums = {
   home: "/pages/home/home",
 
+  qrcode: "/erp/qrcode/qrcode",
+
   // 新增修改销售订单
   editSale: "/form/sale-order",
   // 添加销售退货单
@@ -169,7 +171,8 @@ export const PageEnums = {
   financeReconcile: "/finance/reconcile",
   // 财务报表
   financeReports: "/finance/reports",
-
+  // 最近交易
+  financeLately: "/finance/lately",
 
   // ———————————— 生产管理 ————————————————————
   // 生产
@@ -178,10 +181,12 @@ export const PageEnums = {
   produce: "/produce/produce",
   // 生产工单
   produceWorkList: "/produce/work-list",
+
   // 新的生产工单
-  produceWork: "/produce/work",
+  produceWork: "/process/work",
   // 生产详情
-  produceDetails: "/produce/details",
+  produceDetails: "/process/details",
+
   // 考勤
   attend: "/attend/attend",
   // 考勤记录
@@ -225,7 +230,6 @@ export const PageEnums = {
   stockCheck: "/stock/check",
   // 库存预警
   stockWarning: "/stock/warning",
-
 
   // ———————————— 员工管理 ————————————
   // 员工管理
@@ -299,10 +303,10 @@ export const MENU_LIST = [
   },
   {
     label: "财务报表",
-    icon: "icon-caiwubaobiao",
+    icon: "icon-caiwubaobiao1",
     value: PageEnums.financeReports,
     modelKey: "finance_reports",
-    role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
+    role: ["ADMIN", "BUSINESS", "FINANCE_RECENT"],
     isUpRole: true,
   },
   {
@@ -387,6 +391,7 @@ export const HOME_PAGE_TYPE_ENUMS = {
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
   BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修",
   BINDING_PRODUCT: "分享出去批量绑定产品",
+  ADDED_PRODUCE_PACKING: "分享出去下单板材",
 };
 
 /**

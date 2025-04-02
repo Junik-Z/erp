@@ -1,6 +1,6 @@
 <script>
 // #ifdef H5
-import KoTable from "./components/KoTable/KoTable.vue";
+import KoTable from "@/erp/components/KoTable/KoTable.vue";
 // #endif
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -250,7 +250,9 @@ export default {
         </UniForms>
       </view>
       <template #footer>
-        <button class="ko-basic-button__card" style="margin: 0 40px 10px;" @click.stop="onSubmit()">保存</button>
+        <view style="display: flex;align-items: center;justify-content: center;">
+          <button class="ko-basic-button__card" style="width: 120px" @click.stop="onSubmit()">保存</button>
+        </view>
       </template>
     </BasicPopup>
   </view>

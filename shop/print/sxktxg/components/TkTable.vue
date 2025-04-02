@@ -1,6 +1,6 @@
 <script>
 import props from "../../props";
-import { _get, _set, _sum } from "@/utils";
+import { _get, _round, _set, _sum } from "@/utils";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -96,7 +96,7 @@ export default {
     getStatistics() {
       const data = this?.data || [];
       const total = _sum(data.map(v => (v?.total || 0))) || 0;
-      const quantity = _sum(data.map(v => (v?.productQuantity || 0))) || 0;
+      const quantity = _round(_sum(data.map(v => (v?.productQuantity || 0))) || 0, 2);
 
       if (!total && !quantity) return [];
 

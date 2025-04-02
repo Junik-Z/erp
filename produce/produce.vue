@@ -6,7 +6,6 @@ import UvCountTo from "./components/uv-count-to/uv-count-to.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { TabList } from "./define";
-import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import { _flattenDeep, _get, _groupBy, _keys } from "@/utils";
 import TopMenus from "./components/TopMenus.vue";
 import { getProduceStatisticsApi } from "@/api/erp/produce";
@@ -20,7 +19,6 @@ export default {
     UvCountTo,
     UniRow,
     QiunDataCharts,
-    UniGrid,
     TopMenus,
   },
   mixins: [mixins],

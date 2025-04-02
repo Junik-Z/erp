@@ -1,6 +1,6 @@
 <script>
 import { getConfigApi, getMyInfoApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
-import { _deepCopy, _get, _isEqual, _omit } from "@/utils";
+import { _deepCopy, _get, _isDev, _isEqual, _omit } from "@/utils";
 import { CONFIG, PageEnums } from "@/utils/config";
 
 export default {
@@ -12,7 +12,7 @@ export default {
 
     let query = _deepCopy(_query);
     // 是要进入扫码登录页面
-    const isQrcodePage = _isEqual(option.path, "erp/qrcode/qrcode");
+    const isQrcodePage = [PageEnums.qrcode].includes("/" + option.path);// _isEqual(option.path, "erp/qrcode/qrcode");
 
     if (isQrcodePage) {
       query.login_code = query.scene;
@@ -39,7 +39,7 @@ export default {
     // #ifdef MP-WEIXIN
     uni.$on("$__ask_request_message__", this.askSubscribeMessage);
 
-    uni.$on("$__request_message__", this.requestSubscribeMessage);
+    !_isDev() && uni.$on("$__request_message__", this.requestSubscribeMessage);
     // #endif
 
     // #ifdef MP

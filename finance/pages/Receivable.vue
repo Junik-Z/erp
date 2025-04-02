@@ -14,7 +14,6 @@ import UvCountTo from "../components/uv-count-to/uv-count-to.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
-import KoTable from "../components/KoTable/KoTable.vue";
 import mixins from "@/mixins/mixins";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -47,7 +46,6 @@ export default {
     Pay,
     UniEasyinput,
     KoList,
-    KoTable,
     HistoryBar,
     OrderCard,
     UniCol,
@@ -130,8 +128,8 @@ export default {
           prop: "orderCode",
         },
         {
-          label: "时间",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -149,7 +147,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -321,6 +319,7 @@ export default {
         },
       });
     },
+
     // 添加票据
     onAddedTicket(item, index) {
       this.node = _deepCopy(item);
@@ -366,6 +365,7 @@ export default {
       const index = this.nodeIndex;
       getReceivableDetailApi({id: node.id})
         .then(res => {
+          console.log(res);
           this.$set(this.list, index, _pick(res.data, _keys(node)));
         });
     },
@@ -542,7 +542,7 @@ export default {
         <!-- #endif -->
       </view>
 
-      <Pay ref="TPRef" @success="onSuccess" />
+      <Pay ref="TPRef" @close="onSuccess" />
       <!-- #ifdef H5 -->
     </view>
     <!-- #endif -->

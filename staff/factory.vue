@@ -426,7 +426,7 @@ export default {
             },
           },
           {
-            label: "时间",
+            label: "日期",
             prop: "updateTime",
           },
         ] : []),
@@ -525,7 +525,7 @@ export default {
                 </block>
 
                 <block v-if="GET_PAGE_MENU_FUNC > 1">
-                  <view class="ko-basic-table--th">时间</view>
+                  <view class="ko-basic-table--th">日期</view>
                 </block>
 
                 <view class="ko-basic-table--th">员工</view>
@@ -787,7 +787,7 @@ export default {
         </uni-forms>
       </view>
       <template #footer>
-        <view class="ko-factory__popup--footer ko-basic-box-shadow__top">
+        <view class="ko-factory__popup--footer">
           <button
             class="ko-basic-button__card"
             @click="onSubmit"
@@ -822,7 +822,7 @@ export default {
         </uni-forms>
       </view>
       <template #footer>
-        <view class="ko-factory__popup--footer ko-basic-box-shadow__top">
+        <view class="ko-factory__popup--footer">
           <button
             class="ko-basic-button__card"
             @click="onSettlementSubmit"
@@ -861,10 +861,9 @@ export default {
       display: flex;
       align-items: center;
       justify-content: space-around;
-      padding: 10px;
 
       .ko-basic-button__card {
-        width: 100px;
+        width: 120px;
       }
     }
   }

@@ -23,7 +23,7 @@ export default {
         <div>{{ GET_USER_INFO.nickName }}</div>
 
         <div>电话：</div>
-        <div>13766330902(李)</div>
+        <div>{{GET_CONFIG_INFO.ticketTailContent}}</div>
 
         <div>客户签单：</div>
         <div></div>

@@ -1,6 +1,6 @@
 <script>
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import TicketMixins from "../../TicketMixins";
+import TicketMixins from "./TicketMixins";
 import KoList from "@/components/List/List.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -37,6 +37,7 @@ export default {
       list: [],
 
       moreNode: {},
+      moreIndex: null
     };
   },
   watch: {
@@ -67,11 +68,12 @@ export default {
     },
 
     onSelect(node) {
-      this[node.func](_deepCopy(this.moreNode));
+      this[node.func](_deepCopy(this.moreNode), this.moreIndex);
     },
 
-    onMore(item) {
+    onMore(item, index) {
       this.moreNode = _deepCopy(item);
+      this.moreIndex = _deepCopy(index);
       this.$refs.UASRef.open();
     },
   },
@@ -91,21 +93,40 @@ export default {
         {
           name: "修改",
           func: "addedTicket",
+          status: ["CREATED"],
+        },
+        {
+          name: "删除",
+          func: "onRemoveOrder",
+          status: ["CREATED"],
+          color: "#e43d33",
         },
         {
           name: "确认单据金额",
           func: "onConfirmOrder",
+          status: ["CREATED"],
         },
       ].filter(item => {
+        const isStatus = (item.status || [])?.includes(node.orderStatus);
+
         if (_isEqual(item.func, "addedTicket")) {
-          return node.orderStatus !== "FINISHED" && !this.isDetails;
+          return isStatus && !this.isDetails;
         }
 
         if (_isEqual(item.func, "onConfirmOrder")) {
-          return ((node.orderStatus !== "FINISHED" && !this.isDetails) && !this.noUnable) && ({
-            RECEIVABLE: this.isPerm("FINANCE_CONFIRM_PAID_ORDER"),
-            PAY_LISE: this.isPerm("FINANCE_CONFIRM_RETURNED_ORDER"),
-          }[this.option.FORM]);
+          return ((isStatus && !this.isDetails) && !this.noUnable)
+            && ({
+              RECEIVABLE: this.isPerm("FINANCE_CONFIRM_PAID_ORDER"),
+              PAY_LISE: this.isPerm("FINANCE_CONFIRM_RETURNED_ORDER"),
+            }[this.option.FORM]);
+        }
+
+        if (_isEqual(item.func, "onRemoveOrder")) {
+          return ((isStatus && !this.isDetails) && !this.noUnable)
+            && ({
+              RECEIVABLE: this.isPerm("FINANCE_DELETE_PAID_ORDER"),
+              PAY_LISE: this.isPerm("FINANCE_DELETE_RETURNED_ORDER"),
+            }[this.option.FORM]);
         }
 
         return true;
@@ -155,7 +176,7 @@ export default {
                     操作人
                   </view>
                   <view class="ko-basic-table--th">
-                    时间
+                    日期
                   </view>
                   <view class="ko-basic-table--th">
                     备注
@@ -178,7 +199,7 @@ export default {
                     <view class="ko-basic-table--cell">
                       <button
                         class="ko-basic-button__user"
-                        @click="onMore(item)"
+                        @click="onMore(item, index)"
                         v-if="isPayEdit"
                       >
                         更多
@@ -293,7 +314,13 @@ export default {
   }
 
   &__footer {
-    padding: 10px 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ko-basic-button__card {
+      width: 120px;
+    }
   }
 }
 </style>

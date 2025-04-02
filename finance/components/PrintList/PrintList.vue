@@ -126,7 +126,13 @@ export default {
   }
 
   &__footer {
-    padding: 0 50px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .ko-basic-button {
+      width: 120px;
+    }
   }
 
 }

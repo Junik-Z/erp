@@ -28,7 +28,7 @@
 
 <script>
 import WxCanvas from "./wx-canvas";
-import * as echarts from "./echarts";
+import * as echarts from "./echarts.min";
 
 let ctx;
 

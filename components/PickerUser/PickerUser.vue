@@ -13,6 +13,7 @@ import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar
 import IndexList from "../IndexList/IndexList.vue";
 import { getLogisticsListApi, getLogisticsUserListApi } from "@/api/erp/logistics";
 import { getNotBindInfoApi, getStaffListApi, getStaffUserListApi } from "@/api/erp/product";
+import { getReportsUserListApi } from "@/api/erp/finance";
 
 export default {
   name: "PickerUser",
@@ -42,6 +43,8 @@ export default {
 
       // 备份原始已经选中的用户
       backupChecked: [],
+
+      loading: false,
     };
   },
   mixins: [mixins],
@@ -80,6 +83,8 @@ export default {
       // purchaseUserList: 采购供应商用户列表
       // staffUserList: 员工列表
       // logisticsUserList: 物流商列表
+
+      // reportUser: 财务报表用户列表
       default: "default",
     },
     isInput: Boolean,
@@ -160,6 +165,9 @@ export default {
 
         // 物流商列表
         logisticsUserList: getLogisticsUserListApi,
+
+        // 财务报表用户
+        reportUser: getReportsUserListApi,
       }[this.type];
 
       const vKey = {
@@ -170,11 +178,22 @@ export default {
         purchaseUserList: "userId",
         staffUserList: "userId",
         logisticsUserList: "userId",
+        reportUser: "userId",
       }[this.type] || "id";
-      const lKey = {default: "nickName", "noBindStaff": "nickName", perm: "nickName"}[this.type] || "name";
-      const logoKey = {default: "avatar", "noBindStaff": "avatar", perm: "avatar"}[this.type] || "logo";
+      const lKey = {
+        default: "nickName",
+        reportUser: "nickName",
+        "noBindStaff": "nickName",
+        perm: "nickName",
+      }[this.type] || "name";
+      const logoKey = {
+        default: "avatar",
+        reportUser: "avatar",
+        "noBindStaff": "avatar",
+        perm: "avatar",
+      }[this.type] || "logo";
 
-      Func({...this.queryList, ...this.query})
+      Func({...this.queryList, [lKey]: this.queryList.nickName, ...this.query})
         .then(res => {
           const originalList = (res.data).map(item => ({
             ...item,
@@ -298,12 +317,12 @@ export default {
       this.modelVisible = false;
     },
 
-
     onLower() {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
     },
+
     // 根据索引搜索
     onSearchToNameIndex(key) {
       this.queryList.nameIndex = key;
@@ -440,9 +459,10 @@ export default {
       :visible.sync="modelVisible"
       :title="title"
       :type="isInput ? 'bottom' : 'center'"
+      :no-footer="!isConfirm"
     >
       <view v-if="modelVisible" class="ko-picker-user__popup" :class="{'is-input': isInput}">
-        <view v-if="isAutoCheckType || ['staffUserList'].includes(type)">
+        <view>
           <uni-search-bar
             v-model="queryList.nickName"
             placeholder="请输入"
@@ -462,20 +482,21 @@ export default {
             :disabled="disabled"
             :is-receipt-list="type === 'logistics'"
             :safe-area-inset-bottom="false"
+            :loading="loading"
 
             :is-staff="isEqual('staff', type)"
 
             @lower="onLower"
             :no-more="noMore"
             @search="onSearchToNameIndex"
-
-            not-index
           />
         </view>
       </view>
 
       <template #footer v-if="isConfirm">
-        <view style="padding-bottom: 10px; display: flex;justify-content: center; align-items: center;">
+        <view
+          style="padding-bottom: 10px; display: flex;justify-content: center; align-items: center;"
+        >
           <button
             class="ko-basic-button__card"
             @click="onConfirm"
@@ -493,21 +514,22 @@ export default {
 .ko-picker-user {
   &__popup {
     height: 74vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
     // #ifdef MP
     width: 100vw;
     // #endif
-    position: relative;
-
-    &.is-input {
-      height: 70vh;
-    }
 
     // #ifdef H5
     width: 100%;
     min-width: 600px;
     // #endif
-    display: flex;
-    flex-direction: column;
+
+    &.is-input {
+      height: 80vh;
+    }
   }
 
   ::v-deep input[disabled] {

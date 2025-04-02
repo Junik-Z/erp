@@ -1,16 +1,17 @@
 <script>
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import BasicMixins from "@/mixins/mixins";
+import mixins from "@/mixins/mixins";
 import {
   getSaleDetailApi,
   getSaleHistoryApi,
   getSaleListApi,
   getSaleWaitPaymentListApi,
   printSaleApi,
+  quickOutApi,
 } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
 import OrderCard from "@/erp/components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "@/erp/components/PrintList/PrintList.vue";
@@ -57,18 +58,17 @@ export default {
     HistoryBar,
     BasicCard,
   },
-  mixins: [BasicMixins, SaleMixins],
+  mixins: [mixins, SaleMixins],
   data() {
     const _this = this;
     return {
-      MIXINS_CONTENT: [
+      MOVABLE_LIST: [
         // #ifdef MP
         {
           text: "分享",
           iconfont: "icon-icon-test",
           path: "share",
           openType: "share",
-          perm: "SALE_SHARE",
           params: {
             title: `邀请您来下单啦！`,
             path: PageEnums.editSale,
@@ -76,6 +76,23 @@ export default {
               PAGE_TYPE: "ADDED_SALE",
             },
           },
+          perm: "SALE_SHARE",
+        },
+        {
+          text: "板材",
+          iconfont: "icon-icon-test",
+          path: "share",
+          openType: "share",
+          params: {
+            title: `邀请您来下单啦！`,
+            path: PageEnums.produceWork,
+            query: {
+              PAGE_TYPE: "ADDED_PRODUCE_PACKING",
+              ADDED_TYPE: "packing",
+              FORM: "SALE",
+            },
+          },
+          perm: "SALE_SHARE",
         },
         // #endif
         /*  {
@@ -131,8 +148,8 @@ export default {
           width: 210,
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -236,6 +253,9 @@ export default {
       isNewList: false,
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      visible: false,
+      inadequate: [],
     };
   },
   methods: {
@@ -293,20 +313,20 @@ export default {
       this.nodeIndex = index;
       // #endif
 
-      if (_isEqual(item.orderType, "PRODUCTION")) {
-        this.noRefresh = true;
+      this.noRefresh = true;
+
+      if (this.isProductionOrder(item.orderType)) {
         uni.navigateTo({
           url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE`,
         });
         return false;
       }
 
-      this.noRefresh = true;
       this.jumpAddedSale({id: item.id}, this.nodeIndex);
     },
 
     onToDetails(item) {
-      if (_isEqual(item.orderType, "PRODUCTION")) {
+      if (this.isProductionOrder(item.orderType)) {
         uni.setStorageSync("TO_DETAILS", true);
 
         uni.navigateTo({
@@ -332,8 +352,9 @@ export default {
       this.node = item;
       this.nodeIndex = index;
       this.noRefresh = true;
+
       this.jumpSaleAddedDocuments({
-        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount", "orderType"]),
+        ..._pick(item, ["id", "orderCode", "supplierId", "purchaserId", "totalAmount"]),
         FORM: "SALE",
         noUnable: true,
       });
@@ -382,9 +403,9 @@ export default {
     updateList(isPayment = false) {
       const info = uni.getStorageSync("TENP_ORDER_INFO");
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
+      const Func = _isEqual("customized", info?.produceType) ? getOrderCodeDetailApi : getSaleDetailApi;
 
-      const Func = _isEqual("customized", info.produceType) ? getOrderCodeDetailApi : getSaleDetailApi;
-      Func({id})
+      id && Func({id})
         .then(res => {
           const data = res.data || {};
           this.onProcessingListData(data, isPayment);
@@ -395,6 +416,34 @@ export default {
         });
     },
 
+    // 快捷出库
+    onQuickOut(item, index) {
+      this.inadequate = [];
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后扣除库存。`,
+        confirmText: "确认",
+        success: (res) => {
+          if (res.confirm) {
+            quickOutApi(item)
+              .then((resp) => {
+                const list = _deepCopy(_groupBy(resp.data, (item) => item.className));
+                this.inadequate = _keys(list).map(key => ({
+                  key,
+                  children: list[key],
+                }));
+
+                if (_isEmpty(resp.data)) {
+                  uni.showToast({title: "出库成功"});
+                  // this.list.splice(index, 1);
+                } else {
+                  this.visible = true;
+                }
+              });
+          }
+        },
+      });
+    },
   },
   computed: {
     actionList() {
@@ -405,6 +454,13 @@ export default {
           func: "onReturn",
           status: ["FINISHED"],
           perm: "SALE_RETURN_ADD",
+        },
+        {
+          name: "快捷出库",
+          func: "onQuickOut",
+          status: ["FINISHED"],
+          perm: "SALE_QUICK_OUT",
+          color: "#e43d33",
         },
         {
           name: "取消订单",
@@ -436,7 +492,11 @@ export default {
           const isPerm = this.isPerm(item.perm);
 
           if (_isEqual("onReturn", item.func)) {
-            return isPerm && isStatus && !_isEqual(node.orderType, "PRODUCTION");
+            return isPerm && isStatus && !this.isProductionOrder(item.orderType);
+          }
+
+          if (_isEqual("onQuickOut", item.func)) {
+            return isPerm && isStatus && _isEqual(this.GET_PAGE_MENU_FUNC, 1);
           }
 
           return isPerm && isStatus;
@@ -446,13 +506,13 @@ export default {
     // 判断是不是要显示编辑按钮
     isEditorButton() {
       return (node) => {
-        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && _isEqual(node.orderType, "PRODUCTION")) {
+        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && this.isProductionOrder(node.orderType)) {
           return this.isPerm("SALE_PRODUCE_UPDATE");
         }
 
         if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
           // 待付款生产工单不能编辑
-          if (_isEqual(node.orderType, "PRODUCTION")) {
+          if (this.isProductionOrder(node.orderType)) {
             return false;
           }
 
@@ -579,7 +639,7 @@ export default {
               付款
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !isEqual(item.orderType, 'PRODUCTION')"
+              v-if="['FINISHED'].includes(item.status) && !isProductionOrder(item.orderType)"
               class="ko-basic-button__card"
               @click.stop="onReturn(item, index)"
             >
@@ -591,6 +651,13 @@ export default {
               @click.stop="onJumpPrint(item, 'sale')"
             >
               打印单据
+            </button>
+            <button
+              v-if="['FINISHED'].includes(item.status) && isPerm('SALE_QUICK_OUT') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              class="ko-basic-button__card"
+              @click.stop="onQuickOut(item, index)"
+            >
+              快捷出库
             </button>
             <button
               v-if="['CREATED'].includes(item.status) && isPerm('SALE_SUBMIT')"
@@ -648,10 +715,49 @@ export default {
     />
     <!-- #endif -->
 
+    <BasicPopup :visible.sync="visible" title="库存不足">
+      <view class="ko-order__popup">
+        <view v-for="(item, key) of inadequate" :key="key">
+          <uni-section :title="item.key" type="line">
+            <BasicCard>
+              <view
+                v-for="child of item.children" :key="child.id"
+                style="display: flex; align-items: center; font-size: 12px; padding: 5px 0;"
+              >
+                <view style="flex: 1;">
+                  <label class="ko-basic-label">名称：</label>
+                  <text>{{ child.name }}</text>
+                </view>
+                <!-- <view style="padding: 0 10px">
+                   <label class="ko-basic-label">库存：</label>
+                   <text class="ko-basic-money">{{ child.sequence }}</text>
+                 </view>-->
+                <view style="padding: 0 10px">
+                  <label class="ko-basic-label">数量：</label>
+                  <text class="ko-basic-money">{{ child.productQuantity }}</text>
+                </view>
+                <view style="width: 40px;">
+                  <UvAvatar
+                    v-if="child.images"
+                    :src="getImageUrl(child.images)"
+                    shape="square"
+                  />
+                </view>
+              </view>
+            </BasicCard>
+          </uni-section>
+        </view>
+      </view>
+      <template #footer>
+        <view style="display: flex;justify-content: center;align-items: center;">
+          <button style="width: 120px" class="ko-basic-button__card" @click="visible = false">确认</button>
+        </view>
+      </template>
+    </BasicPopup>
+
     <Pay
       ref="TPRef"
-      @success="updateList(true)"
-      @close="noRefresh = false"
+      @close="updateList(true); noRefresh = false"
     />
   </view>
 </template>
@@ -696,5 +802,12 @@ export default {
   display: flex;
   flex-direction: column;
   // #endif
+
+  &__popup {
+    // #ifdef MP
+    width: 98vw;
+    // #endif
+    padding: 16px;
+  }
 }
 </style>

@@ -22,12 +22,14 @@ import FeesList from "./components/FeesList/FeesList.vue";
 
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { PageEnums } from "@/utils/config";
+import PickerAddress from "./components/PickerAddress.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "SaleOrder",
   components: {
+    PickerAddress,
     OrderCard,
     LoadMore,
     FeesList,
@@ -90,7 +92,7 @@ export default {
       isNormal: false,
     };
   },
-  onLoad(option) {
+  async onLoad(option) {
     // PAGE_TYPE=ADDED_SALE&scene=default&SHARE_USER_ID=ad41944d8cb44faea09da9d69fe67d26
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
@@ -104,11 +106,22 @@ export default {
     this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
 
     if (this.isClient) {
+      this.current = 1;
+      await this.onLogInAgain(this.option)
+        .finally(() => {
+          setTimeout(() => {
+            this.form.otherSupplier = this.GET_USER_INFO.nickName;
+            this.getBindInfo();
+
+            this.$refs?.FLRes?.getList?.();
+          }, 10);
+        });
+
       if (this.option.SHARE_ID) {
-        getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
           .then(res => {
-            console.log(res);
             this.form.id = decodeURIComponent(this.option.SHARE_ID);
+
             if (res.data) {
               uni.redirectTo({
                 url: PageEnums.saleClientAddedBack,
@@ -119,15 +132,6 @@ export default {
             }
           });
       }
-
-      this.current = 1;
-      this.onLogInAgain(this.option)
-        .finally(() => {
-          setTimeout(() => {
-            this.form.otherSupplier = this.GET_USER_INFO.nickName;
-            this.getBindInfo();
-          }, 10);
-        });
     } else {
       this.current = 0;
     }
@@ -151,14 +155,14 @@ export default {
         });
     },
     onSubmit() {
-      this.$refs.FormRef.validate(valid => {
+      this.$refs.FormRef.validate(async (valid) => {
         if (!valid) {
           const params = _deepCopy(this.form);
 
+          await this.isTxFillPrices();
+
           params.totalAmount = yuanToPoints(params.totalAmount);
           // params.details = this.$refs.PPRef.getDiscountedPrices();
-
-          console.log(params.details);
 
           this.loading = true;
 
@@ -206,7 +210,6 @@ export default {
       if (this.current === 1) {
         this.form.supplierId = "";
       }
-
     },
 
     onSupplierId(val) {
@@ -224,6 +227,8 @@ export default {
             label: item.name,
             logo: item.logo,
           }));
+
+          this.form.supplierId = UserInfo.userId;
 
           if (this.bindList.length) {
             this.current = 0;
@@ -303,7 +308,17 @@ export default {
             <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
           </UniFormsItem>
           <UniFormsItem label="地址：" name="orderAddress">
-            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+            <view style="display: flex; align-items: center; width: 100%">
+              <view style="flex: 1; width: 100%">
+                <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+              </view>
+              <PickerAddress
+                v-if="form.supplierId && isPerm('CUSTOMER_ADDRESS_LIST')"
+                :supplierId="form.supplierId"
+                v-model="form.orderAddress"
+                type="sale"
+              />
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
@@ -319,8 +334,13 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
-                :is-show-recent="isPerm('SALE_RECENT_PRICE')"
+
+                is-show-recent
                 :supplier-id="form.supplierId"
+                :order-address="form.orderAddress"
+
+                :is-fill="isTkCustom && isPerm('FILL_CUSTOMER_PRICE')"
+                :fill-info.sync="TK_FILL_INFO"
               />
             </view>
           </UniFormsItem>
@@ -329,7 +349,7 @@ export default {
 
       <UniSection title="其它费用" type="line">
         <view style="padding: 10px;">
-          <FeesList v-model="form.fees" is-form />
+          <FeesList ref="FLRes" v-model="form.fees" is-form />
         </view>
       </UniSection>
 

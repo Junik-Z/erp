@@ -108,6 +108,7 @@ export default {
         // #ifdef MP
         this.$refs.FormRef.clearValidate();
         // #endif
+
         this.form = _deepCopy(this.$options.data().form);
 
         if (!_isEmpty(row)) {
@@ -125,6 +126,7 @@ export default {
             deleteProductClassApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
+
                 this.getList();
               });
           }
@@ -336,7 +338,9 @@ export default {
         </UniForms>
       </view>
       <template #footer>
-        <button class="ko-basic-button" style="margin: 0 40px 10px;" @click="onSubmit">保存</button>
+        <view style="display: flex; justify-content: center; align-items: center">
+          <button class="ko-basic-button" style="width: 120px" @click="onSubmit">保存</button>
+        </view>
       </template>
     </BasicPopup>
 

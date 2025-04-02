@@ -157,7 +157,7 @@ export default {
           ],
         },
         {
-          label: "时间",
+          label: "日期",
           prop: "createTime",
         },
         {
@@ -272,8 +272,6 @@ export default {
                 } else {
                   this.visible = true;
                 }
-
-
               });
           }
         },
@@ -477,8 +475,8 @@ export default {
         </view>
       </view>
       <template #footer>
-        <view style="padding: 0 10% 10px;">
-          <button class="ko-basic-button" @click="visible = false">确认</button>
+        <view style="display: flex; justify-content: center; align-items: center">
+          <button style="width: 120px;" class="ko-basic-button__card" @click="visible = false">确认</button>
         </view>
       </template>
     </BasicPopup>

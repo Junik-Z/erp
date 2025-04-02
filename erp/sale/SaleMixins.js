@@ -187,6 +187,12 @@ export default {
         },
       });
     },
-
   },
+
+  computed: {
+    // 判断是不是生产工单
+    isProductionOrder() {
+      return (type) => ["PRODUCTION", "CUSTOMIZED"].includes(type);
+    }
+  }
 };

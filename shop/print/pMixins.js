@@ -73,20 +73,21 @@ export default {
     this.isA4 = ["outbound", "inbound"].includes(option?.page_type) || _isEqual(option.isA4, "true");
 
     // 生产订单
-    this.isProductIon = _isEqual(option.orderType, "PRODUCTION");
+    this.isProductIon = ["PRODUCTION", "CUSTOMIZED"].includes(option.orderType) && _isEqual(option.page_type, "sale");
 
     // 采购定制单
-    this.isPurchase = _isEqual(option.orderType, "CUSTOMIZED");
+    this.isPurchase = _isEqual(option.orderType, "CUSTOMIZED") && _isEqual(option.page_type, "purchase");
 
     this.option = option;
     this.header = _get(PageType, option?.page_type);
 
     uni.setNavigationBarTitle({title: this.header});
 
+    this.getColumnList();
+    this.getExtendList();
+
     if (!this.isPurchase) {
       await this.getFeesList();
-      this.getColumnList();
-      this.getExtendList();
     }
 
     this.getList();
@@ -97,20 +98,29 @@ export default {
       this.loading = true;
 
       if (this.isPurchase) {
+
         getPurchaseInfoApi({orderCode: this.option.orderCode})
           .then(res => {
             const data = res.data;
             this.TabValue = "CustomTable";
 
+            this.feesList = _keys(data.fees).map((key) => ({
+              key,
+              isPrint: true,
+              value: data.fees[key],
+              label: this.fees[key],
+              notA4: this.isA4,
+            }));
+
             data.isCustomizedMaterials = !_isEmpty(data.customizedMaterials);
 
-            try {
-              const list = JSON.parse(_get(data, "customizedMaterials.0.customTable"));
-              data.CustomTable = _get(list, "0.data") || [];
-              data.CustomTableConfig = _get(list, "0.config") || {};
-            } catch (e) {
-              console.error(e);
-            }
+            console.log(data.isCustomizedMaterials);
+
+            data.details = (data.productDetails || []).map((item, index) => ({
+              ...item,
+              __index__: index + 1,
+              total: item.price * item.productQuantity,
+            }));
 
             this.node = data;
           })
@@ -195,7 +205,18 @@ export default {
             total: item.price * item.productQuantity,
           }));
 
-          // list.details = list.details.slice(0, 35);
+          /* list.details = [
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details,
+            ...list.details
+          ].slice(0, 40); */
 
           this.feesList = _keys(list.fees).map((key) => ({
             key,

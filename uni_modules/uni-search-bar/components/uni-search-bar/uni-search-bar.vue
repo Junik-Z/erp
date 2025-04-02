@@ -1,5 +1,5 @@
 <template>
-	<view class="uni-searchbar">
+	<view class="uni-searchbar" :class="{'no-t-b-padding': noTBPadding}">
 		<view :style="{borderRadius:radius+'px',backgroundColor: bgColor}" class="uni-searchbar__box"
 			@click="searchClick">
 			<view class="uni-searchbar__box-icon-search">
@@ -110,7 +110,8 @@
 			readonly: {
 				type: Boolean,
 				default: false
-			}
+			},
+      noTBPadding: Boolean
 		},
 		data() {
 			return {
@@ -241,6 +242,10 @@
 		position: relative;
 		padding: 10px;
 		// background-color: #fff;
+
+    &.no-t-b-padding {
+      padding: 0 10px;
+    }
 	}
 
 	.uni-searchbar__box {

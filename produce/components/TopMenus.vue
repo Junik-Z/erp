@@ -14,6 +14,7 @@ export default {
   props: {
     tabs: Array,
     path: String,
+    noRole: Boolean
   },
   methods: {
     // 跳转到指定页面 来自 tabs 的跳转
@@ -49,8 +50,12 @@ export default {
   mounted() {
     setTimeout(() => {
       this.$nextTick(() => {
-        const path = _get(this.getTabsList, "0.path") || this.PageEnums.produce;
-        this.$emit("jump-path", path);
+        if (this.getTabsList.length) {
+          const path = _get(this.getTabsList, "0.path") || this.PageEnums.produce;
+          this.$emit("jump-path", path);
+        }
+
+        this.$emit('update:no-role', !this.getTabsList.length)
       });
     }, 10);
   },

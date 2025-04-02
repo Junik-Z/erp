@@ -6,6 +6,7 @@ import {
   getPurchaseWaitPaymentListApi,
   printA4PurchaseApi,
   printPurchaseApi,
+  quickInApi,
 } from "@/api/erp/purchase";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import BasicMixins from "@/mixins/mixins";
@@ -62,7 +63,7 @@ export default {
     const _this = this;
 
     return {
-      MIXINS_CONTENT: [
+      MOVABLE_LIST: [
         // #ifdef MP
         {
           text: "分享",
@@ -122,8 +123,8 @@ export default {
           width: 210,
         },
         {
-          label: "下单日期",
-          prop: "createTime",
+          label: "日期",
+          prop: "updateTime",
           width: 180,
         },
         {
@@ -157,7 +158,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -393,6 +394,23 @@ export default {
         });
     },
 
+    // 快捷入库
+    onQuickIn(item, index) {
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对订单号 ${item.orderCode} 的各产品数量是否准确，确认后增加库存。`,
+        confirmText: "确认",
+        success: (res) => {
+          if (res.confirm) {
+            quickInApi({orderCode: item.orderCode})
+              .then(() => {
+                uni.showToast({title: "入库成功"});
+              });
+          }
+        },
+      });
+    },
+
     // #ifdef H5
     // 生成销售单
     onGenerateSale(item) {
@@ -409,6 +427,13 @@ export default {
           func: "onPrint",
           perm: "PURCHASE_PRINT",
           status: [],
+        },
+        {
+          name: "快捷入库",
+          func: "onQuickIn",
+          status: ["FINISHED"],
+          perm: "PURCHASE_QUICK_IN",
+          color: "#e43d33",
         },
         {
           name: "申请退货",
@@ -444,8 +469,16 @@ export default {
             return isPerm && !_isEqual(node.orderType, "CUSTOMIZED");
           }
 
+          if (_isEqual(item.func, "onReturn")) {
+            return isPerm && !_isEqual(node.orderType, "CUSTOMIZED");
+          }
+
           if (_isEqual(item.func, "onJump")) {
             return this.isEditorButton(node) && isStatus;
+          }
+
+          if (_isEqual(item.func, "onQuickIn")) {
+            return (_isEqual(this.GET_PAGE_MENU_FUNC, 1) && isStatus) && isPerm;
           }
 
           return isStatus && isPerm;
@@ -606,6 +639,14 @@ export default {
             </button>
 
             <button
+              v-if="['FINISHED'].includes(item.status)  && isPerm('PURCHASE_QUICK_IN') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              class="ko-basic-button__card"
+              @click.stop="onQuickIn(item, index)"
+            >
+              快捷入库
+            </button>
+
+            <button
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchase', {isA4: 'true'})"
               v-if="!['CUSTOMIZED'].includes(item.orderType) && isPerm('PURCHASE_PRINT')"
@@ -680,8 +721,7 @@ export default {
 
     <Pay
       ref="TPRef"
-      @success="updateList(true)"
-      @close="noRefresh = false"
+      @close="updateList(true); noRefresh = false"
     />
   </view>
 </template>
