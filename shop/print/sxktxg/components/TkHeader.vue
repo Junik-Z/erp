@@ -17,6 +17,8 @@ export default {
     page: [Number, String],
     header: String,
     isPickDate: Boolean,
+    // 是否是退货订单
+    isRtg: Boolean,
   },
   data() {
     return {
@@ -40,7 +42,8 @@ export default {
 </script>
 
 <template>
-  <div class="ko-tk-header" style="--ko-basic-table-grid-col: 80px auto 80px auto 80px auto;">
+  <div class="ko-tk-header" :class="{'is-rtg': isRtg}"
+       style="--ko-basic-table-grid-col: 80px auto 80px auto 80px auto;">
     <h3>天科板材{{ header }}</h3>
 
     <div class="ko-tk-header__page" v-if="showPage">第{{ page }}</div>
@@ -84,8 +87,16 @@ export default {
 .ko-tk-header {
   position: relative;
 
+  &.is-rtg {
+    h3 {
+      font-size: 28px;
+      line-height: 30px;
+    }
+  }
+
   h3 {
     letter-spacing: 1em;
+    line-height: 24px;
     font-size: 22px;
     text-align: center;
     margin-bottom: 10px;

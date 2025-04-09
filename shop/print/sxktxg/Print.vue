@@ -282,6 +282,10 @@ export default {
     getHeader() {
       return this.header?.replace("销售退货单", "退货单")?.replace("采购退货单", "退货单");
     },
+
+    isRtg() {
+      return ["saleReturn", "purchaseReturn"].includes(this.option?.page_type);
+    },
   },
 };
 // #endif
@@ -308,7 +312,7 @@ export default {
           is-show-summary
         >
           <template #thead>
-            <TkHeader :node.sync="node" :header="getHeader" is-pick-date/>
+            <TkHeader :is-rtg="isRtg" :node.sync="node" :header="getHeader" is-pick-date />
           </template>
           <template #tfoot>
             <TkFooter :node="node" />
@@ -345,6 +349,7 @@ export default {
                   show-page
                   :page="`${index + 1}/${groupList.length || 0}`"
                   :header="getHeader"
+                  :is-rtg="isRtg"
                 />
               </template>
               <template #tfoot>
