@@ -25,6 +25,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import CheckPopup from "./components/CheckPopup.vue";
 import { addedSalePaidOrderApi } from "@/api/erp/sale";
 import { addedSPurchaseReturnedOrderApi } from "@/api/erp/purchase";
+import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 
 export default {
   name: "check",
@@ -43,6 +44,7 @@ export default {
     UniSegmentedControl,
     UniEasyinput,
     CheckPopup,
+    PickerCalendars,
   },
   data() {
     const _this = this;
@@ -92,6 +94,8 @@ export default {
         orderCode: "",
         "user.nickName": "",
         orderAddress: "",
+        // startTime: "",
+        // endTime: "",
       },
 
       saleIndex: [0, 1],
@@ -177,7 +181,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -238,7 +242,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "vouchers")),
-                 size: 42,
+                  size: 42,
                   shape: "square",
                   text: _get(row, "vouchers") || "-",
                 },
@@ -488,6 +492,18 @@ export default {
 
       this.$refs.CPRef.open(this.checked, this.option);
     },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
+    },
   },
   computed: {
     getPageType() {
@@ -521,7 +537,7 @@ export default {
               {class: "ko-table-checked__warp"},
               [
                 h(
-                  'el-checkbox',
+                  "el-checkbox",
                   {
                     class: `ko-table-checked`,
                     props: {
@@ -589,6 +605,13 @@ export default {
             </UniCol>
             <UniCol :span="24">
               <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+            </UniCol>
+            <UniCol :span="24">
+              <PickerCalendars
+                placeholder="请选择开始结束时间"
+                mode="range"
+                @confirm="onCalendarConfirm"
+              />
             </UniCol>
             <UniCol :span="24">
               <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
