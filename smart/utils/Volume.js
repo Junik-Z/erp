@@ -1,3 +1,5 @@
+import { _isEnv } from "@/utils";
+
 let devWebMInfo = {};
 
 function NOOP() {
@@ -41,9 +43,8 @@ class Volume {
     const This = this;
     let inBytes = null;
     const scope = devWebMInfo;
-    const isDev = uni.getSystemInfoSync().platform === "devtools" ? 1 : 0;
 
-    if (isDev) {
+    if (_isEnv()) {
       inBytes = new Uint8Array(aBuf);
     } else {
       This.onRecFn(new Int16Array(aBuf), success);

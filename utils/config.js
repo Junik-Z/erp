@@ -24,7 +24,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // BASE_URL = "https://erp.kuaouyun.cn/api";
   // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
   // #endif
@@ -357,7 +357,7 @@ export const MENU_LIST = [
     label: "托手管家",
     icon: "icon--support-",
     value: PageEnums.smart,
-    role: ["ADMIN", "BUSINESS", "PRODUCE_MEMBER", "PRODUCE_READ"],
+    role: ["ADMIN", "BUSINESS", "*"],
     isUpRole: true,
   },
   {

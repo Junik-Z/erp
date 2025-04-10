@@ -412,7 +412,8 @@
           "path": "smart",
           "style": {
             "navigationBarTitleText": "智能客服",
-            "disableScroll": true
+            "disableScroll": true,
+            "navigationStyle": "custom"
           }
         }
       ]

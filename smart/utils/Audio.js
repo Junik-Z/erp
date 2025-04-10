@@ -2,9 +2,15 @@ import { Volume } from "./Volume.js";
 import { getRecordService } from "@/api/ai";
 
 class AudioVM {
+  // 播放中
+  playing = false;
+  // 录音
+  micFlag = false;
+
   constructor() {
     this.init();
   }
+
 
   init() {
     // 获取全局录音实例
@@ -16,26 +22,56 @@ class AudioVM {
     // 获取播放器实例
     this.AC = uni.createInnerAudioContext({useWebAudioImplement: true});
 
+    console.log("初始化了", this.RM);
+
+    this.initAC();
     this.onMonitor();
+
+    // setTimeout(() => this.startRecord(), 5000);
   }
 
-  getInst() {
+  static getInst() {
     if (!this.inst) {
       this.inst = new AudioVM();
     }
     return this.inst;
   }
 
+  // 初始化播放器
+  initAC() {
+    this.AC.autoplay = true;
+    this.AC.onError((res) => {
+      this.playing = false;
+      this.micFlag = true; //恢复录音
+      console.log("播放错误");
+    });
+    // 播放结束
+    this.AC.onEnded((res) => {
+      this.endplay && clearTimeout(this.endplay);
+      this.endplay = setTimeout(() => {
+        this.playing = false;
+        console.log("end");
+        if (this.pauseStatus) {
+          this.micFlag = true; //恢复录音
+        }
+        this.pauseStatus = false;
+        // this.closeService(); //关闭人
+      }, 1000);
+
+    });
+  }
+
   // 开始监听
   onMonitor() {
     this.RM.onFrameRecorded((res) => {
+      // console.log("获取到的声音数据", res);
       this.Volume.devWebmDecode(res.frameBuffer, (v) => {
         const n = 5;
         let t = v * 0.05;
         const h = (Math.max(0, t * n));
         const n1 = 1;
         const h1 = Math.max(0.2, 1 - t * n1);
-        this.updateWaveView({h, h1});
+        // this.updateWaveView({h, h1});
       });
     });
     // 监听停止
@@ -44,7 +80,7 @@ class AudioVM {
         filePath: res.tempFilePath,
         success: (data) => {
           if (data.data) {
-            that.updateAudioAndPlay(data.data);
+            this.updateAudioAndPlay(data.data);
           }
         },
         fail(res) {
@@ -55,7 +91,8 @@ class AudioVM {
   }
 
   // 更新试图
-  updateWaveView() {
+  updateWaveView(data) {
+    console.log(data);
   }
 
   // 发起请求答案
@@ -65,6 +102,7 @@ class AudioVM {
 
     getRecordService(buffer)
       .then(res => {
+        console.log(res);
         if (res.statusCode !== 200) {
           return;
         }
@@ -105,11 +143,12 @@ class AudioVM {
         filePath,
         data: buffer,
         encoding: "binary",
-        success(e) {
+        success: (e) => {
+          console.log(e, filePath);
           this.AC.src = filePath;
         },
-        fail(error) {
-          that.playing = false;
+        fail: (error) => {
+          this.playing = false;
           console.error("文件保存失败", error);
         },
       });
@@ -120,6 +159,36 @@ class AudioVM {
       console.error(e);
       this.playing = false;
     }
+  }
+
+  // 开始录音
+  startRecord() {
+    // #ifdef MP
+    wx.vibrateShort({type: "medium"});
+
+    this.RM.start({
+      sampleRate: 16000,
+      encodeBitRate: 24000,
+      numberOfChannels: 1,
+      format: "pcm",
+      frameSize: 1,
+    });
+    // #endif
+
+    // #ifdef H5 || APP
+    this.micFlag = true;
+    // #endif
+  }
+
+  pauseRecord() {
+    console.log("录音结束");
+    // #ifdef MP
+    this.RM.stop();
+    // #endif
+
+    // #ifdef H5 || APP
+    this.micFlag = false;
+    // #endif
   }
 
 }
