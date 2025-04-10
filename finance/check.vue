@@ -362,6 +362,7 @@ export default {
     onClickTabs() {
       this.isShowCheck = false;
       this.checked = [];
+      this.$refs.PCRef.clearable();
 
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
@@ -611,6 +612,7 @@ export default {
                 placeholder="请选择开始结束时间"
                 mode="range"
                 @confirm="onCalendarConfirm"
+                ref="PCRef"
               />
             </UniCol>
             <UniCol :span="24">
