@@ -124,8 +124,14 @@
         />
       </template>
       <template v-if="suffixIcon">
-        <uni-icons v-if="suffixIcon" class="content-clear-icon" :type="suffixIcon" color="#c0c4cc"
-                   @click="onClickIcon('suffix')" size="22"></uni-icons>
+        <view v-if="suffixIcon" style="height: 100%" @click="onClickIcon('suffix')">
+          <uni-icons
+            class="content-clear-icon"
+            :type="suffixIcon"
+            color="#c0c4cc"
+            size="22"
+          />
+        </view>
       </template>
       <template v-else>
         <uni-icons v-if="clearable && isVal && !disabled && type !== 'textarea'" class="content-clear-icon"
