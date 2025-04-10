@@ -9,7 +9,7 @@ const reqList = [];
 
 uni.__WIFI_ERROR_MODEL__ = false;
 
-export default function request(config, isLoading = false, whole = false) {
+export default function request(config, isLoading = false, whole = false, isRes = false) {
   isLoading && uni.showLoading();
 
   return new Promise((resolve, reject) => {
@@ -41,6 +41,8 @@ export default function request(config, isLoading = false, whole = false) {
         // #ifdef H5
         ...(Token && false && _isDev() ? {Authorization: Token} : {}),
         // #endif
+
+        ...(config.header ? config.header : {}),
 
         "X-MiniApp-Env": CONFIG.SystemVersion,
         "X-MiniApp-ID": CONFIG.APP_ID,
@@ -77,6 +79,11 @@ export default function request(config, isLoading = false, whole = false) {
 
         if (whole) {
           resolve(res.data);
+          return false;
+        }
+
+        if (isRes) {
+          resolve(res);
           return false;
         }
 

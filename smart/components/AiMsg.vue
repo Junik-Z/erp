@@ -1,6 +1,6 @@
 <script>
 import ZeroMarkdownView from "./zero-markdown-view/zero-markdown-view.vue";
-import { EasyTyper } from "../EasyTyper";
+import { EasyTyper } from "../utils/EasyTyper";
 
 export default {
   name: "AiMsg",
