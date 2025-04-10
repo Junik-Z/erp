@@ -30,6 +30,12 @@ export default {
       }
     },
 
+    // 清除
+    clearable() {
+      this.calendar = null;
+      this.$emit("confirm", null);
+    },
+
     // 确定
     onConfirm(event) {
       this.calendar = event;
@@ -57,11 +63,11 @@ export default {
       <view class="ko-picker-calendars__input--button" @click="onOpen"></view>
       <UniEasyinput
         :placeholder="placeholder || '请选择'"
-        :clearable="true"
+        :clearable="false"
         :suffix-icon="getValue ? 'closeempty' : 'down'"
         style="width: 100%;"
         :value="getValue"
-        @iconClick.stop="onIconClick"
+        @iconClick="onIconClick"
       />
     </view>
 
