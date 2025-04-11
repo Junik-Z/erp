@@ -54,8 +54,10 @@ export default {
 
   onLoad(option) {
     console.log("消息列表的参数：", option);
-    const scene = uni.getStorageSync("__APP_SCENE__") || "";
-    if (option.scene && !_isEqual(option.scene, scene)) {
+    this.list = [];
+
+    // 当参数上有带商户标识的时候触发重新登录
+    if (option.scene) {
       this.onLogInAgain({scene: option.scene}, true)
         .then(() => {
           console.log(option, uni.getStorageSync("__USER_INFO__"));
@@ -215,6 +217,7 @@ export default {
   },
 
   onUnload() {
+    console.log("数据销毁了");
     uni.$off("$__get_config_info_success__", this.reRequest);
   },
 };
