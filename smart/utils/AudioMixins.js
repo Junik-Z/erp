@@ -121,7 +121,7 @@ export default {
           complete: () => {
             this.WSTIME = setTimeout(() => {
               this.askLoading = false;
-            }, (1000 * 16));
+            }, (1000 * 30));
           },
         });
         return false;
