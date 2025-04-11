@@ -112,6 +112,9 @@ export default {
 
     // 显示绑定的用户列表
     showBindUserList: Boolean,
+
+    // 显示库存
+    showQuantity: Boolean,
   },
   watch: {
     data: {
@@ -437,6 +440,7 @@ export default {
                     :is-judge="isJudge"
                     :is-work="isWork"
                     :is-hide-quantity="isChecked"
+                    :show-quantity="showQuantity"
                   />
                 </view>
               </block>
@@ -460,6 +464,7 @@ export default {
                     :span="24"
                     custom-style="height: 100%;"
                     style="height: 100%;"
+                    :show-quantity="showQuantity"
                   >
                     <template #footer>
                       <view class="ko-product__item--footer">

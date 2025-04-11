@@ -137,6 +137,7 @@ export default {
 
       this.isSelect = data?.isSelect;
       this.multiple = data?.multiple;
+      this.showQuantity = data?.showQuantity;
 
       this.EXList = list;
       list.forEach(item => {
@@ -528,14 +529,15 @@ export default {
         },
         {
           label: "现有库存",
-          prop: "stock",
+          prop: "quantity",
+          width: 100,
           fixed: "right",
         },
       ]?.filter(item => {
         if (_isEqual(item.prop, "price")) return !this.isJudge && !this.hidePrices;
 
-        if (_isEqual(item.prop, "stock")) return !this.isJudge && !this.isClient;
-        
+        if (_isEqual(item.prop, "quantity")) return !this.isJudge && !this.isClient;
+
         return true;
       });
 
@@ -627,7 +629,7 @@ export default {
         :is-judge="isJudge"
         v20241216
         :is-work="isWork"
-
+        :show-quantity="!isJudge && !isClient"
 
         @lower="onLower"
         :no-more="noMore"

@@ -7,7 +7,7 @@ import {
   getMyWorkingListApi,
   getWaitMyConfirmListApi,
 } from "@/api/erp/produce";
-import { _deepCopy, _groupBy, _isEmpty } from "@/utils";
+import { _deepCopy, _groupBy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -276,6 +276,13 @@ export default {
         "--ko-basic-table-grid-col": "auto ".repeat([4, 5, 6][this.GET_PAGE_MENU_FUNC]).trim(),
       };
     },
+
+    // 获取计价方式价格
+    getPricingMethodPrice() {
+      return row => {
+        return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+      };
+    },
   },
 };
 </script>
@@ -367,7 +374,7 @@ export default {
                       {{ getPricingMethod(item.pricingMethod) }}
                     </view>
                     <view class="ko-basic-table--cell">
-                      {{ toYuan(item.price) }}
+                      {{ getPricingMethodPrice(item) }}
                     </view>
 
                     <block v-if="GET_PAGE_MENU_FUNC !== 0">
@@ -406,7 +413,6 @@ export default {
         </KoList>
       </view>
       <!-- #endif -->
-
 
       <!-- #ifdef H5 -->
       <view class="ko-factory__table-wrap">

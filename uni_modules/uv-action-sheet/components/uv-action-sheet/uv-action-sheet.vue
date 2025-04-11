@@ -34,6 +34,7 @@
           <view v-for="(item, index) in actions" :key="index">
             <!-- #ifdef MP -->
             <button
+              v-if="!item.openType"
               class="uv-reset-button"
               :open-type="item.openType"
               :data-params="item.dataParams"
@@ -81,7 +82,41 @@
               </view>
               <!-- #ifdef MP -->
             </button>
+
+            <button
+              v-else
+              :key="index"
+              class="uv-reset-button"
+              :open-type="item.openType"
+              :data-params="item.params"
+            >
+              <view
+                class="uv-action-sheet__item-wrap__item"
+                :hover-class="!item.disabled && !item.loading ? 'uv-action-sheet--hover' : ''"
+                :hover-stay-time="150"
+              >
+                <template v-if="!item.loading">
+                  <text
+                    class="uv-action-sheet__item-wrap__item__name"
+                    :style="[itemStyle(index)]"
+                  >{{ item.name }}
+                  </text>
+                  <text
+                    v-if="item.subname"
+                    class="uv-action-sheet__item-wrap__item__subname"
+                  >{{ item.subname }}
+                  </text>
+                </template>
+                <uv-loading-icon
+                  v-else
+                  custom-class="van-action-sheet__loading"
+                  size="18"
+                  mode="circle"
+                />
+              </view>
+            </button>
             <!-- #endif -->
+
             <view class="ko-basic-border__bottom" v-if="index !== actions.length - 1"></view>
           </view>
         </view>

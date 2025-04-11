@@ -24,6 +24,7 @@ import SaleMixins from "../SaleMixins";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "@/erp/components/Pay/Pay.vue";
+import PickerCalendars from "../../components/uv-calendars/PickerCalendars.vue";
 
 const PageMenu = [
   {
@@ -46,6 +47,7 @@ const PageMenu = [
 export default {
   name: "RefundList",
   components: {
+    PickerCalendars,
     Pay,
     UniEasyinput,
     KoList,
@@ -247,6 +249,7 @@ export default {
     onResetList() {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
       this.getList(true);
     },
 
@@ -318,6 +321,18 @@ export default {
           }
         },
       });
+    },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
     },
   },
   computed: {
@@ -399,6 +414,14 @@ export default {
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+          </UniCol>
+          <UniCol :span="24" v-if="false">
+            <PickerCalendars
+              placeholder="请选择开始结束时间"
+              mode="range"
+              @confirm="onCalendarConfirm"
+              ref="PCRef"
+            />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">

@@ -58,6 +58,9 @@ export default {
 
     // 隐藏总金额
     hideTotalPrices: Boolean,
+
+    // 显示库存
+    showQuantity: Boolean
   },
   data() {
     return {
@@ -98,6 +101,9 @@ export default {
             hidePrices: this.hidePrices,
             takeOverName: this.takeOverName,
             isWork: this.isWork,
+
+            // 显示库存
+            showQuantity: this.showQuantity
           });
         },
       });

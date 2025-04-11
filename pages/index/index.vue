@@ -202,7 +202,7 @@ export default {
       return _deepCopy(this.gridList)
         .flatMap(item => {
           const role = this.GET_USER_ROLE;
-
+          
           // 判断是否有单独的字段校验
           const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
 

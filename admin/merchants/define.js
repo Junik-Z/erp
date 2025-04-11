@@ -392,6 +392,20 @@ export const SALE_PERM_TREE = [
         id: "373",
         color: "#e43d33",
       },
+      {
+        "label": "定制订单分享",
+        "type": 2,
+        "perm": "SHARE_ORDER",
+        id: "136",
+        // color: "#e43d33",
+      },
+      {
+        "label": "分享订单接收",
+        "type": 2,
+        "perm": "SHARE_RECEIVE_SHARE_ORDER",
+        id: "135",
+        // color: "#e43d33",
+      },
     ],
   },
   {

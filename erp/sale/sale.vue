@@ -101,7 +101,6 @@ export default {
       });
     },
   },
-
   // 分享相关
   onShareAppMessage(res) {
     const obj = res.target.dataset.params;

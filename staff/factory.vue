@@ -10,7 +10,7 @@ import {
   getWorkingListApi,
   recoverCraftApi,
 } from "@/api/erp/produce";
-import { _deepCopy, _get, _groupBy, _isEmpty, _isNotUnNil, _keys, CustomToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isNotUnNil, _keys, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -100,6 +100,7 @@ export default {
     this.onRequestNextPage();
   },
   methods: {
+    _isEqual,
     // 请求下一页数据
     onRequestNextPage() {
       if (this.noMore) return false;
@@ -170,7 +171,7 @@ export default {
     onEditor(item, index) {
       this.nodeIndex = index;
       const node = _deepCopy(item);
-      node.price = this.toYuan(node.price);
+      node.price = _isEqual("commission", node.pricingMethod) ? node.price / 10000 : this.toYuan(node.price);
       node._placeholder_label_ = (node.staffs || [])?.map(v => v.name)?.join("、");
 
       this.form = node;
@@ -184,10 +185,22 @@ export default {
     // 保存修改流程
     onSubmit() {
       this.$refs.FormRef.validate((valid) => {
+
+        const params = _deepCopy(this.form);
+
         if (this.isPriceRules) {
           this.pLoading = false;
           uni.showToast({
-            title: `请输入${PRICING_METHOD[this.form.pricingMethod]}`,
+            title: `请输入${PRICING_METHOD[params.pricingMethod]}`,
+            icon: "none",
+          });
+          return false;
+        }
+
+        if (_isEqual("commission", params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
+          this.pLoading = false;
+          uni.showToast({
+            title: `总单价提成不能小于0%、大于99%`,
             icon: "none",
           });
           return false;
@@ -195,9 +208,8 @@ export default {
 
         if (!valid) {
           this.pLoading = true;
-          const params = _deepCopy(this.form);
 
-          params.price = _isNotUnNil(params.price) ? this.toFen(params.price) : null;
+          params.price = _isEqual("commission", params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
 
           craftUpdateApi(params)
             .then(() => {
@@ -372,6 +384,19 @@ export default {
       };
     },
 
+    // 价格描述
+    getPriceLabel() {
+      return {commission: "提成比例"}?.[this.form.pricingMethod] || "价格";
+    },
+
+
+    // 获取计价方式价格
+    getPricingMethodPrice() {
+      return row => {
+        return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+      };
+    },
+
     // #ifdef H5
     getColumns() {
       const _this = this;
@@ -410,7 +435,7 @@ export default {
           label: "价格",
           prop: "price",
           render(h, {row}) {
-            return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.price)]);
+            return h("span", {class: "ko-basic-money"}, [_this.getPricingMethodPrice(row)]);
           },
         },
         ...(_this.GET_PAGE_MENU_FUNC >= 1 ? [
@@ -539,7 +564,7 @@ export default {
                     {{ getPricingMethod(item.pricingMethod) }}
                   </view>
                   <view class="ko-basic-table--cell">
-                    {{ toYuan(item.price) }}
+                    {{ getPricingMethodPrice(item) }}
                   </view>
 
                   <block v-if="GET_PAGE_MENU_FUNC > 0">
@@ -726,7 +751,7 @@ export default {
 
     <BasicPopup :visible.sync="visible" title="编辑流程">
       <view class="ko-factory__popup">
-        <uni-forms label-align="right" ref="FormRef" :model="form">
+        <uni-forms label-align="right" ref="FormRef" label-width="110px" :model="form">
           <uni-forms-item
             label="名称"
             name="name"
@@ -740,7 +765,7 @@ export default {
               v-model="form.images"
               :image-styles="{
                 width: '100px',
-                height: '100px',
+                height: '100px'
               }"
             />
           </uni-forms-item>
@@ -749,14 +774,19 @@ export default {
               :options="getPricingMethodOption"
               style="width: 100%"
               v-model="form.pricingMethod"
+              @change="form.price = 0"
             />
           </uni-forms-item>
           <uni-forms-item
-            label="价格"
+            :label="getPriceLabel"
             name="price"
             :required="form.pricingMethod && form.pricingMethod !== 'none'"
           >
-            <uni-easyinput type="digit" v-model="form.price" placeholder="请输入" />
+            <uni-easyinput
+              type="digit"
+              v-model="form.price"
+              placeholder="请输入"
+            />
           </uni-forms-item>
           <uni-forms-item
             label="员工"
@@ -806,9 +836,12 @@ export default {
         <view
           style="padding: 10px; font-size: 12px;color: #8f939c;"
         >
-          计价方式：{{ getPricingMethod(node.pricingMethod) }};
-          金额：
-          <text class="ko-basic-money">{{ toYuan(node.price) }}元</text>
+          计价方式：{{ getPricingMethod(node.pricingMethod) }}
+
+          <text class="ko-basic-money" style="margin-left: 5px;" v-if="node.pricingMethod !== 'commission'">
+            {{ toYuan(node.price) }}元
+          </text>
+          <text class="ko-basic-money" style="margin-left: 6px;" v-else>{{ node.price / 10000 }}%</text>
         </view>
 
         <uni-forms label-align="right" v-if="!['fixedPrice', 'fixedPriceGroup'].includes(node.pricingMethod)">
