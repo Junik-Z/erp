@@ -6,7 +6,7 @@ function NOOP() {
 }
 
 class Volume {
-  static devWebCtx = null;
+  static WAC = null;
 
   constructor(vm) {
     this.mg = vm;
@@ -14,7 +14,7 @@ class Volume {
   }
 
   init() {
-    this.devWebCtx = uni.createWebAudioContext();
+    this.WAC = uni.createWebAudioContext();
   }
 
   static getInst(mg) {
@@ -36,6 +36,7 @@ class Volume {
 
     const size = pcm.length;
     const n = this.getPowerLevel(sum, size);
+    // console.log(pcm);
     success(n);
   }
 
@@ -154,7 +155,7 @@ class Volume {
       i2 += datas[i].length;
     }
 
-    This.devWebCtx
+    This.WAC
       .decodeAudioData(
         u8arr.buffer,
         function (raw) {

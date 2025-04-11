@@ -243,7 +243,7 @@ export default {
               setTimeout(() => {
                 // 获取所有的用户信息
                 uni.$emit("$__get_all_info__", true);
-                uni.$emit("$__init_web_socket__");
+                // uni.$emit("$__init_web_socket__");
                 resolve();
               }, 100);
             });

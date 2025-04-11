@@ -804,3 +804,9 @@ export function isCDAType(suffix) {
   if (!suffix) return false;
   return ["DWG", "DXF", "DWT", "BAK"].includes(suffix.toUpperCase());
 }
+
+
+// 判断是不是二进制流
+export function _isArrayBuffer(data) {
+  return Object.prototype.toString.call(data) === "[object ArrayBuffer]";
+}

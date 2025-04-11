@@ -1,6 +1,6 @@
 <script>
 import { getConfigApi, getMyInfoApi, getSubscribeApi, getWSUrl, isLogin } from "@/api/user";
-import { _deepCopy, _get, _isDev, _isEqual, _omit } from "@/utils";
+import { _deepCopy, _get, _isArrayBuffer, _isDev, _isEqual, _omit } from "@/utils";
 import { CONFIG, PageEnums } from "@/utils/config";
 
 export default {
@@ -190,10 +190,11 @@ export default {
 
     // 发起 WebSocket
     initiateWebSocket() {
+      if (uni.$__SOCKET_TASK__) return false;
       try {
         const scene = uni.getStorageSync("__APP_SCENE__") || "";
 
-        uni.$__SOCKET_TASK__ = uni.connectSocket({
+        const socketTask = uni.$__SOCKET_TASK__ = uni.connectSocket({
           url: getWSUrl(),
           multiple: true,
           header: {
@@ -242,12 +243,18 @@ export default {
     },
 
     onMessage(res) {
-      console.log("WebSocket 接收到的消息", res);
+      // console.log("WebSocket 接收到的消息", res);
       // "{"data":{"type":"ReceivableOrder","comment":"有新应收单"},"askEnum":"NewOrder"}"
       try {
+        if (_isArrayBuffer(res.data)) {
+          uni.$emit("$__web_socket_message__", res);
+          return;
+        }
+
         const data = JSON.parse(res.data);
         uni.$emit("$__web_socket_message__", data);
       } catch (e) {
+        console.log("数据", e);
         // uni.$emit("$__web_socket_message__", res);
       }
     },

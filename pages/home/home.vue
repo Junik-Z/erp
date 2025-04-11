@@ -41,7 +41,7 @@ export default {
       this.VM_TIME && clearTimeout(this.VM_TIME);
 
       // #ifdef MP
-      uni.$emit("$__init_web_socket__");
+      // uni.$emit("$__init_web_socket__");
       // #endif
 
       this.VM_TIME = setTimeout(() => {
@@ -53,7 +53,7 @@ export default {
             }, 100);
           }, */
         });
-      }, 100)
+      }, 200)
     },
 
     // 处理 MP 的信息

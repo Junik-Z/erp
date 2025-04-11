@@ -1,5 +1,9 @@
-.icon--support-:before {
-  content: "\f2d4";
+.icon-keyboard-line:before {
+  content: "\e77f";
+}
+
+.icon-support:before {
+  content: "\e947";
 }
 
 .icon-caiwubaobiao1:before {
@@ -68,10 +72,6 @@
 
 .icon-gerenzhongxin:before {
   content: "\e70b";
-}
-
-.icon-dongjiezhanghao:before {
-  content: "\e659";
 }
 
 .icon-peizhi-xitongpeizhi:before {

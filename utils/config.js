@@ -132,6 +132,7 @@ export const ROLE_LIST_ENUMS = {
  */
 export const PageEnums = {
   home: "/pages/home/home",
+  Index: "/pages/index/index",
 
   qrcode: "/erp/qrcode/qrcode",
 
@@ -355,7 +356,7 @@ export const MENU_LIST = [
   },
   {
     label: "托手管家",
-    icon: "icon--support-",
+    icon: "icon-support",
     value: PageEnums.smart,
     role: ["ADMIN", "BUSINESS", "*"],
     isUpRole: true,
