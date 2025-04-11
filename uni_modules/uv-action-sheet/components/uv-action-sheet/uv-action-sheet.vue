@@ -89,6 +89,7 @@
               class="uv-reset-button"
               :open-type="item.openType"
               :data-params="item.params"
+              @tap="selectHandler(index)"
             >
               <view
                 class="uv-action-sheet__item-wrap__item"

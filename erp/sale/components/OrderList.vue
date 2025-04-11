@@ -385,6 +385,7 @@ export default {
     // 处理调用底部弹出的按钮
     onSelect(item) {
       item.func && this[item.func] && this[item.func](_deepCopy(this.node), this.nodeIndex);
+      !(item.func && this[item.func]) && this.$refs.UASRef.close();
     },
 
     // 开启打印

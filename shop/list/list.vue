@@ -112,6 +112,9 @@ export default {
       multiple: false,
 
       checked: [],
+
+      // 是否显示现有库存
+      showQuantity: false
     };
   },
   components: {
@@ -629,7 +632,7 @@ export default {
         :is-judge="isJudge"
         v20241216
         :is-work="isWork"
-        :show-quantity="!isJudge && !isClient"
+        :show-quantity="!isJudge && !isClient || showQuantity"
 
         @lower="onLower"
         :no-more="noMore"

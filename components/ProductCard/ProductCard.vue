@@ -139,6 +139,11 @@ export default {
         return _get(this.selected, `${item.id}.productQuantity`) || 0;
       };
     },
+
+    // 是否显示库存
+    isShowQuantity() {
+      return node => this.showQuantity && "quantity" in node;
+    },
   },
 };
 </script>
@@ -317,7 +322,6 @@ export default {
           <UniCol :span="24">
             <view class="ko-product-card__item" style="display: block;">
               <label class="ko-basic-label">库存：</label>
-
               <view style="padding-top: 8px;">
                 <UniNumberBox
                   :max="9999999"
@@ -348,9 +352,9 @@ export default {
             <text class="ko-basic-money"> {{ toYuan(getPrice(node)) }}元</text>
           </UniCol>
 
-          <UniCol :span="24" v-if="showQuantity">
+          <UniCol :span="24" v-if="isShowQuantity(node)">
             <label class="ko-basic-label">库存：</label>
-            <text> {{ node.quantity }}</text>
+            <text> {{ node.quantity || 0 }}</text>
           </UniCol>
 
           <UniCol :span="24" v-if="!isHideQuantity">

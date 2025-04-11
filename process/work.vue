@@ -375,7 +375,7 @@ export default {
               CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success: () => {
-                  if (this.isShare) {
+                  if (this.isShare || this.isShareOrder) {
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {
