@@ -16,6 +16,7 @@ export default {
     },
     onSelect(e) {
       this.$emit("input", e.value);
+      this.$emit('change')
     },
     onClose() {
       console.log("关闭");

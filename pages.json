@@ -27,18 +27,6 @@
       "root": "client",
       "pages": [
         {
-          "path": "sale/list",
-          "style": {
-            "navigationBarTitleText": "订单列表"
-          }
-        },
-        {
-          "path": "stock/list",
-          "style": {
-            "navigationBarTitleText": "采购列表"
-          }
-        },
-        {
           "path": "binding/binding",
           "style": {
             "navigationBarTitleText": "自助关联"

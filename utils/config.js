@@ -20,7 +20,6 @@ let type = "develop";
 
 if (_isDev()) {
   // type = "trial";
-
   // type = "release";
 
   // #ifdef MP
@@ -434,6 +433,7 @@ export const PRICING_METHOD = {
   fixedPrice: "固定价格",
   fixedPriceGroup: "固定价格组内平分",
   dailyRate: "按日工资",
+  commission: "总单价提成",
   none: "没有定价方式",
 };
 

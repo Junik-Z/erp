@@ -1,18 +1,31 @@
 <script>
 import KoNotice from "@/components/Notice/Notice.vue";
-import UniSegmentedControl
-  from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { getInboundDetailListApi, getOutboundDetailListApi } from "@/api/erp/stock";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _flattenDeep, _get, _isEmpty } from "@/utils";
+import { _deepCopy, _flattenDeep, _get, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
 import KoList from "@/components/List/List.vue";
+import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
+import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 
 export default {
   name: "check",
-  components: {KoList, OrderCard, LoadMore, UniSegmentedControl, KoNotice},
+  components: {
+    PickerCalendars,
+    KoList,
+    OrderCard,
+    LoadMore,
+    KoNotice,
+    HistoryBar,
+    UniEasyinput,
+    UniRow,
+    UniCol,
+  },
   mixins: [mixins],
   data() {
     const _this = this;
@@ -177,7 +190,6 @@ export default {
     },
 
     getList(reset = false) {
-
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
@@ -196,6 +208,25 @@ export default {
           this.loading = false;
         });
     },
+
+    onClickTabs() {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      this.$refs.SearchRef.onShowSearch(false);
+
+      this.getList(true);
+    },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
+    },
   },
 };
 </script>
@@ -203,8 +234,45 @@ export default {
 <template>
   <view class="ko-stock-check">
     <KoNotice />
-    <view class="ko-stock-check__tabs" style="padding: 10px;">
-      <UniSegmentedControl :values="tabList" :current.sync="current" @clickItem="getList(true)" />
+    <view class="ko-stock-check__tabs" style="padding: 10px 0 0;">
+      <HistoryBar
+        :values="tabList"
+        v-model="current"
+        is-show-search
+        @change="onClickTabs"
+        ref="SearchRef"
+      >
+        <view class="ko-basic-search">
+          <UniRow :gutter="10">
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
+            </UniCol>
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+            </UniCol>
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+            </UniCol>
+            <UniCol :span="24">
+              <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+            </UniCol>
+            <UniCol :span="24">
+              <PickerCalendars
+                placeholder="请选择开始结束时间"
+                mode="range"
+                @confirm="onCalendarConfirm"
+                ref="PCRef"
+              />
+            </UniCol>
+            <UniCol :span="24">
+              <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
+                <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onClickTabs">重置</button>
+                <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+              </view>
+            </UniCol>
+          </UniRow>
+        </view>
+      </HistoryBar>
     </view>
 
     <!-- #ifdef MP -->
@@ -245,13 +313,5 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: column;
-
-  // #ifdef H5
-  &__tabs {
-    width: 200px;
-    margin: 0 auto;
-  }
-
-  // #endif
 }
 </style>

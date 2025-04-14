@@ -44,7 +44,7 @@ import KoMovable from "@/components/Movable/index.vue";
 import { getMyInfoApi } from "@/api/user";
 import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
-import { getBindInfoApi, getSaleCheckShareIdApi } from "@/api/erp/sale";
+import { getBindInfoApi, getSaleCheckShareIdApi, getShareOrderApi } from "@/api/erp/sale";
 import FeesList from "./components/FeesList/FeesList.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import PickerAddress from "./components/PickerAddress.vue";
@@ -140,6 +140,9 @@ export default {
       customizedMoney: 0,
 
       pTotal: 0,
+
+      // 添加分享的订单
+      isShareOrder: false,
     };
   },
   async onLoad(option) {
@@ -162,6 +165,9 @@ export default {
 
     // 生成销售订单
     this.isGenerateSales = _isEqual(option.isGenerateSales, "true");
+
+    // 分享的订单
+    this.isShareOrder = _isEqual(option.PAGE_TYPE, "SHARE_ORDER") && this.isSale;
 
     this.fastId = option?.fastId;
 
@@ -237,6 +243,52 @@ export default {
             }
           });
       }
+    }
+
+    // 分享的订单
+    if (this.isShareOrder) {
+      await this.onLogInAgain({}, true)
+        .finally(() => {
+          setTimeout(() => {
+            this.VmKey = +new Date();
+          }, 50);
+        });
+
+      setTimeout(() => {
+        if (this.option.SHARE_ID && this.isPerm("SHARE_RECEIVE_SHARE_ORDER")) {
+          getShareOrderApi({shareId: decodeURIComponent(this.option.SHARE_ID)})
+            .then(res => {
+              const params = res.data;
+
+              if (_isNotUnNil(params.totalAmount)) params.totalAmount = this.toYuan(params.totalAmount);
+              this.customizedMaterials = _get(params, "customizedMaterials.0.customTable") || "";
+              this.type = !_isEmpty(params.customizedMaterials) ? "xlsx" : !_isEmpty(params.customizedBoards) ? "packing" : "common";
+
+              params.supplierId = "";
+              params.id = "";
+
+              this.form = params;
+              console.log("分享ID逻辑", res.data);
+            })
+            .catch(() => {
+              console.log("数据报错了");
+              uni.redirectTo({
+                url: PageEnums.saleClientAddedBack,
+                fail() {
+                  uni.navigateBack();
+                },
+              });
+            });
+        } else {
+          console.log("哈哈哈");
+          uni.redirectTo({
+            url: PageEnums.saleClientAddedBack,
+            fail() {
+              uni.navigateBack();
+            },
+          });
+        }
+      }, 200);
     }
 
     this.onKeepAlive();
@@ -323,7 +375,7 @@ export default {
               CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
                 success: () => {
-                  if (this.isShare) {
+                  if (this.isShare || this.isShareOrder) {
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {
@@ -560,6 +612,13 @@ export default {
 
 <template>
   <view class="ko-work ko-basic-added-form" :key="VmKey">
+    <!-- #ifdef MP -->
+    <view v-if="isShareOrder" class="ko-work__header ko-basic-box-shadow">
+      <view class="ko-work__header--name">{{ GET_SHOP_NAME }}</view>
+      <text style="font-size: 10px; color: #e43d33;">请核对商户，如有误请切换商户后重新点击分享连接</text>
+    </view>
+    <!-- #endif -->
+
     <view class="ko-work__steps" v-if="getStepsList.length > 1 && !isTechnology">
       <UvSteps :current="current" :key="getStepsList.length">
         <UvStepsItem
@@ -894,6 +953,18 @@ export default {
 <style lang="scss">
 .ko-work {
   padding-bottom: calc(env(safe-area-inset-bottom) + 60px);
+
+  &__header {
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+
+    &--name {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+  }
 
   /* #ifdef H5 */
   .ko-basic-button {

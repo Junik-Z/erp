@@ -735,6 +735,7 @@ export default {
             isSelect: true, // 选择模式
             takeOverName: this.takeOverName,
             type: "null",
+            showQuantity: false,
           });
         },
       });

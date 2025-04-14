@@ -19,6 +19,7 @@ import PrintList from "./PrintList/PrintList.vue";
 import KoList from "@/components/List/List.vue";
 import { CONFIG } from "@/utils/config";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
+import PickerCalendars from "@/stock/components/uv-calendars/PickerCalendars.vue";
 
 const PageMenu = [
   {
@@ -43,6 +44,7 @@ const PageMenu = [
 export default {
   name: "Warehouse",
   components: {
+    PickerCalendars,
     UniEasyinput,
     KoList,
     PrintList,
@@ -114,7 +116,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -271,7 +273,20 @@ export default {
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
       this.getList(true);
+    },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
     },
   },
 };
@@ -300,6 +315,14 @@ export default {
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+          </UniCol>
+          <UniCol :span="24">
+            <PickerCalendars
+              placeholder="请选择开始结束时间"
+              mode="range"
+              @confirm="onCalendarConfirm"
+              ref="PCRef"
+            />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">

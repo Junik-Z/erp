@@ -602,3 +602,24 @@ export function fillCustomerPriceApi(data) {
   });
 }
 
+
+// ————————————————————— 分享订单 —————————————————————
+export function shareOrderApi(data) {
+  return request({
+    url: "/share/shareOrder",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取分享订单的数据
+ */
+export function getShareOrderApi(data) {
+  return request({
+    url: "/share/getShareOrder",
+    method: "get",
+    data,
+  });
+}
+

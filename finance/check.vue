@@ -362,7 +362,7 @@ export default {
     onClickTabs() {
       this.isShowCheck = false;
       this.checked = [];
-      this.$refs.PCRef.clearable();
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
 
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);

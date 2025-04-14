@@ -1,12 +1,12 @@
 <script>
 import UniEcCanvas from "../components/uni-ec-canvas/uni-ec-canvas.vue";
 
-// #ifdef MP
-import * as echarts from "../components/uni-ec-canvas/echarts.min";
-// #endif
-
 // #ifdef H5
 import * as echarts from "@/finance/components/uni-ec-canvas/echarts.min";
+// #endif
+
+// #ifdef MP
+import * as echarts from "../components/uni-ec-canvas/echarts.min";
 // #endif
 
 import {
@@ -148,7 +148,7 @@ export default {
                   arr.push(`{b|员工：${data.staffs?.map(item => item.name)?.join("、")}}`);
                 }
 
-                arr.push(`{c|${PRICING_METHOD[data.pricingMethod]}：}{d|${_this.toYuan(data.price)}元}`);
+                arr.push(`{c|${PRICING_METHOD[data.pricingMethod]}：}{d|${_isEqual(data.pricingMethod, "commission") ? `${data.price / 10000}%` : (_this.toYuan(data.price) + "元")}}`);
 
                 return arr.join("\n");
               },
@@ -312,6 +312,8 @@ export default {
     // 点击弹窗按钮
     onClickPopupButton() {
       this.$refs.FormRef.validate((valid) => {
+        const params = _deepCopy(this.form);
+
         if (this.isPriceRules) {
           this.pLoading = false;
           uni.showToast({
@@ -321,11 +323,20 @@ export default {
           return false;
         }
 
+        if (_isEqual("commission", params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
+          this.pLoading = false;
+          uni.showToast({
+            title: `总单价提成不能小于0%、大于99%`,
+            icon: "none",
+          });
+          return false;
+        }
+
+
         if (!valid) {
           this.pLoading = true;
 
-          const params = _deepCopy(this.form);
-          params.price = _isNotUnNil(params.price) ? this.toFen(params.price) : null;
+          params.price = _isEqual("commission", params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
 
           if (_isEqual(this.pType, "root")) {
             this.tree.push({...params, processId: _generateUUID(), parentId: null});
@@ -396,7 +407,7 @@ export default {
       this.visible = true;
       const node = _deepCopy(this.node);
 
-      node.price = _isNotUnNil(node.price) ? this.toYuan(node.price) : null;
+      node.price = _isEqual("commission", node.pricingMethod) ? node.price / 10000 : _isNotUnNil(node.price) ? this.toYuan(node.price) : null;
 
       node.placeholderLabel = (node.staffs || []).map(v => v.name).join("、");
       this.form = node;
@@ -498,6 +509,11 @@ export default {
         },
       ].filter(item => item.perm ? this.isPerm(item.perm) : true);
     },
+
+    // 价格描述
+    getPriceLabel() {
+      return {commission: "提成比例"}?.[this.form.pricingMethod] || "价格";
+    },
   },
 };
 </script>
@@ -521,7 +537,7 @@ export default {
 
     <BasicPopup :visible.sync="visible" :title="getPopupTitle">
       <view class="ko-craft__popup">
-        <uni-forms label-align="right" ref="FormRef" :model="form">
+        <uni-forms label-width="100px" label-align="right" ref="FormRef" :model="form">
           <uni-forms-item
             label="名称"
             name="name"
@@ -544,10 +560,11 @@ export default {
               :options="getPricingMethodOption"
               style="width: 100%"
               v-model="form.pricingMethod"
+              @change="form.price = 0"
             />
           </uni-forms-item>
           <uni-forms-item
-            label="价格"
+            :label="getPriceLabel"
             name="price"
             :required="form.pricingMethod && form.pricingMethod !== 'none'"
           >

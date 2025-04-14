@@ -24,6 +24,7 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import Pay from "../../components/Pay/Pay.vue";
 import { getOrderCodeDetailApi } from "@/api/erp/produce";
+import PickerCalendars from "../../components/uv-calendars/PickerCalendars.vue";
 
 const PageMenu = [
   {
@@ -46,6 +47,7 @@ const PageMenu = [
 export default {
   name: "OrderList",
   components: {
+    PickerCalendars,
     Pay,
     UniCol,
     UniRow,
@@ -304,6 +306,7 @@ export default {
       this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
       this.getList(true);
     },
 
@@ -314,7 +317,6 @@ export default {
       // #endif
 
       this.noRefresh = true;
-
       if (this.isProductionOrder(item.orderType)) {
         uni.navigateTo({
           url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE`,
@@ -382,7 +384,8 @@ export default {
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.node), this.nodeIndex);
+      item.func && this[item.func] && this[item.func](_deepCopy(this.node), this.nodeIndex);
+      !(item.func && this[item.func]) && this.$refs.UASRef.close();
     },
 
     // 开启打印
@@ -444,11 +447,37 @@ export default {
         },
       });
     },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
+    },
   },
   computed: {
     actionList() {
       const node = this.node;
       return [
+        {
+          name: "分享订单",
+          openType: "share",
+          perm: "SHARE_ORDER",
+          params: {
+            title: `分享订单！`,
+            path: PageEnums.produceWork,
+            query: {
+              PAGE_TYPE: "SHARE_ORDER",
+              FORM: "SALE",
+              queryList: node,
+            },
+          },
+        },
         {
           name: "申请退货",
           func: "onReturn",
@@ -483,7 +512,7 @@ export default {
         },
       ]
         .filter(item => {
-          const isStatus = item.status.includes(node.status);
+          const isStatus = item.status?.includes?.(node.status);
 
           if (_isEqual(item.func, "onJump")) {
             return this.isEditorButton(node) && isStatus;
@@ -499,7 +528,7 @@ export default {
             return isPerm && isStatus && _isEqual(this.GET_PAGE_MENU_FUNC, 1);
           }
 
-          return isPerm && isStatus;
+          return isPerm && isStatus || (isPerm && _isEqual(item.openType, "share") && this.isProductionOrder(node.orderType));
         });
     },
 
@@ -551,6 +580,14 @@ export default {
           </UniCol>
           <UniCol :span="24">
             <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+          </UniCol>
+          <UniCol :span="24" v-if="false">
+            <PickerCalendars
+              placeholder="请选择开始结束时间"
+              mode="range"
+              @confirm="onCalendarConfirm"
+              ref="PCRef"
+            />
           </UniCol>
           <UniCol :span="24">
             <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">

@@ -23,7 +23,7 @@ import { CONFIG, PageEnums } from "@/utils/config";
 import QS from "@/utils/qs.min";
 import { goLogin, logoutApi } from "@/api/user";
 
-import { getSaleShareIdApi } from "@/api/erp/sale";
+import { getSaleShareIdApi, shareOrderApi } from "@/api/erp/sale";
 import { getPurchaseShareIdApi } from "@/api/erp/purchase";
 
 const User = uni.getStorageSync("__USER_INFO__");
@@ -85,7 +85,7 @@ export default {
       const scene = uni.getStorageSync("__APP_SCENE__") || "";
       // 添加默认的参数数据
       const query = {
-        ...(obj.query || {}),
+        ...(_omit(obj.query || {}, ["queryList"])),
         ...(scene ? {[sceneName]: scene} : {}),
         // 分享用户的ID
         SHARE_USER_ID: this.GET_USER_INFO?.userId,
@@ -96,15 +96,16 @@ export default {
         "ADDED_SALE",
         "ADDED_PURCHASE",
         "ADDED_PRODUCE_PACKING",
+        "SHARE_ORDER",
       ].includes(query.PAGE_TYPE)) {
         try {
           const Func = {
             ADDED_SALE: getSaleShareIdApi,
             ADDED_PRODUCE_PACKING: getSaleShareIdApi,
             ADDED_PURCHASE: getPurchaseShareIdApi,
+            SHARE_ORDER: shareOrderApi,
           }[query.PAGE_TYPE];
-
-          const res = await Func?.();
+          const res = await Func?.(obj?.query?.queryList || {});
           query.SHARE_ID = res.data;
         } catch (e) {
         }
@@ -118,7 +119,7 @@ export default {
         imageUrl: "https://erp.kuaouyun.cn/api/files/down/static/share.png",
       };
 
-      return _omit(obQuery, ["query"]);
+      return _omit(obQuery, ["query", "queryList"]);
     },
 
     // 获取参数

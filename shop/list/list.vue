@@ -112,6 +112,9 @@ export default {
       multiple: false,
 
       checked: [],
+
+      // 是否显示现有库存
+      showQuantity: false
     };
   },
   components: {
@@ -137,6 +140,7 @@ export default {
 
       this.isSelect = data?.isSelect;
       this.multiple = data?.multiple;
+      this.showQuantity = data?.showQuantity;
 
       this.EXList = list;
       list.forEach(item => {
@@ -449,7 +453,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: this.getImageUrl(_get(row, "images")),
-                 size: 42,
+                  size: 42,
                   text: _get(row, "images"),
                   shape: "square",
                 },
@@ -468,6 +472,30 @@ export default {
 
       const after = [
         {
+          label: this.isJudge ? "盘点数量" : "数量",
+          prop: "productQuantity",
+          fixed: "right",
+          width: 220,
+          render: (h, {row}) => {
+            return h(
+              "el-Input-number",
+              {
+                class: "ko-basic-money",
+                style: {cursor: "pointer", width: "100%"},
+                props: {
+                  value: this.getSelectNumber(row),
+                  min: 0,
+                },
+                on: {
+                  change: (val) => {
+                    this.onItemNumberChange(row, val);
+                  },
+                },
+              },
+            );
+          },
+        },
+        {
           label: "单价",
           prop: "price",
           fixed: "right",
@@ -484,7 +512,7 @@ export default {
               );
             } else {
               return h(
-                'el-Input-number',
+                "el-Input-number",
                 {
                   class: "ko-basic-money",
                   style: {cursor: "pointer", width: "100%"},
@@ -503,34 +531,17 @@ export default {
           },
         },
         {
-          label: this.isJudge ? "盘点数量" : "数量",
-          prop: "productQuantity",
+          label: "现有库存",
+          prop: "quantity",
+          width: 100,
           fixed: "right",
-          width: 220,
-          render: (h, {row}) => {
-            return h(
-              'el-Input-number',
-              {
-                class: "ko-basic-money",
-                style: {cursor: "pointer", width: "100%"},
-                props: {
-                  value: this.getSelectNumber(row),
-                  min: 0,
-                },
-                on: {
-                  change: (val) => {
-                    this.onItemNumberChange(row, val);
-                  },
-                },
-              },
-            );
-          },
         },
       ]?.filter(item => {
-        // 盘点不需要显示价格
-        if (this.isJudge) return !_isEqual(item.prop, "price");
+        if (_isEqual(item.prop, "price")) return !this.isJudge && !this.hidePrices;
 
-        return !(this.hidePrices && _isEqual(item.prop, this.getMoneyKey));
+        if (_isEqual(item.prop, "quantity")) return !this.isJudge && !this.isClient;
+
+        return true;
       });
 
       const judge = [];
@@ -557,7 +568,7 @@ export default {
               render: (h, {row}) => {
                 return h("span", {class: "ko-table-checked__warp"}, [
                   h(
-                    'el-checkbox',
+                    "el-checkbox",
                     {
                       class: `ko-table-checked ${!this.multiple ? "ko-table-checked__single" : ""}`,
                       props: {
@@ -621,7 +632,7 @@ export default {
         :is-judge="isJudge"
         v20241216
         :is-work="isWork"
-
+        :show-quantity="!isJudge && !isClient || showQuantity"
 
         @lower="onLower"
         :no-more="noMore"
