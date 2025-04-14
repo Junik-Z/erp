@@ -19,6 +19,7 @@ import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "../components/Pay/Pay.vue";
+import PickerCalendars from "../components/uv-calendars/PickerCalendars.vue";
 
 const PageMenu = [
   {
@@ -44,6 +45,7 @@ export default {
   name: "PayList",
   mixins: [mixins],
   components: {
+    PickerCalendars,
     UniEasyinput,
     KoList,
     HistoryBar,
@@ -136,7 +138,7 @@ export default {
           width: 80,
         },
         {
-          label: "订单编号",
+          label: "编号",
           prop: "orderCode",
         },
         {
@@ -248,7 +250,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date();
+        // this.tableKey = +new Date();
       }
 
       const params = _deepCopy(this.queryList);
@@ -359,6 +361,8 @@ export default {
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
+      this.tableKey = +new Date();
       this.getList(true);
     },
 
@@ -369,6 +373,18 @@ export default {
         .then(res => {
           this.$set(this.list, index, _pick(res.data, _keys(node)));
         });
+    },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
     },
   },
   computed: {
@@ -440,6 +456,14 @@ export default {
             </UniCol>
             <UniCol :span="24">
               <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+            </UniCol>
+            <UniCol :span="24">
+              <PickerCalendars
+                placeholder="请选择开始结束时间"
+                mode="range"
+                @confirm="onCalendarConfirm"
+                ref="PCRef"
+              />
             </UniCol>
             <UniCol :span="24">
               <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">

@@ -128,7 +128,7 @@ export default {
           },
         },
         {
-          label: "订单编号",
+          label: "编号",
           prop: "orderCode",
         },
         {

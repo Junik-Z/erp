@@ -19,6 +19,9 @@ import { TabList } from "./define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerSheet from "./components/PickerSheet.vue";
 import CraftCard from "./components/CraftCard.vue";
+import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 
 const PageMenu = [
   {
@@ -40,7 +43,15 @@ const PageMenu = [
 
 export default {
   name: "Factory",
-  components: {CraftCard, PickerSheet, TopMenus, KoList},
+  components: {
+    PickerCalendars,
+    CraftCard,
+    PickerSheet,
+    TopMenus,
+    KoList,
+    UniRow,
+    UniCol,
+  },
   data() {
     const _this = this;
     return {
@@ -342,6 +353,19 @@ export default {
           });
         });
     },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
+    },
+
   },
   computed: {
     actionList() {
@@ -395,6 +419,11 @@ export default {
       return row => {
         return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
       };
+    },
+
+    // 获取客户名称
+    getCustomerName() {
+      return key => _get(this.groupList, `${key}.customer.name`) || "";
     },
 
     // #ifdef H5
@@ -531,7 +560,50 @@ export default {
       @change="onResetList()"
       :is-show-search="false"
       ref="SearchRef"
-    />
+    >
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <uni-easyinput v-model="queryList.orderCode" placeholder="请输入编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <uni-easyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24" v-if="false">
+            <uni-easyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <uni-easyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+          </UniCol>
+          <UniCol :span="24">
+            <PickerCalendars
+              placeholder="请选择开始结束时间"
+              mode="range"
+              @confirm="onCalendarConfirm"
+              ref="PCRef"
+            />
+          </UniCol>
+          <UniCol :span="24">
+            <view style="display: flex;align-items: center;justify-content: space-around; padding-top: 10px;">
+              <button
+                style="width: 35%;"
+                class="ko-basic-button__card"
+                @click.stop="onResetList(true)"
+              >
+                重置
+              </button>
+              <button
+                style="width: 35%;"
+                class="ko-basic-button__card"
+                @click.stop="getList(true)"
+              >
+                搜索
+              </button>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </HistoryBar>
 
     <!-- #ifdef MP -->
     <view style="padding: 0;">
@@ -670,6 +742,13 @@ export default {
     >
       <block v-for="(child, key) of groupList" :key="key">
         <uni-section :title="key" type="line">
+          <template #title>
+            <div>
+              <div>{{ key }}</div>
+              <div>{{ getCustomerName(key) }}</div>
+            </div>
+          </template>
+
           <KoTable
             :loading="loading"
             :columns="getColumns"
@@ -844,7 +923,7 @@ export default {
           <text class="ko-basic-money" style="margin-left: 6px;" v-else>{{ node.price / 10000 }}%</text>
         </view>
 
-        <uni-forms label-align="right" v-if="!['fixedPrice', 'fixedPriceGroup'].includes(node.pricingMethod)">
+        <uni-forms label-align="right" v-if="!['commission'].includes(node.pricingMethod)">
           <uni-forms-item
             label="数量"
             name="name"
