@@ -221,6 +221,8 @@ export default {
       nodeIndex: null,
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      maxInputWrapHeight: 100,
     };
   },
   mounted() {
@@ -444,20 +446,37 @@ export default {
         @change="onResetList(false)"
         is-show-search
         ref="SearchRef"
+        :max-input-wrap-height.sync="maxInputWrapHeight"
       >
         <view class="ko-basic-search">
           <UniRow :gutter="10">
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
+              <UniEasyinput
+                :cursorSpacing="maxInputWrapHeight"
+                v-model="queryList.orderCode"
+                placeholder="请输入编号"
+              />
             </UniCol>
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户/供应商名称" />
+              <UniEasyinput
+                :cursorSpacing="maxInputWrapHeight - 50"
+                v-model="queryList['customer.name']"
+                placeholder="请输入客户/供应商名称"
+              />
             </UniCol>
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+              <UniEasyinput
+                v-model="queryList['user.nickName']"
+                placeholder="请输入下单用户名称"
+                :cursorSpacing="maxInputWrapHeight - 100"
+              />
             </UniCol>
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+              <UniEasyinput
+                v-model="queryList.orderAddress"
+                placeholder="请输入地址"
+                :cursorSpacing="maxInputWrapHeight - 150"
+              />
             </UniCol>
             <UniCol :span="24">
               <PickerCalendars

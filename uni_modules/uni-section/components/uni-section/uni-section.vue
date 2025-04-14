@@ -5,14 +5,14 @@
       <slot v-else name="decoration"></slot>
 
       <view class="uni-section-header__content">
-        <text
+        <view
           :style="{'font-size':titleFontSize,'color':titleColor}"
           class="uni-section__content-title"
           :class="{'distraction':!subTitle}"
         >
-          <block v-if="$slots.title">{{ title }}</block>
-          <slot v-else name="title"></slot>
-        </text>
+          <block v-if="!$slots.title">{{ title }}</block>
+          <slot name="title"></slot>
+        </view>
         <text
           v-if="subTitle"
           :style="{'font-size':subTitleFontSize,'color':subTitleColor}"

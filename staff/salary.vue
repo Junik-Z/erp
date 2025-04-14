@@ -7,7 +7,7 @@ import {
   getMyWorkingListApi,
   getWaitMyConfirmListApi,
 } from "@/api/erp/produce";
-import { _deepCopy, _groupBy, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -17,6 +17,9 @@ import UvCalendars from "./components/uv-calendars/uv-calendars.vue";
 import dayjs from "@/utils/dayjs";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UvCountTo from "./components/uv-count-to/uv-count-to.vue";
+import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 
 const PageMenu = [
   {
@@ -38,7 +41,16 @@ const PageMenu = [
 
 export default {
   name: "salary",
-  components: {TopMenus, KoList, UvCalendars, UvAvatar, UvCountTo},
+  components: {
+    PickerCalendars,
+    TopMenus,
+    KoList,
+    UvCalendars,
+    UvAvatar,
+    UvCountTo,
+    UniRow,
+    UniCol,
+  },
   data() {
     return {
       MySalary: 0,
@@ -76,6 +88,8 @@ export default {
       groupList: {},
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      maxInputWrapHeight: 100,
     };
   },
   mixins: [mixins],
@@ -127,7 +141,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date();
+        // this.tableKey = +new Date();
         this.noMore = false;
         this.groupList = {};
       }
@@ -159,7 +173,12 @@ export default {
         });
     },
 
-    onResetList() {
+    onResetList(flag) {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
+      this.tableKey = +new Date();
+      this.getList(true);
     },
 
     onSelect({func}) {
@@ -242,7 +261,7 @@ export default {
         },
         {
           label: "日期",
-          prop: "updateTime",
+          prop: "createTime",
         },
 
         {
@@ -282,6 +301,16 @@ export default {
       return row => {
         return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
       };
+    },
+
+    // 获取客户名称
+    getCustomerName() {
+      return child => _get(child, `0.customer.name`) || "-";
+    },
+
+    // 获取订单地址
+    getOrderAddress() {
+      return child => _get(child, `0.orderAddress`) || "-";
     },
   },
 };
@@ -339,10 +368,70 @@ export default {
         :values="GET_PAGE_MENU"
         label-key="label"
 
-        @change="getList(true)"
-        :is-show-search="false"
+        @change="onResetList(true)"
+        :is-show-search="true"
         ref="SearchRef"
-      />
+        :max-input-wrap-height.sync="maxInputWrapHeight"
+      >
+        <view class="ko-basic-search">
+          <UniRow :gutter="10">
+            <UniCol :span="24">
+              <uni-easyinput
+                :cursorSpacing="maxInputWrapHeight"
+                v-model="queryList.orderCode"
+                placeholder="请输入编号"
+              />
+            </UniCol>
+            <UniCol :span="24">
+              <uni-easyinput
+                v-model="queryList['customer.name']"
+                placeholder="请输入客户名称"
+                :cursorSpacing="maxInputWrapHeight - 50"
+              />
+            </UniCol>
+            <UniCol :span="24" v-if="false">
+              <uni-easyinput
+                v-model="queryList['user.nickName']"
+                placeholder="请输入下单用户名称"
+                :cursorSpacing="maxInputWrapHeight - (50 * 2)"
+              />
+            </UniCol>
+            <UniCol :span="24">
+              <uni-easyinput
+                :cursorSpacing="maxInputWrapHeight - (50 * 2)"
+                v-model="queryList.orderAddress"
+                placeholder="请输入地址"
+              />
+            </UniCol>
+            <UniCol :span="24">
+              <PickerCalendars
+                placeholder="请选择开始结束时间"
+                mode="range"
+                @confirm="onCalendarConfirm"
+                ref="PCRef"
+              />
+            </UniCol>
+            <UniCol :span="24">
+              <view style="display: flex;align-items: center;justify-content: space-around; padding-top: 10px;">
+                <button
+                  style="width: 35%;"
+                  class="ko-basic-button__card"
+                  @click.stop="onResetList(true)"
+                >
+                  重置
+                </button>
+                <button
+                  style="width: 35%;"
+                  class="ko-basic-button__card"
+                  @click.stop="getList(true)"
+                >
+                  搜索
+                </button>
+              </view>
+            </UniCol>
+          </UniRow>
+        </view>
+      </HistoryBar>
 
       <!-- #ifdef MP -->
       <view>
@@ -350,6 +439,22 @@ export default {
           <view :style="[getGridTemplateColumnsStyle]">
             <block v-for="(child, key) of groupList" :key="key">
               <uni-section :title="key" type="line">
+                <template #title>
+                  <view>
+                    <view>{{ key }}</view>
+                    <view style="font-weight: normal; font-size: 11px; display: flex; align-items: center">
+                      <view>
+                        <uni-icons type="person" size="12" />
+                        {{ getCustomerName(child) }}
+                      </view>
+                      <view style="margin-left: 20px;">
+                        <uni-icons type="location" size="12" />
+                        {{ getOrderAddress(child) }}
+                      </view>
+                    </view>
+                  </view>
+                </template>
+
                 <view class="ko-basic-table">
                   <view class="ko-basic-table--th">名称</view>
                   <view class="ko-basic-table--th">计价方式</view>
@@ -418,6 +523,22 @@ export default {
       <view class="ko-factory__table-wrap">
         <block v-for="(child, key) of groupList" :key="key">
           <uni-section :title="key" type="line">
+            <template #title>
+              <div style="display: flex; align-items: center;">
+                <div>{{ key }}</div>
+                <div style="font-weight: normal; margin-left: 40px; font-size: 15px">
+                <span>
+                  <uni-icons type="person" size="20" />
+                  {{ getCustomerName(child) }}
+                </span>
+                  <span style="margin-left: 20px;">
+                  <uni-icons type="location" size="20" />
+                  {{ getOrderAddress(child) }}
+                </span>
+                </div>
+              </div>
+            </template>
+
             <KoTable
               :loading="loading"
               :columns="getColumns"
