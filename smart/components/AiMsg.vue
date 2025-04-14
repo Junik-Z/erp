@@ -99,14 +99,14 @@ export default {
   &__content {
     border-radius: 10px;
     padding: 10px;
-    background: rgba(183, 232, 192, 0.16);
+    //background: rgba(183, 232, 192, 0.16);
     max-width: 80vw;
     margin-left: 22px;
   }
 
   &__one, &__two {
     position: absolute;
-    background: #B7E8C0;
+    //background: #B7E8C0;
     border-radius: 50%;
   }
 

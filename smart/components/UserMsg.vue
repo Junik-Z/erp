@@ -39,7 +39,7 @@ export default {
   &__content {
     border-radius: 10px;
     padding: 10px;
-    background: rgba(233, 233, 233, 0.76);
+    //background: rgba(233, 233, 233, 0.76);
     max-width: 80vw;
     margin-right: 22px;
     font-size: 14px;
@@ -47,7 +47,7 @@ export default {
 
   &__one, &__two {
     position: absolute;
-    background: #E9E9E9;
+    //background: #E9E9E9;
     border-radius: 50%;
   }
 
