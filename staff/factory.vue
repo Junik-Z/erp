@@ -428,7 +428,7 @@ export default {
 
     // 获取订单地址
     getOrderAddress() {
-      return child => _get(child, `0.orderAddress`) || "-";
+      return child => _get(child, `0.orderAddress`) || "";
     },
 
     // #ifdef H5
@@ -628,7 +628,7 @@ export default {
                       <uni-icons type="person" size="12" />
                       {{ getCustomerName(child) }}
                     </view>
-                    <view style="margin-left: 20px;">
+                    <view style="margin-left: 20px;" v-if="getOrderAddress(child)">
                       <uni-icons type="location" size="12" />
                       {{ getOrderAddress(child) }}
                     </view>
@@ -775,7 +775,7 @@ export default {
                   <uni-icons type="person" size="20" />
                   {{ getCustomerName(child) }}
                 </span>
-                <span style="margin-left: 20px;">
+                <span style="margin-left: 20px;" v-if="getOrderAddress(child)">
                   <uni-icons type="location" size="20" />
                   {{ getOrderAddress(child) }}
                 </span>

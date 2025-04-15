@@ -310,7 +310,7 @@ export default {
 
     // 获取订单地址
     getOrderAddress() {
-      return child => _get(child, `0.orderAddress`) || "-";
+      return child => _get(child, `0.orderAddress`) || "";
     },
   },
 };
@@ -447,7 +447,7 @@ export default {
                         <uni-icons type="person" size="12" />
                         {{ getCustomerName(child) }}
                       </view>
-                      <view style="margin-left: 20px;">
+                      <view style="margin-left: 20px;" v-if="getOrderAddress(child)">
                         <uni-icons type="location" size="12" />
                         {{ getOrderAddress(child) }}
                       </view>
@@ -527,11 +527,11 @@ export default {
               <div style="display: flex; align-items: center;">
                 <div>{{ key }}</div>
                 <div style="font-weight: normal; margin-left: 40px; font-size: 15px">
-                <span>
-                  <uni-icons type="person" size="20" />
-                  {{ getCustomerName(child) }}
-                </span>
-                  <span style="margin-left: 20px;">
+                  <span>
+                    <uni-icons type="person" size="20" />
+                    {{ getCustomerName(child) }}
+                  </span>
+                  <span style="margin-left: 20px;" v-if="getOrderAddress(child)">
                   <uni-icons type="location" size="20" />
                   {{ getOrderAddress(child) }}
                 </span>
