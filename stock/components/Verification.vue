@@ -83,9 +83,7 @@ export default {
     },
     onJump(item) {
       this.noRefresh = true;
-      uni.navigateTo({
-        url: PageEnums.stockCheck + `?id=${item.id}`,
-      });
+      uni.navigateTo({url: PageEnums.stockCheck + `?id=${item.id}&name=${item.name}`});
     },
 
     onJudge() {
@@ -371,6 +369,7 @@ export default {
         margin-right: 6px;
       }
     }
+
     // #endif
   }
 

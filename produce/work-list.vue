@@ -29,6 +29,7 @@ import { TabList } from "./define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import MaterialPopup from "./components/MaterialPopup.vue";
+import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 
 const PageMenu = [
   {
@@ -51,6 +52,7 @@ const PageMenu = [
 export default {
   name: "WorkList",
   components: {
+    PickerCalendars,
     TopMenus,
     KoList,
     KoMovable,
@@ -73,21 +75,21 @@ export default {
       TabList,
       MOVABLE_LIST: [
         // #ifdef MP
-       /*  {
-          text: "板材",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: `邀请您来下单啦！`,
-            path: PageEnums.produceWork,
-            query: {
-              PAGE_TYPE: "ADDED_PRODUCE_PACKING",
-              ADDED_TYPE: "packing",
-            },
-          },
-          perm: "SALE_SHARE",
-        }, */
+        /*  {
+           text: "板材",
+           iconfont: "icon-icon-test",
+           path: "share",
+           openType: "share",
+           params: {
+             title: `邀请您来下单啦！`,
+             path: PageEnums.produceWork,
+             query: {
+               PAGE_TYPE: "ADDED_PRODUCE_PACKING",
+               ADDED_TYPE: "packing",
+             },
+           },
+           perm: "SALE_SHARE",
+         }, */
         // #endif
         {
           text: "常规",
@@ -140,6 +142,10 @@ export default {
           prop: "orderCode",
         },
         {
+          label: "日期",
+          prop: "updateTime",
+        },
+        {
           label: "状态",
           prop: "status",
           render(h, {row}) {
@@ -152,6 +158,34 @@ export default {
           render(h, {row}) {
             return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.totalAmount)]);
           },
+        },
+        {
+          label: "客户",
+          prop: "customer",
+          children: [
+            {
+              label: "Logo",
+              prop: "customer.logo",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {
+                    props: {
+                      src: _this.getImageUrl(_get(row, "customer.logo")),
+                      size: 42,
+                      text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
+                    },
+                  })],
+                );
+              },
+            },
+            {
+              label: "名称",
+              prop: "customer.name",
+            },
+          ],
         },
         {
           label: "提单用户",
@@ -421,6 +455,25 @@ export default {
       this.$refs.MPRef.open(item);
     },
 
+    onResetList() {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
+      this.getList(true);
+    },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
+    },
+
     // #ifdef H5
     onCncClick(item, index) {
       this.$refs.CncRef.open(item, index);
@@ -497,7 +550,52 @@ export default {
       label-key="label"
 
       @change="getList(true)"
-    />
+      is-show-search
+      ref="SearchRef"
+    >
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <uni-easyinput v-model="queryList.orderCode" placeholder="请输入编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <uni-easyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24" v-if="false">
+            <uni-easyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <uni-easyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+          </UniCol>
+          <UniCol :span="24">
+            <PickerCalendars
+              placeholder="请选择开始结束时间"
+              mode="range"
+              @confirm="onCalendarConfirm"
+              ref="PCRef"
+            />
+          </UniCol>
+          <UniCol :span="24">
+            <view style="display: flex;align-items: center;justify-content: space-around; padding-top: 10px;">
+              <button
+                style="width: 35%;"
+                class="ko-basic-button__card"
+                @click.stop="onResetList(true)"
+              >
+                重置
+              </button>
+              <button
+                style="width: 35%;"
+                class="ko-basic-button__card"
+                @click.stop="getList(true)"
+              >
+                搜索
+              </button>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </HistoryBar>
 
     <!-- #ifdef MP -->
     <view>

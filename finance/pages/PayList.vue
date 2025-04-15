@@ -19,6 +19,7 @@ import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "../components/Pay/Pay.vue";
+import PickerCalendars from "../components/uv-calendars/PickerCalendars.vue";
 
 const PageMenu = [
   {
@@ -44,6 +45,7 @@ export default {
   name: "PayList",
   mixins: [mixins],
   components: {
+    PickerCalendars,
     UniEasyinput,
     KoList,
     HistoryBar,
@@ -136,7 +138,7 @@ export default {
           width: 80,
         },
         {
-          label: "订单编号",
+          label: "编号",
           prop: "orderCode",
         },
         {
@@ -159,7 +161,7 @@ export default {
                   [h(UvAvatar, {
                     props: {
                       src: _this.getImageUrl(_get(row, "customer.logo")),
-                     size: 42,
+                      size: 42,
                       text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
                     },
                   })],
@@ -231,6 +233,8 @@ export default {
       nodeIndex: null,
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      maxInputWrapHeight: 100,
     };
   },
   mounted() {
@@ -248,7 +252,7 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date();
+        // this.tableKey = +new Date();
       }
 
       const params = _deepCopy(this.queryList);
@@ -359,6 +363,8 @@ export default {
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
+      this.tableKey = +new Date();
       this.getList(true);
     },
 
@@ -369,6 +375,18 @@ export default {
         .then(res => {
           this.$set(this.list, index, _pick(res.data, _keys(node)));
         });
+    },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
     },
   },
   computed: {
@@ -426,20 +444,45 @@ export default {
         @change="onResetList(false)"
         is-show-search
         ref="SearchRef"
+        :max-input-wrap-height.sync="maxInputWrapHeight"
       >
         <view class="ko-basic-search">
           <UniRow :gutter="10">
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
+              <UniEasyinput
+                :cursorSpacing="maxInputWrapHeight"
+                v-model="queryList.orderCode"
+                placeholder="请输入编号"
+              />
             </UniCol>
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList['customer.name']" placeholder="请输入客户/供应商名称" />
+              <UniEasyinput
+                :cursorSpacing="maxInputWrapHeight - 50"
+                v-model="queryList['customer.name']"
+                placeholder="请输入客户/供应商名称"
+              />
             </UniCol>
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+              <UniEasyinput
+                :cursorSpacing="maxInputWrapHeight - 100"
+                v-model="queryList['user.nickName']"
+                placeholder="请输入下单用户名称"
+              />
             </UniCol>
             <UniCol :span="24">
-              <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+              <UniEasyinput
+                :cursorSpacing="maxInputWrapHeight - 150"
+                v-model="queryList.orderAddress"
+                placeholder="请输入地址"
+              />
+            </UniCol>
+            <UniCol :span="24">
+              <PickerCalendars
+                placeholder="请选择开始结束时间"
+                mode="range"
+                @confirm="onCalendarConfirm"
+                ref="PCRef"
+              />
             </UniCol>
             <UniCol :span="24">
               <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">

@@ -4,7 +4,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { getInboundDetailListApi, getOutboundDetailListApi } from "@/api/erp/stock";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _flattenDeep, _get, _isEmpty } from "@/utils";
+import { _deepCopy, _flattenDeep, _get, _groupBy, _isEmpty, _omit } from "@/utils";
 import mixins from "@/mixins/mixins";
 import KoList from "@/components/List/List.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
@@ -50,7 +50,7 @@ export default {
           width: 80,
         },
         {
-          label: "订单编号",
+          label: "编号",
           prop: "orderCode",
           width: 210,
         },
@@ -121,9 +121,8 @@ export default {
               {
                 style: {
                   display: "flex",
-                  justifyContent: "center",
                   alignItems: "center",
-                  borderBottom: index === (row.details?.length - 1) ? "" : "0.5px solid #c7c9ce",
+                  // borderBottom: index === (row.details?.length - 1) ? "" : "0.5px solid #c7c9ce",
                   paddingBottom: index === (row.details?.length - 1) ? 0 : "5px",
                 },
               },
@@ -179,7 +178,9 @@ export default {
     };
   },
   onLoad(option) {
-    this.option = option;
+    this.option = _deepCopy(option);
+    this.queryList.productName = option.name;
+    this.queryList.id = option.id;
     this.getList();
   },
   methods: {
@@ -199,9 +200,17 @@ export default {
       this.loading = true;
       const Func = [getInboundDetailListApi, getOutboundDetailListApi][this.current];
 
-      Func({...this.option, ...this.queryList})
+      let params = _deepCopy(this.queryList);
+
+      if (params.id) {
+        params = _omit(params, ["productName"]);
+      } else {
+        params = _omit(params, ["id"]);
+      }
+
+      Func(params)
         .then(res => {
-          this.list = this.onMergeArrays(this.list, res.data);
+          this.list = [...this.list, ...res.data]; //this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
         .finally(() => {
@@ -212,6 +221,11 @@ export default {
     onClickTabs() {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
+
+      const option = _deepCopy(this.option);
+      this.queryList.productName = option.name;
+      this.queryList.id = option.id;
 
       this.getList(true);
     },
@@ -226,6 +240,20 @@ export default {
         this.queryList.startTime = "";
         this.queryList.endTime = "";
       }
+    },
+  },
+  computed: {
+    // 获取分组数据
+    getGroupList() {
+      const list = _deepCopy(this.list) || [];
+      const group = _groupBy(list, (item) => item.id) || {};
+
+      return Object.keys(group)
+        ?.map(key => {
+          const L = group?.[key] || [];
+          const item = L?.[0] || {};
+          return {...item, details: _flattenDeep(L.map(v => v.details))};
+        });
     },
   },
 };
@@ -244,6 +272,13 @@ export default {
       >
         <view class="ko-basic-search">
           <UniRow :gutter="10">
+            <UniCol :span="24">
+              <UniEasyinput
+                v-model="queryList.productName"
+                placeholder="请输入产品名称"
+                @input="queryList.id = ''"
+              />
+            </UniCol>
             <UniCol :span="24">
               <UniEasyinput v-model="queryList.orderCode" placeholder="请输入编号" />
             </UniCol>
@@ -279,7 +314,7 @@ export default {
     <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
       <view style="padding: 10px;">
         <OrderCard
-          v-for="item of list"
+          v-for="item of getGroupList"
           :key="item.id"
           is-check-stock
           :item="item"
@@ -296,7 +331,7 @@ export default {
       <KoTable
         :loading="loading"
         :columns="columns"
-        :data="list"
+        :data="getGroupList"
         empty-text="暂无数据"
         stripe
 

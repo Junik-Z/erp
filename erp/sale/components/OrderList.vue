@@ -145,7 +145,7 @@ export default {
           width: 80,
         },
         {
-          label: "订单编号",
+          label: "编号",
           prop: "orderCode",
           width: 210,
         },
@@ -581,7 +581,7 @@ export default {
           <UniCol :span="24">
             <UniEasyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
           </UniCol>
-          <UniCol :span="24" v-if="false">
+          <UniCol :span="24">
             <PickerCalendars
               placeholder="请选择开始结束时间"
               mode="range"

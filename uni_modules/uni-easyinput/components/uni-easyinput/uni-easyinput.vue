@@ -276,7 +276,7 @@ export default {
     },
     maxlength: {
       type: [Number, String],
-      default: 140,
+      default: 560,
     },
     confirmType: {
       type: String,

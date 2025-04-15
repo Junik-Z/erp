@@ -20,6 +20,7 @@ export default {
     },
     labelKey: String,
     isShowSearch: Boolean,
+    maxInputWrapHeight: Number,
   },
   data() {
     return {
@@ -56,6 +57,7 @@ export default {
       getRect(".ko-history__input--wrap", this)
         .then(res => {
           this.inputWrapHeight = res.height;
+          this.$emit("update:maxInputWrapHeight", this.inputWrapHeight - this.wrapHeight);
         });
 
       this.show = flag;
@@ -68,6 +70,7 @@ export default {
         getRect(".ko-history__wrap", this)
           .then(res => {
             this.wrapHeight = res.height;
+
           });
       });
     }
