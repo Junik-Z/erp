@@ -1,5 +1,5 @@
 <script>
-import { getScanCallbackApi } from "@/api/user";
+import { getMonitorJumpApi, getScanCallbackApi } from "@/api/user";
 import { _deepCopy, _isEmpty, _omit, CustomToast } from "@/utils";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 import mixins from "@/mixins/mixins";
@@ -9,6 +9,13 @@ export default {
   components: {MerchantsHeader},
   data: () => ({
     option: {},
+    // 是否是数据大屏登录
+    isMonitor: false,
+    pathList: {},
+
+    visible: false,
+
+    monitorJump: null,
   }),
   mixins: [mixins],
   onLoad(option) {
@@ -19,17 +26,32 @@ export default {
     const arr = query.login_code?.split("&") || [];
 
     this.option = query;
-    this.onLogInAgain({scene: arr[0]}, true)
+
+    this.onLogInAgain({scene: arr[0] || ""}, true)
       .then(() => {
-        console.log(query, uni.getStorageSync("__USER_INFO__"));
+        getMonitorJumpApi({id: arr[1]})
+          .then(res => {
+            const data = res.data;
+            this.isMonitor = !_isEmpty(data);
+            this.pathList = data;
+
+            if (this.isMonitor) {
+              this.visible = true;
+            }
+          });
       });
   },
 
   methods: {
     getSuccess() {
-      console.log(this.option, uni.getStorageSync("__USER_INFO__"));
+      if (this.isMonitor && !this.visible) {
+        this.visible = true;
+        return;
+      }
+
       const arr = this.option.login_code?.split("&") || [];
-      getScanCallbackApi({id: arr[1]})
+      console.log(arr, this.option);
+      getScanCallbackApi({id: arr[1], ...(this.monitorJump ? {monitorJump: this.monitorJump} : {})})
         .then(res => {
           console.log(res);
           CustomToast({
@@ -41,7 +63,14 @@ export default {
               });
             },
           });
+        })
+        .finally(() => {
+          this.visible = false;
         });
+    },
+
+    onChangeRadio(event) {
+      this.monitorJump = event.detail.value;
     },
   },
 };
@@ -53,10 +82,28 @@ export default {
 
     <view class="ko-qrcode__icon">
       <i class="iconfont icon-menhu-diannaoduandenglu"></i>
-      <view class="ko-qrcode__icon--text">登录 PC 系统</view>
+      <view class="ko-qrcode__icon--text">登录{{ isMonitor ? "数据大屏" : "管理" }}系统</view>
     </view>
 
-    <button class="ko-basic-button" @click="getSuccess">授权登录</button>
+    <button class="ko-basic-button" @click="getSuccess">{{ isMonitor ? "选择大屏" : "授权登录" }}</button>
+
+    <BasicPopup :visible.sync="visible" title="选择大屏">
+      <view class="ko-qrcode__popup">
+        <radio-group @change="onChangeRadio">
+          <view class="ko-qrcode__popup--item" v-for="(path, key) of pathList" :key="key">
+            <radio color="rgb(42,121,255)" :checked="monitorJump === key" :value="key">
+              {{ path }}
+            </radio>
+          </view>
+        </radio-group>
+      </view>
+
+      <template #footer>
+        <view style="display: flex; justify-content: center; align-items: center;">
+          <button class="ko-basic-button__card" style="width: 120px;" @click="getSuccess">授权登录</button>
+        </view>
+      </template>
+    </BasicPopup>
   </view>
 </template>
 
@@ -83,6 +130,15 @@ export default {
     margin-top: 100px;
     padding: 0 60px;
     margin-bottom: 120px;
+  }
+
+  &__popup {
+    width: 80vw;
+    padding: 10px 20px 0;
+
+    &--item {
+      margin-bottom: 16px;
+    }
   }
 }
 </style>

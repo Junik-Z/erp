@@ -93,8 +93,9 @@ export default {
 
       <view v-if="isShowSearch" class="ko-history__search">
         <button class="ko-basic-button__card" @click.stop="onShowSearch(!show)">
-          <view style="display: flex; align-items: center;">
-            <text style="padding-right: 5px;">搜索</text>
+          <view style="display: flex; align-items: center; padding-right: 6px;">
+            <!--<text>搜索</text>-->
+            <uni-icons color="#fff" style="margin-right: 5px;" type="search" />
             <i class="iconfont icon-jiantou"></i>
           </view>
         </button>

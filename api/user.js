@@ -232,3 +232,14 @@ export function bindCustomerMessageApi(data) {
     data,
   });
 }
+
+/**
+ * @description 获取登录段数据
+ */
+export function getMonitorJumpApi(data) {
+  return request({
+    url: "/index/monitor/jump",
+    method: "get",
+    data,
+  });
+}

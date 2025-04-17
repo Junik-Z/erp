@@ -93,7 +93,7 @@ export default {
         // #endif
 
         {
-          text: "新增",
+          text: "开单",
           iconfont: "icon-tianjia",
           path: PageEnums.editPurchase,
           perm: "PURCHASE_ADD",

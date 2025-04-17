@@ -117,7 +117,7 @@ export default {
           path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE",
         },
         {
-          text: "新增",
+          text: "开单",
           iconfont: "icon-tianjia",
           perm: "SALE_ADD",
           path: PageEnums.editSale,

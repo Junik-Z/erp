@@ -60,7 +60,8 @@ export default {
               .then(() => {
                 uni.showToast({title: "提交成功"});
                 this.list = [];
-                this.tab = 1;
+                this.PAGE_MENU_INDEX = 1;
+
                 this.getList(true);
               })
               .finally(() => {
@@ -143,6 +144,9 @@ export default {
             confirmPurchaseReturnApi({id: item.id})
               .then(() => {
                 uni.showToast({title: "提交成功"});
+
+                this.PAGE_MENU_INDEX = 1;
+
                 if (_isNumber(index)) {
                   this.list.splice(index, 1);
                 }
