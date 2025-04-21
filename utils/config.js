@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // BASE_URL = "https://erp.kuaouyun.cn/api";
   // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
   // #endif
@@ -134,25 +134,57 @@ export const PageEnums = {
 
   qrcode: "/erp/qrcode/qrcode",
 
+  // —————————— 销售管理 ——————————————————————
+  // 销售首页
+  saleLoading: "/sale/loading",
+
+  // 销售看板
+  saleView: "/sale/view",
+  // 销售
+  sale: "/sale/sale",
+  // 客户管理
+  saleClient: "/sale/client",
+  // 添加客户管理
+  saleNewClient: "/sale/new-client",
+  // 销售退货列表
+  saleRefundList: "/sale/refund",
+  // 我的销售订单
+  saleMyList: "/sale/my-order",
+
   // 新增修改销售订单
   editSale: "/form/sale-order",
   // 添加销售退货单
   saleRefund: "/form/sale-refund-order",
+
+  // 销售客户下单返回地址
+  saleClientAddedBack: "/sale/sale",
+
+
+  // —————————— 采购管理 ——————————————————————
+  // 销售首页
+  purchaseLoading: "/purchase/loading",
+
+  // 销售看板
+  purchaseView: "/purchase/view",
+  // 销售
+  purchase: "/purchase/purchase",
+  // 客户管理
+  purchaseClient: "/purchase/supplier",
+  // 添加客户管理
+  purchaseNewClient: "/purchase/new-client",
+  // 销售退货列表
+  purchaseRefundList: "/purchase/refund",
+  // 我的销售订单
+  purchaseMyList: "/purchase/my-order",
+
+  // 采购供应商下单返回地址
+  purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
 
   // 新增修改采购订单
   editPurchase: "/form/purchase-order",
   // 添加采购退货单
   refundPurchase: "/form/purchase-refund-order",
 
-  // 销售客户
-  saleClient: "/erp/sale/sale?TO_REF=CLRef",
-  // 采购供应商
-  purchaseClient: "/erp/purchase/purchase?TO_REF=CLRef",
-
-  // 销售客户下单返回地址
-  saleClientAddedBack: "/erp/sale/sale?TO_REF=MOLRef",
-  // 采购供应商下单返回地址
-  purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
 
   // ———————————— 产品管理 ————————————————————
   // 添加产品
@@ -264,7 +296,7 @@ export const MENU_LIST = [
   {
     label: "销售",
     icon: "icon-xiaoshoubi",
-    value: "/erp/sale/sale",
+    value: PageEnums.saleLoading,
     modelKey: "sale",
     role: ["ADMIN", "BUSINESS", "SALES_READ", "SALES_WRITE", "SALES_MEMBER"],
     isUpRole: true,
@@ -275,7 +307,7 @@ export const MENU_LIST = [
   {
     label: "采购",
     icon: "icon-icon_B_caigoujihuatibao",
-    value: "/erp/purchase/purchase",
+    value: PageEnums.purchaseLoading,
     modelKey: "purchase",
     role: ["ADMIN", "BUSINESS", "PURCHASE_READ", "PURCHASE_WRITE", "PURCHASE_MEMBER"],
     isUpRole: true,

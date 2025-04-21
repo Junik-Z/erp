@@ -58,7 +58,7 @@ export default {
 
     // 结算
     onSettlementSubmit() {
-      if (_isEmpty(this.node)) {
+      if (_isEmpty(this.sNode)) {
         CustomToast({
           title: "未匹配到流程，请重试。",
         });
@@ -67,7 +67,7 @@ export default {
 
       const quantity = +this.sQuantity;
 
-      if (!["fixedPrice", "fixedPriceGroup"].includes(this.node.pricingMethod)) {
+      if (!["fixedPrice", "fixedPriceGroup"].includes(this.sNode.pricingMethod)) {
         if (isNaN(quantity)) {
           CustomToast({
             title: "请输入数字字符",
@@ -87,7 +87,7 @@ export default {
 
       this.pLoading = true;
 
-      applySettleApi({...this.node, quantity})
+      applySettleApi({id: this.sNode.id, quantity})
         .then(() => {
           uni.showModal({
             title: "温馨提示",
@@ -96,7 +96,7 @@ export default {
           });
         })
         .finally(() => {
-          this.settlementVisible = false;
+          this.sVisible = false;
           this.pLoading = false;
         });
     },

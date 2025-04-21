@@ -38,30 +38,6 @@
       "root": "erp",
       "pages": [
         {
-          "path": "sale/sale",
-          "style": {
-            "navigationBarTitleText": "销售"
-          }
-        },
-        {
-          "path": "sale/client",
-          "style": {
-            "navigationBarTitleText": "客户"
-          }
-        },
-        {
-          "path": "purchase/purchase",
-          "style": {
-            "navigationBarTitleText": "采购"
-          }
-        },
-        {
-          "path": "purchase/client",
-          "style": {
-            "navigationBarTitleText": "供应商"
-          }
-        },
-        {
           "path": "qrcode/qrcode",
           "style": {
             "navigationBarTitleText": "登录确认"
@@ -400,6 +376,100 @@
           "path": "smart",
           "style": {
             "navigationBarTitleText": "智能客服"
+          }
+        }
+      ]
+    },
+    {
+      "root": "sale",
+      "pages": [
+        {
+          "path": "loading",
+          "style": {
+            "navigationBarTitleText": "销售"
+          }
+        },
+        {
+          "path": "view",
+          "style": {
+            "navigationBarTitleText": "销售看板"
+          }
+        },
+        {
+          "path": "sale",
+          "style": {
+            "navigationBarTitleText": "销售订单"
+          }
+        },
+        {
+          "path": "client",
+          "style": {
+            "navigationBarTitleText": "客户"
+          }
+        },
+        {
+          "path": "refund",
+          "style": {
+            "navigationBarTitleText": "退货订单"
+          }
+        },
+        {
+          "path": "my-order",
+          "style": {
+            "navigationBarTitleText": "我的订单"
+          }
+        },
+        {
+          "path": "new-client",
+          "style": {
+            "navigationBarTitleText": "客户"
+          }
+        }
+      ]
+    },
+    {
+      "root": "purchase",
+      "pages": [
+        {
+          "path": "loading",
+          "style": {
+            "navigationBarTitleText": "采购"
+          }
+        },
+        {
+          "path": "view",
+          "style": {
+            "navigationBarTitleText": "采购看板"
+          }
+        },
+        {
+          "path": "purchase",
+          "style": {
+            "navigationBarTitleText": "采购订单"
+          }
+        },
+        {
+          "path": "supplier",
+          "style": {
+            "navigationBarTitleText": "供应商"
+          }
+        },
+        {
+          "path": "refund",
+          "style": {
+            "navigationBarTitleText": "退货订单"
+          }
+        },
+        {
+          "path": "my-order",
+          "style": {
+            "navigationBarTitleText": "我的订单"
+          }
+        },
+        {
+          "path": "new-supplier",
+          "style": {
+            "navigationBarTitleText": "供应商"
           }
         }
       ]
