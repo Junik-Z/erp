@@ -146,10 +146,6 @@ export default {
         this.groupList = {};
       }
 
-      // #ifdef H5
-      const top = _deepCopy(this.$refs?.WrapRef?.scrollTop);
-      // #endif
-
       this.loading = true;
       const Func = [getMyWorkingListApi, getWaitMyConfirmListApi, getMySettledListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
@@ -164,12 +160,6 @@ export default {
         })
         .finally(() => {
           this.loading = false;
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
-          });
-          // #endif
         });
     },
 
@@ -320,16 +310,14 @@ export default {
   <!-- #ifdef H5 -->
   <view
     class="ko-salary__H5"
-    v-infinite-scroll="onRequestNextPage"
-    infinite-scroll-immediate
-    :infinite-scroll-delay="200"
-    :infinite-scroll-disabled="noMore"
-    :infinite-scroll-distance="200"
-    :key="tableKey"
-    ref="WrapRef"
+    :no-more="noMore"
+    hide-tips
+    @load-next="onRequestNextPage"
+    @lower="onRequestNextPage"
+    :data="list"
+    :loading="loading"
   >
     <!-- #endif -->
-
     <view class="ko-salary">
       <TopMenus :tabs="TabList" :path="PageEnums.salary" />
 
@@ -540,10 +528,11 @@ export default {
             </template>
 
             <KoTable
-              :loading="loading"
               :columns="getColumns"
               :data="child"
               stripe
+              no-refresh
+              :no-more="noMore"
             />
           </uni-section>
         </block>
@@ -566,7 +555,6 @@ export default {
       />
       <!-- #endif -->
     </view>
-
     <!-- #ifdef H5 -->
   </view>
   <!-- #endif -->
@@ -603,7 +591,6 @@ $border-color: #e9e9eb;
   // #ifdef H5
   &__H5 {
     height: calc(100vh - 50px);
-    overflow-y: auto;
   }
 
   .ko-basic-count__wrap {

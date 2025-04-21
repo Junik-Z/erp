@@ -196,7 +196,6 @@ export default {
 
       this.loading = true;
 
-
       const Func = [getInboundListApi, getInboundHistoryListApi, getInboundHistoryListApi][this.GET_PAGE_MENU_FUNC];
 
       if (this.GET_PAGE_MENU_FUNC > 0) {

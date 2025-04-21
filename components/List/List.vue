@@ -1,6 +1,8 @@
 <script>
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
+import { getRect } from "@/utils";
+
 export default {
   name: "KoList",
   components: {UvLoadingIcon},
@@ -15,12 +17,28 @@ export default {
     },
     noMoreText: {
       type: String,
-      default: '没有更多数据了'
+      default: "没有更多数据了",
     },
     noDataText: {
       type: String,
-      default: '暂无数据'
-    }
+      default: "暂无数据",
+    },
+    data: Array,
+    noRefresh: Boolean
+  },
+  watch: {
+    data: {
+      handler() {
+        if (this.noRefresh) return false
+
+        this.T_V && clearTimeout(this.T_V);
+        this.$nextTick(() => {
+          this.T_V = setTimeout(this.judgeNext, 600);
+        })
+      },
+      deep: true,
+      immediate: true,
+    },
   },
   methods: {
     // 滚动到底部了
@@ -29,13 +47,30 @@ export default {
         this.$emit("lower");
       }
     },
+
+    // 处理判断是否要加载下一页
+    async judgeNext() {
+      if (this.noMore) return false;
+
+      const root = await getRect(".ko-list", this);
+      const cWrap = await getRect(".ko-list__wrap", this);
+
+      console.log(cWrap.height, root.height);
+
+      if (cWrap.height <= root.height) {
+        this.$emit('load-next');
+      }
+    },
+  },
+  beforeDestroy() {
+    this.T_V && clearTimeout(this.T_V);
   },
 };
 </script>
 
 <template>
   <scroll-view
-    scroll-y
+    :scroll-y="!noRefresh"
     class="ko-list"
     :lower-threshold="100"
     @scrolltolower="onToLower"

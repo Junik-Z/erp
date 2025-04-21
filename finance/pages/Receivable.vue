@@ -254,27 +254,16 @@ export default {
         }[this.GET_PAGE_MENU_FUNC];
       }
 
-      // #ifdef H5
-      const top = _deepCopy(this.$refs.WrapRef.scrollTop);
-      // #endif
-
       Func(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
-          console.log(res);
         })
         .catch(() => {
           this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
-          });
-          // #endif
         });
     },
 
@@ -403,17 +392,17 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <view
+  <KoList
     class="ko-receivable"
-    v-infinite-scroll="onRequestNextPage"
-    infinite-scroll-immediate
-    :infinite-scroll-delay="200"
-    :infinite-scroll-disabled="noMore"
-    :infinite-scroll-distance="200"
-    ref="WrapRef"
-    :key="tableKey"
+    :no-more="noMore"
+    hide-tips
+    @load-next="onRequestNextPage"
+    @lower="onRequestNextPage"
+    :data="list"
+    :loading="loading"
   >
     <!-- #endif -->
+
     <!-- #ifndef H5 -->
     <view class="ko-receivable">
       <!-- #endif -->
@@ -557,14 +546,14 @@ export default {
         <!-- #ifdef H5 -->
         <view style="padding: 10px; height: 100%; overflow: hidden;">
           <KoTable
-            :loading="loading"
             :columns="columns"
             :data="list"
             empty-text="暂无数据"
             stripe
             @row-click="onJumpDetails($event, 'receivable')"
             @next-load="onRequestNextPage"
-            no-more
+            :no-more="noMore"
+            no-refresh
           >
             <template #operate="{item, index}">
               <view
@@ -600,11 +589,12 @@ export default {
       </view>
 
       <Pay ref="TPRef" @close="onSuccess" />
-      <!-- #ifdef H5 -->
+      <!-- #ifndef H5 -->
     </view>
     <!-- #endif -->
-    <!-- #ifndef H5 -->
-  </view>
+
+    <!-- #ifdef H5 -->
+  </KoList>
   <!-- #endif -->
 </template>
 
@@ -617,9 +607,7 @@ export default {
 
   // #ifdef H5
   height: calc(100vh - 56px - 60px - 10px);
-  overflow-y: auto;
   // #endif
-
 
   &__item {
     display: flex;

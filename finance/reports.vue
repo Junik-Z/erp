@@ -410,14 +410,14 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <view
+  <KoList
     class="ko-reports__h5"
-    v-infinite-scroll="RequestNextPage"
-    infinite-scroll-immediate
-    :infinite-scroll-delay="200"
-    :infinite-scroll-distance="200"
-    ref="WrapRef"
-    :key="tableKey"
+    :no-more="noMore"
+    hide-tips
+    @load-next="RequestNextPage"
+    @lower="RequestNextPage"
+    :data="list"
+    :loading="loading"
   >
     <!-- #endif -->
     <view class="ko-reports">
@@ -619,12 +619,12 @@ export default {
         <!-- #ifdef H5 -->
         <view style="padding: 10px; height: 100%; overflow: hidden;">
           <KoTable
-            :loading="loading"
             :columns="columns"
             :data="list"
             empty-text="暂无数据"
             stripe
-            no-more
+            :no-more="noMore"
+            no-refresh
           />
         </view>
         <!-- #endif -->
@@ -636,7 +636,7 @@ export default {
       />
     </view>
     <!-- #ifdef H5 -->
-  </view>
+  </KoList>
   <!-- #endif -->
 </template>
 
@@ -671,7 +671,6 @@ export default {
   // #ifdef H5
   &__h5 {
     height: calc(100vh - 56px - 10px);
-    overflow-y: auto;
   }
 
   &__search {

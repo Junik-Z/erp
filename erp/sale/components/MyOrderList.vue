@@ -242,9 +242,6 @@ export default {
 
       this.loading = true;
       const Func = [getMySaleListApi, getMyReturnSaleListApi][this.GET_PAGE_MENU_FUNC];
-      // #ifdef H5
-      const top = _deepCopy(this.$refs.WrapRef.scrollTop);
-      // #endif
 
       Func(this.queryList)
         .then(res => {
@@ -260,12 +257,6 @@ export default {
 
           this.noRefresh = false;
           uni.setStorageSync("TENP_ORDER_INFO", null);
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
-          });
-          // #endif
         });
     },
 
@@ -437,15 +428,14 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <view
+  <KoList
     class="ko-my-order-list"
-    v-infinite-scroll="onRequestNextPage"
-    infinite-scroll-immediate
-    :infinite-scroll-delay="200"
-    :infinite-scroll-disabled="noMore"
-    :infinite-scroll-distance="200"
-    ref="WrapRef"
-    :key="tableKey"
+    :no-more="noMore"
+    hide-tips
+    @load-next="onRequestNextPage"
+    @lower="onRequestNextPage"
+    :data="list"
+    :loading="loading"
   >
     <!-- #endif -->
 
@@ -523,17 +513,14 @@ export default {
 
         <!-- #ifdef H5 -->
         <KoTable
-          :key="tableKey"
-          :loading="loading"
           :columns="columns"
           :data="list"
           empty-text="暂无数据"
           stripe
           @row-click="onJumpDetails($event, GET_PAGE_MENU_FUNC ? 'saleReturn' : 'sale')"
 
-          @next-load="onRequestNextPage"
-          no-more
-          :no-refresh="noRefresh"
+          :no-more="noMore"
+          no-refresh
         >
           <template #operate="{item, index}">
             <view style="display: flex; align-items: center; justify-content: center;">
@@ -594,7 +581,7 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-  </view>
+  </KoList>
   <!-- #endif -->
 </template>
 
@@ -603,7 +590,6 @@ export default {
 
   // #ifdef H5
   height: calc(100vh - 64px - 50px);
-  overflow-y: auto;
 
   /*.ko-history {
     width: 500px;

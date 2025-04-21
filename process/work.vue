@@ -724,7 +724,7 @@ export default {
           <view style="padding: 10px 0 0;">
             <view
               style="margin: 0 10px 10px;"
-              v-if="(isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient) && !isShare"
+              v-if="(isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient) && !isShare && (isSale || isPurchase)"
             >
               <uni-segmented-control
                 :current.sync="clientType"
@@ -753,7 +753,8 @@ export default {
               </uni-forms-item>
             </block>
 
-            <block v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
+            <block
+              v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && (isSale || isPurchase)">
               <uni-forms-item label="姓名：" name="otherSupplier" key="otherSupplier">
                 <UniEasyinput
                   v-model="form.otherSupplier"

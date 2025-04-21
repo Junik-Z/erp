@@ -29,7 +29,7 @@ export default {
 
     this.onLogInAgain({scene: arr[0] || ""}, true)
       .then(() => {
-        getMonitorJumpApi({id: arr[1]})
+        arr[1] && getMonitorJumpApi({id: arr[1]})
           .then(res => {
             const data = res.data;
             this.isMonitor = !_isEmpty(data);

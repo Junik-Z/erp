@@ -195,11 +195,6 @@ export default {
       this.getCost();
 
       this.loading = true;
-
-      // #ifdef H5
-      const top = _deepCopy(this.$refs.WrapRef.scrollTop);
-      // #endif
-
       getCostListApi({...this.queryList, classId: this.getClassId})
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -210,12 +205,6 @@ export default {
         })
         .finally(() => {
           this.loading = false;
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
-          });
-          // #endif
         });
     },
 
@@ -325,14 +314,14 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <view
+  <KoList
     class="ko-cost"
-    v-infinite-scroll="onRequestNextPage"
-    infinite-scroll-immediate
-    :infinite-scroll-delay="200"
-    :infinite-scroll-disabled="noMore"
-    :infinite-scroll-distance="200"
-    ref="WrapRef"
+    :no-more="noMore"
+    hide-tips
+    @load-next="onRequestNextPage"
+    @lower="onRequestNextPage"
+    :data="list"
+    :loading="loading"
   >
     <!-- #endif -->
 
@@ -424,13 +413,12 @@ export default {
         <!-- #ifdef H5 -->
         <view style="padding: 10px; height: 100%; overflow: hidden;">
           <KoTable
-            :loading="loading"
             :columns="getColumns"
             :data="list"
             empty-text="暂无数据"
             stripe
-            @next-load="onRequestNextPage"
-            no-more
+            :no-more="noMore"
+            no-refresh
           >
             <template #operate="{item}">
               <view style="display: flex; align-items: center; justify-content: center;">
@@ -542,11 +530,11 @@ export default {
           </view>
         </template>
       </BasicPopup>
-      <!-- #ifdef H5 -->
+      <!-- #ifndef H5 -->
     </view>
     <!-- #endif -->
-    <!-- #ifndef H5 -->
-  </view>
+    <!-- #ifdef H5 -->
+  </KoList>
   <!-- #endif -->
 </template>
 
@@ -559,7 +547,6 @@ export default {
 
   // #ifdef H5
   height: calc(100vh - 56px - 60px - 10px);
-  overflow-y: auto;
   // #endif
 
   &__class {

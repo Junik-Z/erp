@@ -256,23 +256,22 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view
-      style="padding: 10px;"
-      v-infinite-scroll="onRequestNextPage"
-      infinite-scroll-immediate
-      :infinite-scroll-delay="200"
-      :infinite-scroll-disabled="noMore"
-      :infinite-scroll-distance="200"
-      ref="WrapRef"
-      :key="tableKey"
+    <KoList
+      style="padding: 10px; height: calc(100vh - 70px);"
+      :no-more="noMore"
+      hide-tips
+      @load-next="onRequestNextPage"
+      @lower="onRequestNextPage"
+      :data="list"
+      :loading="loading"
     >
       <block v-for="(child, key) of groupList" :key="key">
         <uni-section :title="key" type="line">
           <KoTable
-            :loading="loading"
             :columns="getColumns"
             :data="child"
             stripe
+            no-refresh
           />
         </uni-section>
       </block>
@@ -281,7 +280,7 @@ export default {
       <view v-if="noMore && list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">
         没有更多数据了
       </view>
-    </view>
+    </KoList>
     <!-- #endif -->
   </view>
 </template>

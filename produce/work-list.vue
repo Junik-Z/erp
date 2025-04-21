@@ -30,6 +30,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import MaterialPopup from "./components/MaterialPopup.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
+import Settlement from "./components/Settlement.vue";
 
 const PageMenu = [
   {
@@ -63,6 +64,8 @@ export default {
     BasicCard,
     OrderCard,
     MaterialPopup,
+
+    Settlement,
 
     // #ifdef H5
     CNC,
@@ -127,6 +130,8 @@ export default {
       tableKey: +new Date(),
 
       PAGE_MENU: _deepCopy(PageMenu),
+
+      // PAGE_MENU_INDEX: 2,
 
       noRefresh: false,
 
@@ -474,6 +479,11 @@ export default {
       }
     },
 
+    // 处理结算
+    onSettlement(item, index) {
+      this.$refs.SRef.open(item, index);
+    },
+
     // #ifdef H5
     onCncClick(item, index) {
       this.$refs.CncRef.open(item, index);
@@ -526,7 +536,6 @@ export default {
         });
     },
   },
-
 
   // 分享相关
   onShareAppMessage(res) {
@@ -654,6 +663,17 @@ export default {
                   >
                     完成
                   </button>
+
+                  <!-- 结算 -->
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['FINISHED'].includes(item.status) && isPerm('CRAFT_APPLY_SETTLE')"
+                    @click.stop="onSettlement(item, index)"
+                  >
+                    结算
+                  </button>
+
+                  <!-- 更多按钮 -->
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onActionClick(item, index)"
@@ -753,7 +773,6 @@ export default {
                 删除
               </button>
             </block>
-            <!-- #ifdef H5 -->
             <button
               class="ko-basic-button__card"
               v-if="['APPLY_MATERIAL'].includes(item.status) && (isPerm('CNC_NC_PROGRAMS') || isPerm('CNC_PROPERTIES'))"
@@ -761,7 +780,6 @@ export default {
             >
               CNC
             </button>
-            <!-- #endif -->
           </view>
         </template>
       </KoTable>
@@ -770,7 +788,6 @@ export default {
     <CNC ref="CncRef" @print-label="onPrintLabel" />
 
     <PrintLabels ref="PLRef" />
-
     <!-- #endif -->
 
     <MaterialPopup ref="MPRef" @close="noRefresh = false" />
@@ -780,6 +797,8 @@ export default {
       v-if="isShowMovable"
       @click="onAddedJump"
     />
+
+    <Settlement ref="SRef" />
 
     <!-- #ifdef MP -->
     <UvActionSheet

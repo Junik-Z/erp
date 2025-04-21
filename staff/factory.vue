@@ -128,10 +128,6 @@ export default {
         this.noMore = false;
       }
 
-      // #ifdef H5
-      const top = _deepCopy(this.$refs?.WrapRef?.scrollTop);
-      // #endif
-
       this.loading = true;
       const Func = [getWorkingListApi, getWaitConfirmListApi, getSettledListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
@@ -146,12 +142,6 @@ export default {
         })
         .finally(() => {
           this.loading = false;
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
-          });
-          // #endif
         });
     },
 
@@ -755,15 +745,14 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view
+    <KoList
       class="ko-factory__table-wrap"
-      v-infinite-scroll="onRequestNextPage"
-      infinite-scroll-immediate
-      :infinite-scroll-delay="200"
-      :infinite-scroll-disabled="noMore"
-      :infinite-scroll-distance="200"
-      :key="tableKey"
-      ref="WrapRef"
+      :no-more="noMore"
+      hide-tips
+      @load-next="onRequestNextPage"
+      @lower="onRequestNextPage"
+      :data="list"
+      :loading="loading"
     >
       <block v-for="(child, key) of groupList" :key="key">
         <uni-section :title="key" type="line">
@@ -848,7 +837,7 @@ export default {
       <view v-if="noMore && list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">
         没有更多数据了
       </view>
-    </view>
+    </KoList>
     <!-- #endif -->
 
     <!-- #ifdef MP -->
@@ -1018,7 +1007,7 @@ export default {
   &__table-wrap {
     height: calc(100vh - 164px);
     padding: 10px;
-    overflow-y: auto;
+    //overflow-y: auto;
   }
 
   // #endif

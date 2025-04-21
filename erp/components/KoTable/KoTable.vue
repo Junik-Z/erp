@@ -1,8 +1,10 @@
 <script>
 // #ifdef H5
 import { Table, TableColumn } from "@/uni_modules/element-ui/element.min";
-import { _deepCopy, _keys, _pick } from "@/utils";
+import { _keys, _pick } from "@/utils";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
+import KoList from "@/components/List/List.vue";
+import { date } from "@/uni_modules/uv-ui-tools/libs/function/test";
 
 const RenderDom = {
   name: "RenderDom",
@@ -49,29 +51,31 @@ export default {
 
     noPaddingBottom: Boolean,
   },
-  watch: {
-    data: {
-      handler(to, form) {
-        if (to?.length === form?.length || ((to?.length - 1) || 0) === form?.length) return false;
+  /*  watch: {
+     data: {
+       handler(to, form) {
+         if (to?.length === form?.length || ((to?.length - 1) || 0) === form?.length) return false;
+         const top = _deepCopy(this.$refs.WrapRef.scrollTop);
 
-        const top = _deepCopy(this.$refs.WrapRef.scrollTop);
-        this.$nextTick(() => {
-          this.$refs.WrapRef.scrollTop = top;
-        });
-      },
-      deep: true,
-    },
-  },
+         this.$nextTick(() => {
+           this.$refs.WrapRef.scrollTop = top;
+         });
+       },
+       deep: true,
+     },
+   }, */
   data() {
     return {
       isLoading: true,
     };
   },
   components: {
+    KoList,
     UvLoadingIcon,
     RenderDom,
   },
   methods: {
+    date,
     getColBind(item) {
       return {
         align: "center",
@@ -111,16 +115,15 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <div
-    v-infinite-scroll="onInfiniteLoad"
-    class="ko-table"
-    infinite-scroll-immediate
-    :infinite-scroll-delay="200"
-    :infinite-scroll-disabled="noMore"
-    :infinite-scroll-distance="200"
+  <KoList
     ref="WrapRef"
+    :data="data"
+    :loading="loading"
+    :no-more="!!(noMore && !loading && data.length)"
+    @load-next="onInfiniteLoad"
+    :no-refresh="noRefresh"
   >
-    <div :style="{paddingBottom: noPaddingBottom ? 0 : '40px'}">
+    <div style="padding: 16px;">
       <el-table
         v-bind="getElementTableProps"
         @row-click="onRowClick"
@@ -137,7 +140,6 @@ export default {
           <!--<template v-if="item.renderHeader" #header="{column, $index}">
             <RenderDom v-if="item.renderHeader" :column="column" :index="$index" :render="item.renderHeader" />
           </template>-->
-
           <template v-if="(item || {}).render || (item || {}).slot" #default="{row, column, $index}">
             <slot v-if="item.slot" :name="item.slot" :item="row" :column="column" :index="$index"></slot>
             <RenderDom
@@ -159,7 +161,6 @@ export default {
               <!--  <template v-if="child.renderHeader" #header="{column, $index}">
                   <RenderDom v-if="child.renderHeader" :column="column" :index="$index" :render="item.renderHeader" />
                 </template>-->
-
               <template v-if="child.render || child.slot" #default="{row, column, $index}">
                 <slot v-if="child.slot" :name="child.slot" :item="row" :column="column" :index="$index"></slot>
                 <RenderDom
@@ -174,15 +175,8 @@ export default {
           </template>
         </el-table-column>
       </el-table>
-      
-      <view class="ko-table__loading" v-if="loading">
-        <UvLoadingIcon size="40" />
-      </view>
-      <view class="ko-table__no-more" v-if="noMore && !loading && data.length">
-        没有更多数据了
-      </view>
     </div>
-  </div>
+  </KoList>
   <!-- #endif -->
 </template>
 

@@ -298,7 +298,6 @@ export default {
         });
     },
 
-
     onResetList(flag) {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
