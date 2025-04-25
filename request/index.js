@@ -182,6 +182,8 @@ export default function request(config, isLoading = false, whole = false) {
           uni.showToast({title: msg, icon: "none"});
           reject(res);
         }
+
+        code !== 200 && console.error(`【request.js】请求错误： ${config["url"]} ———`, msg);
       },
       fail(res) {
         isLoading && uni.hideLoading();

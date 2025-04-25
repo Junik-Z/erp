@@ -1,6 +1,6 @@
 <script>
 import { getMonitorJumpApi, getScanCallbackApi } from "@/api/user";
-import { _deepCopy, _isEmpty, _omit, CustomToast } from "@/utils";
+import { _deepCopy, _isEmpty, _keys, _omit, CustomToast } from "@/utils";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 import mixins from "@/mixins/mixins";
 
@@ -11,7 +11,13 @@ export default {
     option: {},
     // 是否是数据大屏登录
     isMonitor: false,
-    pathList: {},
+    pathList: {
+      /*  "/home": "笑搜大屏",
+       "/home1": "笑搜大屏1",
+       "/home2": "笑搜大屏2", */
+
+      // '/flat': '员工数字化平板'
+    },
 
     visible: false,
 
@@ -29,14 +35,15 @@ export default {
 
     this.onLogInAgain({scene: arr[0] || ""}, true)
       .then(() => {
+        console.log("arr[1]", arr[1]);
         arr[1] && getMonitorJumpApi({id: arr[1]})
           .then(res => {
             const data = res.data;
             this.isMonitor = !_isEmpty(data);
             this.pathList = data;
-
-            if (this.isMonitor) {
-              this.visible = true;
+            const k = _keys(data);
+            if (k.length) {
+              this.monitorJump = k[0];
             }
           });
       });
@@ -44,11 +51,6 @@ export default {
 
   methods: {
     getSuccess() {
-      if (this.isMonitor && !this.visible) {
-        this.visible = true;
-        return;
-      }
-
       const arr = this.option.login_code?.split("&") || [];
       console.log(arr, this.option);
       getScanCallbackApi({id: arr[1], ...(this.monitorJump ? {monitorJump: this.monitorJump} : {})})
@@ -85,7 +87,15 @@ export default {
       <view class="ko-qrcode__icon--text">登录{{ isMonitor ? "数据大屏" : "管理" }}系统</view>
     </view>
 
-    <button class="ko-basic-button" @click="getSuccess">{{ isMonitor ? "选择大屏" : "授权登录" }}</button>
+    <radio-group class="ko-qrcode__sys" v-if="isMonitor" @change="onChangeRadio">
+      <view class="ko-qrcode__sys--item" v-for="(path, key) of pathList" :key="key">
+        <radio color="rgb(42,121,255)" :checked="monitorJump === key" :value="key">
+          {{ path }}
+        </radio>
+      </view>
+    </radio-group>
+
+    <button class="ko-basic-button" @click="getSuccess">{{ "授权登录" }}</button>
 
     <BasicPopup :visible.sync="visible" title="选择大屏">
       <view class="ko-qrcode__popup">
@@ -127,9 +137,22 @@ export default {
   }
 
   .ko-basic-button {
-    margin-top: 100px;
+    margin-top: 80px;
     padding: 0 60px;
     margin-bottom: 120px;
+  }
+
+  &__sys {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 10vw;
+
+    &--item {
+      margin: 8px 10px;
+      white-space: normal;
+    }
   }
 
   &__popup {

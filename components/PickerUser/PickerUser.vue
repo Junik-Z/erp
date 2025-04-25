@@ -299,12 +299,20 @@ export default {
         return false;
       }
 
+      const queryList = _deepCopy(this.$options.data().queryList);
+      this.queryList = {...queryList};
+
+      this.$refs.ILRef && (this.$refs.ILRef.touchmoveIndex = -1);
+
       this.modelVisible = true;
     },
 
     // 外部打开弹窗
     open(query = {}) {
-      this.queryList = {...this.queryList, ...(query || {})};
+      const queryList = _deepCopy(this.$options.data().queryList);
+      this.queryList = {...queryList, ...(query || {})};
+
+      this.$refs.ILRef && (this.$refs.ILRef.touchmoveIndex = -1);
 
       this.backupChecked = [];
       this.checked = [];
@@ -312,8 +320,6 @@ export default {
     },
 
     close() {
-      this.backupChecked = [];
-      this.checked = [];
       this.modelVisible = false;
     },
 
@@ -335,6 +341,9 @@ export default {
           this.getList(true);
         });
       });
+    },
+
+    onClose() {
     },
   },
   watch: {
@@ -422,7 +431,7 @@ export default {
     // 显示label
     getShowLabel() {
       if (this.multiple) {
-        const V = _isEmpty(this?.checkNode) && _isEmpty(this.value);
+        const V = _isEmpty(this?.checkNode) && !!this.placeholderLabel;
         return V ? this.placeholderLabel : (Array.isArray(this?.checkNode) ? this?.checkNode : [])?.map(v => v.label)?.join("、");
       } else {
         const label = this.checkNode?.label;
@@ -460,6 +469,7 @@ export default {
       :title="title"
       :type="isInput ? 'bottom' : 'center'"
       :no-footer="!isConfirm"
+      @close="onClose"
     >
       <view v-if="modelVisible" class="ko-picker-user__popup" :class="{'is-input': isInput}">
         <view>
@@ -474,6 +484,7 @@ export default {
 
         <view style="flex: 1; position: relative; padding-top: 10px;">
           <IndexList
+            ref="ILRef"
             @click="onSelect"
             :checked-list="checkedList"
             :data="list"

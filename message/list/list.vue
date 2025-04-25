@@ -16,6 +16,7 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import { bindSupplierApi } from "@/api/erp/purchase";
 import { bindCustomerApi } from "@/api/erp/sale";
+import reLogin from "@/mixins/re-login";
 
 const M_TYPE = {
   NewUserNotice: "新用户提醒",
@@ -50,23 +51,11 @@ export default {
       pType: "client",
     };
   },
-  mixins: [mixins],
+  mixins: [mixins, reLogin],
 
   onLoad(option) {
     console.log("消息列表的参数：", option);
     this.list = [];
-
-    // 当参数上有带商户标识的时候触发重新登录
-    if (option.scene) {
-      this.onLogInAgain({scene: option.scene}, true)
-        .then(() => {
-          console.log(option, uni.getStorageSync("__USER_INFO__"));
-        });
-    } else {
-      this.getList(true);
-    }
-
-    uni.$on("$__get_config_info_success__", this.reRequest);
   },
   methods: {
     reRequest() {

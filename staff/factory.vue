@@ -8,7 +8,7 @@ import {
   getSettledListApi,
   getWaitConfirmListApi,
   getWorkingListApi,
-  recoverCraftApi,
+  recoverCraftApi, rollbackSettleApi,
 } from "@/api/erp/produce";
 import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isNotUnNil, _keys, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
@@ -22,6 +22,7 @@ import CraftCard from "./components/CraftCard.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import reLogin from "@/mixins/re-login";
 
 const PageMenu = [
   {
@@ -103,7 +104,7 @@ export default {
       PAGE_MENU: _deepCopy(PageMenu),
     };
   },
-  mixins: [mixins],
+  mixins: [mixins, reLogin],
   onLoad() {
     this.getList(true);
   },
@@ -219,6 +220,7 @@ export default {
               });
               this.$set(this.list, this.nodeIndex, params);
               this.visible = false;
+
               this.onUpdateGroupList();
             })
             .finally(() => {
@@ -356,6 +358,23 @@ export default {
       }
     },
 
+    // 回退结算
+    onCraftRollback(item, index, key) {
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对是否真的需要回退该工序的结算？`,
+        confirmText: "确认回退",
+        success: (res) => {
+          if (res.confirm) {
+            rollbackSettleApi({id: item.id})
+              .then(() => {
+                CustomToast({title: '操作成功'})
+                this.groupList[key].splice(index, 1);
+              })
+          }
+        },
+      });
+    }
   },
   computed: {
     actionList() {
@@ -394,7 +413,7 @@ export default {
     // 获取单元格的分配
     getGridTemplateColumnsStyle() {
       return {
-        "--ko-basic-table-grid-col": "auto ".repeat([5, 7, 7][this.GET_PAGE_MENU_FUNC]).trim(),
+        "--ko-basic-table-grid-col": "auto ".repeat([5, 7, 8][this.GET_PAGE_MENU_FUNC]).trim(),
       };
     },
 
@@ -641,7 +660,7 @@ export default {
                 </block>
 
                 <view class="ko-basic-table--th">员工</view>
-                <view class="ko-basic-table--th" v-if="GET_PAGE_MENU_FUNC <= 1">操作</view>
+                <view class="ko-basic-table--th" v-if="[0, 1, 2].includes(GET_PAGE_MENU_FUNC)">操作</view>
 
                 <block v-for="(item, index) of child" :key="item.id">
                   <view class="ko-basic-table--cell">
@@ -682,7 +701,7 @@ export default {
                       </view>
                     </view>
                   </view>
-                  <view class="ko-basic-table--cell" v-if="GET_PAGE_MENU_FUNC <= 1">
+                  <view class="ko-basic-table--cell" v-if="[0, 1, 2].includes(GET_PAGE_MENU_FUNC)">
                     <view
                       style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap;"
                     >
@@ -732,6 +751,14 @@ export default {
                         v-if="[1].includes(GET_PAGE_MENU_FUNC) && isPerm('CRAFT_CONFIRM_SETTLE')"
                       >
                         确认
+                      </button>
+
+                      <button
+                        class="ko-basic-button__card"
+                        @click.stop="onCraftRollback(item, index, key)"
+                        v-if="[2].includes(GET_PAGE_MENU_FUNC) && (isPerm('CRAFT_ROLLBACK_SETTLE') || isBusiness)"
+                      >
+                        回退结算
                       </button>
                     </view>
                   </view>

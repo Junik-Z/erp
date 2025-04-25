@@ -49,9 +49,33 @@
       "root": "finance",
       "pages": [
         {
-          "path": "finance",
+          "path": "loading",
           "style": {
             "navigationBarTitleText": "财务"
+          }
+        },
+        {
+          "path": "receivable",
+          "style": {
+            "navigationBarTitleText": "应收款"
+          }
+        },
+        {
+          "path": "pay",
+          "style": {
+            "navigationBarTitleText": "应付款"
+          }
+        },
+        {
+          "path": "expenses",
+          "style": {
+            "navigationBarTitleText": "其它支出"
+          }
+        },
+        {
+          "path": "verification",
+          "style": {
+            "navigationBarTitleText": "核对款项"
           }
         },
         {
@@ -295,13 +319,32 @@
       "root": "logistics",
       "pages": [
         {
-          "path": "logistics",
+          "path": "loading",
           "style": {
             "navigationBarTitleText": "配送"
           }
         },
         {
-          "path": "client",
+          "path": "delivery",
+          "style": {
+            "navigationBarTitleText": "配送"
+          }
+        },
+        {
+          "path": "provider",
+          "style": {
+            "navigationBarTitleText": "物流商"
+          }
+        },
+        {
+          "path": "my-delivery",
+          "style": {
+            "navigationBarTitleText": "我的配送"
+          }
+        },
+
+        {
+          "path": "new-provider",
           "style": {
             "navigationBarTitleText": "物流商"
           }
@@ -312,9 +355,33 @@
       "root": "stock",
       "pages": [
         {
-          "path": "stock",
+          "path": "loading",
           "style": {
-            "navigationBarTitleText": "库存"
+            "navigationBarTitleText": "库存管理"
+          }
+        },
+        {
+          "path": "view",
+          "style": {
+            "navigationBarTitleText": "库存看板"
+          }
+        },
+        {
+          "path": "warehouse",
+          "style": {
+            "navigationBarTitleText": "入库审批"
+          }
+        },
+        {
+          "path": "out",
+          "style": {
+            "navigationBarTitleText": "出库审批"
+          }
+        },
+        {
+          "path": "verification",
+          "style": {
+            "navigationBarTitleText": "核对库存"
           }
         },
         {
@@ -470,6 +537,17 @@
           "path": "new-supplier",
           "style": {
             "navigationBarTitleText": "供应商"
+          }
+        }
+      ]
+    },
+    {
+      "root": "order",
+      "pages": [
+        {
+          "path": "status",
+          "style": {
+            "navigationBarTitleText": "订单状态"
           }
         }
       ]

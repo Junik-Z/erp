@@ -1,10 +1,9 @@
 <script>
 // #ifdef H5
 import { Table, TableColumn } from "@/uni_modules/element-ui/element.min";
-import { _keys, _pick } from "@/utils";
+import { _deepCopy, _keys, _pick } from "@/utils";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 import KoList from "@/components/List/List.vue";
-import { date } from "@/uni_modules/uv-ui-tools/libs/function/test";
 
 const RenderDom = {
   name: "RenderDom",
@@ -43,30 +42,32 @@ export default {
         return [];
       },
     },
-
     noMore: Boolean,
     loading: Boolean,
-
     noRefresh: Boolean,
-
     noPaddingBottom: Boolean,
+    hideTips: Boolean,
   },
-  /*  watch: {
-     data: {
-       handler(to, form) {
-         if (to?.length === form?.length || ((to?.length - 1) || 0) === form?.length) return false;
-         const top = _deepCopy(this.$refs.WrapRef.scrollTop);
+ /*  watch: {
+    data: {
+      handler(t, f) {
+        if (t && t.length === f.length) return false
 
-         this.$nextTick(() => {
-           this.$refs.WrapRef.scrollTop = top;
-         });
-       },
-       deep: true,
-     },
-   }, */
+        const S = this.$refs.WrapRef?.$el;
+        const sEl = S?.querySelector(".uni-scroll-view > .uni-scroll-view");
+
+        this.$nextTick(() => {
+          sEl.scrollTop = this.scrollTop;
+        });
+      },
+      deep: true,
+    },
+  }, */
   data() {
     return {
       isLoading: true,
+      scrollTop: 0,
+      isNext: false,
     };
   },
   components: {
@@ -75,7 +76,6 @@ export default {
     RenderDom,
   },
   methods: {
-    date,
     getColBind(item) {
       return {
         align: "center",
@@ -86,7 +86,13 @@ export default {
       this.$emit("row-click", ...arg);
     },
     onInfiniteLoad() {
-      !this.noMore && this.$emit("next-load");
+      if (!this.noMore) {
+        uni._KO_TABLE_TIME_VM_ && clearTimeout(uni._KO_TABLE_TIME_VM_);
+
+        uni._KO_TABLE_TIME_VM_ = setTimeout(() => {
+          this.$emit("next-load");
+        }, 100);
+      }
     },
 
     onRowContextmenu(...arg) {
@@ -121,7 +127,9 @@ export default {
     :loading="loading"
     :no-more="!!(noMore && !loading && data.length)"
     @load-next="onInfiniteLoad"
+    @lower="onInfiniteLoad"
     :no-refresh="noRefresh"
+    :hide-tips="hideTips"
   >
     <div style="padding: 16px;">
       <el-table

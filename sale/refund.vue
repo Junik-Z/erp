@@ -648,7 +648,7 @@ export default {
   }
 
   // #ifdef H5
-  height: calc(100vh - 56px - 60px);
+  height: calc(100vh - 50px);
   display: flex;
   flex-direction: column;
   // #endif

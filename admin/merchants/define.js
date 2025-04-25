@@ -1336,6 +1336,12 @@ export const PRODUCE_PERM_TREE = [
         perm: "CRAFT_CANCEL_SETTLE",
         id: "918",
       },
+      {
+        label: "回退结算",
+        type: 2,
+        perm: "CRAFT_ROLLBACK_SETTLE",
+        id: "020",
+      },
     ],
   },
   {

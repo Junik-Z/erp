@@ -25,6 +25,7 @@ import {
   addedSaleProduceApi,
   getProduceDetailApi,
   getProduceOrderDetailApi,
+  reOrderSaleProduceApi,
   updateCraftProcessApi,
   updateProduceApi,
   updateSaleProduceApi,
@@ -143,6 +144,9 @@ export default {
 
       // 添加分享的订单
       isShareOrder: false,
+
+      // 是否重新下单
+      isAgain: false,
     };
   },
   async onLoad(option) {
@@ -153,6 +157,9 @@ export default {
 
     // 客户下单
     this.isClient = _isEqual(option.isClient, "true");
+
+    // 重新下单
+    this.isAgain = _isEqual(option.isAgain, "true");
 
     // 是否是来自分享页面
     this.isShare = _isEqual(option.PAGE_TYPE, "ADDED_PRODUCE_PACKING");
@@ -196,7 +203,7 @@ export default {
       this.type = option.ADDED_TYPE;
     }
 
-    if (this.isEdit) this.getInfo();
+    if (this.isEdit || this.isAgain) this.getInfo();
 
     // 采购生成销售订单
     if (this.isGenerateSales) {
@@ -343,7 +350,7 @@ export default {
               this.isEdit ? updatePurchaseCustomizedApi : addedPurchaseCustomizedApi
               : this.isTechnology ? updateCraftProcessApi :
                 (this.isSale ?
-                  this.isEdit ? updateSaleProduceApi : addedSaleProduceApi
+                  this.isAgain ? reOrderSaleProduceApi : (this.isEdit ? updateSaleProduceApi : addedSaleProduceApi)
                   : this.isEdit ? updateProduceApi : addedProduceApi);
 
           const params = _deepCopy(this.form);

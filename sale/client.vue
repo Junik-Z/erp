@@ -617,7 +617,7 @@ export default {
   height: calc(100vh - 56px);
 
   // #ifdef H5
-  height: calc(100vh - 56px - 60px);
+  height: calc(100vh - 50px);
   // #endif
 
   &__wrap {

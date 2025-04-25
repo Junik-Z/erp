@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  // type = "trial";
+  type = "trial";
   // BASE_URL = "https://erp.kuaouyun.cn/api";
   // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
   // #endif
@@ -193,7 +193,16 @@ export const PageEnums = {
   product: "/product/product",
 
   // ———————————— 财务管理 ————————————————————
-  finance: "/finance/finance",
+  financeLoading: '/finance/loading',
+  // 应收款
+  financeReceivable: '/finance/receivable',
+  // 应付款
+  financePay: '/finance/pay',
+  // 其它支出
+  financeExpenses: '/finance/expenses',
+  // 核对款项
+  financeVerification: '/finance/verification',
+
   // 添加付款单据
   financeTicket: "/finance/ticket",
   // 核对款项
@@ -248,13 +257,28 @@ export const PageEnums = {
 
   // ———————————— 物流管理 ————————————
   // 物流
-  logistics: "/logistics/logistics",
+  logisticsLoading: "/logistics/loading",
+  // 配送
+  logisticsDelivery: "/logistics/delivery",
   // 物流商
-  logisticsClient: "/logistics/logistics?TO_REF=RLRef",
-  // 物流上
-  logisticsClientList: "/logistics/client",
+  logisticsProvider: "/logistics/provider",
+  // 我的配送
+  logisticsMyDelivery: "/logistics/my-delivery",
+  // 新物流商
+  logisticsNewProvider: "/logistics/new-provider",
 
   // ———————————— 库存管理 ————————————
+  // 库存管理
+  stockLoading: "/stock/loading",
+
+  // 库存看板
+  stockView: "/stock/view",
+  // 入库审批
+  stockWarehouse: "/stock/warehouse",
+  // 出库审批
+  stockOut: "/stock/out",
+  // 核对库存
+  stockVerification: "/stock/verification",
   // 库存管理
   stock: "/stock/stock",
   // 核销库存
@@ -276,6 +300,9 @@ export const PageEnums = {
 
   // ——————————————— 智能客服 ————————————————
   smart: "/smart/smart",
+
+  // ——————————————— 订单状态 ————————————————
+  orderStatus: "/order/status",
 };
 
 /**
@@ -285,7 +312,7 @@ export const MENU_LIST = [
   {
     label: "库存",
     icon: "icon-kucuntongjifenxi",
-    value: PageEnums.stock,
+    value: PageEnums.stockLoading,
     modelKey: "stock",
     role: ["ADMIN", "BUSINESS", "STOCK_READ", "STOCK_WRITE", "STOCK_TAKING"],
     // 是否可以被分配角色
@@ -327,7 +354,7 @@ export const MENU_LIST = [
   {
     label: "财务",
     icon: "icon-tubiao-05",
-    value: PageEnums.finance,
+    value: PageEnums.financeLoading,
     modelKey: "finance",
     role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
     isUpRole: true,
@@ -343,7 +370,7 @@ export const MENU_LIST = [
   {
     label: "配送",
     icon: "icon-daishouhuo",
-    value: PageEnums.logistics,
+    value: PageEnums.logisticsLoading,
     checkField: "deliveryEnable",
     modelKey: "logistics",
     role: ["ADMIN", "BUSINESS", "DELIVERY_READ", "DELIVERY_WRITE", "DELIVERY_MEMBER"],

@@ -26,6 +26,7 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import Pay from "./components/Pay/Pay.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
+import reLogin from "@/mixins/re-login";
 
 const PageMenu = [
   {
@@ -62,7 +63,7 @@ export default {
     LoadMore,
     TopMenus
   },
-  mixins: [BasicMixins, PurchaseMixins],
+  mixins: [BasicMixins, PurchaseMixins, reLogin],
   data() {
     const _this = this;
 
@@ -816,7 +817,7 @@ export default {
   }
 
   // #ifdef H5
-  height: calc(100vh - 56px - 60px);
+  height: calc(100vh - 50px);
   display: flex;
   flex-direction: column;
   // #endif

@@ -26,6 +26,7 @@ import Pay from "./components/Pay/Pay.vue";
 import { getOrderCodeDetailApi } from "@/api/erp/produce";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
+import reLogin from "@/mixins/re-login";
 
 const PageMenu = [
   {
@@ -62,7 +63,7 @@ export default {
     HistoryBar,
     BasicCard,
   },
-  mixins: [mixins, SaleMixins],
+  mixins: [mixins, SaleMixins, reLogin],
   data() {
     const _this = this;
     return {
@@ -334,7 +335,7 @@ export default {
       this.noRefresh = true;
       if (this.isProductionOrder(item.orderType)) {
         uni.navigateTo({
-          url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE`,
+          url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE&isAgain=${_isEqual(this.GET_PAGE_MENU_FUNC, 1)}`,
         });
         return false;
       }
@@ -554,13 +555,8 @@ export default {
           return this.isPerm("SALE_PRODUCE_UPDATE");
         }
 
+        // 是否可以重新下单
         if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
-          // 待付款生产工单不能编辑
-          if (this.isProductionOrder(node.orderType)) {
-            return false;
-          }
-
-          // 是否可以重新下单
           return this.isPerm("SALE_RE_ORDER");
         }
 
@@ -869,7 +865,7 @@ export default {
   }
 
   // #ifdef H5
-  height: calc(100vh - 56px - 60px);
+  height: calc(100vh - 50px);
   display: flex;
   flex-direction: column;
   // #endif

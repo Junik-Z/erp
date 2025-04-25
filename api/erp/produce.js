@@ -421,6 +421,17 @@ export function getOrderCodeDetailApi(data) {
 }
 
 /**
+ * @description 获取我的生产工单
+ */
+export function getMyWaitingApi(data) {
+  return request({
+    url: "/craft/myWaiting",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取生产工单详情
  */
 export function getProduceOrderCodeDetailApi(data) {
@@ -464,6 +475,17 @@ export function updateSaleProduceApi(data) {
   });
 }
 
+/**
+ * @description 销售重新下单
+ */
+export function reOrderSaleProduceApi(data) {
+  return request({
+    url: "/sale/produce/reOrder",
+    method: "post",
+    data,
+  });
+}
+
 // ———————————————————— 修改生产中的工单 —————————————————————— */
 
 /**
@@ -494,6 +516,17 @@ export function completeCraftApi(data) {
 export function recoverCraftApi(data) {
   return request({
     url: "/craft/recover",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 回退结算
+ */
+export function rollbackSettleApi(data) {
+  return request({
+    url: "/craft/rollbackSettle",
     method: "post",
     data,
   });
@@ -561,3 +594,6 @@ export function removeNCProgramsApi(data) {
     },
   );
 }
+
+
+// ——————————————————

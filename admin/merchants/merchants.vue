@@ -68,7 +68,7 @@ export default {
       const url = {
         Sales_Member: PageEnums.saleClient,
         Purchase_Member: PageEnums.purchaseClient,
-        Delivery_Member: PageEnums.logisticsClient,
+        Delivery_Member: PageEnums.logisticsDelivery,
       }[role];
 
       url && uni.navigateTo({url});

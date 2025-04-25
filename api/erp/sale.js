@@ -623,3 +623,16 @@ export function getShareOrderApi(data) {
   });
 }
 
+
+// ————————————————————— 订单状态 —————————————————————
+/**
+ * @description 获取订单状态
+ */
+export function getOrderStatusApi(data) {
+  return request({
+    url: "/sale/order-status",
+    method: "get",
+    data,
+  });
+}
+

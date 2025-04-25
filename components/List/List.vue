@@ -1,7 +1,7 @@
 <script>
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
-import { getRect } from "@/utils";
+import { _deepCopy, getRect } from "@/utils";
 
 export default {
   name: "KoList",
@@ -24,41 +24,80 @@ export default {
       default: "暂无数据",
     },
     data: Array,
-    noRefresh: Boolean
+    noRefresh: Boolean,
   },
   watch: {
     data: {
-      handler() {
-        if (this.noRefresh) return false
+      handler(t, f) {
+        // #ifdef H5
+        if (!t || !t.length) {
+          this.bTop = 0;
+        }
 
+        if (t && t?.length !== f?.length && this.$refs.SRef) {
+          const sEl = this.$refs.SRef?.$el?.querySelector?.(".uni-scroll-view > .uni-scroll-view");
+          this.$nextTick(() => {
+            sEl.scrollTop = this.bTop;
+          });
+        }
+        // #endif
+
+        if (this.noRefresh) return false;
         this.T_V && clearTimeout(this.T_V);
         this.$nextTick(() => {
           this.T_V = setTimeout(this.judgeNext, 600);
-        })
+        });
       },
       deep: true,
       immediate: true,
     },
   },
+  data() {
+    return {
+      scrollTop: 0,
+
+      cTop: 0,
+      bTop: 0,
+    };
+  },
   methods: {
     // 滚动到底部了
     onToLower() {
-      if (!this.loading && !this.noMore && !this.noData) {
-        this.$emit("lower");
-      }
+      if (this.loading || this.noMore) return false;
+      this.getSTop();
+      this.$emit("lower", this.cTop);
+    },
+
+    getSTop() {
+      // #ifdef H5
+      const T = this.$refs.SRef.$el?.querySelector?.(".uni-scroll-view > .uni-scroll-view")?.scrollTop || this.cTop;
+      this.bTop = _deepCopy(T);
+      // #endif
     },
 
     // 处理判断是否要加载下一页
     async judgeNext() {
       if (this.noMore) return false;
-
       const root = await getRect(".ko-list", this);
       const cWrap = await getRect(".ko-list__wrap", this);
 
-      console.log(cWrap.height, root.height);
+      // 内容高度 - 滚动触发距离 小于等于 容器高度的时候触发加载下一页数据用于填充数据
+      if ((cWrap.height - 100) <= root.height) {
+        this.getSTop();
 
-      if (cWrap.height <= root.height) {
-        this.$emit('load-next');
+        this.$emit("load-next", this.cTop);
+      }
+    },
+
+    // 获取滚动距离
+    onScroll(event) {
+      this.cTop = event.detail?.scrollTop;
+    },
+
+    // 处理设置滚动距离
+    setScrollTop(top) {
+      if (!this.noRefresh) {
+        this.scrollTop = top;
       }
     },
   },
@@ -75,6 +114,9 @@ export default {
     :lower-threshold="100"
     @scrolltolower="onToLower"
     :refresher-threshold="60"
+    @scroll="onScroll"
+    :scroll-top="scrollTop"
+    ref="SRef"
   >
     <view class="ko-list__wrap" :class="{'safe': safeAreaInsetBottom}">
       <slot />

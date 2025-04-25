@@ -116,7 +116,6 @@ export default {
 <template>
   <!-- #ifdef H5 -->
   <div class="ko-login">
-    <!-- #ifdef H5 -->
     <div class="ko-login__wrap">
       <image
         class="ko-login__logo"
@@ -134,13 +133,10 @@ export default {
           :class="{'is-timeout': isTimeout}"
         >
           <image :src="qrimage" mode="widthFix" />
-          <!-- #ifdef H5 -->
           <view class="ko-login__qrcode--loading" v-if="loading">
             <UvLoadingIcon :size="40" />
           </view>
-          <!-- #endif -->
         </view>
-
         <template #actions v-if="isTimeout">
           <button
             class="ko-basic-button"
@@ -152,7 +148,6 @@ export default {
         </template>
       </UniCard>
     </div>
-    <!-- #endif -->
   </div>
   <!-- #endif -->
 </template>
@@ -172,6 +167,10 @@ export default {
 
     .ko-basic-button {
       margin-bottom: 20px;
+    }
+
+    ::v-deep .uni-card__header {
+      padding-top: 30px;
     }
   }
 

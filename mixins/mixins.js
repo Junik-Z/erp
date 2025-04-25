@@ -1,6 +1,5 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-
 // #endif
 import {
   _deepCopy,

@@ -1,21 +1,16 @@
 <script>
-import {
-  bindSupplierApi,
-  convertSupplierListApi,
-  getDetailSupplierApi,
-  getSupplierListApi,
-  getTempSupplierListApi,
-  removeSupplierApi,
-  unbindSupplierApi,
-} from "@/api/erp/purchase";
-import { _deepCopy, _get, _isEmpty, _isString, _set, CustomToast } from "@/utils";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
+import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import { _deepCopy, _get, _isEmpty, _isEqual, _set, CustomToast } from "@/utils";
+import LoadMore from "@/components/LoadMore/LoadMore.vue";
+import BasicMixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import mixins from "@/mixins/mixins";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
+import { bindLogisticsApi, getLogisticsListApi, removeLogisticsApi, unbindLogisticsApi } from "@/api/erp/logistics";
 import KoMovable from "@/components/Movable/index.vue";
-import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import { PageEnums } from "@/utils/config";
 import TopMenus from "./components/TopMenus.vue";
 
@@ -23,30 +18,34 @@ export default {
   name: "ClientList",
   components: {
     TopMenus,
-    HistoryBar,
     KoMovable,
     UvActionSheet,
     IndexList,
-    UvAvatar,
     PickerUser,
+    UvAvatar,
+    LoadMore,
+    UniCol,
+    UniRow,
+    BasicCard,
   },
-  mixins: [mixins],
+  mixins: [BasicMixins],
   data() {
     const _this = this;
     return {
       list: [],
       loading: false,
-
       visible: false,
+
       bindUserList: [],
       isBind: false,
+      node: {},
+      nodeIndex: null,
 
       noMore: false,
       queryList: {
-        pageSize: 20, pageNum: 0,
+        pageSize: 20,
+        pageNum: 0,
       },
-
-      tab: 0,
 
       // #ifdef H5
       columns: [
@@ -56,7 +55,7 @@ export default {
           width: 80,
         },
         {
-          label: "供应商Logo",
+          label: "物流商Logo",
           prop: "logo",
           width: 100,
           render: (h, {row}) => {
@@ -66,7 +65,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "logo")),
-                  size: 42,
+                 size: 42,
                   text: _get(row, "name") || _this.GET_SHOP_NAME,
                 },
               })],
@@ -132,12 +131,8 @@ export default {
         },
       ],
       // #endif
+
       tableKey: +new Date(),
-
-      noRefresh: false,
-
-      node: {},
-      nodeIndex: null,
     };
   },
   onShow() {
@@ -153,36 +148,16 @@ export default {
     });
   },
   methods: {
-    getListNode(item) {
-      return {
-        ...item,
-        value: item.id,
-        label: item.name,
-        logo: item.logo,
-      };
-    },
-
-    getList(reset = false) {
-
-      if (reset && !this.noRefresh) {
-        this.tableKey = +new Date();
-        this.list = [];
-        this.queryList.pageNum = 0;
-      }
-
-      const info = uni.getStorageSync("TENP_ORDER_INFO");
-
-      if (this.noRefresh && info && this.list.length) {
-        this.updateList();
-        return false;
-      }
-
+    getList() {
       this.loading = true;
-      const Fn = [getSupplierListApi, getTempSupplierListApi][+this.tabIndex];
-
-      Fn({...this.queryList, ...(+this.tabIndex === 0 ? {type: "OFFICIAL"} : {})})
+      getLogisticsListApi(this.queryList)
         .then((res) => {
-          const list = (res.data || []).map(this.getListNode);
+          const list = (res.data || []).map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
 
           this.list = this.onMergeArrays(this.list, list, "id");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -192,40 +167,24 @@ export default {
         })
         .finally(() => {
           this.loading = false;
-          this.noRefresh = false;
-
-          uni.setStorageSync("TENP_ORDER_INFO", null);
         });
     },
 
-    onTrigger(event) {
-      if ("uni") {
-        uni.navigateTo({url: PageEnums.purchaseNewClient});
-        return false;
-      }
-      const {path} = event.item || {};
-      if (path) {
-        uni.navigateTo({url: path});
-      }
-    },
-
     onJump(row) {
-      this.noRefresh = true;
-      uni.navigateTo({url: `${PageEnums.purchaseNewClient}?id=${row.id}`});
+      uni.navigateTo({url: `${PageEnums.logisticsNewProvider}?id=${row.id}`});
     },
 
-    onRemove(row, index) {
+    onRemove(row) {
       const node = _deepCopy(row);
       uni.showModal({
         title: "温馨提示",
-        content: `您确定要删除 ${row.name} 供应商吗？`,
+        content: `您确定要删除 ${row.name} 物流商吗？`,
         success: (res) => {
           if (res.confirm) {
-            removeSupplierApi(node)
+            removeLogisticsApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
-                // this.getList(true);
-                this.list.splice(index, 1);
+                this.getList();
               });
           }
         },
@@ -234,14 +193,33 @@ export default {
 
     // 解绑
     onUnbind(user) {
+      /*  uni.showModal({
+         title: "温馨提示",
+         content: `您确定要解绑物流商吗？`,
+         success: (res) => {
+           if (res.confirm) {
+
+             Promise.all(
+               user.map(userId => unbindLogisticsApi({
+                 logisticsId: this.item.id,
+                 userId,
+               })),
+             )
+               .then(() => {
+                 uni.showToast({title: "解绑成功"});
+               });
+           }
+         },
+       }); */
       Promise.all(
-        user.map(userId => unbindSupplierApi({
-          supplierId: this.node.id,
+        user.map(userId => unbindLogisticsApi({
+          logisticsId: this.node.id,
           userId,
         })),
       )
         .then(() => {
           uni.showToast({title: "操作成功"});
+
           const node = _deepCopy(this.list[this.nodeIndex]);
           node.users = node.users?.filter?.(item => !(user || []).includes(item.userId)) || [];
           this.$set(this.list, this.nodeIndex, node);
@@ -251,14 +229,13 @@ export default {
     // 绑定
     onBind(user = []) {
       Promise.all(
-        user.map(userId => bindSupplierApi({
-          supplierId: this.node.id,
+        user.map(userId => bindLogisticsApi({
+          logisticsId: this.node.id,
           userId,
         })),
       )
         .then(() => {
           uni.showToast({title: "操作成功"});
-
           const node = _deepCopy(this.list[this.nodeIndex]);
 
           const UList = _get(node, "users") || [];
@@ -272,12 +249,12 @@ export default {
       this.node = item;
       this.nodeIndex = index;
 
-      this.$refs.SPURef?.open?.({supplierId: item.value});
+      this.$refs.SPURef?.open?.({logisticsId: item.value});
     },
 
     onConfirm(obj) {
       if (!_isEmpty(obj?.add)) {
-        if (this.isPerm("SUPPLIER_BIND")) {
+        if (this.isPerm("LOGISTICS_BIND")) {
           this.onBind(obj?.add);
         } else {
           CustomToast({
@@ -288,7 +265,7 @@ export default {
       }
 
       if (!_isEmpty(obj?.remove)) {
-        if (this.isPerm("SUPPLIER_UNBIND")) {
+        if (this.isPerm("LOGISTICS_UNBIND")) {
           this.onUnbind(obj?.remove);
         } else {
           CustomToast({
@@ -301,82 +278,51 @@ export default {
       this.visible = false;
     },
 
+    onTrigger(event) {
+      if ("uni") {
+        uni.navigateTo({url: PageEnums.logisticsNewProvider});
+        return false;
+      }
+
+      const {path} = event.item || {};
+      if (path) {
+        uni.navigateTo({url: path});
+      }
+    },
+
     onJumpInfo(item) {
-      if (this.isPerm("FINANCE_RECEIVABLE_CHECK") || this.isPerm("FINANCE_PAYABLE_CHECK")) {
-        this.noRefresh = true;
+      if (this.isPerm("DELIVERY_CHECK_LIST")) {
         uni.navigateTo({
-          url: PageEnums.financeCheck + `?id=${item.id}&customer_type=purchase&FORM=purchase`,
+          url: PageEnums.financeCheck + `?id=${item.id}&customer_type=logistics`,
         });
       }
     },
 
-    onActionClick(item, index) {
+    onActionClick(item) {
       this.node = item;
-      this.nodeIndex = index;
       this.$refs.UASRef.open();
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.node), this.nodeIndex);
-    },
+      if (item.openType) return false;
 
-    // 供应商转换
-    onConvert(item, index) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `您确定要将 ${item.name} 转为 ${["临时", "正式"][+this.tabIndex]}供应商吗？`,
-        success: (res) => {
-          if (res.confirm) {
-            convertSupplierListApi(item)
-              .then(() => {
-                uni.showToast({
-                  title: "转换成功",
-                });
-                // this.getList(true);
-                this.list.splice(index, 1);
-              });
-          }
-        },
-      });
+      this[item.func](_deepCopy(this.node), ...(item.arg || []));
     },
 
     onLower() {
-      this.noRefresh = false;
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();
+      this.tableKey = +new Date();
     },
     // 根据索引搜索
     onSearchToNameIndex(key) {
-      this.noRefresh = false;
+      this.list = [];
+      this.queryList.pageNum = 0;
       this.queryList.nameIndex = key;
-      this.getList(true);
+      this.getList();
     },
 
-    // 更新列表数据
-    updateList() {
-      const info = uni.getStorageSync("TENP_ORDER_INFO");
-      const id = info ? (_isString(info) ? info : info.id) : this.node.id;
-
-      getDetailSupplierApi({id})
-        .then(res => {
-          const data = res.data || {};
-          const index = this.list.findIndex(v => v.id === data.id);
-          const node = this.node || {};
-
-          const item = this.getListNode(data);
-
-          if (index > -1) {
-            this.$set(this.list, index, {...node, ...item});
-          } else {
-            this.list.unshift({...node, ...item});
-          }
-        })
-        .finally(() => {
-          this.noRefresh = false;
-          uni.setStorageSync("TENP_ORDER_INFO", null);
-        });
-    },
 
     // 处理索引点击按钮
     onClickEvent(query) {
@@ -384,6 +330,12 @@ export default {
     },
   },
   computed: {
+    // #ifdef H5
+    getColumns() {
+      return this.columns.filter(item => this.isHistory ? !_isEqual(item.label, "操作") : true);
+    },
+    // #endif
+
     getBindingParams() {
       return (node) => {
         return {
@@ -391,65 +343,51 @@ export default {
           query: {
             // 客户列表 ID
             CLIENT_LIST_ID: node.id,
-            PAGE_TYPE: "BINDING_CLIENT_BY_PURCHASE",
+            PAGE_TYPE: "BINDING_CLIENT_BY_LOGISTICS",
           },
         };
       };
     },
 
     actionList() {
+      // const node = _deepCopy(this.node);
       return [
-        {
-          name: ["转为临时供应商", "转为正式供应商"][+this.tabIndex],
-          func: "onConvert",
-          perm: "SUPPLIER_CONVERT",
+        /* {
+          openType: "share",
+          dataParams: !_isEmpty(node) && this.getBindingParams(node),
+          name: "邀请绑定",
+        }, */
+        /* {
+          name: "绑定物流商",
+          func: "onBindPopup",
+          arg: [true],
         },
+        {
+          name: "解绑物流商",
+          func: "onBindPopup",
+          arg: [false],
+        }, */
         {
           name: "编辑",
           func: "onJump",
-          perm: "SUPPLIER_EDIT",
+          perm: "LOGISTICS_EDIT",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "onRemove",
-          perm: "SUPPLIER_DELETE",
+          perm: "LOGISTICS_DELETE",
         },
       ].filter(item => this.isPerm(item.perm));
     },
 
-    // 获取列表项
-    getTabsList() {
-      return [
-        {
-          label: "供应商",
-          perm: "SUPPLIER_LIST",
-          type: 0,
-        },
-        {
-          label: "临时供应商",
-          perm: "SUPPLIER_TEMP",
-          type: 1,
-        },
-      ].filter(item => this.isPerm(item.perm));
-    },
-
-    // 获取索引
-    tabIndex() {
-      return _get(this.getTabsList, `${this.tab}.type`);
-    },
 
     // #ifdef MP
     getIndexEventList() {
-      if (this.isPerm("SUPPLIER_BIND") || this.isPerm("SUPPLIER_UNBIND")) {
+      if (this.isPerm("LOGISTICS_BIND") || this.isPerm("LOGISTICS_UNBIND")) {
         return [{label: "绑定"}];
       }
       return [];
-
-      /*  return [
-         {label: "绑定客户", isBind: true, perm: "SUPPLIER_BIND"},
-         {label: "解绑客户", isBind: false, perm: "SUPPLIER_UNBIND"},
-       ].filter(item => this.isPerm(item.perm)); */
     },
     // #endif
   },
@@ -457,51 +395,50 @@ export default {
 </script>
 
 <template>
-  <view class="ko-purchase-client">
-    <TopMenus :path="PageEnums.purchaseClient"/>
+  <view class="ko-client">
+    <TopMenus :path="PageEnums.logisticsProvider"/>
 
-    <view class="ko-purchase-client__content">
-      <HistoryBar
-        :values="getTabsList"
-        label-key="label"
-        v-model="tab"
-
-        @change="onSearchToNameIndex('')"
-        custom-class="ko-purchase-client__tabs"
-      />
-
+    <view class="ko-client__wrap">
       <!-- #ifdef MP -->
-      <view class="ko-purchase-client__wrap">
-        <IndexList
-          :data="list"
-          :loading="loading"
-          is-supplier
-          @click="onJumpInfo"
+      <IndexList
+        :data="list"
+        :loading="loading"
+        @click="onJumpInfo"
+        is-receipt-list
 
-          @lower="onLower"
-          :no-more="noMore"
-          @search="onSearchToNameIndex"
+        @lower="onLower"
+        :no-more="noMore"
+        @search="onSearchToNameIndex"
 
-          :show-more-button="!!actionList.length"
-          @click-more="onActionClick"
+        :show-more-button="!!actionList.length"
+        @click-more="onActionClick"
 
-          :events="getIndexEventList"
-          @click-event="onClickEvent"
-          show-bind-user-list
-        />
-      </view>
+        :events="getIndexEventList"
+        @click-event="onClickEvent"
+        show-bind-user-list
+      />
+      <!--
+       <button
+                    @click.stop="() => {}"
+                    open-type="share"
+                    :data-params="getBindingParams(item)"
+                    class="ko-basic-button__card"
+                  >
+                    邀请绑定
+                  </button>
+      -->
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
-      <view style="padding: 10px; flex: 1; overflow: hidden">
+      <view style="padding: 10px; height: 100%; overflow: hidden">
         <KoTable
           :key="tableKey"
           :loading="loading"
-          :columns="columns"
+          :columns="getColumns"
           :data="list"
           empty-text="暂无数据"
           stripe
-          @row-click="onJumpInfo"
+          @row-click="onJumpInfo($event)"
           @next-load="onLower"
           :no-more="noMore || loading"
         >
@@ -518,56 +455,47 @@ export default {
               <button
                 @click.stop="onBindPopup(item, index)"
                 class="ko-basic-button__user"
-                v-if="isPerm('SUPPLIER_BIND') || isPerm('SUPPLIER_UNBIND')"
+                v-if="isPerm('LOGISTICS_BIND') || isPerm('LOGISTICS_UNBIND')"
               >
                 绑定
               </button>
+
               <button
                 class="ko-basic-button__user"
-                @click.stop="onConvert(item, index)"
-                v-if="isPerm('SUPPLIER_CONVERT')"
-              >
-                {{ ["转为临时供应商", "转为正式供应商"][+tabIndex] }}
-              </button>
-              <button
-                v-if="isPerm('SUPPLIER_EDIT')"
-                class="ko-basic-button__user"
-                @click.stop="onJump(item, index)"
+                @click.stop="onJump(item)"
+                v-if="isPerm('LOGISTICS_EDIT')"
               >
                 编辑
               </button>
               <button
                 class="ko-basic-button__user"
-                @click.stop="onRemove(item, index)"
-                v-if="isPerm('SUPPLIER_DELETE')"
+                @click.stop="onRemove(item)"
+                v-if="isPerm('LOGISTICS_DELETE')"
               >
                 删除
               </button>
             </view>
           </template>
-
         </KoTable>
       </view>
       <!-- #endif -->
     </view>
 
     <PickerUser
+      ref="SPURef"
       :visible.sync="visible"
-      title="绑定/解绑供应商"
+      title="绑定物流商"
       is-confirm
       multiple
       @confirm="onConfirm"
 
-      ref="SPURef"
-      v-if="isPerm('SUPPLIER_UNBIND') || isPerm('SUPPLIER_BIND')"
-
       is-external-open
       not-created-request
-      type="purchaseUserList"
+      type="logisticsUserList"
     />
 
     <KoMovable
-      v-if="isPerm('SUPPLIER_ADD')"
+      v-if="isPerm('LOGISTICS_ADD')"
       @click="onTrigger('')"
     />
 
@@ -584,45 +512,27 @@ export default {
   </view>
 </template>
 
-<style lang="scss" scoped>
-.ko-purchase-client {
+<style scoped lang="scss">
+.ko-client {
   padding-top: 10px;
-
   width: 100%;
-  height: calc(100vh - 56px);
-
-  // #ifdef H5
-  height: calc(100vh - 60px);
-  // #endif
 
   &__wrap {
-    flex: 1;
     position: relative;
+    height: calc(100vh - 66px);
+
+    // #ifdef H5
+    height: calc(100vh - 100px);
+    // #endif
   }
 
-  // #ifdef H5
-  ::v-deep .ko-history {
-    width: 100%;
-  }
-
-  // #endif
-
-  &__content {
-    position: relative;
-    box-sizing: border-box;
-    height: calc(100% - 40px);
-    display: flex;
-    flex-direction: column;
+  :deep(.uni-list-item__container ) {
+    display: block;
   }
 
   &__info {
     font-size: 14px;
     color: $uni-base-color;
-
-    &--logo {
-      display: flex;
-      align-items: center;
-    }
 
     &--button {
       display: flex;
@@ -632,6 +542,11 @@ export default {
       flex-wrap: wrap;
     }
 
+    &--logo {
+      display: flex;
+      align-items: center;
+    }
+
     &--image {
       width: 80px;
       height: 80px;
@@ -639,7 +554,6 @@ export default {
     }
 
     &--name {
-      font-size: 20px;
       font-weight: bold;
       color: #333;
       margin-bottom: 10px;
@@ -656,5 +570,6 @@ export default {
       }
     }
   }
+
 }
 </style>

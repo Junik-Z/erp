@@ -1,5 +1,5 @@
 <script>
-import Verification from "./pages/Verification.vue";
+import Verification from "./verification.vue";
 
 export default {
   name: "reconcile",

@@ -31,6 +31,7 @@ import OrderCard from "./components/OrderCard/OrderCard.vue";
 import MaterialPopup from "./components/MaterialPopup.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import Settlement from "./components/Settlement.vue";
+import reLogin from "@/mixins/re-login";
 
 const PageMenu = [
   {
@@ -239,7 +240,7 @@ export default {
       // #endif
     };
   },
-  mixins: [mixins],
+  mixins: [mixins, reLogin],
   onLoad() {
   },
   onShow() {
