@@ -193,15 +193,15 @@ export const PageEnums = {
   product: "/product/product",
 
   // ———————————— 财务管理 ————————————————————
-  financeLoading: '/finance/loading',
+  financeLoading: "/finance/loading",
   // 应收款
-  financeReceivable: '/finance/receivable',
+  financeReceivable: "/finance/receivable",
   // 应付款
-  financePay: '/finance/pay',
+  financePay: "/finance/pay",
   // 其它支出
-  financeExpenses: '/finance/expenses',
+  financeExpenses: "/finance/expenses",
   // 核对款项
-  financeVerification: '/finance/verification',
+  financeVerification: "/finance/verification",
 
   // 添加付款单据
   financeTicket: "/finance/ticket",
@@ -485,6 +485,7 @@ export const PRICING_METHOD = {
   fixedPriceGroup: "固定价格组内平分",
   dailyRate: "按日工资",
   commission: "总单价提成",
+  priceCommission: "金额提成",
   none: "没有定价方式",
 };
 

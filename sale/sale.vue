@@ -27,6 +27,7 @@ import { getOrderCodeDetailApi } from "@/api/erp/produce";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
 import reLogin from "@/mixins/re-login";
+import GenerateCode from "./components/GenerateCode.vue";
 
 const PageMenu = [
   {
@@ -49,6 +50,7 @@ const PageMenu = [
 export default {
   name: "Sale",
   components: {
+    GenerateCode,
     TopMenus,
     PickerCalendars,
     Pay,
@@ -475,6 +477,11 @@ export default {
         this.queryList.endTime = "";
       }
     },
+
+    // 生成订单二维码
+    onGenerateCode(item) {
+      this.$refs.GCRef.open(item.orderCode);
+    },
   },
   computed: {
     actionList() {
@@ -493,6 +500,10 @@ export default {
               queryList: node,
             },
           },
+        },
+        {
+          name: "生成订单二维码",
+          func: "onGenerateCode",
         },
         {
           name: "申请退货",
@@ -528,6 +539,8 @@ export default {
         },
       ]
         .filter(item => {
+          if (_isEqual(item.func, "onGenerateCode")) return true;
+
           const isStatus = item.status?.includes?.(node.status);
 
           if (_isEqual(item.func, "onJump")) {
@@ -824,6 +837,8 @@ export default {
       ref="TPRef"
       @close="updateList(true); noRefresh = false"
     />
+
+    <GenerateCode ref="GCRef" />
   </view>
 </template>
 

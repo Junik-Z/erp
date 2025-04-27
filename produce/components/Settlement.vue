@@ -1,6 +1,6 @@
 <script>
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import { _deepCopy, _isEmpty, _isEqual, CustomToast } from "@/utils";
+import { _deepCopy, _isEmpty, CustomToast } from "@/utils";
 import { applySettleApi, getProduceDetailApi } from "@/api/erp/produce";
 import KoList from "@/components/List/List.vue";
 import mixins from "@/mixins/mixins";
@@ -65,7 +65,7 @@ export default {
         return false;
       }
 
-      const quantity = +this.sQuantity;
+      let quantity = +this.sQuantity;
 
       if (!["fixedPrice", "fixedPriceGroup"].includes(this.sNode.pricingMethod)) {
         if (isNaN(quantity)) {
@@ -84,6 +84,9 @@ export default {
           return false;
         }
       }
+
+      // 金额提成
+      if (["priceCommission"].includes(this.sNode.pricingMethod)) quantity = this.toFen(quantity);
 
       this.pLoading = true;
 
@@ -117,7 +120,7 @@ export default {
     // 获取计价方式价格
     getPricingMethodPrice() {
       return row => {
-        return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+        return ["commission", "priceCommission"].includes(row.pricingMethod) ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
       };
     },
 
@@ -201,7 +204,8 @@ export default {
         >
           计价方式：{{ getPricingMethod(sNode.pricingMethod) }}
 
-          <text class="ko-basic-money" style="margin-left: 5px;" v-if="sNode.pricingMethod !== 'commission'">
+          <text class="ko-basic-money" style="margin-left: 5px;"
+                v-if="!['commission', 'priceCommission'].includes(sNode.pricingMethod)">
             {{ toYuan(sNode.price) }}元
           </text>
           <text class="ko-basic-money" style="margin-left: 6px;" v-else>{{ sNode.price / 10000 }}%</text>
@@ -209,11 +213,11 @@ export default {
 
         <uni-forms label-align="right" v-if="!['commission'].includes(sNode.pricingMethod)">
           <uni-forms-item
-            label="数量"
+            :label="['priceCommission'].includes(sNode.pricingMethod) ?'金额' : '数量'"
             name="name"
             required
           >
-            <uni-easyinput type="digit" v-model="sQuantity" placeholder="请输入数量" />
+            <uni-easyinput type="digit" v-model="sQuantity" placeholder="请输入" />
           </uni-forms-item>
         </uni-forms>
       </view>

@@ -190,7 +190,7 @@ export default {
     }
 
     if (this.isSale) {
-      this.form.produceType = "customized";
+      this.form.produceType = "internal";
       uni.setNavigationBarTitle({title: "定制工单"});
     }
 
@@ -207,7 +207,7 @@ export default {
 
     // 采购生成销售订单
     if (this.isGenerateSales) {
-      this.form.produceType = "customized";
+      this.form.produceType = "internal";
       this.isEdit = false;
       this.isPurchase = false;
 
@@ -588,7 +588,7 @@ export default {
       ]
         .flatMap(item => {
           // 从销售或者采购进入页面时
-          if ((this.isSale || this.isPurchase) && ["crafts"].includes(item.value)) return [];
+          if ((/* this.isSale ||  */this.isPurchase) && ["crafts"].includes(item.value)) return [];
 
           if (_isEqual(this.type, "xlsx")) {
             if (_isEqual(item.value, "type")) item.label = "自定义工单";
@@ -728,49 +728,51 @@ export default {
         </block>
 
         <block v-if="isEqual(getCurrentValue, 'other')">
-          <view style="padding: 10px 0 0;">
-            <view
-              style="margin: 0 10px 10px;"
-              v-if="(isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient) && !isShare && (isSale || isPurchase)"
-            >
-              <uni-segmented-control
-                :current.sync="clientType"
-                :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
-                style-type="text"
-                @clickItem="onTabItem"
-              />
+          <block v-if="isPurchase || isSale">
+            <view style="padding-top: 10px;">
+              <view
+                style="margin: 0 10px 10px;"
+                v-if="(isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient) && !isShare && (isSale || isPurchase)"
+              >
+                <uni-segmented-control
+                  :current.sync="clientType"
+                  :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
+                  style-type="text"
+                  @clickItem="onTabItem"
+                />
+              </view>
+
+              <block v-if="clientType === 0 && isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
+                <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
+                  <PickerUser
+                    style="width: 100%;"
+                    is-input
+                    :title="`选择${isPurchase ? '供应商' : '客户'}`"
+                    v-model="form.supplierId"
+                    :type="isPurchase ? 'supplier' : 'client'"
+                    ref="UserRef"
+                    @input="onSupplierId"
+
+                    :is-long-list="isClient"
+                    :options="bindList"
+
+                    :placeholder-label="GET_FUNC(form, 'customer.name')"
+                  />
+                </uni-forms-item>
+              </block>
+
+              <block
+                v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && (isSale || isPurchase)">
+                <uni-forms-item label="姓名：" name="otherSupplier" key="otherSupplier">
+                  <UniEasyinput
+                    v-model="form.otherSupplier"
+                    style="width: 100%;"
+                    placeholder="请输入"
+                  />
+                </uni-forms-item>
+              </block>
             </view>
-
-            <block v-if="clientType === 0 && isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
-              <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
-                <PickerUser
-                  style="width: 100%;"
-                  is-input
-                  :title="`选择${isPurchase ? '供应商' : '客户'}`"
-                  v-model="form.supplierId"
-                  :type="isPurchase ? 'supplier' : 'client'"
-                  ref="UserRef"
-                  @input="onSupplierId"
-
-                  :is-long-list="isClient"
-                  :options="bindList"
-
-                  :placeholder-label="GET_FUNC(form, 'customer.name')"
-                />
-              </uni-forms-item>
-            </block>
-
-            <block
-              v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && (isSale || isPurchase)">
-              <uni-forms-item label="姓名：" name="otherSupplier" key="otherSupplier">
-                <UniEasyinput
-                  v-model="form.otherSupplier"
-                  style="width: 100%;"
-                  placeholder="请输入"
-                />
-              </uni-forms-item>
-            </block>
-          </view>
+          </block>
 
           <block v-if="!isPurchase && !isSale">
             <uni-forms-item
@@ -787,25 +789,28 @@ export default {
             </uni-forms-item>
           </block>
 
-          <uni-forms-item label="联系电话：" name="orderPhone">
-            <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
-          </uni-forms-item>
 
-          <uni-forms-item label="配送地址：" name="orderAddress" key="orderAddress">
-            <view style="display: flex; align-items: center; width: 100%">
-              <view style="flex: 1; width: 100%">
-                <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+          <block v-if="isPurchase || isSale">
+            <uni-forms-item label="联系电话：" name="orderPhone">
+              <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
+            </uni-forms-item>
+
+            <uni-forms-item label="配送地址：" name="orderAddress" key="orderAddress">
+              <view style="display: flex; align-items: center; width: 100%">
+                <view style="flex: 1; width: 100%">
+                  <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+                </view>
+                <block v-if="form.supplierId && isPerm(isPurchase ? 'SUPPLIER_ADDRESS_LIST' : 'CUSTOMER_ADDRESS_LIST')">
+                  <PickerAddress
+                    :supplierId="form.supplierId"
+                    v-model="form.orderAddress"
+                    :type="isPurchase ? 'purchase' : 'sale'"
+                    @input="form.orderAddress = $event"
+                  />
+                </block>
               </view>
-              <block v-if="form.supplierId && isPerm(isPurchase ? 'SUPPLIER_ADDRESS_LIST' : 'CUSTOMER_ADDRESS_LIST')">
-                <PickerAddress
-                  :supplierId="form.supplierId"
-                  v-model="form.orderAddress"
-                  :type="isPurchase ? 'purchase' : 'sale'"
-                  @input="form.orderAddress = $event"
-                />
-              </block>
-            </view>
-          </uni-forms-item>
+            </uni-forms-item>
+          </block>
 
           <block v-if="!isPurchase && isSale && !isEdit">
             <uni-forms-item
@@ -863,7 +868,7 @@ export default {
             </view>
           </UniSection>
 
-          <UniSection title="总价" type="line">
+          <UniSection title="总价" type="line"  v-if="isPurchase || isSale">
             <block v-if="isEqual(type, 'packing')">
               <BinCount v-model="form.customizedBoards[0]" @change-total="countTotalAmount" />
             </block>
@@ -894,7 +899,7 @@ export default {
             </view>
           </UniSection>
 
-          <UniSection v-if="!isPurchase" title="其它费用" type="line">
+          <UniSection  v-if="isPurchase || isSale" title="其它费用" type="line">
             <view style="padding: 10px;">
               <FeesList v-model="form.fees" is-form />
             </view>

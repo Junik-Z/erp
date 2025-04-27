@@ -596,4 +596,14 @@ export function removeNCProgramsApi(data) {
 }
 
 
-// ——————————————————
+// —————————————————— 获取员工工资列表 ——————————————————————
+export function getSalaryListApi(data) {
+  return request({url: "/staff/salary-list", method: "get", data});
+}
+
+/**
+ * @description 获取订单二维码
+ */
+export function getSaleOrderCodeApi(data) {
+  return request({url: "/sale/order-code", method: "get", data});
+}

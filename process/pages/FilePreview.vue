@@ -80,8 +80,26 @@ export default {
             const PdfVm = VPdfVm.init(this.$refs.RRef);
             PdfVm.preview(getFileUrl(id));
           } else if (isWordType(extname)) {
-            const VWVm = VWordVm.init(this.$refs.RRef);
-            VWVm.preview(getFileUrl(id));
+
+            if (["DOC"].includes(extname.toUpperCase())) {
+              const DOM = document.createElement("iframe");
+              DOM.style.height = "calc(100% + 154px)";
+              DOM.style.width = "100%";
+              DOM.style.marginTop = "-154px";
+
+              let url = getFileUrl(id);
+              if (!(/^https?:\/\//.test(url))) {
+                url = `https://erp.kuaouyun.cn${url}`;
+              }
+
+              DOM.src = `https://view.officeapps.live.com/op/view.aspx?src=${url}&&embed=true`;
+              this.dom = DOM;
+              this.$refs.RRef.appendChild(DOM);
+            } else {
+              const VWVm = VWordVm.init(this.$refs.RRef);
+              VWVm.preview(getFileUrl(id));
+            }
+
           } else if (isExcelType(extname)) {
             if (["XLS"].includes(extname.toUpperCase())) {
               const DOM = document.createElement("iframe");

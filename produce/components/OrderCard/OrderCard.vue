@@ -58,6 +58,9 @@ export default {
     isCustomStatusName: Boolean,
     // 自定义的状态名称
     customStatusName: String,
+
+    // 显示生产模式
+    showProductType: Boolean,
   },
   methods: {
     onClickOperate(child, item) {
@@ -108,6 +111,16 @@ export default {
             <view style="flex: 1; text-align: left;">
               <text class="ko-order-card__order-type" :class="[item.orderType]">
                 {{ ORDER_TYPE_ENUMS(item.orderType) }}
+              </text>
+            </view>
+          </view>
+        </block>
+
+        <block v-if="showProductType">
+          <view class="ko-order-card__item" style="padding: 0;">
+            <view style="flex: 1; text-align: left;">
+              <text class="ko-order-card__order-type" :class="[item.produceType]">
+                {{ PRODUCE_TYPE_ENUMS(item.produceType) }}
               </text>
             </view>
           </view>
@@ -458,7 +471,7 @@ export default {
   </BasicCard>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .border-top {
   height: 1px;
   //background: #e9e9eb;
@@ -558,7 +571,7 @@ export default {
   &__order-type {
     font-size: 10px;
 
-    &.SALE {
+    &.SALE, &.customized {
       color: #007BFF;
     }
 
@@ -574,7 +587,7 @@ export default {
       color: #DC3545;
     }
 
-    &.PRODUCTION {
+    &.PRODUCTION, &.internal {
       color: #FFC107;
     }
 

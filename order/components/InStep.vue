@@ -23,35 +23,12 @@ export default {
   computed: {
     GroupList() {
       const list = _deepCopy(this.list) || [];
-      const group = _chunk(list, 3)?.map((c, i) => {
+      return _chunk(list, 4)?.map((c, i) => {
         if (i % 2 === 0) {
           return c;
         } else {
           return _reverse(c);
         }
-      });
-
-
-      return group.map((row, rIndex) => {
-        // 下一行
-        const n = group[rIndex - 1] || {};
-
-        if (rIndex % 2 === 0) {
-          return row.map((c) => {
-            return {
-              ...c,
-              _nextStatus: c.status,
-            };
-          });
-        } else {
-          return row.map((c) => {
-            return {
-              ...c,
-              _nextStatus: c.status,
-            };
-          });
-        }
-
       });
     },
 
@@ -89,7 +66,7 @@ export default {
     // 获取箭头颜色
     getIconColor() {
       return (status) => {
-        return {
+        return "#2e2e32" || {
           CREATED: "#eec904",
           FINISHED: "#63e2b7",
           CANCELLED: "#2e2e32",
@@ -102,40 +79,31 @@ export default {
 </script>
 
 <template>
-  <view class="ko-in-product">
-    <view class="ko-in-product__content">
+  <view class="ko-in-step">
+    <view class="ko-in-step__content">
       <block v-for="(G, j) of GroupList" :key="j">
-        <view class="ko-in-product__content--item" :class="j % 2 !== 0 ? 'end' : 'start'">
+        <view class="ko-in-step__content--item" :class="j % 2 !== 0 ? 'end' : 'start'">
           <block v-for="(child, k) of G" :key="k">
-            <view class="ko-in-product__cell" :class="child.status">
-              <view class="ko-in-product__cell--image">
-                <uv-avatar
-                  round
-                  :src="getLogo(child.image)"
-                  object-fit="cover"
-                  class="ko-item-image"
-                  size="30"
-                />
-              </view>
-
-              <view class="ko-in-product__cell--name">{{ child.name }}</view>
-
+            <view class="ko-in-step__cell" :class="child.status">
+              <view class="ko-in-step__cell--name">{{ child.name }}</view>
               <view v-if="child.pricingMethod">{{ getPricingMethod(child.pricingMethod) }}</view>
-
               <view v-if="child.staffs">
                 <text style="margin: 5px;" v-for="c of child.staffs" :key="c.name">{{ c.name }}</text>
+              </view>
+              <view v-if="child.status === 'FINISHED' && false" class="ko-in-step__cell--success">
+                <uni-icons color="#fff" type="checkmarkempty" />
               </view>
             </view>
 
             <!-- 左右箭头 -->
             <view
               v-if="G.length && k !== G.length - 1"
-              class="ko-in-product__cell--arrow"
+              class="ko-in-step__cell--arrow"
               :class="[child._nextStatus]"
             >
               <uni-icons
                 :color="getIconColor(child._nextStatus)"
-                size="40"
+                size="20"
                 :type="j % 2 === 0? 'arrow-right' : 'arrow-left'"
               />
             </view>
@@ -143,13 +111,13 @@ export default {
         </view>
 
         <view
-          class="ko-in-product__cell--arrow arrow-down"
+          class="ko-in-step__cell--arrow arrow-down"
           style="width: 100%"
           :class="[{ 'is-two': j % 2 !== 0 }, getDownBtnStatus(j)]"
           v-if="GroupList.length && j !== GroupList.length - 1"
         >
           <view class="arrow-down__icon">
-            <uni-icons size="40" :color="getIconColor(getDownBtnStatus(j))" type="arrow-down" />
+            <uni-icons size="20" :color="getIconColor(getDownBtnStatus(j))" type="arrow-down" />
           </view>
         </view>
       </block>
@@ -178,11 +146,13 @@ export default {
   }
 }
 
-.ko-in-product {
+.ko-in-step {
+  --count-cell: 7;
+
   height: 100%;
   width: 100%;
-  --item-size: calc(100% / 5 + 20px);
-  --item-arrow-size: calc(100% / 5 - 30px);
+  --in-step-item-size: calc(100% / var(--count-cell) + 20px);
+  --in-step-tem-arrow-size: calc(100% / var(--count-cell) - 20px);
 
   &__item {
     background: rgba(20, 31, 45, 0.1);
@@ -224,76 +194,35 @@ export default {
     justify-content: center;
     padding: 8px;
     border-radius: 6px;
-    width: var(--item-size);
+    width: var(--in-step-item-size);
     text-align: center;
 
-    background: rgba(143, 147, 156, 0.3);
+    background: #6a6a6a;
+    color: #fff;
 
-    &.CREATED {
-      background: rgba(238, 201, 4, 0.3);
-
-      .ko-in-product__cell--image {
-        box-shadow: 0 0 10px #eec904;
-        border-color: rgba(238, 201, 4, 1);
-        animation: rotate 5s linear infinite;
-      }
+    &.CREATED, &.APPLY_MATERIAL, &.CANCELLED {
+      background: #6a6a6a;
+      color: #fff;
     }
 
     &.FINISHED {
-      background: rgba(127, 231, 196, 0.3);
-
-      .ko-in-product__cell--image {
-        box-shadow: 0 0 10px #63e2b7;
-        border-color: #63e2b7;
-      }
-    }
-
-    &.APPLY_MATERIAL {
-      background: #e0f2fe;
-
-      .ko-in-product__cell--image {
-        box-shadow: 0 0 10px #0284c7;
-        border-color: #0284c7;
-        animation: rotate 5s linear infinite;
-      }
-    }
-
-    &.CANCELLED {
-      background: rgba(46, 46, 50, 0.3);
-
-      .ko-in-product__cell--image {
-        box-shadow: 0 0 10px #2e2e32;
-        border-color: #2e2e32;
-      }
-    }
-
-    &--image {
-      height: 40px;
-      width: 40px;
-      border-radius: 50%;
-      border: 1px solid #19264a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #19264a;
+      background: #18bc37;
     }
 
     &--name {
-      font-size: 16px;
-      margin-top: 10px;
-      margin-bottom: 8px;
+      font-size: 12px;
     }
 
     &--arrow {
       display: flex;
       align-items: center;
       background: transparent;
-      width: var(--item-arrow-size);
+      width: var(--in-step-tem-arrow-size);
       justify-content: center;
 
       &.arrow-down {
-        width: var(--item-size);
-        height: 50px;
+        width: var(--in-step-item-size);
+        height: 30px;
         justify-content: flex-end;
 
         &.is-two {
@@ -301,43 +230,19 @@ export default {
         }
 
         .arrow-down__icon {
-          width: var(--item-size);
+          width: var(--in-step-item-size);
           display: flex;
           justify-content: center;
         }
       }
-
-      &.CREATED {
-        ::v-deep .uni-icons {
-          color: #eec904 !important;
-        }
-      }
-
-      &.FINISHED {
-        color: #63e2b7;
-
-        ::v-deep .uni-icons {
-          color: #63e2b7 !important;
-        }
-      }
-
-      &.APPLY_MATERIAL {
-        color: #0284c7;
-
-        ::v-deep .uni-icons {
-          color: #0284c7 !important;
-        }
-      }
-
-      &.CANCELLED {
-        color: #2e2e32;
-
-        ::v-deep .uni-icons {
-          color: #2e2e32 !important;
-        }
-      }
     }
 
+    &--success {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid #fff;
+    }
   }
 
   &__content {

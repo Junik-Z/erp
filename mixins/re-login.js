@@ -11,13 +11,13 @@ export default {
     const [scene, __q_id__] = decodeURIComponent(option.scene || "")?.split("&") || [];
     this.Q_ID = __q_id__;
 
-    console.log("页面参数", scene, __q_id__);
-
     // 当参数上有带商户标识的时候触发重新登录
     if (scene && !_isEqual(scene, "undefined")) {
       this.onLogInAgain({scene: scene}, true)
         .then(() => {
-          console.log("触发重新登录了", scene, uni.getStorageSync("__USER_INFO__"));
+          const info = uni.getStorageSync("__USER_INFO__");
+
+          console.log("触发重新登录了", scene, __q_id__, info);
           this.RE_REQUEST();
         });
     } else {

@@ -8,13 +8,19 @@ import UniSegmentedControl
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { addedCostApi, getCategoryListApi, getCostListApi, statisticsCostApi, updateCostApi } from "@/api/erp/finance";
+import {
+  addedCostApi,
+  getCategoryListApi,
+  getCostListApi,
+  removeCostApi,
+  statisticsCostApi,
+  updateCostApi,
+} from "@/api/erp/finance";
 import mixins from "@/mixins/mixins";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { deleteProductClassApi } from "@/api/erp/product";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 import dayjs from "@/utils/dayjs";
@@ -168,10 +174,6 @@ export default {
 
         return false;
       }
-
-      uni.navigateTo({
-        url: "/erp/finance/classify",
-      });
     },
 
     // 获取分类
@@ -277,7 +279,7 @@ export default {
         content: `您确定要删除 ${row.name} 款项吗？`,
         success: (res) => {
           if (res.confirm) {
-            deleteProductClassApi(node)
+            removeCostApi(node)
               .then(() => {
                 uni.showToast({title: "删除成功"});
                 this.getList(true);

@@ -32,6 +32,7 @@ import MaterialPopup from "./components/MaterialPopup.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import Settlement from "./components/Settlement.vue";
 import reLogin from "@/mixins/re-login";
+import GenerateCode from "./components/GenerateCode.vue";
 
 const PageMenu = [
   {
@@ -67,6 +68,7 @@ export default {
     MaterialPopup,
 
     Settlement,
+    GenerateCode,
 
     // #ifdef H5
     CNC,
@@ -96,7 +98,7 @@ export default {
          }, */
         // #endif
         {
-          text: "常规",
+          text: "开单",
           iconfont: "icon-tianjia",
           path: PageEnums.produceWork + "?ADDED_TYPE=common",
           perm: "PRODUCE_ADD",
@@ -485,6 +487,11 @@ export default {
       this.$refs.SRef.open(item, index);
     },
 
+    // 生成订单二维码
+    onGenerateCode(item) {
+      this.$refs.GCRef.open(item.orderCode);
+    },
+
     // #ifdef H5
     onCncClick(item, index) {
       this.$refs.CncRef.open(item, index);
@@ -499,13 +506,17 @@ export default {
   computed: {
     // #ifdef H5
     getColumns() {
-      return this.columns.filter(item => this.GET_PAGE_MENU_FUNC == 2 ? !_isEqual(item.label, "操作") : true);
+      return this.columns.filter(item => this.GET_PAGE_MENU_FUNC === 2 ? !_isEqual(item.label, "操作") : true);
     },
     // #endif
 
     actionList() {
       const node = this.node;
       return [
+        {
+          name: "生成订单二维码",
+          func: "onGenerateCode",
+        },
         {
           name: "取消工单",
           func: "onCancel",
@@ -527,12 +538,12 @@ export default {
         },
       ]
         .filter(item => {
-          const isPerm = this.isPerm(item.perm);
+          if (_isEqual(item.func, "onGenerateCode")) return true;
 
+          const isPerm = this.isPerm(item?.perm);
           /*  if (_isEqual(item.func, "onJump") && _isEqual(node.produceType, "customized")) {
              return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
            } */
-
           return item?.status?.includes(node.status) && isPerm;
         });
     },
@@ -586,6 +597,19 @@ export default {
             />
           </UniCol>
           <UniCol :span="24">
+            <PickerUser
+              style="width: 100%;"
+              placeholder="请选择员工"
+              is-input
+              title="选择员工"
+              v-model="queryList.staffId"
+              type="staff"
+              is-confirm
+              ref="UserRef"
+              no-safe-bottom
+            />
+          </UniCol>
+          <UniCol :span="24">
             <view style="display: flex;align-items: center;justify-content: space-around; padding-top: 10px;">
               <button
                 style="width: 35%;"
@@ -619,6 +643,7 @@ export default {
               is-new
               show-order-phone
               is-work
+              show-product-type
             >
               <template #operate>
                 <view style="display: flex; align-items: center; justify-content: flex-end;">
@@ -678,7 +703,6 @@ export default {
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onActionClick(item, index)"
-                    v-if='["CREATED", "CANCELLED"].includes(item.status)'
                   >
                     更多
                   </button>
@@ -800,6 +824,8 @@ export default {
     />
 
     <Settlement ref="SRef" />
+
+    <GenerateCode ref="GCRef" />
 
     <!-- #ifdef MP -->
     <UvActionSheet

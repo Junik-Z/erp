@@ -4,7 +4,6 @@ import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
 import { CONFIG } from "@/utils/config";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 import { getScanQrCodeApi } from "@/api/user";
-import { _isDev } from "@/utils";
 import dayjs from "@/utils/dayjs";
 
 export default {
@@ -94,7 +93,7 @@ export default {
       // 表示登录成功
       ESVm.addEventListener("AccessToken", (res) => {
         const scene = res.data;
-        _isDev() && uni.setStorageSync("AccessToken", scene);
+        uni.setStorageSync("AccessToken", scene);
       }, false);
 
       // 获取到的二维码图片

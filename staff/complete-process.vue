@@ -1,6 +1,6 @@
 <script>
-import { getSettledListApi } from "@/api/erp/produce";
-import { _deepCopy, _groupBy, _isEmpty } from "@/utils";
+import { getSalaryListApi, getSettledListApi } from "@/api/erp/produce";
+import { _groupBy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -14,7 +14,6 @@ export default {
   name: "Factory",
   components: {CraftCard, PickerSheet, TopMenus, KoList},
   data() {
-    const _this = this;
     return {
       queryList: {
         pageSize: 20,
@@ -57,15 +56,10 @@ export default {
         this.tableKey = +new Date();
       }
 
-      // #ifdef H5
-      const top = _deepCopy(this.$refs?.WrapRef?.scrollTop) || 0;
-      // #endif
-
       this.loading = true;
       getSettledListApi(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
-
           this.groupList = _groupBy(this.list, (item) => item.orderCode);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })
@@ -74,12 +68,6 @@ export default {
         })
         .finally(() => {
           this.loading = false;
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef && (this.$refs.WrapRef.scrollTop = top);
-          });
-          // #endif
         });
     },
   },
@@ -103,6 +91,20 @@ export default {
     // 获取计价方式
     getPricingMethod() {
       return key => PRICING_METHOD[key];
+    },
+
+    // 获取时间
+    getCreateTime() {
+      return time => time && time.split(" ")[0] || "";
+    },
+
+    getPrice() {
+      return item => ["commission", "priceCommission"].includes(item.pricingMethod) ? item.price / 10000 : this.toYuan(item.price);
+    },
+
+    // 获取数量
+    getQuantity() {
+      return item => _isEqual("priceCommission", item.pricingMethod) ? this.toYuan(item.quantity) : item.quantity;
     },
 
     // #ifdef H5
@@ -232,21 +234,12 @@ export default {
               <view class="ko-basic-table--th">日期</view>
 
               <block v-for="item of child" :key="item.id">
-                <view class="ko-basic-table--cell">
-                  {{ item.name }}
-                </view>
-                <view class="ko-basic-table--cell">
-                  {{ getPricingMethod(item.pricingMethod) }}
-                </view>
-                <view class="ko-basic-table--cell">
-                  {{ toYuan(item.price) }}
-                </view>
-
-                <view class="ko-basic-table--cell">{{ item.quantity }}</view>
+                <view class="ko-basic-table--cell">{{ item.name }}</view>
+                <view class="ko-basic-table--cell">{{ getPricingMethod(item.pricingMethod) }}</view>
+                <view class="ko-basic-table--cell">{{ getPrice(item) }}</view>
+                <view class="ko-basic-table--cell">{{ getQuantity(item) }}</view>
                 <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
-
-                <view class="ko-basic-table--cell">{{ item.updateTime }}</view>
-
+                <view class="ko-basic-table--cell">{{ getCreateTime(item.updateTime) }}</view>
               </block>
             </view>
           </uni-section>

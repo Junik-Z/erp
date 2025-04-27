@@ -496,6 +496,18 @@ export default {
       };
     },
 
+    // 生产类型
+    PRODUCE_TYPE_ENUMS() {
+      return (type) => {
+        if (!type) return "-";
+        const obj = {
+          customized: "定制生产",
+          internal: "内部生产",
+        };
+        return _get(obj, type) || type;
+      };
+    },
+
     // 其它费用类型
     FEES_TYPE_ENUMS() {
       return (type) => {
@@ -674,7 +686,7 @@ export default {
 
     // 天科装饰有限公司 定制功能
     isTkCustom() {
-      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || (_isEnv() && this.isDefault);
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg")/*  || (_isEnv() && this.isDefault) */;
     },
   },
 };

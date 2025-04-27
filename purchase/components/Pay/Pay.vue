@@ -63,7 +63,7 @@ export default {
     },
 
     onLookVoucher() {
-      this.lookImage(this.getImageUrl(this.GET_FUNC(this.moreNode, "user.avatar")));
+      this.lookImage(this.getImageUrl(this.GET_FUNC(this.moreNode, "voucher")));
     },
 
     onSelect(node) {

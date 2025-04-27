@@ -8,7 +8,8 @@ import {
   getSettledListApi,
   getWaitConfirmListApi,
   getWorkingListApi,
-  recoverCraftApi, rollbackSettleApi,
+  recoverCraftApi,
+  rollbackSettleApi,
 } from "@/api/erp/produce";
 import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isNotUnNil, _keys, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
@@ -173,7 +174,7 @@ export default {
     onEditor(item, index) {
       this.nodeIndex = index;
       const node = _deepCopy(item);
-      node.price = _isEqual("commission", node.pricingMethod) ? node.price / 10000 : this.toYuan(node.price);
+      node.price = ["commission", "priceCommission"].includes(node.pricingMethod) ? node.price / 10000 : this.toYuan(node.price);
       node._placeholder_label_ = (node.staffs || [])?.map(v => v.name)?.join("、");
 
       this.form = node;
@@ -199,7 +200,7 @@ export default {
           return false;
         }
 
-        if (_isEqual("commission", params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
+        if (["commission", "priceCommission"].includes(params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
           this.pLoading = false;
           uni.showToast({
             title: `总单价提成不能小于0%、大于99%`,
@@ -211,7 +212,7 @@ export default {
         if (!valid) {
           this.pLoading = true;
 
-          params.price = _isEqual("commission", params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
+          params.price = ["commission", "priceCommission"].includes(params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
 
           craftUpdateApi(params)
             .then(() => {
@@ -288,7 +289,7 @@ export default {
         return false;
       }
 
-      const quantity = +this.settlementQuantity;
+      let quantity = +this.settlementQuantity;
 
       if (!["fixedPrice", "fixedPriceGroup"].includes(this.node.pricingMethod)) {
         if (isNaN(quantity)) {
@@ -307,6 +308,9 @@ export default {
           return false;
         }
       }
+
+      // 金额提成
+      if (["priceCommission"].includes(this.node.pricingMethod)) quantity = this.toFen(quantity);
 
       this.pLoading = true;
 
@@ -368,13 +372,13 @@ export default {
           if (res.confirm) {
             rollbackSettleApi({id: item.id})
               .then(() => {
-                CustomToast({title: '操作成功'})
+                CustomToast({title: "操作成功"});
                 this.groupList[key].splice(index, 1);
-              })
+              });
           }
         },
       });
-    }
+    },
   },
   computed: {
     actionList() {
@@ -419,14 +423,22 @@ export default {
 
     // 价格描述
     getPriceLabel() {
-      return {commission: "提成比例"}?.[this.form.pricingMethod] || "价格";
+      return {commission: "提成比例", priceCommission: "提成比例"}?.[this.form.pricingMethod] || "价格";
     },
 
 
     // 获取计价方式价格
     getPricingMethodPrice() {
       return row => {
-        return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+        return ["commission", "priceCommission"].includes(row.pricingMethod) ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+      };
+    },
+
+
+    // 获取数量或者 priceCommission 金额提成的金额
+    getQuantity() {
+      return row => {
+        return ["priceCommission"].includes(row.pricingMethod) ? this.toYuan(row.quantity) : row.quantity;
       };
     },
 
@@ -485,6 +497,9 @@ export default {
           {
             label: "数量",
             prop: "quantity",
+            render: (h, {row}) => {
+              return h('span', [this.getQuantity(row)])
+            }
           },
           {
             label: "结算",
@@ -602,6 +617,19 @@ export default {
             />
           </UniCol>
           <UniCol :span="24">
+            <PickerUser
+              style="width: 100%;"
+              placeholder="请选择员工"
+              is-input
+              title="选择员工"
+              v-model="queryList.staffId"
+              type="staff"
+              is-confirm
+              ref="UserRef"
+              no-safe-bottom
+            />
+          </UniCol>
+          <UniCol :span="24">
             <view style="display: flex;align-items: center;justify-content: space-around; padding-top: 10px;">
               <button
                 style="width: 35%;"
@@ -674,7 +702,7 @@ export default {
                   </view>
 
                   <block v-if="GET_PAGE_MENU_FUNC > 0">
-                    <view class="ko-basic-table--cell">{{ item.quantity }}</view>
+                    <view class="ko-basic-table--cell">{{ getQuantity(item) }}</view>
                     <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
                   </block>
 
@@ -967,19 +995,28 @@ export default {
         >
           计价方式：{{ getPricingMethod(node.pricingMethod) }}
 
-          <text class="ko-basic-money" style="margin-left: 5px;" v-if="node.pricingMethod !== 'commission'">
+          <text
+            class="ko-basic-money" style="margin-left: 5px;"
+            v-if="!['commission', 'priceCommission'].includes(node.pricingMethod)"
+          >
             {{ toYuan(node.price) }}元
           </text>
-          <text class="ko-basic-money" style="margin-left: 6px;" v-else>{{ node.price / 10000 }}%</text>
+          <text
+            class="ko-basic-money"
+            style="margin-left: 6px;"
+            v-else
+          >
+            {{ node.price / 10000 }}%
+          </text>
         </view>
 
         <uni-forms label-align="right" v-if="!['commission'].includes(node.pricingMethod)">
           <uni-forms-item
-            label="数量"
+            :label="['priceCommission'].includes(node.pricingMethod) ? '金额' : '数量'"
             name="name"
             required
           >
-            <uni-easyinput type="digit" v-model="settlementQuantity" placeholder="请输入数量" />
+            <uni-easyinput type="digit" v-model="settlementQuantity" placeholder="请输入" />
           </uni-forms-item>
         </uni-forms>
       </view>
@@ -1035,6 +1072,11 @@ export default {
     height: calc(100vh - 164px);
     padding: 10px;
     //overflow-y: auto;
+  }
+
+  ::v-deep .uv-popup__content.bottom {
+    max-width: 1024px;
+    margin: 0 auto;
   }
 
   // #endif

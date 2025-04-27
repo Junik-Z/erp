@@ -19,6 +19,7 @@ export default {
 
     noFooterPadding: Boolean,
     noFooter: Boolean,
+    noSafeBottom: Boolean
   },
   data() {
     return {};
@@ -63,7 +64,7 @@ export default {
     <view
       class="ko-basic-popup"
       :style="[maxHeight ? {'max-height': maxHeight} : {}]"
-      :class="[type, {close: close, 'show-title': !!title}]"
+      :class="[type, {close: close, 'show-title': !!title, 'no-safe-bottom': noSafeBottom}]"
     >
       <button
         v-if="close"
@@ -117,6 +118,10 @@ export default {
 
   &.bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  &.no-safe-bottom {
+    padding-bottom: 0;
   }
 
   &__header {

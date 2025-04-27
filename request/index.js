@@ -1,6 +1,6 @@
 import { getFileUrl, goLogin, uploadFileApi } from "@/api/user";
 import { CONFIG } from "@/utils/config";
-import { _isDev, _isEqual } from "@/utils";
+import { _isEqual } from "@/utils";
 
 export const baseURl = CONFIG.BASE_URL;
 
@@ -39,7 +39,7 @@ export default function request(config, isLoading = false, whole = false) {
         // #endif
 
         // #ifdef H5
-        ...(Token && false && _isDev() ? {Authorization: Token} : {}),
+        ...(Token ? {Authorization: Token} : {}),
         // #endif
 
         "X-MiniApp-Env": CONFIG.SystemVersion,

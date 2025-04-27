@@ -1,14 +1,11 @@
 <script>
-import UniEcCanvas from "../components/uni-ec-canvas/uni-ec-canvas.vue";
-
 // #ifdef H5
-import * as echarts from "@/finance/components/uni-ec-canvas/echarts.min";
+import * as H5 from "@/finance/components/uni-ec-canvas/echarts.min";
 // #endif
-
 // #ifdef MP
-import * as echarts from "../components/uni-ec-canvas/echarts.min";
+import * as MP from "../components/uni-ec-canvas/echarts.min";
 // #endif
-
+import UniEcCanvas from "../components/uni-ec-canvas/uni-ec-canvas.vue";
 import {
   _deepCopy,
   _generateUUID,
@@ -17,6 +14,7 @@ import {
   _isEqual,
   _isNotUnNil,
   _keys,
+  _omit,
   _set,
   CustomToast,
   getRect,
@@ -26,6 +24,18 @@ import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import PickerSheet from "../components/PickerSheet.vue";
 import { PRICING_METHOD } from "@/utils/config";
 import mixins from "@/mixins/mixins";
+
+let echarts;
+
+// #ifdef H5
+echarts = H5;
+
+// #endif
+
+// #ifdef MP
+echarts = MP;
+
+// #endif
 
 function buildTree(data, parentId = null, parentKey = "parentId", idKey = "processId") {
   // 过滤出当前层级的节点
@@ -47,7 +57,7 @@ const systemInfo = uni.getSystemInfoSync();
 let screenHeight = systemInfo.screenHeight - 100;
 
 // #ifdef H5
-screenHeight = 600;
+screenHeight = systemInfo.screenHeight - 400;
 // #endif
 
 export default {
@@ -148,7 +158,7 @@ export default {
                   arr.push(`{b|员工：${data.staffs?.map(item => item.name)?.join("、")}}`);
                 }
 
-                arr.push(`{c|${PRICING_METHOD[data.pricingMethod]}：}{d|${_isEqual(data.pricingMethod, "commission") ? `${data.price / 10000}%` : (_this.toYuan(data.price) + "元")}}`);
+                arr.push(`{c|${PRICING_METHOD[data.pricingMethod]}：}{d|${["commission", "priceCommission"].includes(data.pricingMethod) ? `${data.price / 10000}%` : (_this.toYuan(data.price) + "元")}}`);
 
                 return arr.join("\n");
               },
@@ -264,26 +274,26 @@ export default {
         }, 600);
       }
 
-      /*  let sequence = 0;
+      let sequence = 0;
 
-       const fn = (li) => {
-         return li.map(item => {
-           sequence += 1;
-           item.sequence = sequence;
+      function bfsSort(root) {
+        const result = [];
+        const queue = _deepCopy(root);
+        while (queue.length > 0) {
+          const node = queue.shift();
+          sequence += 1;
+          result.push({
+            ..._omit(_deepCopy(node), ["children"]),
+            sequence,
+          });
+          if (node.children) {
+            queue.push(...node.children); // 子节点入队
+          }
+        }
+        return result;
+      }
 
-           let children = [];
-
-           if (item.children) {
-             children = fn(item.children);
-           }
-
-           return [_omit(item, "children"), ...children];
-         });
-       };
-
-       console.log(_flattenDeep(fn(_deepCopy(list))), list); */
-
-      !flag && this.$emit("input", _deepCopy(this.tree)?.map((v, index) => ({...v, sequence: index + 1})));
+      !flag && this.$emit("input", bfsSort(list));
     },
 
     // 点击
@@ -323,7 +333,7 @@ export default {
           return false;
         }
 
-        if (_isEqual("commission", params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
+        if (["commission", "priceCommission"].includes(params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
           this.pLoading = false;
           uni.showToast({
             title: `总单价提成不能小于0%、大于99%`,
@@ -336,7 +346,7 @@ export default {
         if (!valid) {
           this.pLoading = true;
 
-          params.price = _isEqual("commission", params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
+          params.price = ["commission", "priceCommission"].includes(params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
 
           if (_isEqual(this.pType, "root")) {
             this.tree.push({...params, processId: _generateUUID(), parentId: null});
@@ -407,7 +417,7 @@ export default {
       this.visible = true;
       const node = _deepCopy(this.node);
 
-      node.price = _isEqual("commission", node.pricingMethod) ? node.price / 10000 : _isNotUnNil(node.price) ? this.toYuan(node.price) : null;
+      node.price = ["commission", "priceCommission"].includes(node.pricingMethod) ? node.price / 10000 : _isNotUnNil(node.price) ? this.toYuan(node.price) : null;
 
       node.placeholderLabel = (node.staffs || []).map(v => v.name).join("、");
       this.form = node;
@@ -448,6 +458,20 @@ export default {
     // 选中的员工
     onCheckNode(list) {
       this.form.staffs = _deepCopy(list);
+    },
+
+    // 清除说有节点
+    onClearCraft() {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要清除所有的节点吗？",
+        success: (res) => {
+          if (res.confirm) {
+            this.tree = [];
+            this.setCanvasNode(false);
+          }
+        },
+      });
     },
   },
   computed: {
@@ -507,12 +531,18 @@ export default {
           arg: ["craft"],
           perm: "QUICK_CRAFT_LIST",
         },
-      ].filter(item => item.perm ? this.isPerm(item.perm) : true);
+      ].filter(item => {
+        const isPerm = item.perm ? this.isPerm(item.perm) : true;
+
+        if (item.func === "onAdderRoot") return !this.tree.length;
+
+        return isPerm;
+      });
     },
 
     // 价格描述
     getPriceLabel() {
-      return {commission: "提成比例"}?.[this.form.pricingMethod] || "价格";
+      return {commission: "提成比例", priceCommission: "提成比例"}?.[this.form.pricingMethod] || "价格";
     },
   },
 };
@@ -520,6 +550,10 @@ export default {
 
 <template>
   <view class="ko-craft" :style="[{'--wrap-height': (wrapHeight - 140) + 'px'}]">
+    <button @click.stop="onClearCraft" class="ko-basic-button__card ko-craft__button" v-if="!readonly && tree.length">
+      清除所有节点
+    </button>
+
     <UniEcCanvas
       ref="canvas"
       :ec="ec"
@@ -630,6 +664,14 @@ export default {
 <style scoped lang="scss">
 .ko-craft {
   height: 100%;
+  position: relative;
+
+  &__button {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    z-index: 999;
+  }
 
   &__popup {
     padding: 10px;

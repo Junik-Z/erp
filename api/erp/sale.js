@@ -636,3 +636,14 @@ export function getOrderStatusApi(data) {
   });
 }
 
+/**
+ * @description 获取定制订单详情
+ */
+export function getProduceInfoApi(data) {
+  return request({
+    url: "/sale/produce/detail",
+    method: "get",
+    data,
+  });
+}
+

@@ -558,7 +558,7 @@ export default {
   &__order-type {
     font-size: 10px;
 
-    &.SALE {
+    &.SALE, &.customized {
       color: #007BFF;
     }
 
@@ -574,7 +574,7 @@ export default {
       color: #DC3545;
     }
 
-    &.PRODUCTION {
+    &.PRODUCTION, &.internal {
       color: #FFC107;
     }
 

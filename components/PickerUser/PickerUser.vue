@@ -125,6 +125,8 @@ export default {
 
     // 空数据显示占位
     placeholderLabel: String,
+
+    noSafeBottom: Boolean
   },
   created() {
     if ((this.isInput && !this.isLongList && !this.isExternalOpen) && !this.notCreatedRequest) {
@@ -470,6 +472,8 @@ export default {
       :type="isInput ? 'bottom' : 'center'"
       :no-footer="!isConfirm"
       @close="onClose"
+      no-footer-padding
+      :no-safe-bottom="noSafeBottom"
     >
       <view v-if="modelVisible" class="ko-picker-user__popup" :class="{'is-input': isInput}">
         <view>

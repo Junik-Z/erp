@@ -8,7 +8,7 @@ import {
   getMyWorkingListApi,
   getWaitMyConfirmListApi,
 } from "@/api/erp/produce";
-import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, CustomToast } from "@/utils";
+import { _deepCopy, _get, _groupBy, _isEmpty, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -225,9 +225,9 @@ export default {
         return false;
       }
 
-      const quantity = +this.sQuantity;
+      let quantity = +this.sQuantity;
 
-      if (!["fixedPrice", "fixedPriceGroup"].includes(this.node.pricingMethod)) {
+      /* if (!["fixedPrice", "fixedPriceGroup"].includes(this.node.pricingMethod)) {
         if (isNaN(quantity)) {
           CustomToast({
             title: "请输入数字字符",
@@ -243,7 +243,10 @@ export default {
           });
           return false;
         }
-      }
+      } */
+
+      // 金额提成
+      if (["priceCommission"].includes(this.node.pricingMethod)) quantity = this.toFen(quantity);
 
       this.pLoading = true;
       applySettleApi({...this.node, quantity})
@@ -268,10 +271,10 @@ export default {
           if (res.confirm) {
             completeCraftApi({id: row.id})
               .then(() => {
-                this.$set(row, "status", "FINISHED");
-                CustomToast({
-                  title: "操作成功",
-                });
+                // this.$set(row, "status", "FINISHED");
+                this.getList(true);
+
+                CustomToast({title: "操作成功"});
               });
 
           }
@@ -337,6 +340,9 @@ export default {
           label: "数量",
           width: 100,
           prop: "quantity",
+          render: (h, {row}) => {
+            return h("span", [this.getQuantity(row)]);
+          },
         },
         {
           label: "结算",
@@ -451,7 +457,7 @@ export default {
     // 获取计价方式价格
     getPricingMethodPrice() {
       return row => {
-        return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+        return ["commission", "priceCommission"].includes(row.pricingMethod) ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
       };
     },
 
@@ -463,6 +469,17 @@ export default {
     // 获取订单地址
     getOrderAddress() {
       return child => _get(child, `0.orderAddress`) || "";
+    },
+
+    // 获取数量
+    getQuantity() {
+      return row => {
+        return ["priceCommission"].includes(row.pricingMethod) ? this.toYuan(row.quantity) : row.quantity;
+      };
+    },
+
+    getCreateTime() {
+      return time => time && time.split(" ")[0] || "";
     },
   },
 };
@@ -623,12 +640,12 @@ export default {
                   </view>
 
                   <block v-if="GET_PAGE_MENU_FUNC !== 0">
-                    <view class="ko-basic-table--cell">{{ item.quantity }}</view>
+                    <view class="ko-basic-table--cell">{{ getQuantity(item) }}</view>
                     <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
                   </block>
 
                   <block v-if="GET_PAGE_MENU_FUNC > 1">
-                    <view class="ko-basic-table--cell">{{ item.updateTime }}</view>
+                    <view class="ko-basic-table--cell">{{ getCreateTime(item.updateTime) }}</view>
                   </block>
 
                   <block v-if="GET_PAGE_MENU_FUNC === 0">
@@ -844,7 +861,8 @@ export default {
         >
           计价方式：{{ getPricingMethod(node.pricingMethod) }}
 
-          <text class="ko-basic-money" style="margin-left: 5px;" v-if="node.pricingMethod !== 'commission'">
+          <text class="ko-basic-money" style="margin-left: 5px;"
+                v-if="!['commission', 'priceCommission'].includes(node.pricingMethod)">
             {{ toYuan(node.price) }}元
           </text>
           <text class="ko-basic-money" style="margin-left: 6px;" v-else>{{ node.price / 10000 }}%</text>
@@ -852,11 +870,11 @@ export default {
 
         <uni-forms label-align="right" v-if="!['commission'].includes(node.pricingMethod)">
           <uni-forms-item
-            label="数量"
+            :label=" ['priceCommission'].includes(node.pricingMethod) ? '金额' : '数量'"
             name="name"
             required
           >
-            <uni-easyinput type="digit" v-model="sQuantity" placeholder="请输入数量" />
+            <uni-easyinput type="digit" v-model="sQuantity" placeholder="请输入" />
           </uni-forms-item>
         </uni-forms>
       </view>
