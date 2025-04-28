@@ -65,6 +65,14 @@ export function uploadFileApi() {
 
 
 /**
+ * @description 上传物料
+ */
+export function readMaterialListFileApi() {
+  return `${CONFIG.BASE_URL}/produce/readMaterialListFile`;
+}
+
+
+/**
  * @description 获取我的信息
  */
 export function getMyInfoApi(data) {

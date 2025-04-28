@@ -117,7 +117,7 @@ export default {
         });
       } else if (_isEqual(this.getCurrent, 2) && this.isPerm("STAFF_SALARY_LIST")) {
         uni.navigateTo({
-          url: PageEnums.staffWages + `?id=${item.id}`,
+          url: PageEnums.staffWages + `?id=${item.id}&name=${item.name}`,
         });
       } else {
         this.noRefresh = false;

@@ -275,11 +275,9 @@ export default {
     // 处理查看图片
     lookImage(url) {
       if (url) {
-        if (url) {
-          uni.previewImage({
-            urls: [url],
-          });
-        }
+        uni.previewImage({
+          urls: [url],
+        });
       }
     },
 

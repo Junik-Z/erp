@@ -262,7 +262,7 @@ export default {
       if (this.isPerm("STAFF_SALARY_LIST")) {
         this.noRefresh = true;
         uni.navigateTo({
-          url: PageEnums.staffWages + `?id=${item.id}&no-operate=true`,
+          url: PageEnums.staffWages + `?id=${item.id}&no-operate=true&name=${item.name}`,
         });
       }
     },

@@ -39,6 +39,9 @@ export default {
     disabled: Boolean,
     readonly: Boolean,
     showUpdateList: Boolean,
+
+    // 是否使用外部上传
+    isExternalUpload: Boolean,
   },
   data: () => ({
     imageValue: [],
@@ -49,7 +52,7 @@ export default {
         width: 1,
         style: "dashed",
         radius: "6px",
-        color: '#8f939c'
+        color: "#8f939c",
       },
     },
   }),
@@ -81,7 +84,6 @@ export default {
 
     // 获取上传状态
     select(e) {
-      console.log("选中的文件", e);
       const tempFiles = e.tempFiles;
 
       const image = [];
@@ -266,6 +268,12 @@ export default {
 
     // 上传文件
     onCropFile(list) {
+
+      if (this.isExternalUpload) {
+        this.$emit("upload", list);
+        return false;
+      }
+
       uni.showLoading({
         title: "上传中...",
         mask: true,
@@ -367,7 +375,7 @@ export default {
 <style scoped lang="scss">
 .ko-file-picker {
   min-width: 50px;
-  min-height: 50px;
+  min-height: 30px;
 
   ::v-deep .uni-file-picker {
     height: calc(100% - 0.5px);

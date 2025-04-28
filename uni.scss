@@ -129,6 +129,26 @@ button::after {
   }
 }
 
+.ko-basic-button__link {
+  border-radius: 55px;
+  color: $ko-primary-color;
+  font-size: 11px;
+  padding: 4px 10px;
+  line-height: 1.2;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+  // #endif
+
+  & + .ko-basic-button__user {
+    margin-left: 6px;
+  }
+}
+
 .ko-basic-box-shadow {
   box-shadow: $uni-shadow-base;
 

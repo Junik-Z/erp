@@ -67,12 +67,17 @@ export default {
       ],
 
       option: {},
+
+      sName: "",
+
+      checkNode: null,
     };
   },
   mixins: [mixins],
   onLoad(option) {
     this.option = option;
     this.queryList["staffId"] = option.id;
+    this.sName = option.name;
     this.isNoOperate = _isEqual(option["no-operate"], "true");
 
     this.getList(true);
@@ -95,6 +100,8 @@ export default {
         this.queryList.pageNum = 0;
         this.list = [];
       }
+
+      if (this.checkNode?.name) this.sName = _deepCopy(this.checkNode?.name);
 
       this.loading = true;
       getSalaryListApi(this.queryList)
@@ -177,12 +184,20 @@ export default {
 
     // 重置列表
     onResetList() {
+      this.checkNode = null;
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.queryList.staffId = _deepCopy(this.option.id);
+      this.sName = _deepCopy(this.option.name);
+
       this.$refs.SearchRef.onShowSearch(false);
       this.$refs.PCRef && this.$refs.PCRef.clearable();
 
       this.getList(true);
+    },
+
+    // 选中的员工
+    onCheckNode(item) {
+      this.checkNode = _deepCopy(item);
     },
   },
   computed: {
@@ -240,7 +255,6 @@ export default {
       })[type];
     },
 
-
     getPricingPrice() {
       return node => {
         const {pricingMethod, amount} = node || {};
@@ -296,8 +310,8 @@ export default {
           },
         },
         {
-          label: "结算",
-          prop: "finalAmount",
+          label: "金额",
+          prop: "amount",
           render(h, {row}) {
             return h("span", {class: "ko-basic-money"}, [_this.toYuan(Math.abs(row.amount))]);
           },
@@ -306,11 +320,13 @@ export default {
           label: "日期",
           prop: "updateTime",
         },
-        {
-          label: "操作",
-          width: 160,
-          slot: "operate",
-        },
+        ...(this.isNoOperate ? [] : [
+          {
+            label: "操作",
+            width: 160,
+            slot: "operate",
+          },
+        ]),
       ];
     },
     // #endif
@@ -321,7 +337,7 @@ export default {
 <template>
   <view class="ko-wages">
     <HistoryBar
-      :values="['工资']"
+      :values="[`${sName}的工资明细`]"
       :is-show-search="true"
       ref="SearchRef"
     >
@@ -338,6 +354,8 @@ export default {
               is-confirm
               ref="UserRef"
               no-safe-bottom
+
+              @check-node="onCheckNode"
             />
           </UniCol>
           <UniCol :span="24">
@@ -466,7 +484,7 @@ export default {
 
                 <button
                   class="ko-basic-button__card"
-                  v-if="isEqual(GET_FUNC(child, '0.type'), 'ProductionSettlement') && isPerm('STAFF_ADD_SUBSIDY')"
+                  v-if="isEqual(GET_FUNC(child, '0.type'), 'ProductionSettlement') && isPerm('STAFF_ADD_SUBSIDY') && !isNoOperate"
                   @click.stop="onAddSettle(child)"
                 >
                   结算

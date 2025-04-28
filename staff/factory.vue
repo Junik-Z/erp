@@ -470,11 +470,13 @@ export default {
         {
           label: "图片",
           prop: "images",
+          width: 60,
           render(h, {row}) {
             return h(
               UvAvatar,
               {
                 props: {
+                  shape: 'square',
                   src: _this.getImageUrl(row.images),
                 },
               });
@@ -499,8 +501,8 @@ export default {
             label: "数量",
             prop: "quantity",
             render: (h, {row}) => {
-              return h('span', [this.getQuantity(row)])
-            }
+              return h("span", [this.getQuantity(row)]);
+            },
           },
           {
             label: "结算",

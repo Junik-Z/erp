@@ -162,21 +162,21 @@ export const PageEnums = {
   // 销售首页
   purchaseLoading: "/purchase/loading",
 
-  // 销售看板
+  // 采购看板
   purchaseView: "/purchase/view",
-  // 销售
+  // 采购
   purchase: "/purchase/purchase",
-  // 客户管理
+  // 供应商管理
   purchaseClient: "/purchase/supplier",
-  // 添加客户管理
+  // 添加采购管理
   purchaseNewClient: "/purchase/new-supplier",
-  // 销售退货列表
+  // 采购退货列表
   purchaseRefundList: "/purchase/refund",
-  // 我的销售订单
+  // 我的采购订单
   purchaseMyList: "/purchase/my-order",
 
   // 采购供应商下单返回地址
-  purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
+  purchaseClientAddedBack: "/purchase/supplier",
 
   // 新增修改采购订单
   editPurchase: "/form/purchase-order",
