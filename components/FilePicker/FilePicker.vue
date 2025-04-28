@@ -271,7 +271,6 @@ export default {
 
       if (this.isExternalUpload) {
         this.$emit("upload", list);
-        this.$emit('input', +new Date())
         return false;
       }
 
@@ -341,8 +340,8 @@ export default {
     },
 
     clearFiles(index) {
-      this.$refs.FPRef.clearFiles(index)
-    }
+      this.$refs.FPRef.clearFiles(index);
+    },
   },
   computed: {
     getImageStyle() {
