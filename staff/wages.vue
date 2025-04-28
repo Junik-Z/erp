@@ -1,6 +1,6 @@
 <script>
-import { getSalaryListApi, getSettledListApi } from "@/api/erp/produce";
-import { _groupBy, _isEmpty, _isEqual } from "@/utils";
+import { addSubsidyApi, editSubsidyApi, getSalaryListApi, removeSubsidyApi } from "@/api/erp/produce";
+import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _pick, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PRICING_METHOD } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -9,10 +9,25 @@ import { TabList } from "./define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerSheet from "./components/PickerSheet.vue";
 import CraftCard from "./components/CraftCard.vue";
+import WageCard from "./components/WageCard.vue";
+import KoMovable from "@/components/Movable/index.vue";
+import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
+import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
+import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 
 export default {
   name: "Factory",
-  components: {CraftCard, PickerSheet, TopMenus, KoList},
+  components: {
+    KoMovable,
+    CraftCard,
+    PickerSheet,
+    TopMenus,
+    KoList,
+    WageCard,
+    UniForms,
+    UniFormsItem,
+    UniEasyinput,
+  },
   data() {
     return {
       queryList: {
@@ -27,7 +42,13 @@ export default {
 
       groupList: {},
 
-      tableKey: +new Date(),
+      visible: false,
+
+      title: "添加补贴金额",
+      amount: null,
+      isEdit: false,
+      sLoading: false,
+      aId: null,
     };
   },
   mixins: [mixins],
@@ -53,11 +74,10 @@ export default {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date();
       }
 
       this.loading = true;
-      getSettledListApi(this.queryList)
+      getSalaryListApi(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.groupList = _groupBy(this.list, (item) => item.orderCode);
@@ -69,6 +89,61 @@ export default {
         .finally(() => {
           this.loading = false;
         });
+    },
+
+    // 添加补贴
+    onAdded(item) {
+      this.amount = null;
+      this.isEdit = false;
+
+      if (item) {
+        this.title = "修改补贴金额";
+        this.isEdit = true;
+        this.amount = this.toYuan(Math.abs(item.amount));
+        this.aNode = item;
+      }
+      this.visible = true;
+    },
+
+    // 处理提交补贴
+    onSubmit() {
+      if (!this.amount || this.amount < 0) {
+        CustomToast({title: "补贴金额不能小于0", icon: "none"});
+        return false;
+      }
+
+      const Func = this.isEdit ? editSubsidyApi : addSubsidyApi;
+      this.sLoading = true;
+      Func({
+        staffId: this.queryList["staffId"],
+        ...(this.isEdit ? _pick(_deepCopy(this.aNode), ["orderCode", "id"]) : {}),
+        amount: this.toFen(this.amount),
+      })
+        .then(() => {
+          CustomToast({title: `${this.isEdit ? "修改" : "添加"}成功`});
+          this.getList(true);
+          this.visible = false;
+        })
+        .finally(() => {
+          this.sLoading = false;
+        });
+    },
+
+    // 删除补贴金额
+    onRemove(item) {
+      uni.showModal({
+        title: "温馨提示",
+        content: "您确定要删除该补贴吗？",
+        success: (res) => {
+          if (res.confirm) {
+            removeSubsidyApi(item)
+              .then(() => {
+                CustomToast({title: "操作成功"});
+                this.getList(true);
+              });
+          }
+        },
+      });
     },
   },
   computed: {
@@ -88,16 +163,6 @@ export default {
       };
     },
 
-    // 获取计价方式
-    getPricingMethod() {
-      return key => PRICING_METHOD[key];
-    },
-
-    // 获取时间
-    getCreateTime() {
-      return time => time && time.split(" ")[0] || "";
-    },
-
     getPrice() {
       return item => ["commission", "priceCommission"].includes(item.pricingMethod) ? item.price / 10000 : this.toYuan(item.price);
     },
@@ -105,6 +170,16 @@ export default {
     // 获取数量
     getQuantity() {
       return item => _isEqual("priceCommission", item.pricingMethod) ? this.toYuan(item.quantity) : item.quantity;
+    },
+
+    // 获取客户名称
+    getCustomerName() {
+      return child => _get(child, `0.customer.name`) || "";
+    },
+
+    // 获取订单地址
+    getOrderAddress() {
+      return child => _get(child, `0.orderAddress`) || "";
     },
 
     // #ifdef H5
@@ -144,12 +219,15 @@ export default {
           label: "价格",
           prop: "price",
           render(h, {row}) {
-            return h("span", {class: "ko-basic-money"}, [_this.toYuan(row.price)]);
+            return h("span", {class: "ko-basic-money"}, [_this.getPrice(row)]);
           },
         },
         {
           label: "数量",
           prop: "quantity",
+          render(h, {row}) {
+            return h("span", [_this.getQuantity(row)]);
+          },
         },
         {
           label: "结算",
@@ -219,28 +297,31 @@ export default {
 </script>
 
 <template>
-  <view class="ko-factory">
+  <view class="ko-wages">
     <!-- #ifdef MP -->
     <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
       <view :style="[getGridTemplateColumnsStyle]">
         <block v-for="(child, key) of groupList" :key="key">
           <uni-section :title="key" type="line">
-            <view class="ko-basic-table">
-              <view class="ko-basic-table--th">名称</view>
-              <view class="ko-basic-table--th">计价方式</view>
-              <view class="ko-basic-table--th">价格</view>
-              <view class="ko-basic-table--th">数量</view>
-              <view class="ko-basic-table--th">结算</view>
-              <view class="ko-basic-table--th">日期</view>
+            <template #title>
+              <view>
+                <view>{{ key }}</view>
+                <view style="font-weight: normal; font-size: 11px; display: flex; align-items: center">
+                  <view v-if="getCustomerName(child)">
+                    <uni-icons type="person" size="12" />
+                    {{ getCustomerName(child) }}
+                  </view>
+                  <view style="margin-left: 20px;" v-if="getOrderAddress(child)">
+                    <uni-icons type="location" size="12" />
+                    {{ getOrderAddress(child) }}
+                  </view>
+                </view>
+              </view>
+            </template>
 
-              <block v-for="item of child" :key="item.id">
-                <view class="ko-basic-table--cell">{{ item.name }}</view>
-                <view class="ko-basic-table--cell">{{ getPricingMethod(item.pricingMethod) }}</view>
-                <view class="ko-basic-table--cell">{{ getPrice(item) }}</view>
-                <view class="ko-basic-table--cell">{{ getQuantity(item) }}</view>
-                <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
-                <view class="ko-basic-table--cell">{{ getCreateTime(item.updateTime) }}</view>
-              </block>
+            <view style="padding: 0 10px;">
+              <WageCard @remove="onRemove(item)" @editor="onAdded(item)" v-for="item of child" :key="item.id"
+                        :node="item" />
             </view>
           </uni-section>
         </block>
@@ -275,16 +356,53 @@ export default {
       </view>
     </KoList>
     <!-- #endif -->
+
+
+    <KoMovable @click="onAdded(false)">
+      <view style="font-size: 12px; line-height: 1.3;">
+        <view>添加</view>
+        <view>补贴</view>
+      </view>
+    </KoMovable>
+
+    <BasicPopup :visible.sync="visible" :title="title">
+      <view class="ko-wages__popup">
+        <UniForms>
+          <UniFormsItem label-width="120" required label="补贴金额">
+            <UniEasyinput v-model="amount" placeholder="请输入补贴金额" type="digit" />
+          </UniFormsItem>
+        </UniForms>
+      </view>
+
+      <template #footer>
+        <view style="display: flex; justify-content: center; align-items: center;">
+          <button
+            class="ko-basic-button__card"
+            style="width: 120px;"
+            @click.stop="onSubmit"
+            :loading="sLoading"
+            :disabled="sLoading"
+          >
+            提交
+          </button>
+        </view>
+      </template>
+    </BasicPopup>
   </view>
 </template>
 
 <style scoped lang="scss">
-.ko-factory {
+.ko-wages {
   padding-top: 20px;
 
   &__info {
     font-size: 14px;
     color: $uni-base-color;
+  }
+
+  &__popup {
+    width: 90vw;
+    padding: 16px 16px 0;
   }
 }
 </style>

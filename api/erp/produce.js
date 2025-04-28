@@ -607,3 +607,24 @@ export function getSalaryListApi(data) {
 export function getSaleOrderCodeApi(data) {
   return request({url: "/sale/order-code", method: "get", data});
 }
+
+/**
+ * @description 添加员工补贴
+ */
+export function addSubsidyApi(data) {
+  return request({url: "/staff/add-subsidy", method: "post", data});
+}
+
+/**
+ * @description 修改员工补贴
+ */
+export function editSubsidyApi(data) {
+  return request({url: "/staff/edit-subsidy", method: "post", data});
+}
+
+/**
+ * @description 删除员工补贴
+ */
+export function removeSubsidyApi(data) {
+  return request({url: "/staff/delete-subsidy", method: "post", data});
+}

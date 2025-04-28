@@ -24,8 +24,6 @@ if (_isDev()) {
 
   // #ifdef MP
   type = "trial";
-  // BASE_URL = "https://erp.kuaouyun.cn/api";
-  // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
   // #endif
 
   // #ifdef H5
@@ -294,7 +292,7 @@ export const PageEnums = {
   // 生产流程
   factory: "/staff/factory",
   // 员工的已完结工单列表
-  produceStaffCompleteProcess: "/staff/complete-process",
+  produceStaffCompleteProcess: "/staff/wages",
   // 员工工艺工资
   salary: "/staff/salary",
 

@@ -168,6 +168,13 @@ export default {
           },
         },
         {
+          label: "生产类型",
+          prop: "produceType",
+          render(h, {row}) {
+            return h("span", [_this.PRODUCE_TYPE_ENUMS(row.produceType)]);
+          },
+        },
+        {
           label: "客户",
           prop: "customer",
           children: [
@@ -306,6 +313,8 @@ export default {
         if (isTechnology) {
           query += `&isTechnology=true`;
         }
+
+        if(_isEqual(row.produceType, "customized")) query += '&bySale=true'
       }
       uni.navigateTo({
         url: PageEnums.produceWork + query,

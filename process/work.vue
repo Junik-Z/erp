@@ -147,6 +147,9 @@ export default {
 
       // 是否重新下单
       isAgain: false,
+
+      // 来自销售的生产订单
+      bySale: false,
     };
   },
   async onLoad(option) {
@@ -154,6 +157,9 @@ export default {
     this.isEdit = !!option.id;
     // 销售定制单
     this.isSale = _isEqual(option.FORM, "SALE");
+
+    // 来自销售的订单
+    this.bySale = _isEqual(option.bySale, "true");
 
     // 客户下单
     this.isClient = _isEqual(option.isClient, "true");
@@ -728,7 +734,7 @@ export default {
         </block>
 
         <block v-if="isEqual(getCurrentValue, 'other')">
-          <block v-if="isPurchase || isSale">
+          <block v-if="isPurchase || isSale || bySale">
             <view style="padding-top: 10px;">
               <view
                 style="margin: 0 10px 10px;"
@@ -757,6 +763,7 @@ export default {
                     :options="bindList"
 
                     :placeholder-label="GET_FUNC(form, 'customer.name')"
+                    :disabled="bySale"
                   />
                 </uni-forms-item>
               </block>
@@ -768,6 +775,7 @@ export default {
                     v-model="form.otherSupplier"
                     style="width: 100%;"
                     placeholder="请输入"
+                    :disabled="bySale"
                   />
                 </uni-forms-item>
               </block>
@@ -790,7 +798,7 @@ export default {
           </block>
 
 
-          <block v-if="isPurchase || isSale">
+          <block v-if="isPurchase || isSale || bySale">
             <uni-forms-item label="联系电话：" name="orderPhone">
               <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
             </uni-forms-item>
@@ -868,7 +876,7 @@ export default {
             </view>
           </UniSection>
 
-          <UniSection title="总价" type="line"  v-if="isPurchase || isSale">
+          <UniSection title="总价" type="line" v-if="isPurchase || isSale || bySale">
             <block v-if="isEqual(type, 'packing')">
               <BinCount v-model="form.customizedBoards[0]" @change-total="countTotalAmount" />
             </block>
@@ -899,7 +907,7 @@ export default {
             </view>
           </UniSection>
 
-          <UniSection  v-if="isPurchase || isSale" title="其它费用" type="line">
+          <UniSection v-if="isPurchase || isSale || bySale" title="其它费用" type="line">
             <view style="padding: 10px;">
               <FeesList v-model="form.fees" is-form />
             </view>

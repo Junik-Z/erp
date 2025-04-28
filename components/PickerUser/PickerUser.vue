@@ -464,6 +464,7 @@ export default {
       :styles="{disableColor: 'transparent'}"
       :value="getShowLabel"
       is-readonly
+      :disabled="disabled"
     />
 
     <BasicPopup

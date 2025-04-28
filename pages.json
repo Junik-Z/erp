@@ -421,9 +421,9 @@
           }
         },
         {
-          "path": "complete-process",
+          "path": "wages",
           "style": {
-            "navigationBarTitleText": "员工生产记录",
+            "navigationBarTitleText": "员工工资",
             "disableScroll": false
           }
         },

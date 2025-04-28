@@ -978,7 +978,7 @@ $border-color: #e9e9eb;
       margin-bottom: 10px;
 
       .ko-basic-count {
-        padding: 10px 0;
+        padding: 4px 0;
       }
     }
 
