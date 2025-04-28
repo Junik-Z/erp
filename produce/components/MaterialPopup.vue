@@ -52,6 +52,7 @@ export default {
       list: [],
 
       value: "",
+
     };
   },
   mixins: [mixins],
@@ -94,8 +95,6 @@ export default {
 
     // 处理导入物料
     onImport(list) {
-      console.log(this.form.materialDetails);
-
       const item = list?.[0] || {};
 
       if (_isEmpty(item)) {
@@ -114,6 +113,7 @@ export default {
           this.list = data;
           if (_isEmpty(res.data)) {
             CustomToast({title: "未识别到产品", icon: "error"});
+            this.rUpload();
           } else {
             CustomToast({title: `已识别${data?.length}件产品`});
             this.wVisible = true;
@@ -125,7 +125,6 @@ export default {
         });
 
     },
-
 
     // 识别到的物料
     onOk() {
@@ -139,12 +138,13 @@ export default {
         productQuantity: item.quantity,
         price: item.purchasePrice,
       })) || [];
-
       this.form.materialDetails = mergeProductArrays(List, N);
-
-      this.value = "";
-
       this.wVisible = false;
+      this.rUpload();
+    },
+
+    rUpload() {
+      this.$refs.FPRef.clearFiles();
     },
   },
 };
@@ -156,13 +156,14 @@ export default {
       <view class="ko-material-popup">
         <view class="ko-material-popup__button">
           <FilePicker
+            ref="FPRef"
             mode="list"
-            v-model="value"
             file-mediatype="all"
             file-extname="xls,xlsx"
             is-external-upload
             @upload="onImport"
             :disabled="eLoading"
+            :limit="1"
           >
             <button
               class="ko-basic-button__card"
@@ -202,7 +203,7 @@ export default {
       </template>
     </BasicPopup>
 
-    <BasicPopup :visible.sync="wVisible" title="识别到的产品">
+    <BasicPopup @close="rUpload" :visible.sync="wVisible" title="识别到的产品">
       <view class="ko-wl-popup" style="--ko-basic-table-grid-col: 50px auto auto auto 60px 50px;">
         <view class="ko-basic-table">
           <view class="ko-basic-table--cell">序号</view>
@@ -233,7 +234,6 @@ export default {
         </view>
 
         <view v-if="!list.length" style="text-align: center; font-size: 12px; color: #c7c9ce;">没有数据了</view>
-
       </view>
 
       <template #footer>

@@ -271,6 +271,7 @@ export default {
 
       if (this.isExternalUpload) {
         this.$emit("upload", list);
+        this.$emit('input', +new Date())
         return false;
       }
 
@@ -338,6 +339,10 @@ export default {
           uni.hideLoading();
         });
     },
+
+    clearFiles(index) {
+      this.$refs.FPRef.clearFiles(index)
+    }
   },
   computed: {
     getImageStyle() {
@@ -350,6 +355,7 @@ export default {
 <template>
   <view class="ko-file-picker">
     <UniFilePicker
+      ref="FPRef"
       v-model="imageValue"
       :mode="mode"
       @select="select"

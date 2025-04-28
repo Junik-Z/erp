@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  // type = "trial";
+  type = "trial";
   // #endif
 
   // #ifdef H5
