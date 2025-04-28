@@ -46,17 +46,22 @@ export default {
       }[this.node.type];
     },
 
-    getAmount() {
+    getPricingPrice() {
+
       const {pricingMethod, amount} = this.node || {};
       if (pricingMethod) {
         if (_isEqual(pricingMethod, "none")) return amount ? `${this.toYuan(Math.abs(amount || 0))}` : "";
 
-        if (_isEqual(pricingMethod, "commission")) return `× ${this.getPrice} = ${this.toYuan(amount || 0)}`;
+        if (_isEqual(pricingMethod, "commission")) return `× ${this.getPrice}`;
 
-        return `${this.getPrice} × ${this.getQuantity} = ${this.toYuan(amount || 0)}`;
+        return `${this.getPrice} × ${this.getQuantity}`;
       }
 
+      return "";
+    },
 
+    getAmount() {
+      const {amount} = this.node || {};
       return amount ? `${this.toYuan(Math.abs(amount || 0))}` : "";
     },
   },
@@ -69,7 +74,7 @@ export default {
       <!-- 生产结算 -->
       <block v-if="isEqual('ProductionSettlement', node.type)">
         <view class="ko-wage-card__item">
-          <view style="font-size: 15px; font-weight: bold;">
+          <view style="font-size: 14px; font-weight: bold;">
             {{ node.name || "-" }}
           </view>
 
@@ -86,18 +91,17 @@ export default {
             </block>
           </view>
 
-          <view class="cell" v-if="getAmount">
+          <view class="cell" v-if="getPricingPrice">
             <text class="ko-basic-money" style="padding-left: 4px;">
-              {{ getAmount }}
+              {{ getPricingPrice }}
             </text>
           </view>
         </view>
 
-        <view class="ko-wage-card__item">
+        <view class="ko-wage-card__item" v-if="getAmount">
           <view class="cell">
-            <uni-icons type="calendar" />
-            <text style="padding-left: 4px;">
-              {{ getCreateTime(node.updateTime) }}
+            <text class="ko-basic-money" style="padding-left: 4px;">
+              ¥ {{ getAmount }}
             </text>
           </view>
         </view>
@@ -127,19 +131,37 @@ export default {
 
           <view class="ko-wage-card__type" :class="[node.type]">{{ getTypeEnum }}</view>
         </view>
-
-        <view class="ko-wage-card__item">
-          <view></view>
-          <view class="cell">
-            <button class="ko-basic-button__card" @click.stop="$emit('remove')">删除</button>
-            <button class="ko-basic-button__card" @click.stop="$emit('editor')">修改</button>
-          </view>
-        </view>
       </block>
 
       <!-- 取消结算 -->
       <block v-if="isEqual('CancelSettlement', node.type)">
+        <view class="ko-wage-card__item" style="margin-bottom: 0;">
+          <view class="cell" v-if="getAmount">
+            <text class="ko-basic-money" style="padding-left: 4px;">
+              ¥ {{ getAmount }}
+            </text>
+          </view>
 
+          <view class="ko-wage-card__type" :class="[node.type]">{{ getTypeEnum }}</view>
+        </view>
+      </block>
+
+      <!-- 订单时间 -->
+      <view class="ko-wage-card__item">
+        <view class="cell">
+          <uni-icons type="calendar" />
+          <text style="padding-left: 4px;">
+            {{ getCreateTime(node.updateTime) }}
+          </text>
+        </view>
+      </view>
+
+      <!-- 操作 -->
+      <block v-if="$slots.operate">
+        <view class="ko-wage-card__item">
+          <view></view>
+          <slot name="operate" />
+        </view>
       </block>
     </view>
   </BasicCard>
@@ -152,7 +174,6 @@ export default {
     align-items: center;
     justify-content: space-between;
     padding: 2px 0;
-    margin-bottom: 8px;
 
     .cell {
       display: flex;

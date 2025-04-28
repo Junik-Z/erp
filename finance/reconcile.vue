@@ -23,6 +23,6 @@ export default {
 
 <style scoped lang="scss">
 .ko-reconcile {
-  padding-bottom: 80px;
+  //padding-bottom: 80px;
 }
 </style>

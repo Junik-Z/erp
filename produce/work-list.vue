@@ -700,13 +700,13 @@ export default {
                   </button>
 
                   <!-- 结算 -->
-                  <button
+                 <!-- <button
                     class="ko-basic-button__card"
                     v-if="['FINISHED'].includes(item.status) && isPerm('CRAFT_APPLY_SETTLE')"
                     @click.stop="onSettlement(item, index)"
                   >
                     结算
-                  </button>
+                  </button>-->
 
                   <!-- 更多按钮 -->
                   <button

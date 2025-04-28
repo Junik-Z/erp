@@ -13,9 +13,10 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { getUnpaidCustomerApi, getUnpaidSupplierApi } from "@/api/erp/finance";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import { _get, _isEmpty } from "@/utils";
+import { _get, _isEmpty, _isEqual } from "@/utils";
 import { PageEnums } from "@/utils/config";
 import TopMenus from "@/finance/components/TopMenus.vue";
+import { getStaffListApi, refreshStaffApi } from "@/api/erp/product";
 
 export default {
   name: "Verification",
@@ -33,6 +34,7 @@ export default {
   },
   mixins: [mixins],
   props: {
+    // 是否是对账客户点击进入的
     isReconcile: Boolean,
   },
   data() {
@@ -46,14 +48,12 @@ export default {
         pageSize: 20,
         pageNum: 0,
       },
-      tableKey: +new Date(),
 
       noRefresh: false,
     };
   },
   onShow() {
     const isNotRefresh = uni.getStorageSync("TO_DETAILS");
-
     this.$nextTick(() => {
       if (!isNotRefresh) {
         this.getList();
@@ -68,11 +68,13 @@ export default {
       if (reset && !this.noRefresh) {
         this.list = [];
         this.queryList.pageNum = 0;
-        this.tableKey = +new Date();
       }
 
       this.loading = true;
-      const Func = (this.isReconcile ? [getUnpaidCustomerApi, getUnpaidSupplierApi] : [getCustomerListApi, getSupplierListApi])[+this.getCurrent];
+      const Func = (this.isReconcile
+          ? [getUnpaidCustomerApi, getUnpaidSupplierApi]
+          : [getCustomerListApi, getSupplierListApi, getStaffListApi]
+      )[+this.getCurrent];
 
       Func(this.queryList)
         .then((res) => {
@@ -97,10 +99,10 @@ export default {
 
     onRefresh(item, index) {
       this.$set(item, "__r_loading__", true);
-      ;[refreshCustomerApi, refreshSupplierApi][+this.getCurrent]({id: item.id})
+      ;[refreshCustomerApi, refreshSupplierApi, refreshStaffApi][+this.getCurrent]({id: item.id})
         .then((res) => {
           uni.showToast({title: "刷新成功"});
-          this.$set(item, "amount", res.data);
+          !_isEqual(this.getCurrent, 2) && this.$set(item, "amount", res.data);
         })
         .finally(() => {
           this.$set(item, "__r_loading__", false);
@@ -112,6 +114,10 @@ export default {
       if ([this.isPerm("FINANCE_RECEIVABLE_CHECK"), this.isPerm("FINANCE_PAYABLE_CHECK")][+this.getCurrent]) {
         uni.navigateTo({
           url: PageEnums.financeCheck + `?id=${item.id}&customer_type=${["sale", "purchase"][+this.getCurrent]}&FORM=${["F_SALE", "F_PURCHASE"][+this.getCurrent]}`,
+        });
+      } else if (_isEqual(this.getCurrent, 2) && this.isPerm("STAFF_SALARY_LIST")) {
+        uni.navigateTo({
+          url: PageEnums.staffWages + `?id=${item.id}`,
         });
       } else {
         this.noRefresh = false;
@@ -161,6 +167,11 @@ export default {
             func: 1,
             perm: "SUPPLIER_LIST",
           },
+          {
+            label: "员工",
+            func: 2,
+            perm: "STAFF_LIST",
+          },
         ]).filter(item => this.isPerm(item.perm));
     },
 
@@ -169,7 +180,8 @@ export default {
     },
 
     getEvents() {
-      return !this.isReconcile && [this.isPerm("CUSTOMER_REFRESH"), this.isPerm("SUPPLIER_REFRESH")][this.getCurrent]
+      return !this.isReconcile
+      && [this.isPerm("CUSTOMER_REFRESH"), this.isPerm("SUPPLIER_REFRESH"), this.isPerm("STAFF_REFRESH")][this.getCurrent]
         ? [{label: "刷新款项"}]
         : [];
     },
@@ -179,7 +191,7 @@ export default {
 
 <template>
   <view class="ko-verification">
-    <TopMenus :path="PageEnums.financeVerification" />
+    <TopMenus :path="PageEnums.financeVerification" v-if="!isReconcile" />
 
     <HistoryBar
       v-if="getTabsList.length"
@@ -197,7 +209,7 @@ export default {
         :events="getEvents"
         @click-item="onClickItem"
         show-amount
-        :is-supplier="!!getCurrent"
+        :is-supplier="getCurrent === 1"
         :loading="loading"
 
         @lower="onLower"

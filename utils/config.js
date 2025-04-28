@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // #endif
 
   // #ifdef H5
@@ -169,7 +169,7 @@ export const PageEnums = {
   // 客户管理
   purchaseClient: "/purchase/supplier",
   // 添加客户管理
-  purchaseNewClient: "/purchase/new-client",
+  purchaseNewClient: "/purchase/new-supplier",
   // 销售退货列表
   purchaseRefundList: "/purchase/refund",
   // 我的销售订单
@@ -291,9 +291,9 @@ export const PageEnums = {
   produceNewStaff: "/staff/new-staff",
   // 生产流程
   factory: "/staff/factory",
-  // 员工的已完结工单列表
-  produceStaffCompleteProcess: "/staff/wages",
-  // 员工工艺工资
+  // 员工工资列表
+  staffWages: "/staff/wages",
+  // 员工工艺
   salary: "/staff/salary",
 
   // ——————————————— 智能客服 ————————————————

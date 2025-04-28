@@ -259,10 +259,10 @@ export default {
     },
 
     onJumpInfo(item) {
-      if (this.isPerm("CRAFT_SETTLED")) {
+      if (this.isPerm("STAFF_SALARY_LIST")) {
         this.noRefresh = true;
         uni.navigateTo({
-          url: PageEnums.produceStaffCompleteProcess + `?id=${item.id}`,
+          url: PageEnums.staffWages + `?id=${item.id}&no-operate=true`,
         });
       }
     },

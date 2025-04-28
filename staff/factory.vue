@@ -156,6 +156,7 @@ export default {
       this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
       this.getList(true);
     },
 

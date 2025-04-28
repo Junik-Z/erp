@@ -1181,12 +1181,6 @@ export const PRODUCE_PERM_TREE = [
         perm: "STAFF_GET_NOT_BIND_INFO",
         id: "427",
       },
-      /* {
-        label: "刷新员工",
-        type: 2,
-        perm: "STAFF_REFRESH",
-        id: "428",
-      }, */
       {
         label: "绑定员工",
         type: 2,
@@ -1199,6 +1193,13 @@ export const PRODUCE_PERM_TREE = [
         type: 2,
         perm: "ATTENDANCE_ALL_RECORDS",
         id: "510",
+      },
+
+      {
+        label: "工资列表",
+        type: 3,
+        perm: "STAFF_SALARY_LIST",
+        id: "1000",
       },
     ],
   },
@@ -1702,6 +1703,39 @@ export const FINANCE_PERM_TREE = [
         type: 2,
         perm: "SUPPLIER_REFRESH",
         id: "639",
+      },
+
+
+      {
+        label: "刷新员工金额",
+        type: 2,
+        perm: "STAFF_REFRESH",
+        id: "428",
+      },
+      {
+        label: "员工工资",
+        type: 3,
+        perm: "STAFF_SALARY_LIST",
+        id: "1004",
+      },
+
+      {
+        label: "添加补贴",
+        type: 2,
+        perm: "STAFF_ADD_SUBSIDY",
+        id: "1001",
+      },
+      {
+        label: "删除补贴",
+        type: 2,
+        perm: "STAFF_DELETE_SUBSIDY",
+        id: "1002",
+      },
+      {
+        label: "修改补贴",
+        type: 2,
+        perm: "STAFF_EDIT_SUBSIDY",
+        id: "1003",
       },
     ],
   },

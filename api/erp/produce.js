@@ -628,3 +628,10 @@ export function editSubsidyApi(data) {
 export function removeSubsidyApi(data) {
   return request({url: "/staff/delete-subsidy", method: "post", data});
 }
+
+/**
+ * @description 添加订单结算
+ */
+export function addSettlementApi(data) {
+  return request({url: "/staff/add-settlement", method: "post", data});
+}
