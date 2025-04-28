@@ -357,7 +357,6 @@ export default {
     </KoList>
     <!-- #endif -->
 
-
     <KoMovable @click="onAdded(false)">
       <view style="font-size: 12px; line-height: 1.3;">
         <view>添加</view>

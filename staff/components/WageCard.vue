@@ -51,6 +51,8 @@ export default {
       if (pricingMethod) {
         if (_isEqual(pricingMethod, "none")) return amount ? `${this.toYuan(Math.abs(amount || 0))}` : "";
 
+        if (_isEqual(pricingMethod, "commission")) return `× ${this.getPrice} = ${this.toYuan(amount || 0)}`;
+
         return `${this.getPrice} × ${this.getQuantity} = ${this.toYuan(amount || 0)}`;
       }
 
@@ -86,7 +88,7 @@ export default {
 
           <view class="cell" v-if="getAmount">
             <text class="ko-basic-money" style="padding-left: 4px;">
-              ¥ {{ getAmount }}
+              {{ getAmount }}
             </text>
           </view>
         </view>
