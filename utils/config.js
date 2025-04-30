@@ -131,6 +131,7 @@ export const PageEnums = {
   home: "/pages/home/home",
 
   qrcode: "/erp/qrcode/qrcode",
+  login: "/pages/login/login",
 
   // —————————— 销售管理 ——————————————————————
   // 销售首页
@@ -186,9 +187,22 @@ export const PageEnums = {
 
   // ———————————— 产品管理 ————————————————————
   // 添加产品
-  addedProduct: "/product/added",
-  // 添加产品
   product: "/product/product",
+
+  // 购物列表
+  shopping: "/product/shopping",
+
+  // 产品分类
+  productClassify: "/product/classify",
+  // 产品扩张字段
+  productField: "/product/field",
+  // 添加产品
+  addedProduct: "/product/added",
+  // 产品详情
+  productDetail: "/product/detail",
+  // 添加产品描述
+  productDesc: "/product/desc",
+
 
   // ———————————— 财务管理 ————————————————————
   financeLoading: "/finance/loading",
@@ -524,3 +538,10 @@ export const PLATE_SPECIF_ENUMS = [
     value: "1220x2750x17",
   }, */
 ];
+
+export const WAGE_TYPE_ENUMS = {
+  ProductionSettlement: "生产结算",
+  ClearAnAccount: "工资/补贴/奖金发放",
+  SubsidyAndBonus: "补贴/奖金所得",
+  CancelSettlement: "取消结算",
+};

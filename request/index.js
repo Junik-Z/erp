@@ -1,5 +1,5 @@
 import { getFileUrl, goLogin, readMaterialListFileApi, uploadFileApi } from "@/api/user";
-import { CONFIG } from "@/utils/config";
+import { CONFIG, PageEnums } from "@/utils/config";
 import { _isEqual, _isString } from "@/utils";
 
 export const baseURl = CONFIG.BASE_URL;
@@ -96,7 +96,7 @@ async function handleResponse(resolve, reject, res, isLoading = false, whole = f
 
         if (resp.confirm) {
           uni.reLaunch({
-            url: "/pages/home/home",
+            url: PageEnums.home,
           });
         }
       },
@@ -110,7 +110,7 @@ async function handleResponse(resolve, reject, res, isLoading = false, whole = f
     uni.setStorageSync("Cookie", "");
 
     uni.reLaunch({
-      url: "/pages/login/login",
+      url: PageEnums.login,
     });
 
     if ("true") return false;

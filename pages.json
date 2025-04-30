@@ -270,13 +270,45 @@
         {
           "path": "product",
           "style": {
-            "navigationBarTitleText": "产品"
+            "navigationBarTitleText": "产品",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "shopping",
+          "style": {
+            "navigationBarTitleText": "产品",
+            "disableScroll": false
+          }
+        },
+        {
+          "path": "desc",
+          "style": {
+            "navigationBarTitleText": "产品描述"
+          }
+        },
+        {
+          "path": "classify",
+          "style": {
+            "navigationBarTitleText": "产品分类"
+          }
+        },
+        {
+          "path": "field",
+          "style": {
+            "navigationBarTitleText": "扩展字段"
           }
         },
         {
           "path": "added",
           "style": {
             "navigationBarTitleText": "产品"
+          }
+        },
+        {
+          "path": "detail",
+          "style": {
+            "navigationBarTitleText": "商品详情"
           }
         }
       ]
@@ -342,7 +374,6 @@
             "navigationBarTitleText": "我的配送"
           }
         },
-
         {
           "path": "new-provider",
           "style": {

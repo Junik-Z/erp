@@ -1,6 +1,6 @@
 <script>
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import { PRICING_METHOD } from "@/utils/config";
+import { PRICING_METHOD, WAGE_TYPE_ENUMS } from "@/utils/config";
 import { _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 
@@ -38,12 +38,7 @@ export default {
     },
 
     getTypeEnum() {
-      return {
-        ProductionSettlement: "生产结算",
-        ClearAnAccount: "工资/补贴/奖金",
-        SubsidyAndBonus: "补贴/奖金",
-        CancelSettlement: "取消结算",
-      }[this.node.type];
+      return WAGE_TYPE_ENUMS[this.node.type];
     },
 
     getPricingPrice() {
@@ -107,7 +102,7 @@ export default {
         </view>
       </block>
 
-      <!-- 工资/补贴/奖金 -->
+      <!-- 工资/补贴/奖金发放 -->
       <block v-if="isEqual('ClearAnAccount', node.type)">
         <view class="ko-wage-card__item" style="margin-bottom: 0;">
           <view class="cell" v-if="getAmount">
@@ -120,7 +115,7 @@ export default {
         </view>
       </block>
 
-      <!-- 补贴/奖金 -->
+      <!-- 补贴/奖金所得 -->
       <block v-if="isEqual('SubsidyAndBonus', node.type)">
         <view class="ko-wage-card__item">
           <view class="cell" v-if="getAmount">

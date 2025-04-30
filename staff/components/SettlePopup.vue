@@ -35,10 +35,12 @@ export default {
     FilePicker,
   },
   mixins: [mixins],
+  props: {
+    name: String
+  },
   methods: {
     open(query) {
       this.form = _deepCopy(this.$options.data().form);
-      console.log(query);
       this.form.staffId = query.staffId;
       this.form.orderCode = query.orderCode;
       this.form.orderId = query.orderId;
@@ -112,9 +114,24 @@ export default {
 </script>
 
 <template>
-  <BasicPopup :visible.sync="visible" title="添加订单结算">
+  <BasicPopup :visible.sync="visible" title="添加生产结算">
     <view class="ko-wage-popup">
       <UniForms :model="form" label-align="right" ref="FormRef" label-width="80px">
+        <UniFormsItem required label="员工">
+          <PickerUser
+            style="width: 100%;"
+            placeholder="请选择员工"
+            is-input
+            title="选择员工"
+            v-model="form.staffId"
+            type="staff"
+            is-confirm
+            ref="UserRef"
+            no-safe-bottom
+            :placeholder-label="name"
+          />
+        </UniFormsItem>
+
         <uni-forms-item
           label="名称"
           name="name"

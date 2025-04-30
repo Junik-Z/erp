@@ -38,11 +38,16 @@ export default {
   },
 
   mixins: [mixins],
-
+  props: {
+    name: String,
+  },
   methods: {
     open(isEdit, query) {
       this.isEdit = isEdit;
       this.form = _deepCopy(this.$options.data().form);
+
+
+      console.log(query);
 
       if (isEdit) {
         this.form = {...query};
@@ -103,7 +108,23 @@ export default {
 <template>
   <BasicPopup :visible.sync="visible" :title="header">
     <view class="ko-wage-popup">
-      <UniForms :model="form"  label-align="right" ref="FormRef" label-width="110px" >
+      <UniForms :model="form" label-align="right" ref="FormRef" label-width="110px">
+
+        <UniFormsItem required label="员工">
+          <PickerUser
+            style="width: 100%;"
+            placeholder="请选择员工"
+            is-input
+            title="选择员工"
+            v-model="form.personId"
+            type="staff"
+            is-confirm
+            ref="UserRef"
+            no-safe-bottom
+            :placeholder-label="name"
+          />
+        </UniFormsItem>
+
         <UniFormsItem v-if="isEdit" label="金额：" required name="amount">
           <UniEasyinput type="digit" v-model="form.amount" placeholder="请输入" />
           <text style="margin-left: 10px;">元</text>
@@ -152,5 +173,6 @@ export default {
 .ko-wage-popup {
   width: 600px;
 }
+
 // #endif
 </style>

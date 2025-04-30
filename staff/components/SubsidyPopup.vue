@@ -22,6 +22,9 @@ export default {
       isEdit: false,
     };
   },
+  props: {
+    name: String,
+  },
   components: {
     UniForms,
     UniFormsItem,
@@ -91,7 +94,21 @@ export default {
   <BasicPopup :visible.sync="visible" :title="header">
     <view class="ko-subsidy-popup">
       <UniForms :model="form" label-align="right" ref="FormRef" label-width="110px">
-        <UniFormsItem label-width="120" required label="补贴金额">
+        <UniFormsItem required label="员工">
+          <PickerUser
+            style="width: 100%;"
+            placeholder="请选择员工"
+            is-input
+            title="选择员工"
+            v-model="form.staffId"
+            type="staff"
+            is-confirm
+            ref="UserRef"
+            no-safe-bottom
+            :placeholder-label="name"
+          />
+        </UniFormsItem>
+        <UniFormsItem required label="补贴金额">
           <UniEasyinput v-model="form.amount" placeholder="请输入补贴金额" type="digit" />
         </UniFormsItem>
       </UniForms>
@@ -123,5 +140,6 @@ export default {
 .ko-subsidy-popup {
   width: 600px;
 }
+
 // #endif
 </style>

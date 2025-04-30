@@ -2,7 +2,7 @@
 import { getSalaryListApi } from "@/api/erp/produce";
 import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
-import { PRICING_METHOD } from "@/utils/config";
+import { PRICING_METHOD, WAGE_TYPE_ENUMS } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import PickerSheet from "./components/PickerSheet.vue";
 import CraftCard from "./components/CraftCard.vue";
@@ -101,10 +101,14 @@ export default {
         this.list = [];
       }
 
-      if (this.checkNode?.name) this.sName = _deepCopy(this.checkNode?.name);
+      if (this.checkNode) this.sName = _deepCopy(this.checkNode?.name) || "";
 
       this.loading = true;
-      getSalaryListApi(this.queryList)
+      const params = _deepCopy(this.queryList);
+
+      params.staffId = params.staffId || "";
+
+      getSalaryListApi(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -197,7 +201,9 @@ export default {
 
     // 选中的员工
     onCheckNode(item) {
-      this.checkNode = _deepCopy(item);
+      this.checkNode = _deepCopy(item) || null;
+
+      console.log(item);
     },
   },
   computed: {
@@ -247,12 +253,7 @@ export default {
 
     // #ifdef H5
     getTypeEnum() {
-      return (type) => ({
-        ProductionSettlement: "生产结算",
-        ClearAnAccount: "工资/补贴/奖金",
-        SubsidyAndBonus: "补贴/奖金",
-        CancelSettlement: "取消结算",
-      })[type];
+      return (type) => WAGE_TYPE_ENUMS[type];
     },
 
     getPricingPrice() {
@@ -275,6 +276,16 @@ export default {
           type: "index",
           width: 60,
         },
+        ...(
+          !this.sName
+            ? [
+              {
+                label: "员工",
+                prop: "staffName",
+              },
+            ]
+            : []
+        ),
         {
           label: "名称",
           prop: "name",
@@ -337,7 +348,7 @@ export default {
 <template>
   <view class="ko-wages">
     <HistoryBar
-      :values="[`${sName}的工资明细`]"
+      :values="[`${sName ? sName + '的' : ''}工资明细`]"
       :is-show-search="true"
       ref="SearchRef"
     >
@@ -441,7 +452,7 @@ export default {
                       <button
                         class="ko-basic-button__card"
                         @click.stop="onEditor(item, index)"
-                        v-if="isShowEdit(item)"
+                        v-if="isShowEdit(item) && sName"
                       >
                         修改
                       </button>
@@ -504,7 +515,7 @@ export default {
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onEditor(item, index)"
-                    v-if="isShowEdit(item)"
+                    v-if="isShowEdit(item) && sName"
                   >
                     修改
                   </button>
@@ -529,13 +540,13 @@ export default {
     />
 
     <!-- 补贴操作 -->
-    <SubsidyPopup ref="SPRef" @success="getList(true)" @remove="getList(true)" />
+    <SubsidyPopup ref="SPRef" :name="sName" @success="getList(true)" @remove="getList(true)" />
 
     <!-- 工资操作 -->
-    <WagePopup ref="WPRef" @success="getList(true)" @remove="getList(true)" />
+    <WagePopup ref="WPRef" :name="sName" @success="getList(true)" @remove="getList(true)" />
 
     <!-- 订单结算 -->
-    <SettlePopup ref="SettlePRef" @success="getList(true)" @remove="getList(true)" />
+    <SettlePopup ref="SettlePRef" :name="sName" @success="getList(true)" @remove="getList(true)" />
   </view>
 </template>
 
@@ -560,6 +571,11 @@ export default {
 // #ifdef H5
 .ko-wages {
   height: calc(100vh - 50px);
+}
+
+::v-deep .uv-popup__content.bottom {
+  max-width: 1024px;
+  margin: 0 auto;
 }
 
 // #endif

@@ -1,49 +1,23 @@
 <script>
-import UniSegmentedControl
-  from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
-import Classify from "./components/Classify.vue";
 import ProductList from "./components/ProductList.vue";
-import FieldList from "./components/Field.vue";
-import { _deepCopy } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { shareProductApi } from "@/api/erp/product";
+import TopMenus from "./components/TopMenus.vue";
+
+import CommodityList from "./components/CommodityList.vue";
 
 export default {
   name: "product",
-  components: {ProductList, Classify, UniSegmentedControl, FieldList},
-  data: () => ({
-    tabList: [
-      {
-        label: "产品管理",
-        ref: "ListRef",
-        // roles: [],
-      },
-      {
-        label: "分类管理",
-        ref: "ClassRef",
-        // roles: [],
-      },
-      {
-        label: "扩展字段",
-        ref: "FieldRef",
-        // roles: [],
-      },
-    ],
-    // TAB: 0,
-  }),
-  onLoad(option) {
-    this.TABS_LIST = _deepCopy(this.tabList);
-    if (option.PAGE_INDEX) {
-      this.TAB = +option.PAGE_INDEX;
-    }
+  components: {
+    ProductList,
+    TopMenus,
+    CommodityList,
   },
+  data: () => ({}),
   mixins: [mixins],
   methods: {
     getList() {
-      this.$nextTick(() => {
-        if (!this.GET_TABS_REF_NAME) return false;
-        this.$refs[this.GET_TABS_REF_NAME]?.getList?.(true);
-      });
+      this.$refs.ListRef && this.$refs.ListRef.getList();
     },
   },
   onShow() {
@@ -82,35 +56,26 @@ export default {
 
 <template>
   <view class="ko-purchase">
-    <view class="ko-purchase__tabs" v-if="GET_TAB_LIST.length > 1">
-      <UniSegmentedControl
-        :values="GET_TAB_LIST"
-        label-key="label"
-        :current.sync="TAB"
-        @clickItem="getList"
-      />
+    <TopMenus :path="PageEnums.product" />
+
+    <view class="ko-purchase__wrap">
+      <CommodityList v-if="true" />
+      <ProductList ref="ListRef" v-if="false" />
     </view>
-
-    <ProductList ref="ListRef" v-if="isEqual(GET_TABS_REF_NAME, 'ListRef')" />
-
-    <Classify ref="ClassRef" v-if="isEqual(GET_TABS_REF_NAME, 'ClassRef')" />
-
-    <FieldList ref="FieldRef" v-if="isEqual(GET_TABS_REF_NAME, 'FieldRef')" />
-
-    <view class="ko-not-perm" v-if="!GET_TAB_LIST.length" />
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-purchase {
+  padding-top: 10px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 
-  &__tabs {
-    padding: 10px;
-
-    /* #ifdef H5 */
-    width: 300px;
-    /* #endif */
+  &__wrap {
+    flex: 1;
+    overflow: hidden;
   }
 }
 </style>

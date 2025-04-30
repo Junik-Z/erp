@@ -250,7 +250,6 @@ export default {
 
     // 点击选好了
     onSubmit() {
-
       const list = _deepCopy(Object.values(this.selected));
 
       if (this.isJudge) {

@@ -3,7 +3,7 @@
     <scroll-view class="da-tree-scroll" :scroll-y="true" :scroll-x="false">
       <view
         class="da-tree-item"
-        :class="{'is-show': item.show}"
+        :class="{'is-show': item.show, 'tree-active-key': activeKey === item.key}"
         :style="{paddingLeft: item.level * indent + 'rpx'}"
         v-for="item in datalist"
         :key="item.key">
@@ -123,6 +123,8 @@ export default {
       default: 10,
     },
     isOperate: Boolean,
+
+    activeKey: [String, Number],
   },
   data() {
     return {
@@ -1043,7 +1045,15 @@ export default {
     line-height: 1;
     visibility: hidden;
     opacity: 0;
-    transition: opacity 0.2s linear, background .3s;
+    transition: opacity 0.2s linear, background .3s, box-shadow .3s;
+
+    &.tree-active-key {
+      background: rgba(254, 242, 242, .3);
+      box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.3);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 0px solid rgba(255, 255, 255, 0.18);
+    }
 
     /* #ifdef H5 */
     &:hover {

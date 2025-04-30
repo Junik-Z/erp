@@ -670,7 +670,7 @@ export default {
     position: absolute;
     top: 0;
     right: 10px;
-    z-index: 999;
+    z-index: 50;
   }
 
   &__popup {

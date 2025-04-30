@@ -33,7 +33,6 @@
 					@click="clear"
 				>
 					<slot />
-					<uv-safe-bottom v-if="safeAreaInsetBottom"></uv-safe-bottom>
 					<view
 						v-if="closeable"
 						@tap.stop="close"
@@ -42,12 +41,12 @@
 						hover-class="uv-popup__content__close--hover"
 						hover-stay-time="150"
 					>
-						<uv-icon
-							name="close"
+						<uni-icons
+							type="close"
 							color="#909399"
 							size="18"
 							bold
-						></uv-icon>
+						/>
 					</view>
 				</view>
 			</uv-transition>

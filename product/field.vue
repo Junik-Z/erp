@@ -16,6 +16,7 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import mixins from "@/mixins/mixins";
 import KoMovable from "@/components/Movable/index.vue";
 import KoList from "@/components/List/List.vue";
+import TopMenus from "@/product/components/TopMenus.vue";
 
 let pageSize = 20;
 
@@ -26,6 +27,7 @@ pageSize = 50;
 export default {
   name: "Field",
   components: {
+    TopMenus,
     KoList,
     KoMovable,
     UniRow,
@@ -110,6 +112,18 @@ export default {
       ],
       // #endif
     };
+  },
+  onShow() {
+    const isNotRefresh = uni.getStorageSync("TO_DETAILS");
+
+    this.$nextTick(() => {
+      if (!isNotRefresh) {
+        this.getList();
+      }
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 100);
+    });
   },
   created() {
     // this.getList();
@@ -216,6 +230,8 @@ export default {
 
 <template>
   <view class="ko-field">
+    <TopMenus :path="PageEnums.productField" />
+
     <view class="ko-field__row">
       <!-- #ifdef MP -->
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">

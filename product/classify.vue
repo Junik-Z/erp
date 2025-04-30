@@ -1,5 +1,5 @@
 <script>
-import DaTreeVue2 from "../components/da-tree-vue2/index.vue";
+import DaTreeVue2 from "./components/da-tree-vue2/index.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
@@ -16,10 +16,12 @@ import { _deepCopy, _get, _isEmpty } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import KoMovable from "@/components/Movable/index.vue";
+import TopMenus from "./components/TopMenus.vue";
 
 export default {
   name: "Classify",
   components: {
+    TopMenus,
     KoMovable,
     UvActionSheet,
     UniForms,
@@ -63,6 +65,18 @@ export default {
 
       childrenField: "field_child",
     };
+  },
+  onShow() {
+    const isNotRefresh = uni.getStorageSync("TO_DETAILS");
+
+    this.$nextTick(() => {
+      if (!isNotRefresh) {
+        this.getList();
+      }
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 100);
+    });
   },
   created() {
     // this.getList();
@@ -245,6 +259,8 @@ export default {
 
 <template>
   <view class="ko-classify">
+    <TopMenus :path="PageEnums.productClassify" />
+
     <view class="ko-classify__row">
       <DaTreeVue2
         ref="DaTreeRef"

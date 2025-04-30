@@ -19,6 +19,7 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import KoList from "@/components/List/List.vue";
 import PickerClass from "./components/PickerClass/PickerClass.vue";
+import GoodDesc from "./components/GoodDesc.vue";
 
 export default {
   name: "Added",
@@ -35,78 +36,81 @@ export default {
     UniSection,
 
     PickerClass,
+    GoodDesc,
   },
-  data: () => ({
-    form: {
-      "name": "",
-      "classId": "",
-      "levelIds": "",
-      "images": "",
-      "description": "",
-      "purchasePrice": "",
-      "salePrice": "",
-      "stockWarning": "",
-      "remark": "",
-      "extend": {},
-    },
-    classList: [],
-    option: {},
-    loading: false,
-    isEdit: false,
-
-    rules: {
-      name: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入产品名称",
-          },
-        ],
-        validateTrigger: "submit",
+  data() {
+    return {
+      form: {
+        "name": "",
+        "classId": "",
+        "levelIds": "",
+        "images": "",
+        "description": "",
+        "purchasePrice": "",
+        "salePrice": "",
+        "stockWarning": "",
+        "remark": "",
+        "extend": {},
       },
-      classId: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请选择分类",
-          },
-        ],
-        validateTrigger: "submit",
-      },
-      purchasePrice: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入采购价格",
-          },
-        ],
-        validateTrigger: "submit",
-      },
-      salePrice: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入销售价格",
-          },
-        ],
-        validateTrigger: "submit",
-      },
-    },
-    fieldList: [],
+      classList: [],
+      option: {},
+      loading: false,
+      isEdit: false,
 
-    // 重复产品列表
-    DuplicateProducts: [],
-    queryList: {
-      pageSize: 1000,
-      pageNum: 0,
-    },
+      rules: {
+        name: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入产品名称",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+        classId: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请选择分类",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+        purchasePrice: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入采购价格",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+        salePrice: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入销售价格",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+      },
+      fieldList: [],
 
-    submitQuery: {},
-    visible: false,
+      // 重复产品列表
+      DuplicateProducts: [],
+      queryList: {
+        pageSize: 1000,
+        pageNum: 0,
+      },
 
-    noMore: false,
-    sLoading: false,
-  }),
+      submitQuery: {},
+      visible: false,
+
+      noMore: false,
+      sLoading: false,
+    };
+  },
   onLoad(option) {
     this.getClassList();
     this.getFieldList();
@@ -214,6 +218,10 @@ export default {
         }
       });
     },
+
+    // 商品详情
+    toDesc(type) {
+    },
   },
 };
 </script>
@@ -278,15 +286,10 @@ export default {
           </UniFormsItem>
         </view>
       </UniSection>
-      <UniSection title="其它信息" type="line" v-if="false">
+      <UniSection title="其它信息" type="line">
         <view style="padding: 10px;">
           <UniFormsItem label="产品描述：" name="description">
-            <UniEasyinput
-              type="textarea"
-              v-model="form.description"
-              style="width: 100%;"
-              placeholder="请输入"
-            />
+            <GoodDesc v-model="form.description" />
           </UniFormsItem>
           <UniFormsItem label="备注：" name="remark">
             <UniEasyinput

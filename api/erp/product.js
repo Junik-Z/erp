@@ -41,7 +41,7 @@ export function getDetailApi(data) {
     url: "/product/detail",
     method: "get",
     data,
-  }, true);
+  });
 }
 
 /**
