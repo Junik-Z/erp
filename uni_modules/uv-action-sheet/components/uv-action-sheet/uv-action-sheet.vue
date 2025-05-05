@@ -7,7 +7,7 @@
     :close-on-click-overlay="closeOnClickOverlay"
     @change="popupChange"
   >
-    <view class="uv-action-sheet">
+    <view class="uv-action-sheet" :class="{'is-goods': isGoods}">
       <view
         class="uv-action-sheet__header"
         v-if="title"
@@ -183,6 +183,9 @@ export default {
   name: "uv-action-sheet",
   mixins: [openType, button, mpMixin, mixin, props],
   emits: ["close", "select"],
+  props: {
+    isGoods: Boolean,
+  },
   computed: {
     // 操作项目的样式
     itemStyle() {
@@ -313,6 +316,10 @@ $uv-action-sheet-cancel-text-hover-background-color: rgb(242, 243, 245) !default
 
   &--hover {
     background-color: $uv-action-sheet-cancel-text-hover-background-color;
+  }
+
+  &.is-goods {
+    padding-bottom: 80px;
   }
 }
 </style>

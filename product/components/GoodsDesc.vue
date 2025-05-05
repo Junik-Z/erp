@@ -2,7 +2,7 @@
 import { PageEnums } from "@/utils/config";
 
 export default {
-  name: "GoodDesc",
+  name: "GoodsDesc",
   props: {
     value: String,
   },
@@ -51,7 +51,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-good-desc">
+  <view class="ko-goods-desc">
     <button class="ko-basic-button__card" v-if="!value" @click="toDesc('added')">添加</button>
     <block v-else>
       <button class="ko-basic-button__card" @click="toDesc('view')">查看</button>
@@ -61,7 +61,7 @@ export default {
 </template>
 
 <style scoped lang="scss">
-.ko-good-desc {
+.ko-goods-desc {
   display: flex;
   align-items: center;
 }

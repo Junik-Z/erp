@@ -18,6 +18,11 @@ export default {
         "produceEnable": true,
         "deliveryEnable": true,
         "ticketTailContent": "",
+        "logo": "",
+        "merchantBgImg": "",
+        "merchantAddress": "",
+        "merchantPhone": "",
+        "merchantProfile": "",
       },
       loading: false,
     };
@@ -56,28 +61,66 @@ export default {
 
 <template>
   <view class="ko-store ko-basic-added-form">
-    <UniForms label-width="100" label-align="right">
-      <UniSection title="功能设置" type="line">
+    <UniForms label-width="70px" label-align="right">
+      <UniSection title="店铺信息" type="line">
+
         <view style="padding-left: 20px;">
-          <UniFormsItem label="生产模块：">
-            <switch
-              style="transform:scale(0.7)"
-              :checked="form.produceEnable"
-              @change="onChangeSwitch($event, 'produceEnable')"
+          <UniFormsItem label="LOGO">
+            <FilePicker
+              v-model="form.logo"
+              :image-styles="{border: {radius: '6px'}, width: 100, height: 100}"
             />
           </UniFormsItem>
-          <UniFormsItem label="物流模块：">
-            <switch
-              style="transform:scale(0.7)"
-              :checked="form.deliveryEnable"
-              @change="onChangeSwitch($event, 'deliveryEnable')"
+          <UniFormsItem label="背景图">
+            <FilePicker
+              v-model="form.merchantBgImg"
+              :image-styles="{border: {radius: '6px'}, width: 160, height: 100}"
+            />
+          </UniFormsItem>
+          <UniFormsItem label="商户地址">
+            <UniEasyinput
+              v-model.trim="form.merchantAddress"
+              placeholder="请输入"
+            />
+          </UniFormsItem>
+          <UniFormsItem label="联系电话">
+            <UniEasyinput
+              v-model.trim="form.merchantPhone"
+              placeholder="请输入"
+            />
+          </UniFormsItem>
+          <UniFormsItem label="简介">
+            <UniEasyinput
+              type="textarea"
+              v-model.trim="form.merchantProfile"
+              placeholder="请输入"
             />
           </UniFormsItem>
         </view>
       </UniSection>
+
+
+      <!-- <UniSection title="功能设置" type="line">
+         <view style="padding-left: 20px;">
+           <UniFormsItem label="生产模块：">
+             <switch
+               style="transform:scale(0.7)"
+               :checked="form.produceEnable"
+               @change="onChangeSwitch($event, 'produceEnable')"
+             />
+           </UniFormsItem>
+           <UniFormsItem label="物流模块：">
+             <switch
+               style="transform:scale(0.7)"
+               :checked="form.deliveryEnable"
+               @change="onChangeSwitch($event, 'deliveryEnable')"
+             />
+           </UniFormsItem>
+         </view>
+       </UniSection>-->
       <UniSection title="单据设置" type="line">
         <view style="padding-left: 20px;">
-          <UniFormsItem label="票据尾部内容：">
+          <UniFormsItem label="票据尾部内容" label-width="110px">
             <UniEasyinput
               type="textarea"
               v-model.trim="form.ticketTailContent"

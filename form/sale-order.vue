@@ -90,6 +90,8 @@ export default {
       isAgain: false,
       // 正常跳转
       isNormal: false,
+      // 编辑模式
+      isEdit: false,
     };
   },
   async onLoad(option) {
@@ -241,6 +243,21 @@ export default {
           }
         });
     },
+
+    // 切换下单样式
+    onBillStyle() {
+      this.setBillStyle()
+
+      this.$nextTick(() => {
+        const sBill = this.sBill
+        if (sBill) {
+          uni.redirectTo({path: PageEnums.shopping})
+        } else {
+          uni.redirectTo({path: PageEnums.editSale})
+        }
+      })
+
+    }
   },
 
   computed: {
@@ -260,6 +277,17 @@ export default {
       label-align="right"
       ref="FormRef"
     >
+      <!-- #ifdef MP -->
+      <view class="ko-order__switch" v-if="!(isAgain || isEdit || isClient)">
+        <button
+          class="ko-basic-button__card"
+          @click="onBillStyle"
+        >
+          <uni-icons color="#fff" :type="!sBill ? 'list' : 'tune-filled'"></uni-icons>
+        </button>
+      </view>
+      <!-- #endif -->
+
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
           <view style="margin: 0 30px 20px;" v-if="!isClient && noCustomerPerm">
@@ -376,6 +404,24 @@ export default {
 
 <style scoped lang="scss">
 .ko-order {
+  position: relative;
+
+  &__switch {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 99;
+
+    .ko-basic-button__card {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      padding: 0;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
   &__item {
     display: flex;
     flex-direction: row;

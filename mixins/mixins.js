@@ -6,7 +6,6 @@ import {
   _get,
   _haveCommonElements,
   _isEmpty,
-  _isEnv,
   _isEqual,
   _isString,
   _keys,
@@ -24,16 +23,14 @@ import { goLogin, logoutApi } from "@/api/user";
 
 import { getSaleShareIdApi, shareOrderApi } from "@/api/erp/sale";
 import { getPurchaseShareIdApi } from "@/api/erp/purchase";
-
-const User = uni.getStorageSync("__USER_INFO__");
-const Sys = uni.getStorageSync("__CONFIG_INFO__");
+import { BILL_KEY, PRODUCT_STYLE_KEY } from "@/store";
 
 export default {
   data() {
     return {
       MIXINS_OBJ: {
-        USER: User || {},
-        SYS: Sys || {},
+        USER: this.$store.state.USER_INFO,
+        SYS: this.$store.state.CONFIG_INFO,
       },
       TABS_LIST: [],
       TAB: 0,
@@ -46,39 +43,12 @@ export default {
     };
   },
   onShow() {
-    this.$nextTick(() => {
-      this._UP_INGO();
-    });
   },
   created() {
-    this.$nextTick(() => {
-      this._UP_INGO();
-
-      uni.$on("$__get_info_success__", () => {
-        // this?.getList?.();
-        this._UP_INGO();
-      });
-
-      uni.$on("$__get_user_info_success__", () => {
-        this._UP_INGO();
-      });
-
-      uni.$on("$__get_config_info_success__", () => {
-        this._UP_INGO();
-      });
-    });
   },
   mounted() {
   },
   methods: {
-    _UP_INGO(res) {
-      const UserInfo = uni.getStorageSync("__USER_INFO__") || _get(res, "0");
-      const SysInfo = uni.getStorageSync("__CONFIG_INFO__") || _get(res, "1");
-
-      this.$set(this.MIXINS_OBJ, "USER", UserInfo);
-      this.$set(this.MIXINS_OBJ, "SYS", SysInfo);
-    },
-
     // 获取通用的分享 query 参数
     async _GET_SHARE_APP_PARAMS_(obj, sceneName = "scene") {
       const scene = uni.getStorageSync("__APP_SCENE__") || "";
@@ -194,6 +164,9 @@ export default {
         uni.$__IS_LOGOUT_FLAG__ = true;
         logoutApi()
           .finally(() => {
+            const isPStyle = uni.getStorageSync(PRODUCT_STYLE_KEY);
+            const isBillStyle = uni.getStorageSync(BILL_KEY);
+
             setTimeout(() => {
               const obj = _omit(params || {}, ["scene"]);
               const query = {
@@ -229,6 +202,9 @@ export default {
                 resolve();
               }, 10);
               // #endif
+
+              uni.setStorageSync(PRODUCT_STYLE_KEY, isPStyle);
+              uni.setStorageSync(BILL_KEY, isBillStyle);
             }, 50);
           });
       });
@@ -356,6 +332,11 @@ export default {
         }
       });
     },
+
+    // 设置下单样式
+    setBillStyle() {
+      this.$store.dispatch("setBillStyleAsync", !this.sBill);
+    },
   },
   components: {
     // #ifdef H5
@@ -411,17 +392,17 @@ export default {
 
     // 用户信息
     GET_USER_INFO() {
-      return this.MIXINS_OBJ?.USER || {};
+      return this.$store.state.USER_INFO || {};
     },
 
     // 商铺信息
     GET_CONFIG_INFO() {
-      return this.MIXINS_OBJ?.SYS || {};
+      return this.$store.state.CONFIG_INFO || {};
     },
 
     // 用户权限
     GET_USER_ROLE() {
-      return _get(this.MIXINS_OBJ?.USER, "role") || [];
+      return _get(this.GET_USER_INFO, "role") || [];
     },
 
     // 订单状态
@@ -589,7 +570,7 @@ export default {
 
     // 获取店铺名称
     GET_SHOP_NAME() {
-      return _get(this.GET_CONFIG_INFO, "remark") || "";
+      return this.GET_CONFIG_INFO && _get(this.GET_CONFIG_INFO || {}, "remark") || "";
     },
 
     // 通用 tab 列表
@@ -685,6 +666,11 @@ export default {
     // 天科装饰有限公司 定制功能
     isTkCustom() {
       return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg")/*  || (_isEnv() && this.isDefault) */;
+    },
+
+    // 下单样式
+    sBill() {
+      return this.$store.getters.sBill;
     },
   },
 };

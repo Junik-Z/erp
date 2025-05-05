@@ -68,6 +68,9 @@ export default {
   mixins: [mixins, SaleMixins, reLogin],
   data() {
     const _this = this;
+
+    console.log(_this.sBill);
+
     return {
       MOVABLE_LIST: [
         // #ifdef MP
@@ -78,7 +81,7 @@ export default {
           openType: "share",
           params: {
             title: `邀请您来下单啦！`,
-            path: PageEnums.editSale,
+            path: PageEnums.shopping,
             query: {
               PAGE_TYPE: "ADDED_SALE",
             },
@@ -342,6 +345,13 @@ export default {
         return false;
       }
 
+      if (this.sBill) {
+        uni.navigateTo({
+          url: PageEnums.shopping + `?PAGE_TYPE=SALE&id=${item.id}`,
+        });
+        return false;
+      }
+
       this.jumpAddedSale({id: item.id}, this.nodeIndex);
     },
 
@@ -358,10 +368,14 @@ export default {
     },
 
     onTrigger(event) {
-      const {path} = event.item || {};
+      let {path} = event.item || {};
       if (path) {
         this.noRefresh = true;
         this.isNewList = true;
+
+        if (_isEqual(PageEnums.editSale, path)) {
+          path = !this.sBill ? PageEnums.editSale : (PageEnums.shopping + "?PAGE_TYPE=SALE");
+        }
 
         uni.navigateTo({url: path});
       }

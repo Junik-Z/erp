@@ -4,13 +4,14 @@ import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar
 import { getProductClassApi, getProductFieldApi, getProductListApi } from "@/api/erp/product";
 import mixins from "@/mixins/mixins";
 import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
-import GoodCard from "./GoodCard.vue";
+import GoodsCard from "./GoodsCard.vue";
 import { PageEnums } from "@/utils/config";
 import DaTreeVue2 from "./da-tree-vue2/index.vue";
+import GoodsMixins from "./GoodsMixins";
 
 export default {
   name: "VTabs",
-  mixins: [mixins],
+  mixins: [mixins, GoodsMixins],
   data() {
     return {
       cLoading: false,
@@ -34,12 +35,25 @@ export default {
     this.getClassifyList();
     this.getFieldList();
   },
-  components: {GoodCard, DaTreeVue2, UniSearchBar},
+  components: {GoodsCard, DaTreeVue2, UniSearchBar},
   props: {
     // 购物模式
     isShopping: Boolean,
+    // 外部编辑
+    isExternal: Boolean,
+
+    // 显示切换
+    showSwitch: {
+      type: Boolean,
+      default: true,
+    },
   },
   methods: {
+    reset() {
+      this.getClassifyList();
+      this.getFieldList();
+      this.getList(true);
+    },
     // 获取分类列表
     getClassifyList() {
       // 加载分类
@@ -71,9 +85,9 @@ export default {
       this.loading = true;
       getProductListApi(this.queryList)
         .then(res => {
-          this.list = this.onMergeArrays(this.list, res.data.map(v => ({...v, value: v.id})));
-
-          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
+          const data = res.data || [];
+          this.list = this.onMergeArrays(this.list, data.map(v => ({...v, productId: v.id})));
+          this.noMore = _isEmpty(data) || data.length < this.queryList.pageSize;
         })
         .catch(() => {
           this.noMore = true;
@@ -125,8 +139,23 @@ export default {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.getList(true);
     },
+
+    // 切换样式
+    onStyle() {
+      const Func = this.isShopping ? this.setBillStyle : this.setProductStyle;
+      Func();
+
+      if (this.isShopping) {
+        const path = this.sStyle ? PageEnums.shopping : PageEnums.editSale;
+        this.$emit("switch", path);
+      }
+    },
   },
-  computed: {},
+  computed: {
+    sStyle() {
+      return this.isShopping ? this.sBill : this.getProductStyle;
+    },
+  },
 };
 </script>
 
@@ -147,8 +176,17 @@ export default {
       <button
         class="ko-basic-button__card"
         @click="showPurchasePrice = !showPurchasePrice"
+        v-if="!isShopping"
       >
         <i class="iconfont" :class="[!showPurchasePrice ? 'icon-xianshi' : 'icon-mimaxianshiyincang-']"></i>
+      </button>
+
+      <button
+        class="ko-basic-button__card"
+        @click="onStyle"
+        v-if="showSwitch"
+      >
+        <uni-icons color="#fff" :type="!sStyle ? 'list' : 'tune-filled'"></uni-icons>
       </button>
     </view>
 
@@ -185,7 +223,7 @@ export default {
             v-for="(item, index) in list"
             :key="index"
           >
-            <GoodCard
+            <GoodsCard
               :show-purchase-price="showPurchasePrice"
               :field="fieldList"
               :node="item"
@@ -204,6 +242,8 @@ export default {
 
 <style scoped lang="scss">
 .ko-v-tabs {
+  --footer-padding-height: 120px;
+
   height: 100%;
   width: 100%;
   display: flex;
@@ -236,14 +276,13 @@ export default {
     }
   }
 
-
   &__left {
     width: 33%;
     box-shadow: 0 2px 10px 0 rgba(31, 38, 135, 0.3);
   }
 
   &__classify {
-    padding-bottom: 40px;
+    padding-bottom: var(--footer-padding-height);
 
     &--item {
       color: rgba(75, 85, 99, 1);
@@ -276,7 +315,7 @@ export default {
     &--content {
       height: 100%;
       overflow-y: auto;
-      padding: 6px 10px 50px;
+      padding: 6px 10px var(--footer-padding-height);
     }
   }
 

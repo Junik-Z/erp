@@ -87,8 +87,11 @@ export default {
     getUserInfo() {
       return getMyInfoApi()
         .then((res) => {
-          uni.setStorageSync("__USER_INFO__", res.data);
-          uni.$emit("$__get_user_info_success__", res.data);
+          const data = res.data;
+          uni.setStorageSync("__USER_INFO__", data);
+          uni.$emit("$__get_user_info_success__", data);
+
+          this.$store.dispatch("setUserInfoAsync", data);
 
           uni.$emit("$__request_message__");
           return res.data;
@@ -99,8 +102,10 @@ export default {
     getConfig() {
       return getConfigApi()
         .then((res) => {
-          uni.setStorageSync("__CONFIG_INFO__", res.data);
-          uni.$emit("$__get_config_info_success__", res.data);
+          const data = res.data;
+          uni.setStorageSync("__CONFIG_INFO__", data);
+          uni.$emit("$__get_config_info_success__", data);
+          this.$store.dispatch("setConfigInfoAsync", data);
           return res.data;
         });
     },

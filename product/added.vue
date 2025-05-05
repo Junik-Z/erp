@@ -19,7 +19,7 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import KoList from "@/components/List/List.vue";
 import PickerClass from "./components/PickerClass/PickerClass.vue";
-import GoodDesc from "./components/GoodDesc.vue";
+import GoodsDesc from "./components/GoodsDesc.vue";
 
 export default {
   name: "Added",
@@ -36,7 +36,7 @@ export default {
     UniSection,
 
     PickerClass,
-    GoodDesc,
+    GoodsDesc,
   },
   data() {
     return {
@@ -51,6 +51,7 @@ export default {
         "stockWarning": "",
         "remark": "",
         "extend": {},
+        carousel: [],
       },
       classList: [],
       option: {},
@@ -147,6 +148,7 @@ export default {
 
           params.purchasePrice = transferYuan(params.purchasePrice);
           params.salePrice = transferYuan(params.salePrice);
+          params.carousel = params.carousel ? (params.carousel).split(",") : [];
 
           this.form = params;
         })
@@ -206,6 +208,7 @@ export default {
           const params = _deepCopy(this.form);
           params.purchasePrice = yuanToPoints(params.purchasePrice);
           params.salePrice = yuanToPoints(params.salePrice);
+          params.carousel = (params.carousel || []).join(",");
 
           this.submitQuery = params;
 
@@ -286,10 +289,23 @@ export default {
           </UniFormsItem>
         </view>
       </UniSection>
-      <UniSection title="其它信息" type="line">
+      <UniSection title="产品详情" type="line">
         <view style="padding: 10px;">
+          <UniFormsItem label="Banner：" name="description">
+            <FilePicker
+              v-model="form.carousel"
+              :limit="9"
+              file-extname="png,jpg,jpeg,gif"
+              show-update-list
+              return-type="array"
+              :image-styles="{
+                width: '100px',
+                height: '100px',
+              }"
+            />
+          </UniFormsItem>
           <UniFormsItem label="产品描述：" name="description">
-            <GoodDesc v-model="form.description" />
+            <GoodsDesc v-model="form.description" />
           </UniFormsItem>
           <UniFormsItem label="备注：" name="remark">
             <UniEasyinput

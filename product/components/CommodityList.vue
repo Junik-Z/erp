@@ -6,14 +6,15 @@ import VTabs from "./VTabs.vue";
 import mixins from "@/mixins/mixins";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 
-import { _deepCopy, _isEmpty } from "@/utils";
+import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
 import { PageEnums } from "@/utils/config";
 import { deleteProductApi, upDownPurchaseApi, upDownSaleApi } from "@/api/erp/product";
+import KoMovable from "@/components/Movable/index.vue";
 
 // 商品列表
 export default {
   name: "Commodity",
-  components: {VTabs, UvVtabs, UvVtabsItem, UvActionSheet},
+  components: {KoMovable, VTabs, UvVtabs, UvVtabsItem, UvActionSheet},
   mixins: [mixins],
   data() {
     return {
@@ -23,6 +24,32 @@ export default {
       list: [],
       node: null,
       nIndex: null,
+
+
+      MOVABLE_LIST: [
+        // #ifdef MP
+        {
+          text: "分享",
+          iconfont: "icon-icon-test",
+          path: PageEnums.shareProduct,
+          perm: "SHARE_PRODUCT",
+          /* openType: "share",
+          params: {
+            title: `邀请您绑定产品！`,
+            path: PageEnums.shareAddedProduct,
+            query: {
+              PAGE_TYPE: "BINDING_PRODUCT",
+            },
+          }, */
+        },
+        // #endif
+        {
+          text: "新增",
+          iconfont: "icon-tianjia",
+          path: PageEnums.addedProduct,
+          perm: "PRODUCT_ADD",
+        },
+      ],
     };
   },
   methods: {
@@ -108,6 +135,18 @@ export default {
         },
       });
     },
+
+    // 点击右下角的按钮
+    onTrigger(event) {
+      const {path} = event.item || {};
+      if (path) {
+        if (_isEqual(PageEnums.addedProduct, path)) {
+          this.onFabClick({});
+        } else {
+          uni.navigateTo({url: path});
+        }
+      }
+    },
   },
   computed: {
     ActionsList() {
@@ -159,6 +198,13 @@ export default {
       @select="onSelect"
     />
     <!-- #endif -->
+
+    <KoMovable
+      :content="GET_MOVABLE_LIST"
+      v-if="isShowMovable"
+
+      @click="onTrigger"
+    />
   </view>
 </template>
 

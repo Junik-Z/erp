@@ -2,6 +2,7 @@
 import { getDetailApi, getProductFieldApi } from "@/api/erp/product";
 import UvParse from "./components/uv-parse/uv-parse.vue";
 import { _get, transferYuan } from "@/utils";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "detail",
@@ -69,6 +70,7 @@ export default {
       info: {},
     };
   },
+  mixins: [mixins],
   methods: {
     getFieldList() {
       getProductFieldApi({pageSize: 100, pageNum: 0})
@@ -83,9 +85,9 @@ export default {
           const params = res.data;
           params.purchasePrice = transferYuan(params.purchasePrice);
           params.salePrice = transferYuan(params.salePrice);
-          this.info = params;
+          params.carousel = params.carousel ? params.carousel.split(",") : [];
 
-          console.log(params);
+          this.info = params;
         })
         .finally(() => {
           this.loading = false;
@@ -104,18 +106,10 @@ export default {
   <view class="ko-detail">
     <view class="ko-detail__swiper">
       <swiper class="ko-detail__swiper--wrap" autoplay="true" duration="1000" interval="3000">
-        <swiper-item class="ko-detail__swiper--item">
+        <swiper-item class="ko-detail__swiper--item" v-for="item of info.carousel" :key="item">
           <image
             class="ko-detail__swiper--image"
-            src="https://fastly.picsum.photos/id/820/800/600.jpg?hmac=Af_5Es6V0RAWhRjJTasmBe55kzkkPTbgm3ilU4iyTUY"
-            mode="aspectFill"
-          />
-        </swiper-item>
-
-        <swiper-item class="ko-detail__swiper--item">
-          <image
-            class="ko-detail__swiper--image"
-            src="https://fastly.picsum.photos/id/820/800/600.jpg?hmac=Af_5Es6V0RAWhRjJTasmBe55kzkkPTbgm3ilU4iyTUY"
+            :src="getImageUrl(item)"
             mode="aspectFill"
           />
         </swiper-item>

@@ -9,6 +9,7 @@ import "@/uni_modules/element-ui/element.min.css";
 // #ifndef VUE3
 import Vue from "vue";
 import App from "./App";
+import store from './store';
 
 
 Vue.config.productionTip = false;
@@ -21,6 +22,7 @@ Vue.use(ElementUI);
 
 const app = new Vue({
   ...App,
+  store
 });
 app.$mount();
 // #endif

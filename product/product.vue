@@ -5,6 +5,7 @@ import { shareProductApi } from "@/api/erp/product";
 import TopMenus from "./components/TopMenus.vue";
 
 import CommodityList from "./components/CommodityList.vue";
+import GoodsMixins from "./components/GoodsMixins";
 
 export default {
   name: "product",
@@ -13,11 +14,22 @@ export default {
     TopMenus,
     CommodityList,
   },
-  data: () => ({}),
-  mixins: [mixins],
+  data() {
+    return {};
+  },
+  mixins: [mixins, GoodsMixins],
+  watch: {
+    getProductStyle: {
+      handler() {
+        this.getList();
+      },
+    },
+  },
   methods: {
     getList() {
-      this.$refs.ListRef && this.$refs.ListRef.getList();
+      setTimeout(() => {
+        this.$refs.ListRef && this.$refs.ListRef.getList();
+      }, 230);
     },
   },
   onShow() {
@@ -59,8 +71,8 @@ export default {
     <TopMenus :path="PageEnums.product" />
 
     <view class="ko-purchase__wrap">
-      <CommodityList v-if="true" />
-      <ProductList ref="ListRef" v-if="false" />
+      <CommodityList v-if="getProductStyle" />
+      <ProductList ref="ListRef" v-if="!getProductStyle" />
     </view>
   </view>
 </template>
