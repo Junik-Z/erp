@@ -6,6 +6,7 @@ export default {
     spacing: Number,
     className: String,
     noShadow: Boolean,
+    bgColor: String,
   },
   methods: {
     onClick(event) {
@@ -20,7 +21,7 @@ export default {
     class="ko-basic-card"
     @click.stop="onClick"
     :class="[{'not-padding': notPadding}, className || '', noShadow ? '' : 'ko-basic-box-shadow']"
-    :style="{ marginBottom: `${spacing || 0}px` }"
+    :style="{ marginBottom: `${spacing || 0}px`, backgroundColor: bgColor }"
   >
     <slot></slot>
   </view>

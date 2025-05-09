@@ -178,6 +178,9 @@ export default {
 
 <template>
   <view class="ko-details ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniSection title="基础信息" type="line">
       <view class="ko-details__item">
         <view class="ko-details__cell">

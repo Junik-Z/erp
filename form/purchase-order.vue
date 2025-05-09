@@ -22,12 +22,14 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import { PageEnums } from "@/utils/config";
 import PickerAddress from "@/form/components/PickerAddress.vue";
+import SendMsg from "./components/SendMsg.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "Order",
   components: {
+    SendMsg,
     PickerAddress,
     OrderCard,
     LoadMore,
@@ -175,7 +177,11 @@ export default {
 
               CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
-                success() {
+                success: async () => {
+                  if ((this.isEdit || this.isAgain) && this.isPerm("SEND_INTERNAL_MESSAGE")) {
+                    await this.$refs.SMRef.open();
+                  }
+
                   if (this.isClient && !this.isNormal) {
                     uni.$emit("$__get_all_info__");
 
@@ -222,7 +228,7 @@ export default {
     },
 
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi({pageSize: 1000, pageNum: 0})
         .then(res => {
           this.bindList = res.data?.map(item => ({...item, value: item.id, label: item.name, logo: item.logo}));
           this.form.supplierId = UserInfo.userId;
@@ -248,6 +254,9 @@ export default {
 
 <template>
   <view class="ko-order ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniForms
       :model="form"
       label-width="120px"
@@ -364,6 +373,8 @@ export default {
         保存
       </button>
     </view>
+
+    <SendMsg ref="SMRef" />
   </view>
 </template>
 

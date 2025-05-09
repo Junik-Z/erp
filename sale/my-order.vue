@@ -458,6 +458,9 @@ export default {
       class="ko-my-order-list"
     >
       <!-- #endif -->
+      <!-- #ifdef MP -->
+      <Notice />
+      <!-- #endif -->
 
       <TopMenus :path="PageEnums.saleMyList" />
 

@@ -347,6 +347,10 @@ export default {
 
 <template>
   <view class="ko-wages">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <HistoryBar
       :values="[`${sName ? sName + '的' : ''}工资明细`]"
       :is-show-search="true"

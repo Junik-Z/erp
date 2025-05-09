@@ -208,6 +208,9 @@ export default {
 
 <template>
   <view class="ko-view-version">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.purchaseView" />
 
     <view class="ko-basic-count__wrap">

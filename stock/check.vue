@@ -1,5 +1,4 @@
 <script>
-import KoNotice from "@/components/Notice/Notice.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import { getInboundDetailListApi, getOutboundDetailListApi } from "@/api/erp/stock";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
@@ -20,7 +19,6 @@ export default {
     KoList,
     OrderCard,
     LoadMore,
-    KoNotice,
     HistoryBar,
     UniEasyinput,
     UniRow,
@@ -261,7 +259,6 @@ export default {
 
 <template>
   <view class="ko-stock-check">
-    <KoNotice />
     <view class="ko-stock-check__tabs" style="padding: 10px 0 0;">
       <HistoryBar
         :values="tabList"

@@ -195,6 +195,9 @@ export default {
 
 <template>
   <view class="ko-refund ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniForms
       :model="form"
       label-width="120px"

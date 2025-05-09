@@ -5,6 +5,12 @@ export default {
   name: "GoodsDesc",
   props: {
     value: String,
+    carousel: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
   },
   data() {
     return {
@@ -17,8 +23,10 @@ export default {
   },
   methods: {
     getTakList(data) {
-      console.log("接收到的数据", data);
-      this.$emit("input", data);
+      console.log("接收到的数据轮播图数据", data);
+
+      this.$emit("input", data.html);
+      this.$emit("update:carousel", data.carousel);
     },
 
     // 商品详情
@@ -35,7 +43,12 @@ export default {
         // #endif
         success: (res) => {
           // 通过eventChannel向被打开页面传送数据
-          res.eventChannel.emit("on_good_desc_over", {type, value: this.value, takeOverName: this.takeOverName});
+          res.eventChannel.emit("on_good_desc_over", {
+            type,
+            value: this.value,
+            takeOverName: this.takeOverName,
+            carousel: this.carousel,
+          });
         },
       });
     },

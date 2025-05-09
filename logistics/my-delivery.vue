@@ -216,6 +216,9 @@ export default {
 
 <template>
   <view class="ko-my-order-list">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.logisticsMyDelivery"/>
 
     <view class="ko-basic-count__wrap">

@@ -308,6 +308,9 @@ export default {
 
 <template>
   <view class="ko-warehouse">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.stockWarehouse" />
 
     <HistoryBar

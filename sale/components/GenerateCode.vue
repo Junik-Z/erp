@@ -61,6 +61,7 @@ export default {
         :src="qrcode"
         mode="aspectFill"
         show-menu-by-longpress
+        lazy-load
       />
     </view>
   </BasicPopup>

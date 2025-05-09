@@ -197,11 +197,33 @@ export function getMessageListApi(data) {
 }
 
 /**
+ * @description 获取我的未读消息数据
+ */
+export function getMessageCountApi(data) {
+  return request({
+    url: "/message/myUnreadMessageCount",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 删除消息
  */
 export function removeMessageApi(data) {
   return request({
     url: "/message/deleteMessage",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 发送内部员工消息
+ */
+export function sendInternalMessageApi(data) {
+  return request({
+    url: "/message/sendInternalMessage",
     method: "post",
     data,
   });
@@ -248,6 +270,37 @@ export function getMonitorJumpApi(data) {
   return request({
     url: "/index/monitor/jump",
     method: "get",
+    data,
+  });
+}
+
+// ———————————————————— 微信用户管理 ————————————
+export function getWxUsersApi(data) {
+  return request({
+    url: "/user/get-all-users",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 设置用户标签
+ */
+export function setUserTagApi(data) {
+  return request({
+    url: "/user/set-tag",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 设置维护人员
+ */
+export function setMaintenanceApi(data) {
+  return request({
+    url: "/manage/setMaintenance",
+    method: "post",
     data,
   });
 }

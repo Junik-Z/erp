@@ -9,7 +9,7 @@ import { _deepCopy } from "@/utils";
 import { updateMyInfoApi, uploadBase64Api } from "@/api/user";
 import { getImageBase64 } from "@/utils/processingFiles";
 import LongPressButton from "@/admin/components/LongPressButton/LongPressButton.vue";
-import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import FilePicker from "../components/FilePicker/FilePicker.vue";
 import { generateQRCodeBusinessesApi } from "@/api/admin";
 
 export default {
@@ -105,6 +105,9 @@ export default {
 
 <template>
   <view class="ko-user ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <view class="ko-user__info" @click="onUpdateInfo">
       <UvAvatar
         :key="GET_USER_INFO.avatar"
@@ -212,6 +215,7 @@ export default {
           class="ko-user__code--image"
           :src="getImageUrl(qrCode)"
           mode="aspectFill"
+          lazy-load
           show-menu-by-longpress
         />
       </view>

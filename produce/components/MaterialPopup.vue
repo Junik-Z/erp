@@ -6,6 +6,7 @@ import PickerProduct from "../components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, _isEmpty, CustomToast } from "@/utils";
 import { requestUploadMaterialFileApi } from "@/request";
 import mixins from "@/mixins/mixins";
+import FilePicker from './FilePicker/FilePicker.vue'
 
 function mergeProductArrays(arr1, arr2) {
   const mergedMap = new Map();
@@ -37,7 +38,7 @@ function mergeProductArrays(arr1, arr2) {
 
 export default {
   name: "MaterialPopup",
-  components: {KoMovable, BasicPopup, PickerProduct},
+  components: {KoMovable, BasicPopup, PickerProduct, FilePicker},
   data() {
     return {
       visible: false,
@@ -144,7 +145,7 @@ export default {
     },
 
     rUpload() {
-      this.$refs.FPRef.clearFiles();
+      this.$refs.FPRef && this.$refs.FPRef.clearFiles();
     },
   },
 };

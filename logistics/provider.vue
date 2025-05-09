@@ -396,6 +396,9 @@ export default {
 
 <template>
   <view class="ko-client">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.logisticsProvider"/>
 
     <view class="ko-client__wrap">

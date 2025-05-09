@@ -126,7 +126,7 @@
           }
         },
         {
-          "path": "merchants/merchants",
+          "path": "set-role",
           "style": {
             "navigationBarTitleText": "员工管理"
           }
@@ -144,15 +144,21 @@
           }
         },
         {
-          "path": "admin/store",
+          "path": "set-shop",
           "style": {
             "navigationBarTitleText": "信息设置"
           }
         },
         {
-          "path": "renewal/renewal",
+          "path": "renewal",
           "style": {
             "navigationBarTitleText": "服务续费"
+          }
+        },
+        {
+          "path": "we-chat",
+          "style": {
+            "navigationBarTitleText": "用户管理"
           }
         }
       ]
@@ -278,7 +284,8 @@
           "path": "shopping",
           "style": {
             "navigationBarTitleText": "产品",
-            "disableScroll": false
+            "disableScroll": false,
+            "navigationStyle": "custom"
           }
         },
         {
@@ -308,7 +315,8 @@
         {
           "path": "detail",
           "style": {
-            "navigationBarTitleText": "商品详情"
+            "navigationBarTitleText": "商品详情",
+            "navigationStyle": "custom"
           }
         }
       ]

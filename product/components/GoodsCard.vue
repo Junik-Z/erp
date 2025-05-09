@@ -88,15 +88,16 @@ export default {
 </script>
 
 <template>
-  <view class="ko-goods-card">
+  <view class="ko-goods-card glass" :class="[type]">
     <image
       class="ko-goods-card__image"
       v-if="node.images"
       :src="getLogo(node.images)"
-      mode="aspectFill"
+      mode="heightFix"
       :style="[{opacity: node.images ? 1 : 0.5}]"
       @click.stop="onClick"
       :class="{'is-goods': isGoods}"
+      style="width: 100%;"
     />
 
     <view class="ko-goods-card__wrap">
@@ -159,14 +160,14 @@ export default {
 <style scoped lang="scss">
 .ko-goods-card {
   --image-size: 80px;
-  --goods-image-size: 120px;
+  --goods-image-size: 140px;
   --border-radius-size: 10px;
   --operate-size: 26px;
 
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.37);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  //background: rgba(255, 255, 255, 0.25);
+  //box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.37);
+  //backdrop-filter: blur(4px);
+  //-webkit-backdrop-filter: blur(4px);
   //border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--border-radius-size);
   overflow: hidden;
@@ -174,15 +175,31 @@ export default {
   //display: flex;
   //align-items: flex-start;
 
+  &.goods {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+
+    .ko-goods-card__image {
+      width: var(--image-size) !important;
+      height: var(--image-size);
+      border-radius: var(--border-radius-size);
+    }
+
+    .ko-goods-card__wrap {
+      flex: 1;
+    }
+  }
+
   &__image {
-    width: 100%;
-    height: var(--image-size);
+    width: 100% !important;
+    //height: var(--image-size);
     border-radius: var(--border-radius-size) var(--border-radius-size) 0 0;
     display: block;
     box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.37);
 
     &.is-goods {
-      height: var(--goods-image-size);
+      //height: var(--goods-image-size);
     }
   }
 
@@ -191,7 +208,7 @@ export default {
     position: relative;
 
     .ko-basic-money {
-      font-size: 14px;
+      font-size: 16px;
 
       &__unit {
         font-size: 12px;
@@ -257,10 +274,8 @@ export default {
 
   &__name {
     font-size: 16px;
-    background: linear-gradient(90deg, #ff6b6b, #ff8e53);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     font-weight: bold;
+    color: #333;
   }
 
   &__operate {
@@ -277,7 +292,7 @@ export default {
   }
 
   &__filed {
-    margin-top: 8px;
+    margin-top: 2px;
     padding: 5px 0;
     font-size: 10px;
     display: flex;

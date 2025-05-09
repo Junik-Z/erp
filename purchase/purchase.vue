@@ -554,6 +554,9 @@ export default {
 
 <template>
   <view class="ko-purchase-order">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.purchase"/>
 
     <HistoryBar

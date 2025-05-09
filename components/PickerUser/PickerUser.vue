@@ -529,7 +529,7 @@ export default {
 <style scoped lang="scss">
 .ko-picker-user {
   &__popup {
-    height: 74vh;
+    height: 77vh;
     position: relative;
     display: flex;
     flex-direction: column;

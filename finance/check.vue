@@ -1,7 +1,6 @@
 <script>
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
-import KoNotice from "@/components/Notice/Notice.vue";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import {
   addedPaidOrderApi,
@@ -40,7 +39,6 @@ export default {
     UniRow,
     OrderCard,
     LoadMore,
-    KoNotice,
     UniSegmentedControl,
     UniEasyinput,
     CheckPopup,
@@ -586,7 +584,10 @@ export default {
 
 <template>
   <view class="ko-check" :class="{'not-footer': isShowFooter && isShowCheck}">
-    <KoNotice />
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <view class="ko-check__tabs" v-if="!isLogistics">
       <HistoryBar
         v-model="current"

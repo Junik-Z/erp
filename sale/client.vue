@@ -484,6 +484,9 @@ export default {
 
 <template>
   <view class="ko-client">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.saleClient" />
 
     <view class="ko-client__content">

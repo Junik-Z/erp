@@ -44,7 +44,7 @@
 					:style="[$uv.addStyle(barItemBadgeStyle)]"
 					v-if="!!(item.badge && (item.badge.show || item.badge.isDot || item.badge.value))"
 				>
-					<uv-badge
+					<UvBadge
 						:show="!!(item.badge && (item.badge.show || item.badge.isDot || item.badge.value))"
 						:isDot="item.badge && item.badge.isDot || propsBadge.isDot"
 						:value="item.badge && item.badge.value || propsBadge.value"
@@ -56,7 +56,7 @@
 						:shape="item.badge && item.badge.shape || propsBadge.shape"
 						:numberType="item.badge && item.badge.numberType || propsBadge.numberType"
 						:inverted="item.badge && item.badge.inverted || propsBadge.inverted"
-					></uv-badge>
+					></UvBadge>
 				</view>
 			</view>
 		</scroll-view>

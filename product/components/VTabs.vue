@@ -29,6 +29,9 @@ export default {
       loading: false,
 
       showPurchasePrice: false,
+
+      // 显示搜索
+      showSearch: false,
     };
   },
   created() {
@@ -82,6 +85,7 @@ export default {
         this.list = [];
         this.queryList.pageNum = 0;
       }
+
       this.loading = true;
       getProductListApi(this.queryList)
         .then(res => {
@@ -99,8 +103,12 @@ export default {
     },
 
     // 处理搜索
-    search(query) {
-      this.queryList.name = query.name;
+    onInputSearch() {
+      if (!this.$refs.DaTreeRef) return false;
+      const keys = this.$refs.DaTreeRef.getCheckedKeys();
+      this.$refs.DaTreeRef.setCheckedKeys(keys, false);
+
+      this.queryList.classId = "";
       this.getList(true);
     },
 
@@ -129,8 +137,8 @@ export default {
 
     // 切换分类搜索
     onChangeClassItem(key, _item) {
-      console.log(key);
       this.queryList.classId = _isEqual(this.queryList.classId, key) ? "" : key;
+      this.queryList.name = "";
       this.getList(true);
     },
 
@@ -150,6 +158,18 @@ export default {
         this.$emit("switch", path);
       }
     },
+
+    // 滚动到底部
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList(false);
+    },
+
+    // 处理搜索显示隐藏
+    onShowSearch() {
+      this.showSearch = !this.showSearch;
+    },
   },
   computed: {
     sStyle() {
@@ -161,11 +181,22 @@ export default {
 
 <template>
   <view class="ko-v-tabs">
-    <view class="ko-v-tabs__search">
+    <button
+      class="ko-basic-button__card ko-v-tabs__search--btn"
+      @click="onShowSearch"
+      v-if="!showSwitch"
+    >
+      <uni-icons color="#fff" type="search"></uni-icons>
+    </button>
+
+    <view
+      class="ko-v-tabs__search glass"
+      :class="{show: showSearch, 'show-switch': showSwitch}"
+    >
       <view style="flex: 1;">
         <UniSearchBar
           :radius="999"
-          @confirm="getList(true)"
+          @confirm="onInputSearch(true)"
           @cancel="onCancel"
           v-model="queryList.name"
           placeholder="产品名称"
@@ -180,7 +211,6 @@ export default {
       >
         <i class="iconfont" :class="[!showPurchasePrice ? 'icon-xianshi' : 'icon-mimaxianshiyincang-']"></i>
       </button>
-
       <button
         class="ko-basic-button__card"
         @click="onStyle"
@@ -194,6 +224,7 @@ export default {
       <scroll-view scroll-y="true" class="ko-v-tabs__left">
         <view class="ko-v-tabs__classify">
           <DaTreeVue2
+            theme-color="rgba(239, 68, 68, 1)"
             ref="DaTreeRef"
             :data="classList"
             labelField="name"
@@ -204,6 +235,8 @@ export default {
             :indent="20"
             :show-radio-icon="false"
             :active-key="queryList.classId"
+            :padding-bottom="80"
+            :padding-top="20"
           />
           <!-- <view
              v-for="(item, index) of classList"
@@ -216,7 +249,7 @@ export default {
            </view>-->
         </view>
       </scroll-view>
-      <view class="ko-v-tabs__right">
+      <scroll-view scroll-y="true" class="ko-v-tabs__right" @scrolltolower="onLower">
         <view class="ko-v-tabs__right--content">
           <view
             class="ko-v-tabs__goods"
@@ -235,14 +268,15 @@ export default {
 
           <uv-loading-icon v-if="loading" />
         </view>
-      </view>
+      </scroll-view>
     </view>
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-v-tabs {
-  --footer-padding-height: 120px;
+  --footer-padding-height: 100px;
+  position: relative;
 
   height: 100%;
   width: 100%;
@@ -252,10 +286,13 @@ export default {
 
   &__search {
     width: 100%;
-    padding-bottom: 10px;
     display: flex;
-    align-items: center;
-    padding-right: 10px;
+    align-items: flex-start;
+    padding-right: calc(32px + 10px + 10px);
+    height: 0;
+    overflow: hidden;
+
+    transition: height .3s;
 
     .ko-basic-button__card {
       display: flex;
@@ -274,11 +311,33 @@ export default {
         height: 20px;
       }
     }
+
+    &--btn {
+      position: absolute;
+      top: 0;
+      right: 10px;
+      z-index: 999;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    &.show {
+      height: 46px;
+    }
+
+    &.show-switch {
+      height: 46px;
+      padding-right: 10px;
+    }
   }
 
   &__left {
     width: 33%;
-    box-shadow: 0 2px 10px 0 rgba(31, 38, 135, 0.3);
+    //box-shadow: 0 2px 10px 0 rgba(31, 38, 135, 0.3);
   }
 
   &__classify {
@@ -302,6 +361,7 @@ export default {
   }
 
   &__wrap {
+    padding-top: 10px;
     flex: 1;
     display: flex;
     overflow: hidden;
@@ -309,18 +369,16 @@ export default {
 
   &__right {
     flex: 1;
-    overflow-y: auto;
+    overflow: hidden;
     padding-top: 6px;
 
     &--content {
-      height: 100%;
-      overflow-y: auto;
       padding: 6px 10px var(--footer-padding-height);
     }
   }
 
   &__goods {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
   }
 }
 </style>

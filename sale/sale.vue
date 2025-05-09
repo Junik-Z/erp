@@ -68,9 +68,6 @@ export default {
   mixins: [mixins, SaleMixins, reLogin],
   data() {
     const _this = this;
-
-    console.log(_this.sBill);
-
     return {
       MOVABLE_LIST: [
         // #ifdef MP
@@ -611,6 +608,9 @@ export default {
 
 <template>
   <view class="ko-order">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.sale" />
 
     <HistoryBar

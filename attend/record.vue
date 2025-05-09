@@ -142,6 +142,9 @@ export default {
 
 <template>
   <view class="ko-record">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <view style="padding: 10px;">
       <PickerDate
         mode="year-month"

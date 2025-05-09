@@ -655,6 +655,12 @@ export const SALE_PERM_TREE = [
         id: "902",
       },
       {
+        label: "发送消息",
+        type: 2,
+        perm: "SEND_INTERNAL_MESSAGE",
+        id: "1030",
+      },
+      {
         label: "创建并绑定客户",
         type: 2,
         perm: "CREATE_BIND_CUSTOMER",
@@ -1062,6 +1068,12 @@ export const PURCHASE_PERM_TREE = [
         id: "902",
       },
       {
+        label: "发送消息",
+        type: 2,
+        perm: "SEND_INTERNAL_MESSAGE",
+        id: "1030",
+      },
+      {
         label: "创建并绑定供应商",
         type: 2,
         perm: "CREATE_BIND_SUPPLIER",
@@ -1443,6 +1455,21 @@ export const PRODUCE_PERM_TREE = [
         type: 2,
         perm: "QUICK_PRODUCE_DELETE",
         id: "441",
+      },
+    ],
+  },
+
+  {
+    label: "其它功能",
+    type: 1,
+    perm: ["SEND_INTERNAL_MESSAGE"],
+    id: "1030434438",
+    children: [
+      {
+        label: "发送消息",
+        type: 2,
+        perm: "SEND_INTERNAL_MESSAGE",
+        id: "1030",
       },
     ],
   },

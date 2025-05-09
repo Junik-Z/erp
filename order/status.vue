@@ -75,6 +75,9 @@ export default {
 
 <template>
   <view class="ko-status">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <view class="ko-status__title">
       <uni-icons style="margin-right: 6px" size="18" color="#1D4ED8" type="info" />
       <text>基础信息</text>

@@ -23,6 +23,7 @@ import FeesList from "./components/FeesList/FeesList.vue";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { PageEnums } from "@/utils/config";
 import PickerAddress from "./components/PickerAddress.vue";
+import SendMsg from "./components/SendMsg.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -40,6 +41,8 @@ export default {
     UniFormsItem,
     UniForms,
     UniSection,
+
+    SendMsg,
   },
   mixins: [mixins],
   data() {
@@ -174,7 +177,11 @@ export default {
             .then((res) => {
               CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
-                success: () => {
+                success: async () => {
+                  if ((this.isEdit || this.isAgain) && this.isPerm("SEND_INTERNAL_MESSAGE")) {
+                    await this.$refs.SMRef.open();
+                  }
+
                   if (this.isClient && !this.isNormal) {
                     uni.$emit("$__get_all_info__");
 
@@ -230,7 +237,7 @@ export default {
             logo: item.logo,
           }));
 
-          this.form.supplierId = UserInfo.userId;
+          // this.form.supplierId = UserInfo.userId;
 
           if (this.bindList.length) {
             this.current = 0;
@@ -246,18 +253,19 @@ export default {
 
     // 切换下单样式
     onBillStyle() {
-      this.setBillStyle()
+      this.setBillStyle();
 
       this.$nextTick(() => {
-        const sBill = this.sBill
-        if (sBill) {
-          uni.redirectTo({path: PageEnums.shopping})
-        } else {
-          uni.redirectTo({path: PageEnums.editSale})
-        }
-      })
+        const sBill = this.sBill;
 
-    }
+        if (sBill) {
+          uni.redirectTo({url: PageEnums.shopping + "?PAGE_TYPE=SALE"});
+        } else {
+          uni.redirectTo({url: PageEnums.editSale});
+        }
+      });
+
+    },
   },
 
   computed: {
@@ -270,6 +278,9 @@ export default {
 
 <template>
   <view class="ko-order ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniForms
       :model="form"
       :rules="rules"
@@ -399,6 +410,8 @@ export default {
         保存
       </button>
     </view>
+
+    <SendMsg ref="SMRef" />
   </view>
 </template>
 

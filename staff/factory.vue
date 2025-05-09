@@ -24,6 +24,8 @@ import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import reLogin from "@/mixins/re-login";
+import SendList from "./components/SendMsg.vue";
+import FilePicker from "./components/FilePicker/FilePicker.vue";
 
 const PageMenu = [
   {
@@ -46,6 +48,7 @@ const PageMenu = [
 export default {
   name: "Factory",
   components: {
+    SendList,
     PickerCalendars,
     CraftCard,
     PickerSheet,
@@ -53,6 +56,7 @@ export default {
     KoList,
     UniRow,
     UniCol,
+    FilePicker,
   },
   data() {
     const _this = this;
@@ -109,9 +113,11 @@ export default {
   onLoad() {
     this.getList(true);
   },
+  // #ifdef MP
   onReachBottom() {
     this.onRequestNextPage();
   },
+  // #endif
   methods: {
     _isEqual,
     // 请求下一页数据
@@ -380,6 +386,11 @@ export default {
         },
       });
     },
+
+    // 发送消息
+    onSendMsg(ids, label) {
+      this.$refs.SMRef.open(ids, label);
+    },
   },
   computed: {
     actionList() {
@@ -476,7 +487,7 @@ export default {
               UvAvatar,
               {
                 props: {
-                  shape: 'square',
+                  shape: "square",
                   src: _this.getImageUrl(row.images),
                 },
               });
@@ -519,7 +530,7 @@ export default {
         {
           label: "员工",
           prop: "staffList",
-          render(h, {row}) {
+          render: (h, {row}) => {
             return h("div", {
                 style: {
                   flex: 1,
@@ -529,7 +540,7 @@ export default {
                   "justify-content": "center",
                 },
               },
-              _this.getStaffListLogo(row)
+              this.getStaffListLogo(row)
                 .map(item => h(
                   "div",
                   {
@@ -539,6 +550,12 @@ export default {
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
+                    },
+                    on: {
+                      click: (event) => {
+                        event.stopPropagation();
+                        this.onSendMsg([item.id], item.name);
+                      },
                     },
                   },
                   [
@@ -550,6 +567,7 @@ export default {
                           randomBgColor: true,
                           size: 38,
                           text: item.name,
+                          notView: true,
                         },
                       }),
                     h("span", {
@@ -586,6 +604,10 @@ export default {
 
 <template>
   <view class="ko-factory">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <TopMenus :tabs="TabList" :path="PageEnums.factory" />
 
     <HistoryBar
@@ -714,19 +736,19 @@ export default {
                   </block>
 
                   <view class="ko-basic-table--cell">
-                    <view
-                      style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;"
-                    >
+                    <view style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
                       <view
                         style="padding: 2px; display: flex; flex-direction: column; justify-content: center;align-items: center;"
                         v-for="staff of getStaffListLogo(item)"
                         :key="staff.id"
+                        @click.stop="onSendMsg([staff.id], staff.name)"
                       >
                         <uv-avatar
                           :src="getImageUrl(staff.logo)"
                           random-bg-color
                           size="18"
                           :text="staff.name"
+                          not-view
                         />
                         <text style="font-size: 10px; color: #8f939c;padding-top: 2px;">{{ staff.name }}</text>
                       </view>
@@ -992,7 +1014,6 @@ export default {
 
     <BasicPopup :visible.sync="settlementVisible" title="结算">
       <view class="ko-factory__popup">
-
         <view
           style="padding: 10px; font-size: 12px;color: #8f939c;"
         >
@@ -1036,6 +1057,8 @@ export default {
         </view>
       </template>
     </BasicPopup>
+
+    <SendList ref="SMRef" />
   </view>
 </template>
 

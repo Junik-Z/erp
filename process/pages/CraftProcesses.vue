@@ -20,7 +20,7 @@ import {
   getRect,
 } from "@/utils";
 import KoMovable from "@/components/Movable/index.vue";
-import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import FilePicker from "../components/FilePicker/FilePicker.vue";
 import PickerSheet from "../components/PickerSheet.vue";
 import { PRICING_METHOD } from "@/utils/config";
 import mixins from "@/mixins/mixins";

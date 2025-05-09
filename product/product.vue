@@ -68,6 +68,9 @@ export default {
 
 <template>
   <view class="ko-purchase">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.product" />
 
     <view class="ko-purchase__wrap">

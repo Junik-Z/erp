@@ -1,11 +1,31 @@
 <script>
-import { _deepCopy, _isEqual } from "@/utils";
+// #ifdef MP
 import PiaoyiEditor from "./components/piaoyi-editor/piaoyi-editor.vue";
+// #endif
+// #ifndef MP
+import Tinymce from "./components/tinymce-vue/Tinymce.vue";
+// #endif
+import { _deepCopy, _isEqual } from "@/utils";
 import { CONFIG } from "@/utils/config";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import mixins from "@/mixins/mixins";
+import FilePicker from './components/FilePicker/FilePicker.vue'
+
 
 export default {
   name: "desc",
-  components: {PiaoyiEditor},
+  components: {
+    // #ifdef MP
+    PiaoyiEditor,
+    // #endif
+
+    // #ifndef MP
+    Tinymce,
+    // #endif
+    UniSection,
+    FilePicker,
+  },
+  mixins: [mixins],
   onLoad(option) {
     const EC = this.getOpenerEventChannel();
     EC?.on?.("on_good_desc_over", (obj) => {
@@ -40,6 +60,8 @@ export default {
       name: "file",
       html: "",
       takeOverName: null,
+
+      carousel: [],
     };
   },
   methods: {
@@ -51,6 +73,7 @@ export default {
 
       this.values = data.value;
       this.takeOverName = data.takeOverName;
+      this.carousel = data.carousel;
     },
 
     saveContens({html}) {
@@ -59,15 +82,16 @@ export default {
 
     onSubmit() {
       if (!this.readOnly) {
-        const params = this.html || this.values;
+        const html = this.html || this.values;
+        const carousel = this.carousel;
 
         // #ifndef H5
         const EC = this.getOpenerEventChannel();
-        EC?.emit?.("on_good_desc_over", params);
+        EC?.emit?.("on_good_desc_over", {html, carousel});
         // #endif
 
         // #ifdef H5
-        uni.$emit(this.takeOverName, params);
+        uni.$emit(this.takeOverName, {html, carousel});
         // #endif
       }
 
@@ -81,25 +105,89 @@ export default {
         },
       });
     },
+
+    // 上传成功
+    onSuccessFiles(files) {
+      console.log("上传成功的文件", files);
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-desc">
-    <view style="flex: 1; overflow: hidden;">
-      <PiaoyiEditor
-        :values="values"
-        :read-only="readOnly"
-        :maxlength="999999999999999"
-        :photoUrl="photoUrl"
-        :api="api"
-        :name="name"
-        @changes="saveContens"
-      />
-    </view>
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
 
-    <view style="display: flex; align-items: center; justify-content: center">
+    <UniSection title="Banner: " type="line">
+      <view style="padding: 0 10px 16px;">
+        <view class="ko-desc__swiper" v-if="readOnly">
+          <swiper
+            class="ko-desc__swiper--wrap"
+            autoplay
+            :duration="500"
+            :interval="3000"
+            indicator-dots
+          >
+            <swiper-item
+              class="ko-desc__swiper--item"
+              v-for="item of carousel"
+              :key="item"
+            >
+              <image
+                class="ko-desc__swiper--image"
+                :src="getImageUrl(item)"
+                mode="widthFix"
+                lazy-load
+              />
+            </swiper-item>
+          </swiper>
+        </view>
+
+        <view class="ko-desc__swiper--button" v-else>
+          <FilePicker
+            v-model="carousel"
+            :limit="9"
+            file-extname="png,jpg,jpeg,gif"
+            show-update-list
+            return-type="array"
+            :image-styles="{width: '100px',height: '100px'}"
+            :readonly="readOnly"
+            @files="onSuccessFiles"
+          >
+            <!-- <button class="ko-basic-button__card" style="width: 120px;">
+               <view style="display: flex; align-items: center; justify-content: center;">
+                 <uni-icons type="cloud-upload-filled" color="#fff" />
+                 <text style="margin-left: 8px;">图片上传</text>
+               </view>
+             </button>-->
+          </FilePicker>
+        </view>
+      </view>
+    </UniSection>
+
+    <UniSection title="产品描述: " type="line">
+      <view style="height: 100vh;">
+        <!-- #ifndef MP -->
+        <Tinymce v-model="values" :readonly="readOnly" />
+        <!-- #endif -->
+
+        <!-- #ifdef MP -->
+        <PiaoyiEditor
+          :values="values"
+          :read-only="readOnly"
+          :maxlength="999999999999999"
+          :photoUrl="photoUrl"
+          :api="api"
+          :name="name"
+          @changes="saveContens"
+        />
+        <!-- #endif -->
+      </view>
+    </UniSection>
+
+    <view class="ko-desc__footer">
       <button class="ko-basic-button__card" style="width: 120px" @click="onSubmit">
         {{ readOnly ? "返回" : "编辑完成" }}
       </button>
@@ -109,10 +197,63 @@ export default {
 
 <style scoped lang="scss">
 .ko-desc {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
   padding-bottom: 30px;
 
+  // #ifdef H5
+  &__swiper {
+    width: 750px;
+    margin: 0 auto;
+
+    uni-swiper {
+      height: 328px;
+    }
+
+    &--wrap {
+      height: 328px;
+    }
+
+    &--image {
+      width: 100%;
+    }
+
+    &--button {
+      width: 750px;
+      margin: 20px auto 0;
+    }
+  }
+
+  // #endif
+
+  // #ifdef MP
+  &__swiper {
+    width: 100%;
+
+    &--wrap {
+      height: 308px;
+    }
+
+    &--image {
+      width: calc(100vw - 20px);
+    }
+
+    &--button {
+      margin-top: 10px;
+      //display: flex;
+      //align-items: center;
+      //justify-content: flex-end;
+    }
+  }
+
+  // #endif
+
+  &__footer {
+    position: fixed;
+    bottom: 32px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 </style>

@@ -1,98 +1,100 @@
 <template>
   <view class="da-tree" :style="{'--theme-color': themeColor}">
-    <scroll-view class="da-tree-scroll" :scroll-y="true" :scroll-x="false">
-      <view
-        class="da-tree-item"
-        :class="{'is-show': item.show, 'tree-active-key': activeKey === item.key}"
-        :style="{paddingLeft: item.level * indent + 'rpx'}"
-        v-for="item in datalist"
-        :key="item.key">
+    <scroll-view class="da-tree-scroll" :class="{'active': activeKey === item.key}" :scroll-y="true" :scroll-x="false">
+      <view :style="[{paddingBottom: `${paddingBottom || 0}px`, paddingTop: `${paddingTop || 0}px`}]">
         <view
-          v-if="item.showArrow"
-          class="da-tree-item__icon"
-          @click="handleExpandedChange(item)"
-        >
-          <view :class="['da-tree-item__icon--arr','is-loading']" v-if="loadLoading && item.loading"></view>
-          <view :class="['da-tree-item__icon--arr','is-expand', {'is-right':!item.expand}]" v-else></view>
-        </view>
-        <view v-else class="da-tree-item__icon"></view>
-        <view
-          class="da-tree-item__checkbox"
-          :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
-          v-if="showCheckbox"
-          @click="handleCheckChange(item)"
-        >
+          class="da-tree-item"
+          :class="{'is-show': item.show, 'tree-active-key glass': activeKey === item.key}"
+          :style="{paddingLeft: item.level * indent + 'rpx'}"
+          v-for="item in datalist"
+          :key="item.key">
           <view
-            class="da-tree-item__checkbox--icon da-tree-checkbox-checked"
-            v-if="item.checkedStatus === isCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-checkbox-indeterminate"
-            v-else-if="item.checkedStatus === halfCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-checkbox-outline"
-            v-else
-          />
-        </view>
-        <view
-          class="da-tree-item__checkbox"
-          :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
-          v-if="!showCheckbox && showRadioIcon"
-          @click="handleRadioChange(item)"
-        >
-          <view
-            class="da-tree-item__checkbox--icon da-tree-radio-checked"
-            v-if="item.checkedStatus === isCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-radio-indeterminate"
-            v-else-if="item.checkedStatus === halfCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-radio-outline"
-            v-else
-          />
-        </view>
-        <view
-          class="da-tree-item__label"
-          :class="'da-tree-item__label--'+item.checkedStatus"
-          @click="handleLabelClick(item)"
-        >
-          <view style="flex: 1;">
-            {{ item.label }}
-            <text class="da-tree-item__label--append" v-if="item.append">{{ item.append }}</text>
+            v-if="item.showArrow"
+            class="da-tree-item__icon"
+            @click="handleExpandedChange(item)"
+          >
+            <view :class="['da-tree-item__icon--arr','is-loading']" v-if="loadLoading && item.loading"></view>
+            <view :class="['da-tree-item__icon--arr','is-expand', {'is-right':!item.expand}]" v-else></view>
           </view>
-          <view class="ko-classify__button">
-            <!-- #ifdef H5 -->
-            <slot name="node" :node="item.originItem" :item="item"></slot>
-            <!-- #endif -->
+          <view v-else class="da-tree-item__icon"></view>
+          <view
+            class="da-tree-item__checkbox"
+            :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
+            v-if="showCheckbox"
+            @click="handleCheckChange(item)"
+          >
+            <view
+              class="da-tree-item__checkbox--icon da-tree-checkbox-checked"
+              v-if="item.checkedStatus === isCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-checkbox-indeterminate"
+              v-else-if="item.checkedStatus === halfCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-checkbox-outline"
+              v-else
+            />
+          </view>
+          <view
+            class="da-tree-item__checkbox"
+            :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
+            v-if="!showCheckbox && showRadioIcon"
+            @click="handleRadioChange(item)"
+          >
+            <view
+              class="da-tree-item__checkbox--icon da-tree-radio-checked"
+              v-if="item.checkedStatus === isCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-radio-indeterminate"
+              v-else-if="item.checkedStatus === halfCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-radio-outline"
+              v-else
+            />
+          </view>
+          <view
+            class="da-tree-item__label"
+            :class="'da-tree-item__label--'+item.checkedStatus"
+            @click="handleLabelClick(item)"
+          >
+            <view style="flex: 1;">
+              {{ item.label }}
+              <text class="da-tree-item__label--append" v-if="item.append">{{ item.append }}</text>
+            </view>
+            <view class="ko-classify__button">
+              <!-- #ifdef H5 -->
+              <slot name="node" :node="item.originItem" :item="item"></slot>
+              <!-- #endif -->
 
-            <!-- #ifdef MP -->
-            <slot v-if="$slots['operate-node']" name="operate-node" :node="item.originItem"></slot>
+              <!-- #ifdef MP -->
+              <slot v-if="$slots['operate-node']" name="operate-node" :node="item.originItem"></slot>
 
-            <template v-if="isOperate">
-              <button
-                class="ko-basic-button__card action"
-                @click.stop="onActionClick(item)"
-              >
-                更多
-              </button>
+              <template v-if="isOperate">
+                <button
+                  class="ko-basic-button__card action"
+                  @click.stop="onActionClick(item)"
+                >
+                  更多
+                </button>
 
-              <button v-if="hideChildren(item) && false" @click.stop="onAdded(item)">添加子级</button>
-              <button v-if="false" @click.stop="onEdit(item)">编辑</button>
-              <button v-if="false" @click.stop="onRemove(item)">删除</button>
-            </template>
-            <!-- #endif -->
+                <button v-if="hideChildren(item) && false" @click.stop="onAdded(item)">添加子级</button>
+                <button v-if="false" @click.stop="onEdit(item)">编辑</button>
+                <button v-if="false" @click.stop="onRemove(item)">删除</button>
+              </template>
+              <!-- #endif -->
+            </view>
           </view>
         </view>
-      </view>
 
-      <view
-        v-if="!dataRef.length"
-        style="text-align: center; padding: 20px; font-size: 12px; color: #c7c9ce;"
-      >
-        没有节点数据
+        <view
+          v-if="!dataRef.length"
+          style="text-align: center; padding: 20px; font-size: 12px; color: #c7c9ce;"
+        >
+          没有节点数据
+        </view>
       </view>
     </scroll-view>
   </view>
@@ -125,6 +127,9 @@ export default {
     isOperate: Boolean,
 
     activeKey: [String, Number],
+
+    paddingBottom: Number,
+    paddingTop: Number,
   },
   data() {
     return {
@@ -1048,11 +1053,7 @@ export default {
     transition: opacity 0.2s linear, background .3s, box-shadow .3s;
 
     &.tree-active-key {
-      background: rgba(254, 242, 242, .3);
-      box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.3);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      border: 0px solid rgba(255, 255, 255, 0.18);
+      color: rgba(239, 68, 68, 1);
     }
 
     /* #ifdef H5 */
@@ -1197,7 +1198,8 @@ export default {
       display: flex;
       align-items: center;
       overflow: hidden;
-      height: 32px;
+      min-height: 32px;
+      line-height: 1.2;
 
       &--2 {
         color: var(--theme-color, #007aff);

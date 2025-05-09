@@ -383,6 +383,9 @@ export default {
 
 <template>
   <view class="ko-send">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.logisticsDelivery"/>
 
     <view class="ko-basic-count__wrap">

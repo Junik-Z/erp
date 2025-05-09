@@ -11,7 +11,7 @@ import {
   getProductClassApi,
   getProductFieldApi,
 } from "@/api/erp/product";
-import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import FilePicker from "./components/FilePicker/FilePicker.vue";
 import { _deepCopy, _get, _isEmpty, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -231,6 +231,10 @@ export default {
 
 <template>
   <view class="ko-order ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <UniForms
       :model-value="form"
       label-width="90px"
@@ -291,7 +295,7 @@ export default {
       </UniSection>
       <UniSection title="产品详情" type="line">
         <view style="padding: 10px;">
-          <UniFormsItem label="Banner：" name="description">
+          <!--<UniFormsItem label="Banner：" name="description">
             <FilePicker
               v-model="form.carousel"
               :limit="9"
@@ -303,9 +307,12 @@ export default {
                 height: '100px',
               }"
             />
-          </UniFormsItem>
+          </UniFormsItem>-->
           <UniFormsItem label="产品描述：" name="description">
-            <GoodsDesc v-model="form.description" />
+            <GoodsDesc
+              v-model="form.description"
+              :carousel.sync="form.carousel"
+            />
           </UniFormsItem>
           <UniFormsItem label="备注：" name="remark">
             <UniEasyinput

@@ -10,6 +10,7 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 
 import UniSkeletons from "@/uni_modules/uv-skeletons/components/uv-skeletons/uv-skeletons.vue";
+import { WX_USER_TAG_ENUMS } from "@/utils/config";
 
 // 索引列表
 const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -115,6 +116,12 @@ export default {
 
     // 显示库存
     showQuantity: Boolean,
+
+    // 发送页面选人列表
+    isSendMsg: Boolean,
+
+    // 微信用户标签设置
+    isWeChat: Boolean,
   },
   watch: {
     data: {
@@ -295,6 +302,9 @@ export default {
     },
   },
   computed: {
+    WX_USER_TAG_ENUMS() {
+      return WX_USER_TAG_ENUMS;
+    },
     IndexMenus,
 
     isSelection() {
@@ -393,6 +403,11 @@ export default {
         const list = _deepCopy(_get(item, "users")) || [];
         return list?.slice?.(0, 3) || [];
       };
+    },
+
+    // 标签
+    getWeTag() {
+      return item => item.tags?.split?.(",") || [];
     },
   },
 };
@@ -507,25 +522,28 @@ export default {
                   class="ko-index-list__item"
                   v-for="(item, index) in data"
                   :key="index"
+                  :class="{'is-send-msg': isSendMsg}"
                 >
                   <BasicCard no-shadow :spacing="0" style="width: 100%;" @click.stop="onClick(item)">
                     <view class="ko-user">
-                      <view class="ko-user__wrap">
-                        <view style="margin-right: 10px;" v-if="isChecked">
+                      <view class="ko-user__wrap" style="position: relative">
+                        <view style="margin-right: 6px;" v-if="isChecked">
                           <checkbox :checked="isSelection(item)" :disabled="getDisabled(item)" />
                         </view>
-                        <UvAvatar
-                          :size="64"
-                          :src="getImageUrl(item.avatar || item.logo)"
-                          mode="aspectFill"
-                          :text="item.label || GET_SHOP_NAME"
-                          random-bg-color
-                          @click.stop
-                        />
-                        <view style="padding-left: 10px; flex: 1; position: relative">
+                        <view style="margin-right: 6px">
+                          <UvAvatar
+                            :size="isSendMsg ? 32 : 64"
+                            :src="getImageUrl(item.avatar || item.logo)"
+                            mode="aspectFill"
+                            :text="item.label || GET_SHOP_NAME"
+                            random-bg-color
+                            @click.stop
+                          />
+                        </view>
+                        <view style="flex: 1;">
                           <view
-                            v-if="(isStaff) && !isEmpty(GET_FUNC(item, 'users'))"
-                            style="position: absolute; top: 6px; right: 20px;"
+                            v-if="(isStaff) && !isEmpty(GET_FUNC(item, 'users')) && !isSendMsg"
+                            style="position: absolute; top: 6px; right: 20px; display: flex; align-items: center; justify-content: center; flex-direction: column"
                           >
                             <uv-avatar
                               :src="getImageUrl(GET_FUNC(item, 'users.0.avatar'))"
@@ -540,7 +558,7 @@ export default {
 
                           <block v-if="showBindUserList && !isEmpty(GET_FUNC(item, 'users'))">
                             <view
-                              style="position: absolute; top: 6px; right: 20px; display: flex; align-items: center;"
+                              style="position: absolute; top: 6px; right: 20px; display: flex; align-items: center; justify-content: center;"
                             >
                               <view
                                 v-for="user of getBindUserList(item)"
@@ -560,26 +578,35 @@ export default {
                             </view>
                           </block>
 
+                          <view class="ko-index-list__we-chat" v-if="isWeChat">
+                            <text
+                              class="ko-index-list__we-chat--item"
+                              v-for="c of getWeTag(item)"
+                              :key="c"
+                              :class="c"
+                            >
+                              {{ WX_USER_TAG_ENUMS[c] }}
+                            </text>
+                          </view>
 
-                          <UniRow :gutter="10">
-                            <UniCol :span="24">
-                              <view class="ko-user__name">{{ item.label || "-" }}</view>
-                            </UniCol>
-                            <UniCol :span="24" v-if="item.amount">
-                              <label v-if="isReceiptList" class="ko-basic-label" style="font-size: 14px;">
+                          <view>
+                            <view class="ko-user__name">{{ item.label || "-" }}</view>
+
+                            <view v-if="item.amount && !isSendMsg">
+                              <label v-if="isReceiptList" class="ko-basic-label">
                                 {{ item.amount > 0 ? "待结账" : "多付" }}：
                               </label>
-                              <label v-else-if="isStaff" class="ko-basic-label" style="font-size: 14px;">
+                              <label v-else-if="isStaff" class="ko-basic-label">
                                 工资：
                               </label>
-                              <label v-else class="ko-basic-label" style="font-size: 14px;">
+                              <label v-else class="ko-basic-label">
                                 {{ item.amount > 0 ? "多付" : isSupplier ? "应付" : "欠款" }}：
                               </label>
-                              <text class="ko-basic-money" style="font-weight: 500; font-size: 14px">
+                              <text class="ko-basic-money" style="font-weight: 500;">
                                 {{ absYuan(item.amount) }}元
                               </text>
-                            </UniCol>
-                          </UniRow>
+                            </view>
+                          </view>
                           <i v-if="false" class="iconfont icon-shanghuguanli"></i>
                         </view>
                       </view>
@@ -593,7 +620,6 @@ export default {
                         >
                           {{ button.label }}
                         </button>
-
                         <button
                           class="ko-basic-button__user"
                           @click.stop="onMoreClick(item, index)"
@@ -601,7 +627,6 @@ export default {
                         >
                           更多
                         </button>
-
                         <slot v-if="$slots.default" :node="item" :index="index"></slot>
                       </view>
                     </view>
@@ -806,6 +831,18 @@ export default {
     padding: 0 10px 0 10px;
     font-size: 16px;
 
+    &.is-send-msg {
+      padding: 0;
+
+      .ko-user__name {
+        font-size: 13px;
+      }
+
+      .ko-basic-label, .ko-basic-money {
+        font-size: 12px;
+      }
+    }
+
     /* #ifndef APP-NVUE */
     display: flex;
     /* #endif */
@@ -832,6 +869,65 @@ export default {
         left: 0;
         bottom: 0;
         right: 0;
+      }
+    }
+
+    .ko-user__name {
+      font-size: 16px;
+    }
+
+    .ko-basic-label, .ko-basic-money {
+      font-size: 12px;
+    }
+  }
+
+  &__we-chat {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--item {
+      font-size: 8px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      border: 1rpx solid #000;
+      margin: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.newUser {
+        color: rgb(255, 165, 0);
+        border-color: rgb(255, 165, 0);
+        background: rgba(255, 165, 0, 0.1);
+      }
+
+      &.customerTag {
+        color: #4CAF50;
+        border-color: #4CAF50;
+        background: rgba(76, 175, 80, 0.1);
+      }
+
+      &.supplierTag {
+        color: #2196F3;
+        border-color: #2196F3;
+        background: rgba(33, 150, 243, 0.1);
+      }
+
+      &.staffTag {
+        color: #9C27B0;
+        border-color: #9C27B0;
+        background: rgba(156, 39, 176, 0.1);
+      }
+
+      &.logisticTag {
+        color: #3F51B5;
+        border-color: #3F51B5;
+        background: rgba(63, 81, 181, 0.1);
       }
     }
   }

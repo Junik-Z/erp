@@ -487,6 +487,9 @@ export default {
 
 <template>
   <view class="ko-salary">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :tabs="TabList" :path="PageEnums.salary" />
 
     <!-- #ifdef MP -->

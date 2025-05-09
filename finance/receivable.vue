@@ -421,6 +421,9 @@ export default {
     <!-- #ifndef H5 -->
     <view class="ko-receivable">
       <!-- #endif -->
+      <!-- #ifdef MP -->
+      <Notice />
+      <!-- #endif -->
 
       <TopMenus :path="PageEnums.financeReceivable"/>
 

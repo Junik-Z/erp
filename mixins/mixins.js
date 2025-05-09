@@ -25,21 +25,22 @@ import { getSaleShareIdApi, shareOrderApi } from "@/api/erp/sale";
 import { getPurchaseShareIdApi } from "@/api/erp/purchase";
 import { BILL_KEY, PRODUCT_STYLE_KEY } from "@/store";
 
+// #ifdef MP
+const MenuButtonRect = uni.getMenuButtonBoundingClientRect();
+console.log(MenuButtonRect);
+// #endif
+
 export default {
   data() {
     return {
-      MIXINS_OBJ: {
-        USER: this.$store.state.USER_INFO,
-        SYS: this.$store.state.CONFIG_INFO,
-      },
       TABS_LIST: [],
       TAB: 0,
-
       PAGE_MENU: [],
-
       PAGE_MENU_INDEX: 0,
-
       TK_FILL_INFO: {},
+      // #ifdef MP
+      MenuButtonRect,
+      // #endif
     };
   },
   onShow() {
@@ -671,6 +672,16 @@ export default {
     // 下单样式
     sBill() {
       return this.$store.getters.sBill;
+    },
+
+    // 右边胶囊的样式
+    menuButtonRectStyle() {
+      const m = this.MenuButtonRect || {};
+      return {
+        "--m-height": m.height + "px",
+        "--m-width": m.width + "px",
+        "--m-top": m.top + "px",
+      };
     },
   },
 };

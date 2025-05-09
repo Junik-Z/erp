@@ -421,6 +421,10 @@ export default {
     <!-- #ifndef H5 -->
     <view class="ko-pay">
       <!-- #endif -->
+
+      <!-- #ifdef MP -->
+      <Notice />
+      <!-- #endif -->
       <TopMenus :path="PageEnums.financePay"/>
 
       <view class="ko-basic-count__wrap">

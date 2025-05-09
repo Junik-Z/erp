@@ -214,7 +214,6 @@ export default function request(config, isLoading = false, whole = false) {
           },
         });
       },
-
       complete() {
         isLoading && uni.hideLoading();
       },

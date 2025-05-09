@@ -3,6 +3,7 @@ import { getDetailApi, getProductFieldApi } from "@/api/erp/product";
 import UvParse from "./components/uv-parse/uv-parse.vue";
 import { _get, transferYuan } from "@/utils";
 import mixins from "@/mixins/mixins";
+import { CONFIG, PageEnums } from "@/utils/config";
 
 export default {
   name: "detail",
@@ -17,54 +18,6 @@ export default {
   data() {
     return {
       fieldList: {},
-
-      strings: `
-      <div class="product-detail" style="padding: 10px; background: #fff;">
-  <h1 style="color: #ff4e00; font-size: 24px;">【限时特惠】AI智能降噪耳机 Pro</h1>
-  <p style="font-size: 16px; color: #666;">🔊 40dB深度降噪 | 30小时续航 | Hi-Res音质认证</p>
-
-  <!-- 主图轮播 -->
-  <div class="swiper">
-    <img src="https://example.com/headphone_main.jpg" alt="耳机主图" style="width: 100%; border-radius: 8px;">
-  </div>
-
-  <!-- 价格与促销 -->
-  <div style="margin: 15px 0;">
-    <span style="font-size: 28px; color: #f44336;">¥599</span>
-    <span style="text-decoration: line-through; color: #999; margin-left: 10px;">¥899</span>
-    <span style="background: #fff8e1; padding: 3px 8px; border-radius: 4px; margin-left: 10px;">省¥300</span>
-  </div>
-
-  <!-- 商品亮点 -->
-  <div style="background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-    <h3 style="color: #333; border-left: 4px solid #ff4e00; padding-left: 8px;">核心卖点</h3>
-    <ul style="padding-left: 20px;">
-      <li>🎵 定制化声学系统，支持LDAC高清音频解码</li>
-      <li>🔋 快充10分钟，播放5小时</li>
-      <li>🌍 IPX5防水等级，运动出汗无忧</li>
-    </ul>
-  </div>
-
-  <!-- 图文详情 -->
-  <div class="detail-content">
-    <h3 style="color: #333;">产品详情</h3>
-    <img src="https://example.com/headphone_detail_1.jpg" alt="耳机细节图" style="width: 100%; margin: 10px 0;">
-    <p style="line-height: 1.8;">采用<strong>双层振膜技术</strong>，低频下潜更深，高频解析力提升20%。耳罩部分使用<u>蛋白皮材质</u>，长时间佩戴不压耳。</p>
-
-    <h3 style="color: #333; margin-top: 20px;">技术参数</h3>
-    <table style="width: 100%; border-collapse: collapse;">
-      <tr style="border-bottom: 1px solid #eee;">
-        <td style="padding: 8px 0; color: #777;">蓝牙版本</td>
-        <td style="text-align: right;">5.2</td>
-      </tr>
-      <tr style="border-bottom: 1px solid #eee;">
-        <td style="padding: 8px 0; color: #777;">重量</td>
-        <td style="text-align: right;">248g</td>
-      </tr>
-    </table>
-  </div>
-</div>`,
-
       option: {},
 
       info: {},
@@ -87,11 +40,27 @@ export default {
           params.salePrice = transferYuan(params.salePrice);
           params.carousel = params.carousel ? params.carousel.split(",") : [];
 
+          params.description = params.description?.replace?.(/<img([^>]*)src="(.*?)"([^>]*)>/gi, (match, p1, p2, p3) => {
+            const p = p2?.replace(CONFIG.BASE_URL, "") || "";
+            return `<img${p1}src="${this.getImageUrl(p)}"${p3}>`;
+          });
+
           this.info = params;
         })
         .finally(() => {
           this.loading = false;
         });
+    },
+
+    // 返回上一级
+    onBlack() {
+      uni.navigateBack({
+        fail() {
+          uni.reLaunch({
+            url: PageEnums.home,
+          });
+        },
+      });
     },
   },
   computed: {
@@ -103,25 +72,43 @@ export default {
 </script>
 
 <template>
-  <view class="ko-detail">
+  <view class="ko-detail" :style="[menuButtonRectStyle]">
+    <!-- #ifdef MP -->
+    <Notice is-custom />
+    <!-- #endif -->
+    <button class="ko-top-black" @click="onBlack">
+      <uni-icons size="24" color="#000" type="left" />
+    </button>
+
     <view class="ko-detail__swiper">
-      <swiper class="ko-detail__swiper--wrap" autoplay="true" duration="1000" interval="3000">
-        <swiper-item class="ko-detail__swiper--item" v-for="item of info.carousel" :key="item">
+      <swiper
+        class="ko-detail__swiper--wrap"
+        autoplay
+        :duration="500"
+        :interval="3000"
+        indicator-dots
+      >
+        <swiper-item
+          class="ko-detail__swiper--item"
+          v-for="item of info.carousel"
+          :key="item"
+        >
           <image
             class="ko-detail__swiper--image"
             :src="getImageUrl(item)"
-            mode="aspectFill"
+            mode="widthFix"
+            lazy-load
           />
         </swiper-item>
       </swiper>
     </view>
 
     <view class="ko-detail__top">
-      <view class="ko-detail__name">{{ info.name }}</view>
+      <view class="ko-detail__name">{{ info.name || "" }}</view>
 
       <view class="ko-detail__amount">
         <view style="display: flex; align-items: flex-end;">
-          <view class="money">¥ {{ info.salePrice }}</view>
+          <view class="money">¥ {{ info.salePrice || "" }}</view>
           <view class="line" v-if="false">¥23.9</view>
         </view>
       </view>
@@ -155,6 +142,19 @@ export default {
 </template>
 
 <style scoped lang="scss">
+.ko-top-black {
+  position: fixed;
+  top: var(--m-top);
+  height: var(--m-height);
+  left: 10px;
+  z-index: 999;
+  padding: 0;
+  width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 .ko-detail {
   --primary-color: #3B82F6;
   --secondary-color: #60A5FA;
@@ -179,7 +179,7 @@ export default {
     padding-bottom: 20px;
 
     &--wrap {
-      height: 228px;
+      height: 328px;
     }
 
     &--item {
@@ -205,8 +205,8 @@ export default {
   }
 
   &__name {
-    color: #3C84F6;
-    font-size: 18px;
+    color: #333;
+    font-size: 16px;
     font-weight: bold;
   }
 
@@ -287,8 +287,8 @@ export default {
 
     &--title {
       padding-bottom: 10px;
-      color: #4086F6;
-      font-size: 18px;
+      color: #333;
+      font-size: 16px;
       font-weight: bold;
     }
   }

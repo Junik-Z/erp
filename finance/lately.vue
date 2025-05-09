@@ -202,6 +202,10 @@ export default {
   >
     <!-- #endif -->
     <view class="ko-lately">
+      <!-- #ifdef MP -->
+      <Notice />
+      <!-- #endif -->
+
       <HistoryBar
         v-model="tab"
         :values="Tabs"

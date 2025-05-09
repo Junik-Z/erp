@@ -373,6 +373,9 @@ export default {
 
 <template>
   <view class="ko-staff">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :tabs="TabList" :path="PageEnums.produceStaff" v-if="!isNotMenu" />
 
     <view class="ko-staff__content">

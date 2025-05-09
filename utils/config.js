@@ -156,7 +156,7 @@ export const PageEnums = {
   saleRefund: "/form/sale-refund-order",
 
   // 销售客户下单返回地址
-  saleClientAddedBack: "/sale/sale",
+  saleClientAddedBack: "/sale/my-order",
 
 
   // —————————— 采购管理 ——————————————————————
@@ -259,9 +259,13 @@ export const PageEnums = {
   // 授权页面
   adminAuthorization: "/admin/merchants/authorization",
   // 服务续费
-  adminRenewal: "/admin/renewal/renewal",
-  // 系统设置
-  adminStore: "/admin/admin/store",
+  adminRenewal: "/admin/renewal",
+  // 店铺设置
+  adminSetShop: "/admin/set-shop",
+  // 管理微信用户
+  WeChat: "/admin/we-chat",
+  // 设置权限
+  SetRole: "/admin/set-role",
 
   // ———————————— 消息管理 ————————————
   // 消息列表
@@ -412,10 +416,17 @@ export const MENU_LIST = [
   {
     label: "员工管理",
     icon: "icon-guanxiaobaotubiao38",
-    value: "/admin/merchants/merchants",
+    value: PageEnums.SetRole,
     role: ["ADMIN", "BUSINESS"],
     isUpRole: false,
   },
+  /*  {
+     label: "用户管理",
+     icon: "icon-a-yonghuguanli11",
+     value: PageEnums.WeChat,
+     role: ["ADMIN", "BUSINESS"],
+     isUpRole: false,
+   }, */
   {
     label: "考勤",
     icon: "icon-kaoqindaka",
@@ -544,4 +555,24 @@ export const WAGE_TYPE_ENUMS = {
   ClearAnAccount: "工资/补贴/奖金发放",
   SubsidyAndBonus: "补贴/奖金所得",
   CancelSettlement: "取消结算",
+};
+
+/**
+ * @description 消息类型
+ */
+export const MSG_TYPE_ENUMS = {
+  NewUserNotice: "新用户提醒",
+  InternalStaffNoticeSender: "发送的消息",
+  InternalStaffNoticeReceiver: "消息提醒",
+};
+
+/**
+ * @description 微信用户标签
+ */
+export const WX_USER_TAG_ENUMS = {
+  newUser: "新用户",
+  customerTag: "客户",
+  supplierTag: "供应商",
+  staffTag: "员工",
+  logisticTag: "物流商",
 };

@@ -9,6 +9,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import {
   _deepCopy,
+  _flattenDeep,
   _get,
   _isEmpty,
   _isEqual,
@@ -18,6 +19,7 @@ import {
   _pick,
   _set,
   _sum,
+  _uniqBy,
   CustomToast,
 } from "@/utils";
 import {
@@ -47,13 +49,15 @@ import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
 import { getBindInfoApi, getSaleCheckShareIdApi, getShareOrderApi } from "@/api/erp/sale";
 import FeesList from "./components/FeesList/FeesList.vue";
-import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import FilePicker from "./components/FilePicker/FilePicker.vue";
 import PickerAddress from "./components/PickerAddress.vue";
 import { PageEnums } from "@/utils/config";
+import SendMsg from "./components/SendMsg.vue";
 
 export default {
   name: "Work",
   components: {
+    SendMsg,
     PickerAddress,
     BinCount,
     KoMovable,
@@ -387,7 +391,12 @@ export default {
 
               CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
-                success: () => {
+                success: async () => {
+                  if ((this.isEdit || this.isAgain) && this.isPerm("SEND_INTERNAL_MESSAGE")) {
+                    const staffs = _uniqBy(_flattenDeep(params?.craftProcesses?.map(v => v.staffs) || []), "id") || [];
+                    await this.$refs.SMRef.open(staffs.map(v => v.id), staffs.map(v => v.name)?.join("、"));
+                  }
+
                   if (this.isShare || this.isShareOrder) {
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
@@ -625,6 +634,10 @@ export default {
 
 <template>
   <view class="ko-work ko-basic-added-form" :key="VmKey">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <!-- #ifdef MP -->
     <view v-if="isShareOrder" class="ko-work__header ko-basic-box-shadow">
       <view class="ko-work__header--name">{{ GET_SHOP_NAME }}</view>
@@ -968,6 +981,8 @@ export default {
     </view>
 
     <FastPopup ref="FPRef" @apply-fast="onApplyFast" />
+
+    <SendMsg ref="SMRef" />
   </view>
 </template>
 

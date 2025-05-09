@@ -572,6 +572,9 @@ export default {
 
 <template>
   <view class="ko-work-list">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :tabs="TabList" :path="PageEnums.produceWorkList" />
 
     <HistoryBar

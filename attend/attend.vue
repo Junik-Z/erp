@@ -257,6 +257,9 @@ export default {
 
 <template>
   <view class="ko-attend">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <view class="ko-attend__set" v-if="isPerm('PRODUCE_WRITE') || isBusiness">
       <button
         class="ko-basic-button__card"

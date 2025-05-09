@@ -191,6 +191,9 @@ export default {
 
 <template>
   <view class="ko-verification">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.financeVerification" v-if="!isReconcile" />
 
     <HistoryBar

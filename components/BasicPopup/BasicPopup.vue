@@ -19,7 +19,7 @@ export default {
 
     noFooterPadding: Boolean,
     noFooter: Boolean,
-    noSafeBottom: Boolean
+    noSafeBottom: Boolean,
   },
   data() {
     return {};
@@ -64,7 +64,13 @@ export default {
     <view
       class="ko-basic-popup"
       :style="[maxHeight ? {'max-height': maxHeight} : {}]"
-      :class="[type, {close: close, 'show-title': !!title, 'no-safe-bottom': noSafeBottom}]"
+      :class="[type, {
+        close: close,
+         'show-title': !!title,
+          'no-safe-bottom': noSafeBottom,
+           'show-footer': $slots.footer && !noFooter,
+           'hide-footer': !($slots.footer && !noFooter)
+      }]"
     >
       <button
         v-if="close"
@@ -117,10 +123,16 @@ export default {
   }
 
   &.bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+    &.show-footer .ko-basic-popup__footer {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+    }
+
+    &.hide-footer {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+    }
   }
 
-  &.no-safe-bottom {
+  &.no-safe-bottom.hide-footer {
     padding-bottom: 0;
   }
 

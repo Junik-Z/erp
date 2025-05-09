@@ -409,6 +409,9 @@ export default {
 
 <template>
   <view class="ko-purchase-refund-list">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.purchaseRefundList"/>
 
     <HistoryBar

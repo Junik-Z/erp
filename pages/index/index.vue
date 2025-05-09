@@ -3,19 +3,18 @@ import { _deepCopy, _get, _haveCommonElements, _isEmpty } from "@/utils";
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST, PageEnums } from "@/utils/config";
-import KoNotice from "@/components/Notice/Notice.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 
 import Dayjs from "@/utils/dayjs";
+import { getMessageCountApi } from "@/api/user";
 
 export default {
   components: {
     MerchantsHeader,
     UniCol,
     UniRow,
-    KoNotice,
   },
   mixins: [mixins],
   data() {
@@ -39,15 +38,20 @@ export default {
 
       // 有效天数
       expiredDays: 0,
+
+      msgCount: 0,
     };
   },
   onShow() {
     this.$nextTick(() => {
       this.validShopDate();
     });
+    this.getMsgCount();
   },
   onLoad() {
     uni.$on("$__get_config_info_success__", this.validShopDate);
+
+    uni.$on("$__update_msg_count__", this.getMsgCount);
 
     uni.$__FIELD_LIST__ = [];
 
@@ -90,7 +94,7 @@ export default {
     onJumpStore() {
       this.onMsg();
       uni.navigateTo({
-        url: PageEnums.adminStore,
+        url: PageEnums.adminSetShop,
       });
     },
 
@@ -187,6 +191,17 @@ export default {
         uni.$emit("$__ask_request_message__");
       }
     },
+
+    // 获取未读消息条数
+    getMsgCount() {
+      if (!this.isPerm("MESSAGE_LIST")) return false;
+
+      getMessageCountApi()
+        .then(res => {
+          this.msgCount = res.data;
+          this.$store.dispatch("setNewMsgAsync", !!res.data);
+        });
+    },
   },
   computed: {
     // 获取按钮位置
@@ -202,7 +217,7 @@ export default {
       return _deepCopy(this.gridList)
         .flatMap(item => {
           const role = this.GET_USER_ROLE;
-          
+
           // 判断是否有单独的字段校验
           const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
 
@@ -213,12 +228,10 @@ export default {
           }
         });
     },
-
     // 显示过期描述
     showExpiredDesc() {
       return this.isExpired || this.expiredDays <= 30;
     },
-
     // 获取过期描述
     getExpiredDesc() {
       const day = this.expiredDays;
@@ -238,13 +251,16 @@ export default {
   },
   onUnload() {
     uni.$off("$__get_config_info_success__", this.validShopDate);
+    uni.$off("$__update_msg_count__", this.getMsgCount);
   },
 };
 </script>
 
 <template>
   <view class="ko-home" :style="[getMenuButtonStyle]">
-    <KoNotice is-custom />
+    <!-- #ifdef MP -->
+    <Notice is-custom />
+    <!-- #endif -->
 
     <MerchantsHeader ref="MHRef" :disabled="disabled" />
 
@@ -253,20 +269,13 @@ export default {
         <i class="iconfont icon-shezhi"></i>
       </button>
 
-      <button
-        class="ko-home__store--notification"
-        @click="onJumpMessage"
-        v-if="isPerm('MESSAGE_LIST')"
-      >
-        <view style="position: relative;">
-          <uni-icons
-            type="notification-filled"
-            size="28"
-          />
+      <view class="ko-home__msg" v-if="isPerm('MESSAGE_LIST')">
+        <button class="ko-home__msg--btn" @click="onJumpMessage">
+          <uni-icons type="notification-filled" size="28" />
+        </button>
 
-          <text v-if="false" class="ko-home__store--notification--badge"></text>
-        </view>
-      </button>
+        <text @click="onJumpMessage" v-if="msgCount" class="ko-home__msg--badge">{{ msgCount }}</text>
+      </view>
     </view>
 
     <!-- #ifdef MP -->
@@ -341,24 +350,35 @@ export default {
     display: flex;
     align-items: center;
     font-size: 26px;
+  }
 
-    &--notification {
+  &__msg {
+    position: relative;
+    margin-left: 14px;
+
+    &--btn {
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
 
-      &--badge {
-        position: absolute;
-        z-index: 99;
-        top: 20px;
-        right: 0;
+    &--badge {
+      position: absolute;
+      z-index: 99;
+      top: -8px;
+      left: 14px;
 
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #e43d33;
-      }
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e43d33;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
     }
   }
 
@@ -373,10 +393,6 @@ export default {
     .icon-shezhi {
       height: var(--ko-menu-height, 32px);
       font-size: 26px;
-    }
-
-    &--notification {
-      margin-left: 10px;
     }
   }
 
@@ -401,11 +417,13 @@ export default {
       font-size: 30px;
       color: #fff;
     }
+  }
 
-    &--notification {
-      margin-right: 20px;
-      order: 1;
+  &__msg {
+    margin-left: 0;
+    margin-right: 20px;
 
+    &--btn {
       .uni-icons.uniui-notification-filled {
         color: #fff !important;
         font-size: 32px !important;
@@ -608,7 +626,6 @@ export default {
       margin-bottom: 20px;
     }
   }
-
 }
 
 // #endif

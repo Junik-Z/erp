@@ -116,8 +116,9 @@ export default {
     z-index: 20;
 
     color: #fff;
-    padding-bottom: 3px;
+    padding-bottom: 2px;
     font-size: var(--k-number-input-btn-font-size);
+    line-height: 1.2;
   }
 
   &__input {

@@ -458,6 +458,9 @@ export default {
 
 <template>
   <view class="ko-purchase-client">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.purchaseClient"/>
 
     <view class="ko-purchase-client__content">

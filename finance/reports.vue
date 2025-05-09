@@ -421,6 +421,10 @@ export default {
   >
     <!-- #endif -->
     <view class="ko-reports">
+      <!-- #ifdef MP -->
+      <Notice />
+      <!-- #endif -->
+
       <view
         v-if="isPerm('FINANCE_REPORT_ASSETS')"
         class="ko-basic-table ko-basic-table__not-border"

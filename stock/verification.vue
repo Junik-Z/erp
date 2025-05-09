@@ -246,6 +246,9 @@ export default {
 
 <template>
   <view class="ko-verification">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.stockVerification"/>
 
     <view class="ko-verification__class">

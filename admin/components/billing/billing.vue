@@ -97,6 +97,7 @@ export default {
                   :src="getImageUrl(item)"
                   mode="widthFix"
                   @load="onImageLoad"
+                  lazy-load
                 />
               </view>
             </swiper-item>

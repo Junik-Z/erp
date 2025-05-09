@@ -98,6 +98,9 @@ export default {
 
 <template>
   <view class="ko-check-in">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <view class="ko-check-in__title">考勤二维码</view>
     <view class="ko-check-in__shop">{{ GET_SHOP_NAME }}</view>
     <view class="ko-check-in__time">{{ time }}</view>

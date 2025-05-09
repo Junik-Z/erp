@@ -122,11 +122,6 @@
           </view>
         </view>
       </slot>
-      <uv-gap
-        bgColor="#eaeaec"
-        height="6"
-        v-if="cancelText"
-      ></uv-gap>
       <view hover-class="uv-action-sheet--hover">
         <text
           @touchmove.stop.prevent

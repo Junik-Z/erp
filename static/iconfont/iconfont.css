@@ -1,3 +1,19 @@
+.icon-a-yonghuguanli11:before {
+  content: "\e610";
+}
+
+.icon-tingzhi:before {
+  content: "\e612";
+}
+
+.icon-keyboard-line:before {
+  content: "\e77f";
+}
+
+.icon-support:before {
+  content: "\e947";
+}
+
 .icon-caiwubaobiao1:before {
   content: "\e60d";
 }

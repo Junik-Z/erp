@@ -35,6 +35,8 @@ export default {
       loading: false,
       isEdit: false,
       isAgain: false,
+
+      iVisible: false,
     };
   },
   components: {OrderInfo, GoodsCard, UniSection},
@@ -59,14 +61,10 @@ export default {
           this.isAgain = ["FINISHED"].includes(params.status);
 
           const obj = {};
-
           params.details?.forEach(item => {
             _set(obj, item.productId, item);
           });
-
           this.setGoodsObjAsync(obj);
-
-          this.$refs.FormRef.form = params;
 
           this.form = params;
         });
@@ -80,18 +78,29 @@ export default {
     // 获取总金额
     getTotalAmount() {
       this.form.totalAmount = this.toYuan(this.sTotalPrice || 0);
+      this.setOrderForm({totalAmount: this.toYuan(this.sTotalPrice || 0)});
     },
 
     onSubmit() {
-      if (!this.visible) {
+      if (!this.visible && !this.iVisible) {
+        this.iVisible = false;
         this.visible = true;
-        return false
+        return false;
+      }
+
+
+      if (!this.iVisible) {
+        this.visible = false;
+        this.iVisible = true;
+
+        setTimeout(() => {
+          this.$refs.FormRef.form = _deepCopy(this.form);
+        }, 100);
+        return false;
       }
 
       this.$refs.FormRef.validate().then(async (valid) => {
         if (!valid) {
-          this.getTotalAmount();
-
           const params = _deepCopy(this.form);
           params.purchaserId = params.purchaserId || this.GET_USER_INFO?.userId;
           params.details = this.goodsList;
@@ -106,15 +115,13 @@ export default {
           Func(params)
             .then((res) => {
               this.resetGoods();
-
               this.visible = false;
 
               CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
                 success: () => {
-                  if (this.isClient && !this.isNormal) {
+                  if (this.isShare) {
                     uni.$emit("$__get_all_info__");
-
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {
@@ -149,28 +156,46 @@ export default {
     onChange(event) {
       const val = _toFinite(event.detail.value);
 
-      if (isNaN(val)) this.form.totalAmount = 0;
-      else this.form.totalAmount = val;
+      let value = 0;
+      if (isNaN(val)) value = 0;
+      else value = val;
+
+      this.setOrderForm({totalAmount: value});
+
+      this.form.totalAmount = value;
     },
 
     // 更新其它费用
     updateFees() {
-      this.$refs.FormRef.updateFees()
-    }
+      this.$refs.FormRef.updateFees();
+    },
   },
   mounted() {
     this.form.purchaserId = this.GET_USER_INFO?.userId;
   },
-  computed: {},
+  computed: {
+    tAmount() {
+      return _get(this.getOrderInfo, "form.totalAmount") || 0;
+    },
+  },
 };
 </script>
 
 <template>
   <view class="ko-cart-list">
-    <view class="ko-cart-list__wrap">
+    <view class="ko-cart-list__wrap glass">
+      <view class="ko-cart-list__cart">
+        <button class="ko-basic-button__card" @click.stop="visible = true; iVisible = false;">
+          <uni-icons type="cart-filled" size="32" color="#fff" />
+        </button>
+        <text class="ko-basic-button__badge" v-if="goodsList.length">
+          {{ goodsList.length }}
+        </text>
+      </view>
+
       <view class="ko-cart-list__amount">
-        <text>¥</text>
-        <input @click.stop type="digit" :value="form.totalAmount || 0" @input="onChange" :disabled="isShare" />
+        <text style="font-size: 14px;">¥</text>
+        <input @click.stop type="digit" :value="tAmount || 0" @input="onChange" :disabled="isShare" />
       </view>
 
       <view class="ko-cart-list__settlement">
@@ -178,9 +203,9 @@ export default {
           class="ko-basic-button__card"
           @click.stop="onSubmit"
           :loading="loading"
-          :disabled="loading"
+          :disabled="loading || !goodsList.length"
         >
-          {{ visible ? "开单" : "结算" }}
+          {{ !visible && !iVisible ? "购物车" : (iVisible ? "立即下单" : "去结算") }}
         </button>
       </view>
     </view>
@@ -196,12 +221,21 @@ export default {
               您还未选择商品
             </view>
           </UniSection>
-
-          <view class="ko-cart-list__order">
-            <OrderInfo ref="FormRef" @change="onUpdateForm" :is-edit="isEdit" :is-share="isShare" />
-          </view>
         </view>
       </scroll-view>
+    </BasicPopup>
+
+    <BasicPopup :visible.sync="iVisible" title="配送信息" type="bottom" no-safe-bottom no-footer-padding>
+      <view class="ko-cart-list__popup">
+        <view class="ko-cart-list__order">
+          <OrderInfo
+            ref="FormRef"
+            @change="onUpdateForm"
+            :is-edit="isEdit"
+            :is-share="isShare"
+          />
+        </view>
+      </view>
     </BasicPopup>
   </view>
 </template>
@@ -210,53 +244,91 @@ export default {
 .ko-cart-list {
   width: 100%;
 
-  --s-height: 44px;
+  --s-height: 84px;
 
   &__wrap {
-    position: relative;
+    position: fixed;
     z-index: 999999;
     height: var(--s-height);
     width: 100%;
-    border-radius: 100px;
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(15px);
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #fff;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    //border-radius: 100px;
+    //box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+    //backdrop-filter: blur(15px);
+    //background-color: rgba(0, 0, 0, 0.7);
+    //color: #fff;
+    padding: 10px 20px 24px;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
 
+  &__cart {
+    position: relative;
+
+    .ko-basic-button__card {
+      height: 48px;
+      width: 48px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ko-basic-button__badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      border-radius: 99px;
+      font-size: 12px;
+      color: #fff;
+      background: #F56C6C;
+      line-height: 14px;
+      padding: 3px;
+      min-width: 20px;
+      text-align: center;
+    }
+  }
+
   &__amount {
-    padding-left: 16px;
+    padding-left: 10px;
     display: flex;
-    align-items: center;
-    height: var(--s-height);
+    align-items: flex-end;
 
     input {
-      height: var(--s-height);
-      width: 40%;
+      width: 30%;
+      font-size: 18px;
     }
   }
 
   &__settlement {
-    width: 100px;
-    height: 100%;
+    display: flex;
+    align-items: center;
 
     .ko-basic-button__card {
-      height: 100%;
-      border-radius: 0 100px 100px 0;
+      width: 100px;
+      //height: 100%;
+      //border-radius: 0 100px 100px 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
-      padding-right: 16px;
+      font-size: 14px;
+      //padding-right: 16px;
+      height: 40px;
+    }
+
+    wx-button[disabled]:not([type]),
+    wx-button[disabled][type=default] {
+      background-color: rgba(41, 121, 255, 0.6);
+      color: rgba(255, 255, 255, .9);
     }
   }
 
   &__item {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 
     &--tis {
       text-align: center;
@@ -268,6 +340,10 @@ export default {
   &__popup {
     height: 80vh;
     width: 100vw;
+  }
+
+  &__order {
+    padding-right: 10px;
   }
 
   &__content {

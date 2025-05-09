@@ -340,6 +340,9 @@ export default {
 
 <template>
   <view class="ko-out">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.stockOut"/>
 
     <HistoryBar

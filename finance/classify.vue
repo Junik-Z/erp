@@ -161,6 +161,10 @@ export default {
 <template>
   <view class="ko-classify">
     <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
+    <!-- #ifdef MP -->
     <BasicCard :spacing="10" v-for="item of list" :key="item.id">
       <view class="ko-classify__info">
         <view class="ko-classify__info--name">{{ item.name }}</view>

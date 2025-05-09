@@ -14,7 +14,6 @@ import { getBindInfoApi } from "@/api/erp/sale";
 import PickerAddress from "./PickerAddress.vue";
 import FeesList from "./FeesList/FeesList.vue";
 
-
 export default {
   name: "OrderInfo",
   components: {
@@ -40,7 +39,6 @@ export default {
   },
   data() {
     return {
-
       form: {
         "orderCode": "",
         "supplierId": "",
@@ -119,6 +117,8 @@ export default {
             logo: item.logo,
           }));
 
+          // this.form.supplierId = this.GET_USER_INFO?.userId;
+
           if (this.bindList.length) {
             this.current = 0;
             const one = _get(res.data, "0") || {};
@@ -132,8 +132,8 @@ export default {
     },
 
     updateFees() {
-      this.$refs.FLRes.getList()
-    }
+      this.$refs.FLRes && this.$refs.FLRes.getList();
+    },
   },
   computed: {
     noCustomerPerm() {
@@ -208,7 +208,7 @@ export default {
       </UniFormsItem>
     </UniSection>
 
-    <UniSection title="其它费用" type="line">
+    <UniSection title="其它费用" type="line" v-if="!isShare && false">
       <view style="padding: 10px;">
         <FeesList ref="FLRes" v-model="form.fees" is-form is-goods />
       </view>

@@ -407,6 +407,10 @@ export default {
     <view class="ko-my-order-list">
       <!-- #endif -->
 
+      <!-- #ifdef MP -->
+      <Notice />
+      <!-- #endif -->
+
       <TopMenus :path="PageEnums.purchaseMyList"/>
 
       <view class="ko-basic-count__wrap">

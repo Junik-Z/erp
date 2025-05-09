@@ -7,7 +7,7 @@ import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import Basic from "@/mixins/mixins";
-import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import FilePicker from "../components/FilePicker/FilePicker.vue";
 import { _deepCopy, _get, _isEmpty } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -373,6 +373,7 @@ export default {
             :src="getImageUrl(qrCode)"
             mode="aspectFill"
             show-menu-by-longpress
+            lazy-load
           />
         </view>
 

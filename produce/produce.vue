@@ -212,6 +212,9 @@ export default {
 
 <template>
   <view class="ko-purchase">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :tabs="TabList" :path="PageEnums.produce" />
 
     <view class="ko-view-version">

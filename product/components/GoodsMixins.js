@@ -1,4 +1,4 @@
-import { _get, _isEqual, _omit, _sum } from "@/utils";
+import { _deepCopy, _get, _isEqual, _omit, _sum } from "@/utils";
 
 export default {
   data() {
@@ -60,6 +60,28 @@ export default {
     setProductStyle() {
       this.$store.dispatch("setProductStyleAsync", !this.getProductStyle);
     },
+
+    // 设置表单信息
+    setOrderForm(obj) {
+      const O = _deepCopy(this.getOrderInfo);
+      this.setOrderInfoByKey("form", {...O.form, ...obj});
+    },
+
+    // 根据 key 设置表单数据
+    setOrderInfoByKey(key, value) {
+      const O = _deepCopy(this.getOrderInfo);
+      this.setOrderInfo({...O, [key]: value});
+    },
+
+    // 保存数据
+    setOrderInfo(obj) {
+      this.$store.dispatch("setOrderInfoAsync", obj);
+    },
+
+    // 重置购物车
+    reset() {
+      this.$store.dispatch("onReset");
+    },
   },
   computed: {
     // 获取的金额字段
@@ -101,6 +123,11 @@ export default {
     // 获取产品列表的样式
     getProductStyle() {
       return this.$store.state.PRODUCT_STYLE || false;
+    },
+
+    // 获取表单样式
+    getOrderInfo() {
+      return this.$store.getters.oForm || {};
     },
   },
 };

@@ -230,6 +230,9 @@ export default {
 
 <template>
   <view class="ko-field">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :path="PageEnums.productField" />
 
     <view class="ko-field__row">
