@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // #endif
 
   // #ifdef H5
@@ -141,6 +141,8 @@ export const PageEnums = {
   saleView: "/sale/view",
   // 销售
   sale: "/sale/sale",
+  // 销售订单列表
+  saleOrderList: "/sale/order-list",
   // 客户管理
   saleClient: "/sale/client",
   // 添加客户管理
@@ -151,7 +153,7 @@ export const PageEnums = {
   saleMyList: "/sale/my-order",
 
   // 新增修改销售订单
-  editSale: "/form/sale-order",
+  NewSale: "/form/sale-order",
   // 添加销售退货单
   saleRefund: "/form/sale-refund-order",
 
@@ -266,6 +268,8 @@ export const PageEnums = {
   WeChat: "/admin/we-chat",
   // 设置权限
   SetRole: "/admin/set-role",
+  // 个人中心
+  User: '/admin/user',
 
   // ———————————— 消息管理 ————————————
   // 消息列表
@@ -437,7 +441,7 @@ export const MENU_LIST = [
   {
     label: "个人中心",
     icon: "icon-gerenzhongxin",
-    value: "/admin/user/user",
+    value: PageEnums.User,
     role: ["*"],
     isUpRole: false,
   },
@@ -472,7 +476,7 @@ export const HOME_PAGE_TYPE_ENUMS = {
  * @description 页面类型对呀的页面地址
  */
 export const PAGE_TYPE_CORRESPOND_PATH = {
-  ADDED_SALE: PageEnums.editSale,
+  ADDED_SALE: PageEnums.NewSale,
   BINDING_CLIENT_BY_SALE: "/client/binding/binding",
   ADDED_PURCHASE: PageEnums.editPurchase,
   BINDING_CLIENT_BY_PURCHASE: "/client/binding/binding",

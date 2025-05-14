@@ -145,6 +145,17 @@ export function getSaleListApi(data) {
 }
 
 /**
+ * @description 获取销售订单2
+ */
+export function getSaleList2Api(data) {
+  return request({
+    url: "/sale/list2",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取销售待付款订单
  */
 export function getSaleWaitPaymentListApi(data) {

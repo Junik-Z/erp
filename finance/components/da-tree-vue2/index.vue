@@ -245,7 +245,7 @@ export default {
             parent.children.push(newItem);
             if (newItem.parentKeys?.length) {
               newItem.parentKeys.forEach(k => {
-                this.datamap[k].childrenKeys = [...this.datamap[k].childrenKeys, newItem.key];
+                this.datamap[k].childrenKeys = [...this.datamap[k].childrenKeys, newItem?.key];
               });
             }
           }

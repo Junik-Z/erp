@@ -24,7 +24,10 @@ export default {
       default: "暂无数据",
     },
     data: Array,
+    // 不许要滚动
     noRefresh: Boolean,
+    // 滚动到指定id位置
+    scrollIntoView: [String, null],
   },
   watch: {
     data: {
@@ -117,6 +120,8 @@ export default {
     @scroll="onScroll"
     :scroll-top="scrollTop"
     ref="SRef"
+    :scroll-into-view="scrollIntoView || ''"
+    scroll-with-animation
   >
     <view class="ko-list__wrap" :class="{'safe': safeAreaInsetBottom}">
       <slot />

@@ -91,6 +91,8 @@ export default {
         />
       </view>
 
+      <slot name="extra"/>
+
       <view v-if="isShowSearch" class="ko-history__search">
         <button class="ko-basic-button__card" @click.stop="onShowSearch(!show)">
           <view style="display: flex; align-items: center; padding-right: 6px;">
@@ -127,13 +129,13 @@ export default {
 
   &__tabs {
     flex: 1;
-    padding: 2px 20px;
+    padding: 2px 10px;
     text-align: center;
     position: relative;
     font-size: 18px;
     font-weight: bold;
     border-radius: 20px;
-    margin: 0 20px;
+    margin: 0 10px;
   }
 
   &__search {

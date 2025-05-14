@@ -5,10 +5,11 @@ import { bindCustomerMessageApi, bindSupplierMessageApi, readMessageApi } from "
 import { bindSupplierApi } from "@/api/erp/purchase";
 import { bindCustomerApi } from "@/api/erp/sale";
 import mixins from "@/mixins/mixins";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
   name: "Notice",
-  components: {},
+  components: {UvAvatar},
   props: {
     path: String,
     isCustom: Boolean,
@@ -228,6 +229,44 @@ export default {
               <view class="ko-notice__item">
                 <view class="ko-notice__item--title">{{ title(item) }}</view>
                 <view class="ko-notice__item--content"> {{ item.content }}</view>
+
+                <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 6px;">
+                  <view
+                    v-if="isEqual(item.type, 'InternalStaffNoticeSender')"
+                    class="ko-notice__form"
+                  >
+                    <text style="white-space: nowrap; margin-top: 2px;">发给：</text>
+                    <view class="ko-notice__form--wrap">
+                      <view
+                        v-for="child of getToUser(item)"
+                        :key="child.userId"
+                        class="ko-notice__form--user"
+                        :class="{'is-read': child.isRead}"
+                      >
+                        <uni-icons
+                          :type="child.isRead ? 'mail-open-filled' : 'email-filled'"
+                          size="16px"
+                          :color="child.isRead ? '#333' : '#c7c9ce'"
+                        />
+                        <text style="margin-left: 2px;">{{ child.nickName }}</text>
+                      </view>
+                    </view>
+                  </view>
+                  <view
+                    class="ko-notice__form--wrap"
+                    v-if="isEqual(item.type, 'InternalStaffNoticeReceiver')"
+                  >
+                    <uni-icons v-if="false" type="paperplane-filled" size="12px" color="#8f939c" />
+                    来自：
+
+                    <UvAvatar
+                      :size="16"
+                      v-if="GET_FUNC(item, 'sender.avatar')"
+                      :src="getImageUrl(GET_FUNC(item, 'sender.avatar'))"
+                    />
+                    <text style="color: #8f939c;">{{ GET_FUNC(item, "sender.nickName") || "" }}</text>
+                  </view>
+                </view>
               </view>
             </BasicCard>
           </uv-transition>

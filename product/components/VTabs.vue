@@ -50,6 +50,9 @@ export default {
       type: Boolean,
       default: true,
     },
+
+    // 更新显示搜索状态
+    isShowSearch: Boolean,
   },
   methods: {
     reset() {
@@ -154,7 +157,7 @@ export default {
       Func();
 
       if (this.isShopping) {
-        const path = this.sStyle ? PageEnums.shopping : PageEnums.editSale;
+        const path = this.sStyle ? PageEnums.shopping : PageEnums.NewSale;
         this.$emit("switch", path);
       }
     },
@@ -169,6 +172,7 @@ export default {
     // 处理搜索显示隐藏
     onShowSearch() {
       this.showSearch = !this.showSearch;
+      this.$emit("update:is-show-search", this.showSearch);
     },
   },
   computed: {
@@ -190,18 +194,20 @@ export default {
     </button>
 
     <view
-      class="ko-v-tabs__search glass"
+      class="ko-v-tabs__search glass no-border"
       :class="{show: showSearch, 'show-switch': showSwitch}"
     >
       <view style="flex: 1;">
         <UniSearchBar
-          :radius="999"
+          :radius="10"
           @confirm="onInputSearch(true)"
           @cancel="onCancel"
           v-model="queryList.name"
           placeholder="产品名称"
           clear-button="none"
           no-t-b-padding
+          bg-color="#fff"
+          input-class-name="glass"
         />
       </view>
       <button
@@ -266,6 +272,14 @@ export default {
             />
           </view>
 
+          <view v-if="noMore && !loading && list.length" class="ko-no-more" style="margin: 20px 0;">
+            该分类没有更多数据了
+          </view>
+
+          <view v-if="noMore && !loading && !list.length" class="ko-no-more" style="margin: 20px 0;">
+            该分类暂无数据
+          </view>
+
           <uv-loading-icon v-if="loading" />
         </view>
       </scroll-view>
@@ -288,11 +302,12 @@ export default {
     width: 100%;
     display: flex;
     align-items: flex-start;
+    padding: 0;
     padding-right: calc(32px + 10px + 10px);
     height: 0;
     overflow: hidden;
 
-    transition: height .3s;
+    transition: height .3s, padding .3s;
 
     .ko-basic-button__card {
       display: flex;
@@ -314,7 +329,7 @@ export default {
 
     &--btn {
       position: absolute;
-      top: 0;
+      top: 8px;
       right: 10px;
       z-index: 999;
       width: 32px;
@@ -326,12 +341,18 @@ export default {
     }
 
     &.show {
-      height: 46px;
+      height: 58px;
+
+      padding-top: 10px;
+      padding-bottom: 10px;
     }
 
     &.show-switch {
-      height: 46px;
+      height: 58px;
       padding-right: 10px;
+
+      padding-top: 10px;
+      padding-bottom: 10px;
     }
   }
 

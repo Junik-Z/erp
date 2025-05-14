@@ -165,7 +165,6 @@ export default {
     },
 
     getList(reset = false) {
-
       if (reset && !this.noRefresh) {
         this.tableKey = +new Date();
         this.list = [];

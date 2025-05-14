@@ -122,7 +122,7 @@ export default {
 
     // 获取产品列表的样式
     getProductStyle() {
-      return this.$store.state.PRODUCT_STYLE || false;
+      return this.$store.getters.sProductStyle || false;
     },
 
     // 获取表单样式

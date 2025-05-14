@@ -308,7 +308,7 @@ export default {
       }, 200);
     }
 
-    this.onKeepAlive();
+    // this.onKeepAlive();
   },
   methods: {
     // 获取详情
@@ -523,11 +523,11 @@ export default {
     },
 
     // 处理保活
-    onKeepAlive() {
+    /* onKeepAlive() {
       this.TimeVM = setTimeout(() => {
         getMyInfoApi();
       }, 10 * 60 * 1000);
-    },
+    }, */
 
     // 处理 tab 切换
     onTabItem() {

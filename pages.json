@@ -138,7 +138,7 @@
           }
         },
         {
-          "path": "user/user",
+          "path": "user",
           "style": {
             "navigationBarTitleText": "个人中心"
           }
@@ -529,6 +529,12 @@
           "path": "new-client",
           "style": {
             "navigationBarTitleText": "客户"
+          }
+        },
+        {
+          "path": "order-list",
+          "style": {
+            "navigationBarTitleText": "订单列表"
           }
         }
       ]

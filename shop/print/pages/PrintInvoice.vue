@@ -88,6 +88,9 @@ export default {
       groupList: [],
 
       classGroup: [],
+
+      // 根据分类排序
+      isClassSort: false,
     };
   },
   methods: {
@@ -116,7 +119,7 @@ export default {
       let count = 0;
 
       // 数据列表
-      const data = (this.filterData || []);
+      const data = (this.getFilterList || []);
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
@@ -156,7 +159,6 @@ export default {
 
       // 是否有统计
       if (rect.summary) balance += 1;
-
 
       // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
       if (fill > 0 && fill < balance) {
@@ -277,12 +279,30 @@ export default {
       ];
     },
     watchSize() {
-      return [...this.filterColumnList, ...this.getFees, ...this.filterData];
+      return [...this.filterColumnList, ...this.getFees, ...this.getFilterList];
+    },
+
+    // 获取根据分类去去除数据
+    filterItemList() {
+      const classGroup = _deepCopy(this.classGroup).flatMap(item => {
+        if (item.isPrint) {
+          return [item.classId];
+        } else {
+          return [];
+        }
+      });
+
+      return _deepCopy(this.data)?.filter(item => classGroup.includes(item.classId)) || [];
     },
 
     filterData() {
       return _flattenDeep(_deepCopy(this.classGroup)?.filter(item => item.isPrint)?.map(v => v.list) || [])
         ?.map((v, index) => ({...v, __index__: index + 1}));
+    },
+
+    // 获取排序后的数据列表
+    getFilterList() {
+      return this.isClassSort ? this.filterData : this.filterItemList;
     },
   },
 };
@@ -316,7 +336,16 @@ export default {
           </div>
         </div>
         <div class="ko-n-print__check" style="margin-top: 10px; margin-bottom: 10px;">
-          <label>打印分类：</label>
+          <label>
+            打印分类：
+
+            <el-checkbox
+              v-if="classGroup.length > 1"
+              style="margin-left: 10px;"
+              v-model="isClassSort"
+              label="根据类型排序"
+            />
+          </label>
           <div>
             <el-checkbox
               :disabled="item.disabled"
@@ -340,7 +369,7 @@ export default {
           ref="PTableRef"
           is-summary
           :columns="filterColumnList"
-          :data="filterData || []"
+          :data="getFilterList || []"
           :summary="isA4 ? [] : getSummary"
           :is-fees="!!getFees.length"
           :fees-list="getFees"

@@ -339,7 +339,12 @@ export default {
 
     <BasicPopup :visible.sync="visible" title="产品名称重复">
       <view class="ko-order__popup">
-        <KoList @lower="getCheckDuplicate" :loading="sLoading" :no-more="noMore" :no-data="!DuplicateProducts.length">
+        <KoList
+          @lower="getCheckDuplicate"
+          :loading="sLoading"
+          :no-more="noMore"
+          :no-data="!DuplicateProducts.length"
+        >
           <view>
             <BasicCard :spacing="10" v-for="item of DuplicateProducts" :key="item.id">
               <UniRow :gutter="10">

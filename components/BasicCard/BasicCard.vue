@@ -7,6 +7,10 @@ export default {
     className: String,
     noShadow: Boolean,
     bgColor: String,
+    paddingSize: {
+      type: Number,
+      default: 10
+    }
   },
   methods: {
     onClick(event) {
@@ -21,7 +25,7 @@ export default {
     class="ko-basic-card"
     @click.stop="onClick"
     :class="[{'not-padding': notPadding}, className || '', noShadow ? '' : 'ko-basic-box-shadow']"
-    :style="{ marginBottom: `${spacing || 0}px`, backgroundColor: bgColor }"
+    :style="{ marginBottom: `${spacing || 0}px`, backgroundColor: bgColor, padding: `${paddingSize}px` }"
   >
     <slot></slot>
   </view>
@@ -30,7 +34,6 @@ export default {
 <style scoped lang="scss">
 .ko-basic-card {
   width: 100%;
-  padding: 10px;
   position: relative;
   border-radius: 6px;
 

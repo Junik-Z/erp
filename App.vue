@@ -1,7 +1,8 @@
 <script>
 import { getConfigApi, getMyInfoApi, getSubscribeApi, getWSUrl, isLogin, readMessageApi } from "@/api/user";
-import { _deepCopy, _get, _isDev, _isEqual, _omit } from "@/utils";
+import { _deepCopy, _get, _isDev, _isEmpty, _isEqual, _omit } from "@/utils";
 import { CONFIG, MSG_TYPE_ENUMS, PageEnums } from "@/utils/config";
+import getCacheFile from "@/utils/fileCache";
 
 const AC = uni.createInnerAudioContext();
 
@@ -54,7 +55,7 @@ export default {
 
     // #ifdef MP
     // 当进入的不是 [首页, 自助绑定] 时需要先获取用户信息
-    if (!["pages/home/home", "client/binding/binding", PageEnums.editSale, PageEnums.editPurchase].includes(option.path)) {
+    if (!["pages/home/home", "client/binding/binding", PageEnums.NewSale, PageEnums.editPurchase].includes(option.path)) {
       await this.getInfo();
     }
 
@@ -305,18 +306,37 @@ export default {
           // #endif
 
           // #ifndef MP
+          const isSender = !_isEmpty(data.sender) && _get(data, "sender.nickName");
+
+          const h = this.$createElement;
+
           const not = this.$notify({
             title: MSG_TYPE_ENUMS[data.type],
-            message: data.content,
+            dangerouslyUseHTMLString: isSender,
+            message: isSender ? `
+<div class="ko-ws-notify__wrap">
+  <div class="ko-ws-notify">${data.content}</div>
+  <p class="ko-ws-notify__form">来自：<img src="${getCacheFile(_get(data, "sender.avatar"))}" alt=""/><span>${_get(data, "sender.nickName") || ""}</span></p>
+ </div>` : data.content,
             duration: 0,
             showClose: false,
             onClick: () => {
               readMessageApi({id: data.id})
                 .then(res => {
                   console.log("已标记为已读", res);
-                  this.$alert(data.content, MSG_TYPE_ENUMS[data.type], {
-                    confirmButtonText: "确定",
+
+                  this.$msgbox({
+                    title: MSG_TYPE_ENUMS[data.type],
+                    message: h("div", {class: "ko-ws-notify__wrap"}, [
+                      h("div", {class: "ko-ws-notify"}, [data.content]),
+                      h("p", {class: "ko-ws-notify__form"}, [
+                        "来自：",
+                        h("img", {attrs: {src: getCacheFile(_get(data, "sender.avatar"))}}),
+                        h("span", [_get(data, "sender.nickName") || ""]),
+                      ]),
+                    ]),
                   });
+
                 })
                 .finally(() => {
                   uni.$emit("$__update_msg_count__");
@@ -357,17 +377,31 @@ export default {
       uni.__TITLE__ = _deepCopy(document.title);
       let flag = false;
 
+      const _this = this;
+
       function flashTitle() {
         if (!document.hasFocus()) { // 检测窗口是否失去焦点
           flag = !flag;
-          document.title = flag ? `【您有新消息】${uni.__TITLE__}` : " "; // 切换标题内容
+          document.title = flag ? `【您有新消息】${uni.__TITLE__?.replace("【您有新消息】", "")}` : " "; // 切换标题内容
           uni.__HIDE_TIME_VM__ = setTimeout(flashTitle, 500); // 每0.5秒切换一次
         } else {
           document.title = uni.__TITLE__; // 恢复默认标题
         }
       }
 
+      /* function flash() {
+        uni.__FOCUS__ && clearTimeout(uni.__FOCUS__);
+
+        uni.__FOCUS__ = setTimeout(function () {
+          window.focus();
+          window.blur();
+          alert(1);
+          flash();
+        }, 3000);
+      } */
+
       this.isNewMsg && flashTitle();
+      // this.isNewMsg && flash();
       // #endif
     },
   },
@@ -376,10 +410,22 @@ export default {
       return this.$store.getters.isNewMsg;
     },
   },
+
+  onUnload() {
+    if (uni.$__SOCKET_TASK__) uni.$__SOCKET_TASK__.close();
+    console.log("uni.$__SOCKET_TASK__", uni.$__SOCKET_TASK__);
+  },
+
+  beforeDestroy() {
+    if (uni.$__SOCKET_TASK__) uni.$__SOCKET_TASK__.close();
+    console.log("uni.$__SOCKET_TASK__", uni.$__SOCKET_TASK__);
+  },
 };
 </script>
 
 <style lang="scss">
 /*每个页面公共css */
 @import '@/uni_modules/uni-scss/index.scss';
+// 样式
+@import "@/common.scss";
 </style>

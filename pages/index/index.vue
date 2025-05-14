@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _haveCommonElements, _isEmpty } from "@/utils";
+import { _deepCopy, _get, _haveCommonElements, _isEmpty, _isNumber } from "@/utils";
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST, PageEnums } from "@/utils/config";
@@ -37,7 +37,7 @@ export default {
       isExpired: false,
 
       // 有效天数
-      expiredDays: 0,
+      expiredDays: null,
 
       msgCount: 0,
     };
@@ -66,6 +66,14 @@ export default {
         });
       }, 600);
     } */
+
+    const user = this.GET_USER_INFO;
+    // 用户没有设置昵称
+    if (_isEmpty(user.nickName)) {
+      uni.navigateTo({
+        url: PageEnums.User + `?noInfo=true`,
+      });
+    }
     // #endif
   },
   // #ifdef H5
@@ -230,7 +238,7 @@ export default {
     },
     // 显示过期描述
     showExpiredDesc() {
-      return this.isExpired || this.expiredDays <= 30;
+      return this.isExpired || (_isNumber(this.expiredDays) && this.expiredDays <= 30);
     },
     // 获取过期描述
     getExpiredDesc() {

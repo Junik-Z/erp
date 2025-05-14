@@ -30,6 +30,8 @@ export default {
   data() {
     return {
       val: undefined,
+      isFocus: false,
+
     };
   },
   methods: {
@@ -78,15 +80,32 @@ export default {
       this.$emit("input", this.val);
     },
   },
+  computed: {
+    isShowButton() {
+      return this.val || this.isFocus;
+    },
+  },
 };
 </script>
 
 <template>
   <view class="ko-number-input" @click.stop>
-    <button v-show="val" class="ko-number-input__btn" :disabled="val <= (min || 0)" @click.stop="onBtnClick('minus')">
+    <button
+      v-show="isShowButton"
+      class="ko-number-input__btn"
+      :disabled="val <= (min || 0)"
+      @click.stop="onBtnClick('minus')"
+    >
       -
     </button>
-    <input v-show="val" v-model="val" class="ko-number-input__input" @input="onInput" />
+    <input
+      v-show="isShowButton"
+      v-model="val"
+      class="ko-number-input__input"
+      @input="onInput"
+      @focus="isFocus = true"
+      @blur="isFocus = false"
+    />
     <button class="ko-number-input__btn" @click.stop="onBtnClick('added')">
       +
     </button>

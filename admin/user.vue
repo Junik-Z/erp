@@ -5,11 +5,11 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import { _deepCopy } from "@/utils";
+import { _deepCopy, _isEqual } from "@/utils";
 import { updateMyInfoApi, uploadBase64Api } from "@/api/user";
 import { getImageBase64 } from "@/utils/processingFiles";
 import LongPressButton from "@/admin/components/LongPressButton/LongPressButton.vue";
-import FilePicker from "../components/FilePicker/FilePicker.vue";
+import FilePicker from "./components/FilePicker/FilePicker.vue";
 import { generateQRCodeBusinessesApi } from "@/api/admin";
 
 export default {
@@ -31,13 +31,23 @@ export default {
       gLoading: false,
       look: false,
       qrCode: "",
+
+      isNoInfo: false,
     };
   },
-  onLoad() {
+  onLoad(option) {
     this.form = _deepCopy(this.GET_USER_INFO) || _deepCopy(this.$options.data().form);
     uni.$on("$__get_user_info_success__", (data) => {
       this.form = _deepCopy(data);
     });
+
+    this.isNoInfo = _isEqual(option.noInfo, "true");
+
+    if (this.isNoInfo) {
+      setTimeout(() => {
+        this.visible = true;
+      }, 1000);
+    }
   },
   methods: {
     onUpdateInfo() {
@@ -71,6 +81,7 @@ export default {
           uni.showToast({title: "信息更新成功"});
           uni.$emit("$__get_all_info__", true);
           this.visible = false;
+          this.isNoInfo && uni.navigateBack({});
         })
         .finally(() => {
           this.loading = false;

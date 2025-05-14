@@ -58,6 +58,12 @@ export default {
     isCustomStatusName: Boolean,
     // 自定义的状态名称
     customStatusName: String,
+
+    // 新版的订单列表
+    isNewSale: Boolean,
+
+    // 隐藏地址
+    hideOrderAddress: Boolean,
   },
   methods: {
     onClickOperate(child, item) {
@@ -100,8 +106,8 @@ export default {
 </script>
 
 <template>
-  <BasicCard :spacing="spacing" custom-class="ko-order-card" @click="$emit('click')">
-    <view class="ko-order-card__wrap">
+  <BasicCard :padding-size="isNewSale ? 6 : 10" :spacing="spacing" custom-class="ko-order-card" @click="$emit('click')">
+    <view class="ko-order-card__wrap" :class="{'is-new-sale': isNewSale}">
       <block v-if="isNew">
         <block v-if="showOrderType">
           <view class="ko-order-card__item" style="padding: 0;">
@@ -115,13 +121,35 @@ export default {
 
         <view class="ko-order-card__item">
           <view
-            style="font-size: 15px; font-weight: bold;"
+            class="order-code"
             @click.stop="onCopyText(item.orderCode)"
           >
             {{ item.orderCode || "-" }}
           </view>
 
-          <view class="ko-order-card__status" v-if="!isHideStatus" :class="[item.status]">
+          <view class="ko-order-card__status" v-if="!isHideStatus && !isNewSale" :class="[item.status]">
+            <block v-if="isCustomStatusName && customStatusName">
+              {{ customStatusName }}
+            </block>
+            <block v-else-if="isWork">
+              {{ PRODUCE_STATUS_ENUMS(item.status) }}
+            </block>
+            <block v-else-if="!isFinance">
+              {{ ORDER_STATUS_ENUMS(item.status) }}
+            </block>
+            <block v-else>
+              {{ FINANCE_ORDER_STATUS_ENUMS(item.status) }}
+            </block>
+          </view>
+        </view>
+
+
+        <view class="ko-order-card__item">
+          <view class="ko-basic-money">
+            ¥ {{ toYuan(item.totalAmount) }}
+          </view>
+
+          <view class="ko-order-card__status" v-if="isNewSale" :class="[item.status]">
             <block v-if="isCustomStatusName && customStatusName">
               {{ customStatusName }}
             </block>
@@ -138,15 +166,6 @@ export default {
         </view>
 
         <view class="ko-order-card__item">
-          <view v-if="false" style="font-weight: bold;">
-            总计
-          </view>
-          <view class="ko-basic-money">
-            ¥ {{ toYuan(item.totalAmount) }}
-          </view>
-        </view>
-
-        <view class="ko-order-card__item">
           <view style="display: flex; align-items: center;">
             <uni-icons type="calendar" />
             <text style="padding-left: 4px;">
@@ -154,7 +173,7 @@ export default {
             </text>
           </view>
           <view
-            v-if="item.customer && (isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType))"
+            v-if="!isNewSale && item.customer && (isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType))"
           >
             <block v-if="isLogistics">
               <view class="ko-basic-label__images-wrap">
@@ -187,7 +206,7 @@ export default {
           </view>
         </view>
 
-        <view class="border-top"></view>
+        <view class="border-top" v-if="!isNewSale"></view>
 
         <block v-if="isCheckStock">
           <view
@@ -230,7 +249,7 @@ export default {
           </view>
         </view>
 
-        <view class="ko-order-card__item" v-if="item.orderAddress">
+        <view class="ko-order-card__item" v-if="item.orderAddress && !hideOrderAddress">
           <view>
             <label class="ko-basic-label" style="margin-right: 6px;">
               <uni-icons type="location" />
@@ -250,16 +269,16 @@ export default {
 
         <!--<view class="border-top"></view>-->
 
-        <view class="ko-order-card__item" style="margin-top: 6px;">
+        <view class="ko-order-card__item" style="margin-top: 6px;" v-if="!isNewSale">
           <view style="display: flex; align-items: center;">
             <block v-if="GET_FUNC(item, 'user.nickName') || GET_FUNC(item, 'user.avatar')">
-              <view style="margin-right: 10px;" @click.stop>
+              <view style="margin-right: 8px;" @click.stop>
                 <UvAvatar
-                  :size="28"
+                  :size="isNewSale ? 22 : 28"
                   random-bg-color
                   :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
                   :text="GET_FUNC(item, 'user.nickName') || ''"
-                  :font-size="12"
+                  :font-size="isNewSale ? 8 : 12"
                 />
               </view>
               <text v-if="GET_FUNC(item, 'user.nickName')">{{ GET_FUNC(item, "user.nickName") }}</text>
@@ -271,6 +290,33 @@ export default {
             </view>
           </view>
         </view>
+
+        <block v-if="isNewSale">
+          <view class="ko-order-card__item">
+            <view style="display: flex; align-items: center;">
+              <block v-if="GET_FUNC(item, 'user.nickName') || GET_FUNC(item, 'user.avatar')">
+                <view style="margin-right: 8px;" @click.stop>
+                  <UvAvatar
+                    :size="isNewSale ? 22 : 28"
+                    random-bg-color
+                    :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
+                    :text="GET_FUNC(item, 'user.nickName') || ''"
+                    :font-size="isNewSale ? 8 : 12"
+                  />
+                </view>
+                <text v-if="GET_FUNC(item, 'user.nickName')">{{ GET_FUNC(item, "user.nickName") }}</text>
+              </block>
+            </view>
+          </view>
+          <view class="ko-order-card__item" style="margin-top: 6px;">
+            <view></view>
+            <view style="flex: 1;">
+              <view style="padding-top: 0;" class="ko-order-card__operate" v-if="$slots.operate">
+                <slot name="operate" :node="item" />
+              </view>
+            </view>
+          </view>
+        </block>
       </block>
 
       <block v-else>
@@ -465,13 +511,57 @@ export default {
   margin: 6px;
 }
 
-.ko-order-card {
+.is-new-sale {
+  .ko-order-card {
+    &__item {
+      font-size: 12px;
 
+      .order-code {
+        font-size: 13px;
+        font-weight: normal;
+      }
+    }
+
+
+    &__status {
+      padding: 2px 4px;
+      font-size: 10px;
+
+      &.CREATED {
+        background: #fef3c7;
+        color: #d97706;
+      }
+
+      &.FINISHED {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+
+      &.CANCELLED {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+
+      &.APPLY_MATERIAL {
+        background: #e0f2fe;
+        color: #0284c7;
+      }
+    }
+
+  }
+}
+
+.ko-order-card {
   &__item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 2px 0;
+
+    .order-code {
+      font-size: 15px;
+      font-weight: bold;
+    }
   }
 
   &__status {

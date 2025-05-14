@@ -29,7 +29,7 @@
 				<view
 					class="uv-popup__content"
 					:style="[contentStyle]"
-					:class="[popupClass]"
+					:class="[popupClass, {'safe-area-inset-bottom': safeAreaInsetBottom}]"
 					@click="clear"
 				>
 					<slot />
@@ -484,6 +484,10 @@
 			overflow: hidden;
 			/* #endif */
 			position: relative;
+
+      &.safe-area-inset-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
 
 			&.left,
 			&.right {

@@ -10,12 +10,12 @@ export const TabList = [
   {
     label: "员工管理",
     path: PageEnums.SetRole,
-    roles: ["*"],
+    roles: ["ADMIN", "BUSINESS", '*'],
   },
   {
     label: "用户管理",
     path: PageEnums.WeChat,
-    roles: ["*"],
+    roles: ["ADMIN", "BUSINESS", '*'],
   },
 ];
 
@@ -50,7 +50,7 @@ export default {
       return TabList?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
-          if (_haveCommonElements(role, item.roles) || this.isAdmin) {
+          if (_haveCommonElements(role, item.roles) || this.isAdmin || item.roles.includes('*')) {
             return [item];
           } else {
             return [];

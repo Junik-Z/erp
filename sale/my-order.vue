@@ -208,7 +208,7 @@ export default {
         {
           text: "新增",
           iconfont: "icon-tianjia",
-          path: PageEnums.editSale + "?PAGE_TYPE=ADDED_SALE&isNormal=true",
+          path: PageEnums.NewSale + "?PAGE_TYPE=ADDED_SALE&isNormal=true",
           perm: "SALE_ADD",
         },
       ],

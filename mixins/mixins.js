@@ -23,7 +23,7 @@ import { goLogin, logoutApi } from "@/api/user";
 
 import { getSaleShareIdApi, shareOrderApi } from "@/api/erp/sale";
 import { getPurchaseShareIdApi } from "@/api/erp/purchase";
-import { BILL_KEY, PRODUCT_STYLE_KEY } from "@/store";
+import { NO_CLEAR_KEY } from "@/store";
 
 // #ifdef MP
 const MenuButtonRect = uni.getMenuButtonBoundingClientRect();
@@ -165,8 +165,7 @@ export default {
         uni.$__IS_LOGOUT_FLAG__ = true;
         logoutApi()
           .finally(() => {
-            const isPStyle = uni.getStorageSync(PRODUCT_STYLE_KEY);
-            const isBillStyle = uni.getStorageSync(BILL_KEY);
+            const NoClear = uni.getStorageSync(NO_CLEAR_KEY);
 
             setTimeout(() => {
               const obj = _omit(params || {}, ["scene"]);
@@ -204,8 +203,7 @@ export default {
               }, 10);
               // #endif
 
-              uni.setStorageSync(PRODUCT_STYLE_KEY, isPStyle);
-              uni.setStorageSync(BILL_KEY, isBillStyle);
+              uni.setStorageSync(NO_CLEAR_KEY, NoClear);
             }, 50);
           });
       });
@@ -337,6 +335,11 @@ export default {
     // 设置下单样式
     setBillStyle() {
       this.$store.dispatch("setBillStyleAsync", !this.sBill);
+    },
+
+    // 设置销售列表样式
+    setSaleStyle() {
+      this.$store.dispatch("setSaleStyleAsync", !this.sSale);
     },
   },
   components: {
@@ -682,6 +685,11 @@ export default {
         "--m-width": m.width + "px",
         "--m-top": m.top + "px",
       };
+    },
+
+    // 获取销售列表样式
+    sSale() {
+      return this.$store.getters.gSaleStyle;
     },
   },
 };

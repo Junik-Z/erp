@@ -262,6 +262,7 @@ export default {
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
+    <TopMenus :path="PageEnums.productClassify" />
 
     <view class="ko-classify__row">
       <DaTreeVue2

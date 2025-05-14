@@ -101,6 +101,8 @@ export default {
           />
         </swiper-item>
       </swiper>
+
+      <view class="ko-detail__swiper--no-more" v-if="!(info.carousel || []).length">该商品未上传相关展示图片</view>
     </view>
 
     <view class="ko-detail__top">
@@ -177,6 +179,15 @@ export default {
 
   &__swiper {
     padding-bottom: 20px;
+    position: relative;
+
+    &--no-more {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #c7c9ce;
+    }
 
     &--wrap {
       height: 328px;

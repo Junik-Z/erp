@@ -19,6 +19,8 @@ export default {
       isEdit: false,
       option: {},
       isShare: false,
+
+      isShowSearch: false,
     };
   },
   onLoad(option) {
@@ -40,6 +42,16 @@ export default {
     }
 
     if (this.isShare) this.handlerShare();
+
+    // 来自销售的订单
+    if (this.isSale) {
+      setTimeout(() => {
+        this.$refs.CLRef.onUpdateForm({
+          supplierId: option.supplierId,
+          orderAddress: option.address,
+        });
+      }, 300);
+    }
 
     // this.setOrderInfoByKey("isShare", this.isShare);
     // this.setOrderInfoByKey("isEdit", this.isEdit);
@@ -145,6 +157,9 @@ export default {
     sys() {
       return this.GET_CONFIG_INFO || {};
     },
+    shopName() {
+      return (this.GET_SHOP_NAME || "").substring(0, 2);
+    },
   },
   onUnload() {
     this.reset();
@@ -153,37 +168,53 @@ export default {
 </script>
 
 <template>
-  <view class="ko-shopping glass" :style="[{'--k-shopping-header-height': hHeight + 'px'}, menuButtonRectStyle]">
+  <view
+    class="ko-shopping glass no-border"
+    :style="[{'--k-shopping-header-height': hHeight + 'px'}, menuButtonRectStyle]"
+  >
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
-    
+
     <button class="ko-top-black" @click="onBlack">
       <uni-icons size="24" color="#000" type="left" />
     </button>
 
     <view class="ko-shopping__content" :class="{'no-height': !isShare}">
-      <view class="ko-shopping__header" v-if="!isSale">
+      <view class="ko-shopping__header" :class="{' glass no-border': !isShowSearch}" v-if="!isSale">
         <view class="ko-shopping__swiper">
-          <swiper class="ko-shopping__swiper--wrap" autoplay="true" duration="1000" interval="3000">
+          <swiper
+            class="ko-shopping__swiper--wrap"
+            :class="{'not-bg-img': !sys.merchantBgImg}"
+            autoplay="true"
+            duration="1000"
+            interval="3000"
+          >
             <swiper-item class="ko-shopping__swiper--item">
               <image
                 class="ko-shopping__swiper--image"
-                :src="getImageUrl(sys.merchantBgImg)"
-                mode="aspectFill"
+                :src="getImageUrl(sys.merchantBgImg || 'https://erp.kuaouyun.cn/api/files/down/static/store_pg.png')"
+                mode="widthFix"
                 lazy-load
               />
             </swiper-item>
           </swiper>
 
-          <view class="ko-shopping__header--wrap">
+          <view class="ko-shopping__header--wrap"
+                :class="{'no-bg': !sys.merchantBgImg, 'merchantProfile': sys.merchantProfile}">
             <view class="ko-shopping__info">
-              <image
-                class="ko-shopping__info--image"
-                :src="getImageUrl(sys.logo)"
-                mode="aspectFill"
-                lazy-load
-              />
+              <view class="ko-shopping__info--image" :class="{'no-logo': !sys.logo}">
+                <image
+                  v-if="sys.logo"
+                  class="image"
+                  :src="getImageUrl(sys.logo)"
+                  mode="aspectFill"
+                  lazy-load
+                />
+                <text v-else class="ko-shopping__info--name">
+                  {{ shopName }}
+                </text>
+              </view>
               <view style="padding-left: 10px;">
                 <view class="ko-shopping__info--name">{{ GET_SHOP_NAME }}</view>
                 <view style="display: flex; align-items: center; font-size: 12px; color: rgba(75, 85, 99, 1);">
@@ -221,6 +252,7 @@ export default {
           is-shopping
           @switch="onSwitch"
           :show-switch="!(isEdit || isShare)"
+          :is-show-search.sync="isShowSearch"
         />
       </view>
     </view>
@@ -245,10 +277,11 @@ export default {
 
 .ko-shopping {
   --merchants-logo-size: 70px;
-  --swiper-height: 160px;
+  --swiper-height: 198px;
   --footer-left-right-size: 20px;
   --footer-bottom-size: 26px;
 
+  background: rgba(255, 255, 255, 0.25);
   height: 100vh;
   overflow-y: hidden;
 
@@ -267,15 +300,20 @@ export default {
   }
 
   &__swiper {
-    padding-bottom: 10px;
+    //padding-bottom: 10px;
+    position: relative;
 
     &--wrap {
       height: var(--swiper-height);
+      /* &.not-bg-img {
+         height: calc(var(--m-top) + (var(--m-height) * 2) + 10px);
+       }*/
     }
 
     &--item {
       border-radius: 0 0 10px 10px;
       overflow: hidden;
+      background: #ECECEC;
     }
 
     &--image {
@@ -284,47 +322,69 @@ export default {
   }
 
   &__header {
+    //background-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .8));
+
     &--wrap {
-      margin-top: -20px;
-      position: relative;
-      z-index: 30;
-      //padding: 0 20px;
       backdrop-filter: blur(10px);
-      background-color: rgba(255, 255, 255, 0.7);
+      -webkit-backdrop-filter: blur(10px);
+      //padding-bottom: 16px;
+      //z-index: 55;
+      //position: absolute;
+      //top: calc(var(--m-top) + var(--m-height) + 16px);
+      //left: -2px;
+      //right: -2px;
+
+      margin-top: -60px;
+      margin-left: -2px;
+
+      &.merchantProfile {
+        padding-bottom: 1px;
+      }
     }
   }
 
   &__info {
     display: flex;
     align-items: flex-end;
-    padding: 0 20px;
+    padding: 0 20px 10px;
 
     &--address {
-      margin-top: 10px;
+      margin: 10px;
       font-size: 14px;
       color: rgba(75, 85, 99, 1);
       padding: 12px;
       border-radius: 6px;
-      margin-left: 10px;
-      margin-right: 10px;
       --tw-text-opacity: 1;
     }
 
     &--name {
-      background: linear-gradient(90deg, #ff6b6b, #ff8e53);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      //background: linear-gradient(90deg, #ff6b6b, #ff8e53);
+      //-webkit-background-clip: text;
+      //-webkit-text-fill-color: transparent;
+      color: #333;
       font-size: 18px;
       font-weight: bold;
     }
 
     &--image {
       margin-top: -20px;
-
+      background-color: rgba(255, 255, 255, 1);
       width: var(--merchants-logo-size);
       height: var(--merchants-logo-size);
       border-radius: 10px;
       box-shadow: 0 0 #0000, 0 0 #0000, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+      .image {
+        width: 100%;
+        border-radius: 10px;
+        height: 100%;
+      }
+
+      &.no-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
   }
 

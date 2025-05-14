@@ -5,7 +5,6 @@ import { _get, _haveCommonElements, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
 import { PageEnums } from "@/utils/config";
 
-
 export const TabList = [
   {
     label: "销售看版",
@@ -41,8 +40,23 @@ export default {
   mixins: [mixins],
   data() {
     return {
-      tabs: TabList,
+      TabList,
     };
+  },
+  watch: {
+    sSale: {
+      handler() {
+        this.$nextTick(() => {
+          this.TabList = this.TabList.map(item => {
+            if (_isEqual(item.label, "销售订单")) {
+              item.path = this.sSale ? PageEnums.saleOrderList : PageEnums.sale;
+            }
+            return item;
+          });
+        });
+      },
+      immediate: true,
+    },
   },
   props: {
     path: String,
@@ -52,9 +66,7 @@ export default {
     // 跳转到指定页面 来自 tabs 的跳转
     onJumpByTabs({currentIndex}) {
       const node = this.getTabsList[currentIndex];
-
       this.$emit("click-tab", node);
-
       if (node.path) {
         uni.redirectTo({url: node.path});
       }
@@ -62,7 +74,7 @@ export default {
   },
   computed: {
     getTabsList() {
-      return TabList?.flatMap(item => {
+      return this.TabList?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
           if (_haveCommonElements(role, item.roles) || this.isAdmin) {

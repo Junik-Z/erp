@@ -98,12 +98,19 @@ export default {
     };
   },
   async onLoad(option) {
-    // PAGE_TYPE=ADDED_SALE&scene=default&SHARE_USER_ID=ad41944d8cb44faea09da9d69fe67d26
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
     this.isEdit = !!option.id;
 
     this.isNormal = option.isNormal === "true";
+
+    // 快捷开单
+    this.isFast = _isEqual(option.isFast, "true");
+
+    if (this.isFast) {
+      this.form.supplierId = option.supplierId;
+      this.form.orderAddress = option.address || "";
+    }
 
     if (this.isEdit) this.getInfo();
 
@@ -259,12 +266,11 @@ export default {
         const sBill = this.sBill;
 
         if (sBill) {
-          uni.redirectTo({url: PageEnums.shopping + "?PAGE_TYPE=SALE"});
+          uni.redirectTo({url: PageEnums.shopping + `?PAGE_TYPE=SALE&supplierId=${this.option.supplierId}&address=${this.option.address}`});
         } else {
-          uni.redirectTo({url: PageEnums.editSale});
+          uni.redirectTo({url: PageEnums.NewSale + `?supplierId=${this.option.supplierId}&address=${this.option.address}`});
         }
       });
-
     },
   },
 

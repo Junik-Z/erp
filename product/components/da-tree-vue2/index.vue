@@ -1,6 +1,6 @@
 <template>
   <view class="da-tree" :style="{'--theme-color': themeColor}">
-    <scroll-view class="da-tree-scroll" :class="{'active': activeKey === item.key}" :scroll-y="true" :scroll-x="false">
+    <scroll-view class="da-tree-scroll" :scroll-y="true" :scroll-x="false">
       <view :style="[{paddingBottom: `${paddingBottom || 0}px`, paddingTop: `${paddingTop || 0}px`}]">
         <view
           class="da-tree-item"
@@ -252,7 +252,7 @@ export default {
             parent.children.push(newItem);
             if (newItem.parentKeys?.length) {
               newItem.parentKeys.forEach(k => {
-                this.datamap[k].childrenKeys = [...this.datamap[k].childrenKeys, newItem.key];
+                this.datamap[k].childrenKeys = [...this.datamap[k].childrenKeys, (newItem || {})?.key];
               });
             }
           }
@@ -447,7 +447,7 @@ export default {
       // 单选
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
-        if (item.key === checkedKeyList) {
+        if (item?.key === checkedKeyList) {
           // console.log('item.key === checkedKeyList', item.key, checkedKeyList)
           this.checkTheRadio(item, checked);
           break;
@@ -461,7 +461,7 @@ export default {
      * @param checked
      */
     checkTheChecked(item, checked = true) {
-      const {childrenKeys, parentKeys, disabled = false} = item;
+      const {childrenKeys, parentKeys, disabled = false} = item || {};
       if (!this.checkedDisabled && disabled) return;
 
       // 当前
@@ -540,7 +540,7 @@ export default {
       // 收起
       if (expand === false) {
         for (let i = 0; i < list.length; i++) {
-          const item = list[i];
+          const item = list[i] || {};
           if (expandedKeyList?.includes(item.key)) {
             item.expand = false;
             if (item.childrenKeys?.length) {
@@ -555,7 +555,7 @@ export default {
       }
       // 展开
       for (let i = 0; i < list.length; i++) {
-        const item = list[i];
+        const item = list[i] || {};
         // 处理展开
         if (expandedKeyList?.includes(item.key)) {
           // 父子

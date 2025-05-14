@@ -22,7 +22,7 @@ export default {
     jumpAddedSale(query = {}, index) {
       let q = this.getQueryString(query);
       uni.navigateTo({
-        url: `${PageEnums.editSale}${q}`,
+        url: `${PageEnums.NewSale}${q}`,
       });
     },
 

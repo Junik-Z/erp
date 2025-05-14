@@ -129,7 +129,8 @@
           v-if="cancelText"
           class="uv-action-sheet__cancel-text"
           @tap="cancel"
-        >{{ cancelText }}
+        >
+          {{ cancelText }}
         </text>
       </view>
     </view>
@@ -303,6 +304,7 @@ $uv-action-sheet-cancel-text-hover-background-color: rgb(242, 243, 245) !default
   }
 
   &__cancel-text {
+    border-top: 4px solid #EAEAEC;
     font-size: $uv-action-sheet-cancel-text-font-size;
     color: $uv-action-sheet-cancel-text-color;
     text-align: center;
