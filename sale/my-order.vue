@@ -13,7 +13,7 @@ import {
 import mixins from "@/mixins/mixins";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import KoList from "@/components/List/List.vue";
-import OrderCard from "./components/OrderCard.vue";
+import OrderCard from "../components/OrderCard/OrderCard.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";

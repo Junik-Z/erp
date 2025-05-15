@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _get, _haveCommonElements, _isEmpty, _isNumber } from "@/utils";
+import { _deepCopy, _get, _haveCommonElements, _isEmpty, _isEqual, _isNumber, _reverse } from "@/utils";
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST, PageEnums } from "@/utils/config";
@@ -8,7 +8,7 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 
 import Dayjs from "@/utils/dayjs";
-import { getMessageCountApi } from "@/api/user";
+import { getMessageCountApi, getMessageListApi } from "@/api/user";
 
 export default {
   components: {
@@ -40,13 +40,18 @@ export default {
       expiredDays: null,
 
       msgCount: 0,
+
+      isInit: true,
+
+      isFlag: false,
     };
   },
   onShow() {
     this.$nextTick(() => {
       this.validShopDate();
     });
-    this.getMsgCount();
+    this.isFlag && this.getMsgCount(false);
+    this.isFlag = true;
   },
   onLoad() {
     uni.$on("$__get_config_info_success__", this.validShopDate);
@@ -54,6 +59,8 @@ export default {
     uni.$on("$__update_msg_count__", this.getMsgCount);
 
     uni.$__FIELD_LIST__ = [];
+
+    this.getMsgCount(true);
 
     // console.log("用户权限", this.GET_USER_ROLE);
 
@@ -201,14 +208,43 @@ export default {
     },
 
     // 获取未读消息条数
-    getMsgCount() {
+    getMsgCount(flag = false) {
       if (!this.isPerm("MESSAGE_LIST")) return false;
 
       getMessageCountApi()
         .then(res => {
           this.msgCount = res.data;
           this.$store.dispatch("setNewMsgAsync", !!res.data);
+
+          if (this.msgCount > 0 && flag) {
+            setTimeout(() => {
+              this.getMsgList();
+            }, 1000);
+          }
         });
+    },
+
+    // 获取未读的消息列表
+    getMsgList() {
+      getMessageListApi({pageSize: 30, pageNum: 0})
+        .then(async (res) => {
+          const list = (res.data || []).filter(item => _isEqual("InternalStaffNoticeReceiver", item.type) && !item.isRead);
+          const sList = _reverse(list);
+          console.log("通知消息的列表", sList);
+          for (let i = 0; i < sList.length; i++) {
+            const data = sList[i];
+            await this.tisMsg(data);
+          }
+        });
+    },
+
+    // 消息提示
+    tisMsg(data = {}) {
+      if (_isEmpty(data)) return false;
+      return new Promise(resolve => {
+        uni.$emit("$__show_tis_msg__", data);
+        setTimeout(resolve, 600);
+      });
     },
   },
   computed: {

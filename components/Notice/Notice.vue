@@ -58,11 +58,9 @@ export default {
       // #endif
     },
     // 来的消息
-    onSocketMessage(res) {
-      const {data} = res;
-      if (_isEmpty(data)) return false;
+    onSocketMessage(data) {
+      if (_isEmpty(data) || this.list.some(v => _isEqual(v.id, data.id))) return false;
       this.$refs.UPRef && this.$refs.UPRef.open();
-
       const id = data.id;
       this.list.unshift({...data, __show__: false});
       setTimeout(() => {
@@ -230,41 +228,45 @@ export default {
                 <view class="ko-notice__item--title">{{ title(item) }}</view>
                 <view class="ko-notice__item--content"> {{ item.content }}</view>
 
-                <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 6px;">
-                  <view
-                    v-if="isEqual(item.type, 'InternalStaffNoticeSender')"
-                    class="ko-notice__form"
-                  >
-                    <text style="white-space: nowrap; margin-top: 2px;">发给：</text>
-                    <view class="ko-notice__form--wrap">
-                      <view
-                        v-for="child of getToUser(item)"
-                        :key="child.userId"
-                        class="ko-notice__form--user"
-                        :class="{'is-read': child.isRead}"
-                      >
-                        <uni-icons
-                          :type="child.isRead ? 'mail-open-filled' : 'email-filled'"
-                          size="16px"
-                          :color="child.isRead ? '#333' : '#c7c9ce'"
-                        />
-                        <text style="margin-left: 2px;">{{ child.nickName }}</text>
+                <view style="display: flex; align-items: center; justify-content: space-between; margin-top: 5px;">
+                  <view class="ko-notice__form--wrap" style="color: #8f939c;">{{ item.createTime || "" }}</view>
+
+                  <view style="display: flex; align-items: center; justify-content: flex-end; margin-top: 6px;">
+                    <view
+                      v-if="isEqual(item.type, 'InternalStaffNoticeSender')"
+                      class="ko-notice__form"
+                    >
+                      <text style="white-space: nowrap; margin-top: 2px;">发给：</text>
+                      <view class="ko-notice__form--wrap">
+                        <view
+                          v-for="child of getToUser(item)"
+                          :key="child.userId"
+                          class="ko-notice__form--user"
+                          :class="{'is-read': child.isRead}"
+                        >
+                          <uni-icons
+                            :type="child.isRead ? 'mail-open-filled' : 'email-filled'"
+                            size="16px"
+                            :color="child.isRead ? '#333' : '#c7c9ce'"
+                          />
+                          <text style="margin-left: 2px;">{{ child.nickName }}</text>
+                        </view>
                       </view>
                     </view>
-                  </view>
-                  <view
-                    class="ko-notice__form--wrap"
-                    v-if="isEqual(item.type, 'InternalStaffNoticeReceiver')"
-                  >
-                    <uni-icons v-if="false" type="paperplane-filled" size="12px" color="#8f939c" />
-                    来自：
+                    <view
+                      class="ko-notice__form--wrap"
+                      v-if="isEqual(item.type, 'InternalStaffNoticeReceiver')"
+                    >
+                      <uni-icons v-if="false" type="paperplane-filled" size="12px" color="#8f939c" />
+                      来自：
 
-                    <UvAvatar
-                      :size="16"
-                      v-if="GET_FUNC(item, 'sender.avatar')"
-                      :src="getImageUrl(GET_FUNC(item, 'sender.avatar'))"
-                    />
-                    <text style="color: #8f939c;">{{ GET_FUNC(item, "sender.nickName") || "" }}</text>
+                      <UvAvatar
+                        :size="16"
+                        v-if="GET_FUNC(item, 'sender.avatar')"
+                        :src="getImageUrl(GET_FUNC(item, 'sender.avatar'))"
+                      />
+                      <text style="color: #8f939c;">{{ GET_FUNC(item, "sender.nickName") || "" }}</text>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -276,41 +278,44 @@ export default {
 
     <BasicPopup @close="onClose" no-footer-padding :visible.sync="visible" :title="vTitle" :no-footer="!showNewUsers">
       <view class="ko-notice__popup">
-        <view class="ko-notice__popup--content">
-          <view class="ko-notice__popup--content--time" v-if="node.createTime">{{ node.createTime }}</view>
+        <view class="ko-notice__popup--content ko-ws-notify__content">
           {{ node.content }}
         </view>
 
-        <view style="display: flex; align-items: center; justify-content: flex-end;">
-          <view
-            v-if="isEqual(node.type, 'InternalStaffNoticeSender')"
-            class="ko-notice__form"
-          >
-            <text style="white-space: nowrap; margin-top: 2px;">发给：</text>
-            <view class="ko-notice__form--wrap">
-              <view
-                v-for="child of getToUser(node)"
-                :key="child.userId"
-                class="ko-notice__form--user"
-                :class="{'is-read': child.isRead}"
-              >
-                <uni-icons
-                  :type="child.isRead ? 'mail-open-filled' : 'email-filled'"
-                  size="16px"
-                  :color="child.isRead ? '#333' : '#c7c9ce'"
-                />
-                <text style="margin-left: 2px;">{{ child.nickName }}</text>
+        <view class="ko-ws-notify__footer">
+          <view class="ko-ws-notify__time">{{ node.createTime || "" }}</view>
+
+          <view style="display: flex; align-items: center; justify-content: flex-end;">
+            <view
+              v-if="isEqual(node.type, 'InternalStaffNoticeSender')"
+              class="ko-ws-notify__form"
+            >
+              <text style="white-space: nowrap; margin-top: 2px;">发给：</text>
+              <view class="ko-message__form--wrap">
+                <view
+                  v-for="child of getToUser(node)"
+                  :key="child.userId"
+                  class="ko-message__form--user"
+                  :class="{'is-read': child.isRead}"
+                >
+                  <uni-icons
+                    :type="child.isRead ? 'mail-open-filled' : 'email-filled'"
+                    size="16px"
+                    :color="child.isRead ? '#333' : '#c7c9ce'"
+                  />
+                  <text style="margin-left: 2px;">{{ child.nickName }}</text>
+                </view>
               </view>
             </view>
-          </view>
 
-          <view
-            class="ko-notice__form--wrap"
-            v-if="isEqual(node.type, 'InternalStaffNoticeReceiver')"
-          >
-            <uni-icons v-if="false" type="paperplane-filled" size="12px" color="#8f939c" />
-            来自：
-            <text style="color: #8f939c;">{{ GET_FUNC(node, "sender.nickName") || "" }}</text>
+            <view
+              class="ko-ws-notify__form"
+              v-if="isEqual(node.type, 'InternalStaffNoticeReceiver')"
+            >
+              <uni-icons v-if="false" type="paperplane-filled" size="12px" color="#8f939c" />
+              来自：
+              <text style="color: #8f939c;">{{ GET_FUNC(node, "sender.nickName") || "" }}</text>
+            </view>
           </view>
         </view>
       </view>

@@ -26,6 +26,12 @@ export default new Vuex.Store({
     BILL_STYLE: noClear.billStyle || false,
     // 销售的新样式
     SALE_STYLE: noClear.saleStyle || false,
+    // 采购的新样式
+    PURCHASE_STYLE: noClear.purchaseStyle || false,
+    // 应收款新样式
+    OR_STYLE: noClear.orStyle || false,
+    // 应付款新样式
+    AP_STYLE: noClear.apStyle || false,
 
     orderInfo: {
       isEdit: false,
@@ -37,24 +43,37 @@ export default new Vuex.Store({
     newMsg: false,
   },
   getters: {
-    sBill(state) {
-      return state.BILL_STYLE;
-    },
-
-    sProductStyle(state) {
-      return state.PRODUCT_STYLE;
-    },
-
     oForm(state) {
       return state.orderInfo;
     },
-
+    // 有新消息
     isNewMsg(state) {
       return state.newMsg;
     },
 
-    gSaleStyle(state) {
+    // 下单样式
+    sBill(state) {
+      return state.BILL_STYLE;
+    },
+    // 商品列表样式
+    sProductStyle(state) {
+      return state.PRODUCT_STYLE;
+    },
+    // 销售样式
+    sSaleStyle(state) {
       return state.SALE_STYLE || false;
+    },
+    // 采购样式
+    sPurchaseStyle(state) {
+      return state.PURCHASE_STYLE;
+    },
+    // 应收款样式
+    sOrStyle(state) {
+      return state.OR_STYLE;
+    },
+    // 应付款样式
+    sApStyle(state) {
+      return state.AP_STYLE;
     },
   },
   mutations: {
@@ -95,6 +114,21 @@ export default new Vuex.Store({
       state.SALE_STYLE = payload;
       uni.setStorageSync(NO_CLEAR_KEY, {...obj, saleStyle: payload});
     },
+    setPurchaseStyle(state, payload) {
+      const obj = uni.getStorageSync(NO_CLEAR_KEY) || {};
+      state.PURCHASE_STYLE = payload;
+      uni.setStorageSync(NO_CLEAR_KEY, {...obj, purchaseStyle: payload});
+    },
+    setOrStyle(state, payload) {
+      const obj = uni.getStorageSync(NO_CLEAR_KEY) || {};
+      state.OR_STYLE = payload;
+      uni.setStorageSync(NO_CLEAR_KEY, {...obj, orStyle: payload});
+    },
+    setApStyle(state, payload) {
+      const obj = uni.getStorageSync(NO_CLEAR_KEY) || {};
+      state.AP_STYLE = payload;
+      uni.setStorageSync(NO_CLEAR_KEY, {...obj, apStyle: payload});
+    },
 
     setOrderInfo(state, payload) {
       state.orderInfo = payload;
@@ -121,19 +155,28 @@ export default new Vuex.Store({
       commit("setBillStyle", payload);
     },
 
+    setPurchaseStyleAsync({commit}, payload) {
+      commit("setPurchaseStyle", payload);
+    },
+
     setOrderInfoAsync({commit}, payload) {
       commit("setOrderInfo", payload);
     },
-
     onReset({commit}) {
       commit("reset");
     },
-
     setNewMsgAsync({commit}, payload) {
       commit("setNewMsg", payload);
     },
     setSaleStyleAsync({commit}, payload) {
       commit("setSaleStyle", payload);
+    },
+
+    setOrStyleAsync({commit}, payload) {
+      commit("setOrStyle", payload);
+    },
+    setApStyleAsync({commit}, payload) {
+      commit("setApStyle", payload);
     },
   },
 });

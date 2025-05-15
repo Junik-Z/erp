@@ -1287,6 +1287,12 @@ export const PRODUCE_PERM_TREE = [
         perm: "PRODUCE_UPDATE_CRAFT_PROCESS",
         id: "413",
       },
+      {
+        label: "修改生产物料",
+        type: 2,
+        perm: "PRODUCE_UPDATE_MATERIAL",
+        id: "1031",
+      },
     ],
   },
   {

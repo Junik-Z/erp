@@ -180,7 +180,7 @@ export default {
             <!-- #endif -->
 
             <!-- #ifdef H5 -->
-            <uni-easyinput v-model="form.seller" placeholder="请输入" />
+            <uni-easyinput v-model.trim="form.seller" placeholder="请输入" />
             <!-- #endif -->
           </view>
           <view class="ko-check-popup__row--item">
@@ -190,7 +190,7 @@ export default {
             <!-- #endif -->
 
             <!-- #ifdef H5 -->
-            <uni-easyinput v-model="form.buyer" placeholder="请输入" />
+            <uni-easyinput v-model.trim="form.buyer" placeholder="请输入" />
             <!-- #endif -->
           </view>
         </view>

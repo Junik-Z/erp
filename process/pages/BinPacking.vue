@@ -1665,7 +1665,7 @@ export default {
               <uni-row :gutter="0" v-if="!isTableEdit">
                 <uni-col :span="24">
                   <uni-forms-item label="名称" label-width="70" name="name">
-                    <uni-easyinput v-model="form.name" placeholder="请输入" />
+                    <uni-easyinput v-model.trim="form.name" placeholder="请输入" />
                     <button style="margin-left: 10px;" class="ko-basic-button__card" @click.stop="onPickName">
                       选择
                     </button>
@@ -1688,7 +1688,7 @@ export default {
                   <view style="display:flex; align-items: center; justify-content: center;">
                     <uni-forms-item label="颜色" required label-width="70" name="color">
                       <view style="display: flex; align-items: center; overflow: hidden; width: 100%">
-                        <uni-easyinput v-model="form.color" placeholder="请输入" />
+                        <uni-easyinput v-model.trim="form.color" placeholder="请输入" />
                         <button
                           @click="onJumpPickerProduct"
                           style="margin-left: 8px;"
@@ -1740,7 +1740,7 @@ export default {
               <uni-row :gutter="0">
                 <uni-col :span="24">
                   <uni-forms-item label="名称" label-width="70" name="name">
-                    <uni-easyinput v-model="form.name" placeholder="请输入" />
+                    <uni-easyinput v-model.trim="form.name" placeholder="请输入" />
                   </uni-forms-item>
                 </uni-col>
                 <uni-col :span="24">
@@ -1753,7 +1753,7 @@ export default {
                     <view style="width: 20rpx;"></view>
                     <view style="flex: 1;">
                       <uni-forms-item label="颜色" required label-width="70" name="color">
-                        <uni-easyinput v-model="form.color" placeholder="请输入" />
+                        <uni-easyinput v-model.trim="form.color" placeholder="请输入" />
                         <button
                           @click="onJumpPickerProduct"
                           style="margin-left: 8px;"

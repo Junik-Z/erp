@@ -33,7 +33,6 @@ export const TabList = [
   },
 ];
 
-
 export default {
   name: "Tabs",
   components: {UniSegmentedControl},

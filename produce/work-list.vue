@@ -314,7 +314,7 @@ export default {
           query += `&isTechnology=true`;
         }
 
-        if(_isEqual(row.produceType, "customized")) query += '&bySale=true'
+        if (_isEqual(row.produceType, "customized")) query += "&bySale=true";
       }
       uni.navigateTo({
         url: PageEnums.produceWork + query,
@@ -434,7 +434,7 @@ export default {
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.node), this.nodeIndex);
+      this[item.func](_deepCopy(this.node), this.nodeIndex, ...(item.params || []));
     },
 
     // 处理新增
@@ -467,9 +467,9 @@ export default {
     },
 
     // 处理添加材料
-    onAddedMaterial(item, index) {
+    onAddedMaterial(item, index, isEdit) {
       this.noRefresh = true;
-      this.$refs.MPRef.open(item);
+      this.$refs.MPRef.open(item, isEdit);
     },
 
     onResetList() {
@@ -525,6 +525,25 @@ export default {
         {
           name: "生成订单二维码",
           func: "onGenerateCode",
+        },
+        {
+          name: "添加物料",
+          func: "onAddedMaterial",
+          status: ["CREATED"],
+          perm: "PRODUCE_UPDATE",
+        },
+        {
+          name: "修改物料",
+          func: "onAddedMaterial",
+          status: ['APPLY_MATERIAL', 'CANCELLED'],
+          perm: "PRODUCE_UPDATE_MATERIAL",
+          params: [true]
+        },
+        {
+          name: "修改工艺",
+          func: "onTechnology",
+          status: ['APPLY_MATERIAL', 'PAUSED'],
+          perm: "PRODUCE_UPDATE_CRAFT_PROCESS",
         },
         {
           name: "取消工单",
@@ -589,16 +608,16 @@ export default {
       <view class="ko-basic-search">
         <UniRow :gutter="10">
           <UniCol :span="24">
-            <uni-easyinput v-model="queryList.orderCode" placeholder="请输入编号" />
+            <uni-easyinput v-model.trim="queryList.orderCode" placeholder="请输入编号" />
           </UniCol>
           <UniCol :span="24">
-            <uni-easyinput v-model="queryList['customer.name']" placeholder="请输入客户名称" />
+            <uni-easyinput v-model.trim="queryList['customer.name']" placeholder="请输入客户名称" />
           </UniCol>
           <UniCol :span="24" v-if="false">
-            <uni-easyinput v-model="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+            <uni-easyinput v-model.trim="queryList['user.nickName']" placeholder="请输入下单用户名称" />
           </UniCol>
           <UniCol :span="24">
-            <uni-easyinput v-model="queryList.orderAddress" placeholder="请输入地址" />
+            <uni-easyinput v-model.trim="queryList.orderAddress" placeholder="请输入地址" />
           </UniCol>
           <UniCol :span="24">
             <PickerCalendars
@@ -658,15 +677,21 @@ export default {
               show-product-type
             >
               <template #operate>
-                <view style="display: flex; align-items: center; justify-content: flex-end;">
+                <view class="ko-work-list__footer">
                   <button
                     class="ko-basic-button__card"
-                    v-if="GET_PAGE_MENU_FUNC === 0 && isPerm('PRODUCE_UPDATE')"
+                    v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_UPDATE') && false"
                     @click.stop="onAddedMaterial(item, index)"
                   >
                     添加物料
                   </button>
-
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['APPLY_MATERIAL', 'CANCELLED'].includes(item.status) && isPerm('PRODUCE_UPDATE_MATERIAL') && false"
+                    @click.stop="onAddedMaterial(item, index, true)"
+                  >
+                    修改物料
+                  </button>
                   <button
                     class="ko-basic-button__card"
                     v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
@@ -687,7 +712,7 @@ export default {
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
+                    v-if="false && ['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
                     @click.stop="onTechnology(item, index)"
                   >
                     修改工艺
@@ -703,13 +728,13 @@ export default {
                   </button>
 
                   <!-- 结算 -->
-                 <!-- <button
-                    class="ko-basic-button__card"
-                    v-if="['FINISHED'].includes(item.status) && isPerm('CRAFT_APPLY_SETTLE')"
-                    @click.stop="onSettlement(item, index)"
-                  >
-                    结算
-                  </button>-->
+                  <!-- <button
+                     class="ko-basic-button__card"
+                     v-if="['FINISHED'].includes(item.status) && isPerm('CRAFT_APPLY_SETTLE')"
+                     @click.stop="onSettlement(item, index)"
+                   >
+                     结算
+                   </button>-->
 
                   <!-- 更多按钮 -->
                   <button
@@ -749,6 +774,13 @@ export default {
                 @click.stop="onAddedMaterial(item, index)"
               >
                 添加物料
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="[1, 2].includes(GET_PAGE_MENU_FUNC) && isPerm('PRODUCE_UPDATE_MATERIAL')"
+                @click.stop="onAddedMaterial(item, index, true)"
+              >
+                修改物料
               </button>
               <button
                 class="ko-basic-button__card"
@@ -834,9 +866,7 @@ export default {
       v-if="isShowMovable"
       @click="onAddedJump"
     />
-
     <Settlement ref="SRef" />
-
     <GenerateCode ref="GCRef" />
 
     <!-- #ifdef MP -->
@@ -852,7 +882,7 @@ export default {
   </view>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .ko-work-list {
   padding-top: 10px;
 
@@ -883,6 +913,18 @@ export default {
       text {
         flex: 1;
       }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin: -2px;
+
+    .ko-basic-button__card {
+      margin: 2px;
     }
   }
 

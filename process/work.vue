@@ -813,13 +813,13 @@ export default {
 
           <block v-if="isPurchase || isSale || bySale">
             <uni-forms-item label="联系电话：" name="orderPhone">
-              <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
+              <uni-easyinput v-model.trim="form.orderPhone" placeholder="请输入" />
             </uni-forms-item>
 
             <uni-forms-item label="配送地址：" name="orderAddress" key="orderAddress">
               <view style="display: flex; align-items: center; width: 100%">
                 <view style="flex: 1; width: 100%">
-                  <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+                  <UniEasyinput v-model.trim="form.orderAddress" placeholder="请输入地址" />
                 </view>
                 <block v-if="form.supplierId && isPerm(isPurchase ? 'SUPPLIER_ADDRESS_LIST' : 'CUSTOMER_ADDRESS_LIST')">
                   <PickerAddress

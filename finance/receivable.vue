@@ -2,8 +2,6 @@
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import {
-  cancelReceivableApi,
-  finishReceivableApi,
   getReceivableCountApi,
   getReceivableDetailApi,
   getReceivableHistoryListApi,
@@ -14,14 +12,13 @@ import UvCountTo from "./components/uv-count-to/uv-count-to.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
-import mixins from "@/mixins/mixins";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "./components/Pay/Pay.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
-import TopMenus from './components/TopMenus.vue'
-import reLogin from "@/mixins/re-login";
+import TopMenus from "./components/TopMenus.vue";
+import orMixins from "@/finance/or-mixins";
 
 const PageMenu = [
   {
@@ -57,7 +54,7 @@ export default {
     UvCountTo,
     TopMenus,
   },
-  mixins: [mixins, reLogin],
+  mixins: [orMixins],
   data() {
     const _this = this;
     return {
@@ -218,10 +215,6 @@ export default {
         },
       ],
       // #endif
-      tableKey: +new Date(),
-
-      node: {},
-      nodeIndex: null,
 
       PAGE_MENU: _deepCopy(PageMenu),
 
@@ -241,7 +234,7 @@ export default {
     });
   },
   mounted() {
-    this.getCount();
+    // this.getCount();
   },
   methods: {
     // 请求下一页数据
@@ -292,67 +285,16 @@ export default {
       }
     },
 
-    onCancel(item, index) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `如果销售订单未出库或仓库计划取消订单，库存将保持原状。若商品已经出库，系统会自动将其退回仓库。请仓库工作人员在商品退回后进行仔细盘点。`,
-        success: (res) => {
-          if (res.confirm) {
-            cancelReceivableApi(item)
-              .then(() => {
-                uni.showToast({title: "取消成功"});
-                this.list.splice(index, 1);
-                // this.getList(true);
-              });
-          }
-        },
-      });
-    },
-
-    onConfirm(item, index) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `请仔细核对金额是否准确。未确认的单据将自动确认，确认后入账。`,
-        confirmText: "确认",
-        success: (res) => {
-          if (res.confirm) {
-            finishReceivableApi(item)
-              .then(() => {
-                uni.showToast({title: "操作成功"});
-                this.list.splice(index, 1);
-                this.getCount();
-              });
-          }
-        },
-      });
-    },
-
-    // 添加票据
-    onAddedTicket(item, index) {
-      this.node = _deepCopy(item);
-      this.nodeIndex = _deepCopy(index);
-
-      this.$refs.TPRef.open({
-        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId", "totalAmount"]),
-        isReceivable: true,
-        FORM: "RECEIVABLE",
-      });
-
-      /*
-       const q = this.getQueryString({
-          ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
-          isReceivable: true,
-        });
-       uni.navigateTo({
-          url: `${PageEnums.financeTicket}${q}`,
-        }); */
-    },
-
     // 跳转到对账客户页面
     onJumpReconcile() {
       uni.navigateTo({
         url: PageEnums.financeReconcile,
       });
+    },
+
+    // 移除列表的数据
+    onRemoveList(index) {
+      this.list.splice(index, 1);
     },
 
     onFunc(item) {
@@ -425,9 +367,9 @@ export default {
       <Notice />
       <!-- #endif -->
 
-      <TopMenus :path="PageEnums.financeReceivable"/>
+      <TopMenus :path="PageEnums.financeReceivable" />
 
-      <view class="ko-basic-count__wrap">
+      <view class="ko-basic-count__wrap" v-if="false">
         <UniRow :gutter="10" v-if="isPerm('FINANCE_RECEIVABLE_COUNT')">
           <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
             <view class="ko-basic-count" @click.stop="onFunc(item)">
@@ -457,6 +399,17 @@ export default {
         ref="SearchRef"
         :max-input-wrap-height.sync="maxInputWrapHeight"
       >
+
+        <template #extra>
+          <button
+            class="ko-basic-button__card ko-supplier__switch"
+            @click="onSwitchStyle"
+            style="margin-right: 6px;"
+          >
+            <uni-icons color="#fff" :type="!sApStyle ? 'list' : 'tune-filled'" />
+          </button>
+        </template>
+
         <view class="ko-basic-search">
           <UniRow :gutter="10">
             <UniCol :span="24">
@@ -666,5 +619,15 @@ export default {
       }
     }
   }
+}
+
+.ko-supplier__switch {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  margin: 2px;
 }
 </style>

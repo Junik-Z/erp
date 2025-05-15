@@ -148,7 +148,7 @@ export default {
             @change="onChangePrice"
             @clear="onChangePrice"
             type="digit"
-            v-model="item.price"
+            v-model.trim="item.price"
           />
           <block v-else>{{ item.price }}</block>
         </view>

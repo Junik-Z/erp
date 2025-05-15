@@ -111,6 +111,17 @@ export function removeProduceApi(data) {
 }
 
 /**
+ * @description 修改物料
+ */
+export function updateMaterialApi(data) {
+  return request({
+    url: "/produce/updateMaterial",
+    method: "post",
+    data,
+  });
+}
+
+/**
  * @description 申请生产物料
  */
 export function applyMaterialProduceApi(data) {

@@ -2,8 +2,8 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import { getSaleHistoryApi, getSaleListApi, getSaleWaitPaymentListApi } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
-import OrderCard from "./components/OrderCard.vue";
+import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
+import OrderCard from "../components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "./components/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
@@ -17,6 +17,7 @@ import TopMenus from "./components/TopMenus.vue";
 import GenerateCode from "./components/GenerateCode.vue";
 import sale from "./sale";
 import { PageEnums } from "@/utils/config";
+import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 
 export default {
   name: "Sale",
@@ -38,7 +39,116 @@ export default {
   },
   mixins: [sale],
   data() {
+    const _this = this;
+
     return {
+      // #ifdef H5
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 80,
+        },
+        {
+          label: "编号",
+          prop: "orderCode",
+          width: 210,
+        },
+        {
+          label: "日期",
+          prop: "updateTime",
+          width: 180,
+        },
+        {
+          label: "状态",
+          width: 80,
+          prop: "status",
+          render: (h, {row}) => {
+            return h("div", [_this.ORDER_STATUS_ENUMS(row.status)]);
+          },
+        },
+        {
+          label: "金额(元)",
+          prop: "totalAmount",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
+          },
+        },
+        {
+          label: "客户",
+          prop: "customer",
+          children: [
+            {
+              label: "Logo",
+              prop: "customer.logo",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {
+                    props: {
+                      src: _this.getImageUrl(_get(row, "customer.logo")),
+                      size: 42,
+                      text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
+                    },
+                  })],
+                );
+              },
+            },
+            {
+              label: "名称",
+              prop: "customer.name",
+            },
+          ],
+        },
+        {
+          label: "下单用户",
+          prop: "customer",
+          children: [
+            {
+              label: "头像",
+              prop: "user.avatar",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 42}})],
+                );
+              },
+            },
+            {
+              label: "昵称",
+              prop: "user.nickName",
+            },
+          ],
+        },
+        /* {
+          label: "产品详情",
+          prop: "details",
+          render: (h, {row}) => {
+            return h("div", row.details);
+          },
+        }, */
+        {
+          label: "地址",
+          prop: "orderAddress",
+        },
+        {
+          label: "备注",
+          prop: "remark",
+          minWidth: 120,
+        },
+        {
+          label: "操作",
+          slot: "operate",
+          width: 380,
+        },
+      ],
+      // #endif
+
     };
   },
   onShow() {

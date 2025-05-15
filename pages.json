@@ -61,7 +61,19 @@
           }
         },
         {
+          "path": "or-order",
+          "style": {
+            "navigationBarTitleText": "应收款"
+          }
+        },
+        {
           "path": "pay",
+          "style": {
+            "navigationBarTitleText": "应付款"
+          }
+        },
+        {
+          "path": "ap-pay",
           "style": {
             "navigationBarTitleText": "应付款"
           }
@@ -556,6 +568,12 @@
         },
         {
           "path": "purchase",
+          "style": {
+            "navigationBarTitleText": "采购订单"
+          }
+        },
+        {
+          "path": "order",
           "style": {
             "navigationBarTitleText": "采购订单"
           }

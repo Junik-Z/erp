@@ -202,7 +202,7 @@ export default {
         await this.getCategoryList();
       }
 
-      this.getCost();
+      // this.getCost();
 
       this.loading = true;
       getCostListApi({...this.queryList, classId: this.getClassId})
@@ -344,7 +344,7 @@ export default {
 
       <TopMenus :path="PageEnums.financeExpenses"/>
 
-      <view class="ko-basic-count__wrap" v-if="isPerm('COST_STATISTICS')">
+      <view class="ko-basic-count__wrap" v-if="isPerm('COST_STATISTICS') && false">
         <UniRow :gutter="10">
           <UniCol v-for="(item) of costList" :key="item.id" :span="item.span || 12">
             <view class="ko-basic-count">

@@ -550,7 +550,7 @@ export default {
                 <label class="ko-basic-label">备注：</label>
                 <uni-easyinput
                   v-if="!readonly"
-                  v-model="item.remark"
+                  v-model.trim="item.remark"
                   placeholder="请输入备注"
                   maxlength="7"
                 />

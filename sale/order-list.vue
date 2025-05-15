@@ -6,7 +6,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import UniSkeletons from "@/uni_modules/uv-skeletons/components/uv-skeletons/uv-skeletons.vue";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 import KoList from "@/components/List/List.vue";
-import OrderCard from "./components/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import sale from "./sale";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
@@ -48,8 +48,6 @@ export default {
   },
   data() {
     return {
-      RootScroll: true,
-
       rootId: null,
       cQuery: {
         pageNum: 0,
@@ -111,7 +109,8 @@ export default {
         this.cQuery.pageNum = 0;
         this.aId = null;
         this.rootId = null;
-        this.PAGE_MENU_INDEX = 0;
+        this.aList = [];
+        this.aQuery = _deepCopy(this.$options.data().aQuery);
       }
       this.cLoading = true;
       getCustomerListApi(this.cQuery)
@@ -142,6 +141,9 @@ export default {
         // this.rootId = null;
         return false;
       }
+      // 重置搜索列表
+      this.onSReset();
+
       this.rootId = node.value;
       this.getAddressList(true);
 
@@ -204,6 +206,9 @@ export default {
             this.getOrderList(true);
           }
         })
+        .catch(() => {
+          this.aMore = true;
+        })
         .finally(() => {
           this.aLoading = false;
         });
@@ -249,14 +254,14 @@ export default {
 
     // 获取下一页的订单列表
     onNextOrderList() {
-      if (this.oMore) return false;
+      if (this.oMore || this.oLoading) return false;
       this.oQuery.pageNum += 1;
       this.getOrderList();
     },
 
     // 获取下一页的客户
     onLowerClient() {
-      if (this.cMore) return false;
+      if (this.cMore || this.cLoading) return false;
       this.cQuery.pageNum += 1;
       this.getList();
     },
@@ -300,7 +305,7 @@ export default {
 
     // 加载下一页地址列表
     onLowerAddress() {
-      if (this.aMore) return false;
+      if (this.aMore || this.aLoading) return false;
       this.aQuery.pageNum += 1;
 
       this.getAddressList();
@@ -558,14 +563,6 @@ export default {
                 bg-color="transparent"
                 border
               />
-
-              <button
-                class="ko-basic-button__card ko-client__switch"
-                @click="onSwitchStyle"
-                v-if="false"
-              >
-                <uni-icons color="#fff" :type="!sSale ? 'list' : 'tune-filled'"></uni-icons>
-              </button>
             </view>
             <view class="ko-client">
               <KoList
@@ -591,7 +588,7 @@ export default {
                       <text class="ko-client__name--text ko-text-wrap">{{ root.label }}</text>
                       <view class="ko-client__money">
                         <!--<block v-if="root.amount < 0">欠</block>-->
-                        ¥{{ toYuan(Math.abs(root.amount)) }}
+                        ¥{{ toYuan(Math.abs(root.amount || 0)) }}
                       </view>
                     </view>
                   </view>
@@ -684,8 +681,8 @@ export default {
                         class="ko-address__name"
                         @click.stop="onAChange(dz, cRoot)"
                       >
-                        <view class="ko-address__name--info ko-address__name--item">
-                          <view class="ko-text-wrap">{{ dz.address }}</view>
+                        <view class="ko-address__name--info ko-address__name--item" style="overflow: hidden;">
+                          <view class="ko-text-wrap" style="flex: 1;">{{ dz.address }}</view>
                           <button class="ko-text-wrap__btn" @click.stop="toPlaceAnOrder(dz)">开单</button>
                         </view>
                         <view class="ko-address__name--item" style="margin-top: 2px;">
@@ -1140,6 +1137,7 @@ export default {
     overflow: hidden;
     flex: 1;
     height: 100%;
+    overflow-y: auto;
     margin-left: 8px;
     border-radius: 6px;
     background: #fff;
@@ -1307,6 +1305,7 @@ export default {
 
     .ko-basic-button__card {
       margin: 2px;
+      padding: 6px 8px;
     }
   }
 }

@@ -3,8 +3,6 @@ import UvCountTo from "./components/uv-count-to/uv-count-to.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import {
-  cancelPayableApi,
-  finishPayableApi,
   getPayableCountApi,
   getPayableDetailApi,
   getPayableHistoryListApi,
@@ -13,7 +11,6 @@ import {
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
-import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
@@ -21,7 +18,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import Pay from "./components/Pay/Pay.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
-import reLogin from "@/mixins/re-login";
+import apMixins from "@/finance/ap-mixins";
 
 const PageMenu = [
   {
@@ -45,7 +42,7 @@ const PageMenu = [
 
 export default {
   name: "PayList",
-  mixins: [mixins, reLogin],
+  mixins: [apMixins],
   components: {
     TopMenus,
     PickerCalendars,
@@ -232,16 +229,13 @@ export default {
       // #endif
       tableKey: +new Date(),
 
-      node: {},
-      nodeIndex: null,
-
       PAGE_MENU: _deepCopy(PageMenu),
 
       maxInputWrapHeight: 100,
     };
   },
   mounted() {
-    this.getCount();
+    // this.getCount();
   },
   onShow() {
     const isNotRefresh = uni.getStorageSync("TO_DETAILS");
@@ -292,39 +286,6 @@ export default {
           this.loading = false;
         });
     },
-    onCancel(item, index) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `如果销售订单未出库或仓库计划取消订单，库存将保持原状。若商品已经出库，系统会自动将其退回仓库。请仓库工作人员在商品退回后进行仔细盘点。`,
-        success: (res) => {
-          if (res.confirm) {
-            cancelPayableApi(item)
-              .then(() => {
-                uni.showToast({title: "取消成功"});
-                this.list.splice(index, 1);
-              });
-          }
-        },
-      });
-    },
-    onConfirm(item, index) {
-      uni.showModal({
-        title: "温馨提示",
-        content: `请仔细核对金额是否准确。未确认的单据将自动确认，确认后入账。`,
-        confirmText: "确认",
-        success: (res) => {
-          if (res.confirm) {
-            finishPayableApi(item)
-              .then(() => {
-                uni.showToast({title: "操作成功"});
-                // this.getList(true);
-                this.list.splice(index, 1);
-                this.getCount();
-              });
-          }
-        },
-      });
-    },
 
     getCount() {
       if (this.isPerm("FINANCE_PAYABLE_COUNT")) {
@@ -334,23 +295,6 @@ export default {
             console.log(res.data);
           });
       }
-    },
-    // 添加票据
-    onAddedTicket(item, index) {
-      this.node = _deepCopy(item);
-      this.nodeIndex = _deepCopy(index);
-      this.$refs.TPRef.open({
-        ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId", "totalAmount"]),
-        isReceivable: false,
-        FORM: "PAY_LISE",
-      });
-      /*  const q = this.getQueryString({
-         ..._pick(item, ["id", "orderCode", "supplierId", "orderType", "purchaserId"]),
-         isReceivable: false,
-       });
-       uni.navigateTo({
-         url: `${PageEnums.financeTicket}${q}`,
-       }); */
     },
 
     // 跳转到对账客户页面
@@ -374,6 +318,12 @@ export default {
       this.getList(true);
     },
 
+    // 移除列表的数据
+    onRemoveList(index) {
+      this.list.splice(index, 1);
+    },
+
+    // 付款完成
     onSuccess() {
       const node = this.node;
       const index = this.nodeIndex;
@@ -425,9 +375,9 @@ export default {
       <!-- #ifdef MP -->
       <Notice />
       <!-- #endif -->
-      <TopMenus :path="PageEnums.financePay"/>
+      <TopMenus :path="PageEnums.financePay" />
 
-      <view class="ko-basic-count__wrap">
+      <view class="ko-basic-count__wrap" v-if="false">
         <UniRow :gutter="10" v-if="isPerm('FINANCE_PAYABLE_COUNT')">
           <UniCol v-for="(item, index) of CountList" :key="index" :span="item.span || 12">
             <view class="ko-basic-count" @click.stop="onFunc(item)">
@@ -457,6 +407,15 @@ export default {
         ref="SearchRef"
         :max-input-wrap-height.sync="maxInputWrapHeight"
       >
+        <template #extra>
+          <button
+            class="ko-basic-button__card ko-supplier__switch"
+            @click="onSwitchStyle"
+            style="margin-right: 6px;"
+          >
+            <uni-icons color="#fff" :type="!sApStyle ? 'list' : 'tune-filled'" />
+          </button>
+        </template>
         <view class="ko-basic-search">
           <UniRow :gutter="10">
             <UniCol :span="24">
@@ -607,6 +566,16 @@ export default {
 </template>
 
 <style scoped lang="scss">
+.ko-supplier__switch {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  margin: 2px;
+}
+
 .ko-pay {
   margin-top: 10px;
   // #ifdef MP

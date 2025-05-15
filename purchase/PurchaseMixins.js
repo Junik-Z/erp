@@ -22,7 +22,7 @@ export default {
     jumpAddedPurchase(query) {
       const q = this.getQueryString(query);
       uni.navigateTo({
-        url: `${PageEnums.editPurchase}${q}`,
+        url: `${PageEnums.NewPurchase}${q}`,
       });
     },
 

@@ -138,7 +138,7 @@ export default {
           :rules="[{required: true, errorMessage: '请输入名称'}]"
           required
         >
-          <uni-easyinput v-model="form.name" placeholder="请输入名称" />
+          <uni-easyinput v-model.trim="form.name" placeholder="请输入名称" />
         </uni-forms-item>
         <uni-forms-item label="图片" name="images">
           <FilePicker
@@ -161,7 +161,7 @@ export default {
         >
           <uni-easyinput
             type="digit"
-            v-model="form.price"
+            v-model.trim="form.price"
             placeholder="请输入"
           />
         </uni-forms-item>
@@ -173,12 +173,12 @@ export default {
         >
           <uni-easyinput
             type="digit"
-            v-model="form.quantity"
+            v-model.trim="form.quantity"
             placeholder="请输入"
           />
         </uni-forms-item>
         <uni-forms-item label="描述" name="description">
-          <uni-easyinput type="textarea" v-model="form.description" placeholder="请输入" />
+          <uni-easyinput type="textarea" v-model.trim="form.description" placeholder="请输入" />
         </uni-forms-item>
       </UniForms>
     </view>

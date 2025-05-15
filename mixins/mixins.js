@@ -27,7 +27,6 @@ import { NO_CLEAR_KEY } from "@/store";
 
 // #ifdef MP
 const MenuButtonRect = uni.getMenuButtonBoundingClientRect();
-console.log(MenuButtonRect);
 // #endif
 
 export default {
@@ -336,10 +335,21 @@ export default {
     setBillStyle() {
       this.$store.dispatch("setBillStyleAsync", !this.sBill);
     },
-
     // 设置销售列表样式
     setSaleStyle() {
       this.$store.dispatch("setSaleStyleAsync", !this.sSale);
+    },
+    // 设置采购列表样式
+    setPurchaseStyle() {
+      this.$store.dispatch("setPurchaseStyleAsync", !this.sPurchase);
+    },
+    // 设置应收款样式
+    setOrStyle() {
+      this.$store.dispatch("setOrStyleAsync", !this.sOrStyle);
+    },
+    // 设置应付款样式
+    setApStyle() {
+      this.$store.dispatch("setApStyleAsync", !this.sApStyle);
     },
   },
   components: {
@@ -672,11 +682,6 @@ export default {
       return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg")/*  || (_isEnv() && this.isDefault) */;
     },
 
-    // 下单样式
-    sBill() {
-      return this.$store.getters.sBill;
-    },
-
     // 右边胶囊的样式
     menuButtonRectStyle() {
       const m = this.MenuButtonRect || {};
@@ -687,9 +692,25 @@ export default {
       };
     },
 
+    // 下单样式
+    sBill() {
+      return this.$store.getters.sBill;
+    },
     // 获取销售列表样式
     sSale() {
-      return this.$store.getters.gSaleStyle;
+      return this.$store.getters.sSaleStyle;
+    },
+    // 采购列表的新样式
+    sPurchase() {
+      return this.$store.getters.sPurchaseStyle;
+    },
+    // 应收款样式
+    sOrStyle() {
+      return this.$store.getters.sOrStyle;
+    },
+    // 应付款样式
+    sApStyle() {
+      return this.$store.getters.sApStyle;
     },
   },
 };

@@ -169,6 +169,8 @@ export const PageEnums = {
   purchaseView: "/purchase/view",
   // 采购
   purchase: "/purchase/purchase",
+  // 采购新订单列表
+  purchaseOrder: "/purchase/order",
   // 供应商管理
   purchaseClient: "/purchase/supplier",
   // 添加采购管理
@@ -182,7 +184,7 @@ export const PageEnums = {
   purchaseClientAddedBack: "/purchase/supplier",
 
   // 新增修改采购订单
-  editPurchase: "/form/purchase-order",
+  NewPurchase: "/form/purchase-order",
   // 添加采购退货单
   refundPurchase: "/form/purchase-refund-order",
 
@@ -210,8 +212,12 @@ export const PageEnums = {
   financeLoading: "/finance/loading",
   // 应收款
   financeReceivable: "/finance/receivable",
+  // 新应收款
+  financeOrOrder: "/finance/or-order",
   // 应付款
   financePay: "/finance/pay",
+  // 应付款
+  financeApPay: "/finance/ap-pay",
   // 其它支出
   financeExpenses: "/finance/expenses",
   // 核对款项
@@ -478,7 +484,7 @@ export const HOME_PAGE_TYPE_ENUMS = {
 export const PAGE_TYPE_CORRESPOND_PATH = {
   ADDED_SALE: PageEnums.NewSale,
   BINDING_CLIENT_BY_SALE: "/client/binding/binding",
-  ADDED_PURCHASE: PageEnums.editPurchase,
+  ADDED_PURCHASE: PageEnums.NewPurchase,
   BINDING_CLIENT_BY_PURCHASE: "/client/binding/binding",
 };
 

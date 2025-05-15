@@ -125,7 +125,7 @@ export default {
       return this.$store.getters.sProductStyle || false;
     },
 
-    // 获取表单样式
+    // 获取表单
     getOrderInfo() {
       return this.$store.getters.oForm || {};
     },

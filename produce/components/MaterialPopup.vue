@@ -1,12 +1,12 @@
 <script>
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import { getProduceDetailApi, updateProduceApi } from "@/api/erp/produce";
+import { getProduceDetailApi, updateMaterialApi, updateProduceApi } from "@/api/erp/produce";
 import KoMovable from "@/components/Movable/index.vue";
 import PickerProduct from "../components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, _isEmpty, CustomToast } from "@/utils";
 import { requestUploadMaterialFileApi } from "@/request";
 import mixins from "@/mixins/mixins";
-import FilePicker from './FilePicker/FilePicker.vue'
+import FilePicker from "./FilePicker/FilePicker.vue";
 
 function mergeProductArrays(arr1, arr2) {
   const mergedMap = new Map();
@@ -54,6 +54,7 @@ export default {
 
       value: "",
 
+      isEdit: false,
     };
   },
   mixins: [mixins],
@@ -67,10 +68,10 @@ export default {
     },
   },
   methods: {
-    open(item) {
+    open(item, isEdit = false) {
       this.node = item;
       this.visible = true;
-
+      this.isEdit = isEdit;
       this.getInfo();
     },
 
@@ -84,9 +85,10 @@ export default {
     // 提交修改
     onSubmit() {
       this.loading = true;
-      updateProduceApi(this.form)
+      const Func = this.isEdit ? updateMaterialApi : updateProduceApi;
+      Func(this.form)
         .then(() => {
-          CustomToast({title: `添加成功`});
+          CustomToast({title: `操作成功`});
           this.visible = false;
         })
         .finally(() => {

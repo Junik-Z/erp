@@ -106,6 +106,14 @@ export default {
     this.isEdit = !!option.id;
     if (this.isEdit) this.getInfo();
     this.isNormal = option.isNormal === "true";
+    
+    // 快捷开单
+    this.isFast = _isEqual(option.isFast, "true");
+
+    if (this.isFast) {
+      this.form.supplierId = option.supplierId;
+      this.form.orderAddress = option.address || "";
+    }
 
     // 是否是客户下单
     this.isClient = _isEqual("ADDED_PURCHASE", option.PAGE_TYPE);

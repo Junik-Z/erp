@@ -8,7 +8,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import FilePicker from "../FilePicker/FilePicker.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import OrderCard from "../OrderCard.vue";
+import OrderCard from "../../../components/OrderCard/OrderCard.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { _deepCopy, _get, _isEqual } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";

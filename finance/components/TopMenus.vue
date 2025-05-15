@@ -35,12 +35,40 @@ export default {
   mixins: [mixins],
   data() {
     return {
-      tabs: TabList,
+      TabList,
     };
   },
   props: {
     path: String,
     noRole: Boolean,
+  },
+  watch: {
+    sOrStyle: {
+      handler() {
+        this.$nextTick(() => {
+          this.TabList = this.TabList.map(item => {
+            if (_isEqual(item.label, "应收款")) {
+              item.path = this.sOrStyle ? PageEnums.financeOrOrder : PageEnums.financeReceivable;
+            }
+            return item;
+          });
+        });
+      },
+      immediate: true,
+    },
+    sApStyle: {
+      handler() {
+        this.$nextTick(() => {
+          this.TabList = this.TabList.map(item => {
+            if (_isEqual(item.label, "应付款")) {
+              item.path = this.sApStyle ? PageEnums.financeApPay : PageEnums.financePay;
+            }
+            return item;
+          });
+        });
+      },
+      immediate: true,
+    },
   },
   methods: {
     // 跳转到指定页面 来自 tabs 的跳转
@@ -56,7 +84,7 @@ export default {
   },
   computed: {
     getTabsList() {
-      return TabList?.flatMap(item => {
+      return this.TabList?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
           if (_haveCommonElements(role, item.roles) || this.isAdmin) {

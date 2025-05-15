@@ -2,7 +2,6 @@
 import { getConfigApi, getMyInfoApi, getSubscribeApi, getWSUrl, isLogin, readMessageApi } from "@/api/user";
 import { _deepCopy, _get, _isDev, _isEmpty, _isEqual, _omit } from "@/utils";
 import { CONFIG, MSG_TYPE_ENUMS, PageEnums } from "@/utils/config";
-import getCacheFile from "@/utils/fileCache";
 
 const AC = uni.createInnerAudioContext();
 
@@ -47,6 +46,9 @@ export default {
 
     uni.$on("$__update_config_info__", this.getConfig);
 
+    // 显示消息数据
+    uni.$on("$__show_tis_msg__", this.showTisMsg);
+
     // #ifdef MP-WEIXIN
     uni.$on("$__ask_request_message__", this.askSubscribeMessage);
 
@@ -55,7 +57,7 @@ export default {
 
     // #ifdef MP
     // 当进入的不是 [首页, 自助绑定] 时需要先获取用户信息
-    if (!["pages/home/home", "client/binding/binding", PageEnums.NewSale, PageEnums.editPurchase].includes(option.path)) {
+    if (!["pages/home/home", "client/binding/binding", PageEnums.NewSale, PageEnums.NewPurchase].includes(option.path)) {
       await this.getInfo();
     }
 
@@ -298,73 +300,11 @@ export default {
          */
         if (["InternalStaffNotice"].includes(askEnum)) {
           uni.$emit("$__update_msg_count__");
-
           this.play();
-
-          // #ifdef MP
-          uni.$emit("$__web_socket_notice__", resp);
-          // #endif
-
+          this.showTisMsg(data);
           // #ifndef MP
-          const isSender = !_isEmpty(data.sender) && _get(data, "sender.nickName");
-
-          const h = this.$createElement;
-
-          const not = this.$notify({
-            title: MSG_TYPE_ENUMS[data.type],
-            dangerouslyUseHTMLString: isSender,
-            message: isSender ? `
-<div class="ko-ws-notify__wrap">
-  <div class="ko-ws-notify">${data.content}</div>
-  <p class="ko-ws-notify__form">来自：<img src="${getCacheFile(_get(data, "sender.avatar"))}" alt=""/><span>${_get(data, "sender.nickName") || ""}</span></p>
- </div>` : data.content,
-            duration: 0,
-            showClose: false,
-            onClick: () => {
-              readMessageApi({id: data.id})
-                .then(res => {
-                  console.log("已标记为已读", res);
-
-                  this.$msgbox({
-                    title: MSG_TYPE_ENUMS[data.type],
-                    message: h("div", {class: "ko-ws-notify__wrap"}, [
-                      h("div", {class: "ko-ws-notify"}, [data.content]),
-                      h("p", {class: "ko-ws-notify__form"}, [
-                        "来自：",
-                        h("img", {attrs: {src: getCacheFile(_get(data, "sender.avatar"))}}),
-                        h("span", [_get(data, "sender.nickName") || ""]),
-                      ]),
-                    ]),
-                  });
-
-                })
-                .finally(() => {
-                  uni.$emit("$__update_msg_count__");
-                  not.close();
-                });
-            },
-          });
           this.onFlash();
           // #endif
-
-          // uni.showModal({
-          //   title: "消息提示",
-          //   content: data.content,
-          //   showCancel: false,
-          //   confirmText: "已知晓",
-          //   success: (resp) => {
-          //     if (resp.confirm) {
-          //       console.log(resp);
-          //       readMessageApi({id: data.id})
-          //         .then(res => {
-          //           console.log("已标记为已读", res);
-          //         })
-          //         .finally(() => {
-          //           uni.$emit("$__update_msg_count__");
-          //         });
-          //     }
-          //   },
-          // });
         }
       } catch (e) {
         // uni.$emit("$__web_socket_message__", res);
@@ -384,6 +324,9 @@ export default {
           flag = !flag;
           document.title = flag ? `【您有新消息】${uni.__TITLE__?.replace("【您有新消息】", "")}` : " "; // 切换标题内容
           uni.__HIDE_TIME_VM__ = setTimeout(flashTitle, 500); // 每0.5秒切换一次
+
+          window.focus();
+          window.blur();
         } else {
           document.title = uni.__TITLE__; // 恢复默认标题
         }
@@ -404,18 +347,77 @@ export default {
       // this.isNewMsg && flash();
       // #endif
     },
+
+    // 消息提示
+    showTisMsg(data = {}) {
+      if (_isEmpty(data)) return false;
+      return new Promise(resolve => {
+        // #ifdef MP
+        uni.$emit("$__web_socket_notice__", data);
+        // #endif
+
+        // #ifndef MP
+        const isSender = !_isEmpty(data.sender) && _get(data, "sender.nickName");
+        const h = this.$createElement;
+        /* <img src="${getCacheFile(_get(data, "sender.avatar"))}" alt=""/> */
+        const not = this.$notify({
+          title: MSG_TYPE_ENUMS[data.type],
+          dangerouslyUseHTMLString: isSender,
+          message: isSender ? `
+<div class="ko-ws-notify">
+  <div class="ko-ws-notify__content">${data.content}</div>
+  <div class="ko-ws-notify__footer">
+    <div class="ko-ws-notify__time">${data.createTime || ""}</div>
+    <p class="ko-ws-notify__form">来自：<span>${_get(data, "sender.nickName") || ""}</span></p>
+  </div>
+ </div>` : data.content,
+          duration: 0,
+          showClose: false,
+          onClick: () => {
+            readMessageApi({id: data.id})
+              .then(res => {
+                console.log("已标记为已读", res);
+                this.$msgbox({
+                  showConfirmButton: false,
+                  title: MSG_TYPE_ENUMS[data.type],
+                  message: h("div", {class: "ko-ws-notify"}, [
+                    h("div", {
+                      class: "ko-ws-notify__content",
+                      style: {height: "360px", overflowY: "auto"},
+                    }, [data.content]),
+                    h("div", {class: "ko-ws-notify__footer"}, [
+                      h("div", {class: "ko-ws-notify__time"}, [data.createTime || ""]),
+                      h("p", {class: "ko-ws-notify__form"}, [
+                        "来自：",
+                        // h("img", {attrs: {src: getCacheFile(_get(data, "sender.avatar"))}}),
+                        h("span", [_get(data, "sender.nickName") || ""]),
+                      ]),
+                    ]),
+                  ]),
+                });
+
+              })
+              .finally(() => {
+                uni.$emit("$__update_msg_count__");
+                not.close();
+              });
+          },
+        });
+        // #endif
+
+        setTimeout(resolve, 600);
+      });
+    },
   },
   computed: {
     isNewMsg() {
       return this.$store.getters.isNewMsg;
     },
   },
-
   onUnload() {
     if (uni.$__SOCKET_TASK__) uni.$__SOCKET_TASK__.close();
     console.log("uni.$__SOCKET_TASK__", uni.$__SOCKET_TASK__);
   },
-
   beforeDestroy() {
     if (uni.$__SOCKET_TASK__) uni.$__SOCKET_TASK__.close();
     console.log("uni.$__SOCKET_TASK__", uni.$__SOCKET_TASK__);
