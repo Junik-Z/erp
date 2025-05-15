@@ -200,7 +200,8 @@ export default {
           const data = res.data;
           this.aList = this.onMergeArrays(this.aList, data, "id");
           this.aMore = _isEmpty(data) || data.length < this.aQuery.pageSize;
-          this.aId = this.aList?.[0]?.id || null;
+
+          if (data.length === 1) this.aId = this.aList?.[0]?.id || null;
 
           if (this.aId) {
             this.getOrderList(true);
@@ -711,6 +712,7 @@ export default {
                           :loading="oLoading"
                           :no-data="!oMore && !oLoading && !oList.length"
                           @lower="onNextOrderList"
+                          v-if="isEqual(dz.id, aId)"
                         >
                           <view style="padding-top: 6px;">
                             <view class="ko-address__list--item" v-for="item of oList" :key="item.id">

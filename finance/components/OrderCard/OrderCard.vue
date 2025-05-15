@@ -64,6 +64,9 @@ export default {
 
     // 隐藏下单用户
     isHideUser: Boolean,
+
+    // 隐藏客户信息
+    isHideCustomer: Boolean,
   },
   methods: {
     onClickOperate(child, item) {
@@ -180,7 +183,7 @@ export default {
             </text>
           </view>
           <view
-            v-if="item.customer && (isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType))"
+            v-if="!isHideCustomer && item.customer && (isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType))"
           >
             <block v-if="isLogistics">
               <view class="ko-basic-label__images-wrap">

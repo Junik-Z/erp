@@ -5,6 +5,8 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import {
   addedPaidOrderApi,
   addedReturnedOrderApi,
+  financeCustomerAddressListApi,
+  financeSupplierAddressListApi,
   getPayableCheckApi,
   getReceivableCheckApi,
 } from "@/api/erp/finance";
@@ -25,11 +27,13 @@ import CheckPopup from "./components/CheckPopup.vue";
 import { addedSalePaidOrderApi } from "@/api/erp/sale";
 import { addedSPurchaseReturnedOrderApi } from "@/api/erp/purchase";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
+import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 
 export default {
   name: "check",
   mixins: [mixins],
   components: {
+    HistoryBar,
     KoList,
     KoMovable,
     UniSection,
@@ -66,21 +70,6 @@ export default {
           pageType: "payable",
           perm: "FINANCE_PAYABLE_CHECK",
         },
-
-        /*  {
-           sale: "已收账款",
-           purchase: "已收账款",
-           logistics: "已收账款",
-           func: getPaidOrderListApi,
-           pageType: "receivable",
-         },
-         {
-           sale: "已付账款",
-           purchase: "已付账款",
-           logistics: "已付账款",
-           func: getReturnedOrderListApi,
-           pageType: "payable",
-         }, */
       ],
       current: 0,
       loading: false,
@@ -270,8 +259,20 @@ export default {
       ],
       // #endif
 
-      tableKey: +new Date(),
       noMore: false,
+
+      aId: null,
+      aQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
+      aList: [],
+      aMore: false,
+      aLoading: false,
+
+      isSearch: false,
+
+      AViewId: null,
     };
   },
   onLoad(option) {
@@ -281,9 +282,7 @@ export default {
   methods: {
     getShowTabList() {
       const key = this.option?.customer_type || "sale";
-
       this.isLogistics = _isEqual(key, "logistics");
-
       if (this.isLogistics) {
         this.getList();
         return false;
@@ -298,35 +297,80 @@ export default {
       this.showTabList = Ins.flatMap(index => {
         const obj = this.tabsList?.[index] || {};
         if (this.isPerm(obj.perm)) {
-          const item = {
-            ...obj,
-            label: obj[key],
-          };
-
+          const item = {...obj, label: obj[key]};
           return [item];
         } else {
           return [];
         }
-
       });
 
-      this.getList();
+      this.getAddressList(true);
     },
+
+    // 获取地址列表
+    getAddressList(reset) {
+      if (reset) {
+        this.aList = [];
+        this.aQuery.pageNum = 0;
+      }
+
+      this.aLoading = true;
+
+      const Func = {
+        sale: financeCustomerAddressListApi,
+        purchase: financeSupplierAddressListApi,
+      }[this.option?.customer_type];
+
+      // 获取当前选中的tab数据
+      const item = this.showTabList[this.current] || {};
+
+      // payableOrReceivable: true 应付；false: 应收
+      Func({
+        id: this.option.id, ...this.aQuery,
+        payableOrReceivable: _isEqual(item.pageType, "payable"),
+        queryNoAddress: true,
+      })
+        .then(res => {
+          const data = res.data;
+          this.aList = this.onMergeArrays(this.aList, data, "id");
+          this.aMore = _isEmpty(data) || data.length < this.aQuery.pageSize;
+
+          if (data.length === 1) this.aId = this.aList?.[0]?.id || null;
+          if (this.aId) {
+            this.getList(true);
+          }
+        })
+        .catch(() => {
+          this.aMore = true;
+        })
+        .finally(() => {
+          this.aLoading = false;
+        });
+    },
+
+    // 获取列表数据
     getList(reset) {
       if (reset) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date();
       }
-
-      const Func = this.isLogistics ? checkListApi : _get(this.showTabList || [], `${this.current}.func`); // [getReceivableCheckApi, getPayableCheckApi, getPaidOrderListApi, getReturnedOrderListApi][this.current];
-
+      const Func = this.isLogistics ? checkListApi : _get(this.showTabList || [], `${this.current}.func`);
       this.loading = true;
+
+
+      const dz = this.aList.find(v => _isEqual(v.id, this.aId)) || {};
 
       Func?.({
         [this.isLogistics ? "logisticsId" : "supplierId"]: this.option.id,
         ...(this.current > 1 ? {orderStatus: "FINISHED"} : {}),
         ...this.queryList,
+
+        ...(this.isLogistics
+          ? {}
+          : {
+            queryNoAddress: _isEqual(dz.id, "1"),
+            orderAddress: _isEqual(dz.id, "1") ? "" : dz.address || "",
+          }),
       })
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -357,7 +401,9 @@ export default {
       this.checked = [];
     },
 
+    // 切换应收还是应付
     onClickTabs() {
+      this.isSearch = false;
       this.isShowCheck = false;
       this.checked = [];
       this.$refs.PCRef && this.$refs.PCRef.clearable();
@@ -365,7 +411,10 @@ export default {
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
 
-      this.getList(true);
+      this.aId = null;
+      this.aList = [];
+
+      this.getAddressList(true);
     },
 
     async onSubmit() {
@@ -376,13 +425,10 @@ export default {
         });
         return false;
       }
-
       const list = this.checked.map(item => {
         const obj = _pick(_deepCopy(item), ["supplierId", "orderType", "purchaserId", "orderCode"]);
-
         // 已经结账的数据
         const closed = _sum(item.proofs?.map(v => v.totalAmount));
-
         return {
           ...obj,
           totalAmount: item.totalAmount - closed,
@@ -390,15 +436,8 @@ export default {
           remark: "",
         };
       });
-
-      /* if (list) {
-        console.log(list);
-        return false;
-      } */
       this.sLoading = true;
-
       let isError = false;
-
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
         try {
@@ -437,9 +476,7 @@ export default {
           isError = true;
         }
       }
-
       this.sLoading = false;
-
       if (!isError) {
         await CustomToast({
           title: "操作成功",
@@ -503,6 +540,25 @@ export default {
         this.queryList.endTime = "";
       }
     },
+
+    // 加载下一页地址列表
+    onLowerAddress() {
+      if (this.aMore || this.aLoading) return false;
+      this.aQuery.pageNum += 1;
+
+      this.getAddressList();
+    },
+
+    // 点击地址
+    onAChange(dz) {
+      if (_isEqual(dz.id, this.aId)) {
+        this.aId = null;
+        return false;
+      }
+
+      this.aId = dz.id;
+      this.getList(true);
+    },
   },
   computed: {
     getPageType() {
@@ -513,12 +569,10 @@ export default {
         return this.checked?.some(item => item.id === node.id);
       };
     },
-    isShowFooter() {
-      return this.current < 2;
-    },
     totalAmount() {
       return _sum(this.checked?.map(v => (v.totalAmount - _sum((v.proofs || []).map(v => v.totalAmount || 0))) || 0) || []);
     },
+
     // 计算已结的金额
     calculationCompleted() {
       return (list) => _sum(list.map((v) => v.totalAmount || 0));
@@ -564,9 +618,7 @@ export default {
     // 是否显示批量清帐按钮
     isShowCheckButton() {
       const label = _get(this.showTabList || [], `${this.current}.label`) || "";
-
       const isCheck = ["销售订单", "采购订单"].includes(label);
-
       const isPaid = {
         sale: this.isPerm("SALE_ADD_PAID_ORDER"),
         purchase: this.isPerm("PURCHASE_ADD_RETURNED_ORDER"),
@@ -574,7 +626,6 @@ export default {
         F_SALE: this.isPerm("FINANCE_ADD_PAID_ORDER"),
         F_PURCHASE: this.isPerm("FINANCE_ADD_RETURNED_ORDER"),
       }[this.option?.FORM];
-
       // 当显示弹窗 并且 不是物流商 并且
       return !this.isShowCheck && isCheck && !this.isLogistics && (this.option?.FORM ? isPaid : true);
     },
@@ -583,7 +634,7 @@ export default {
 </script>
 
 <template>
-  <view class="ko-check" :class="{'not-footer': isShowFooter && isShowCheck}">
+  <view class="ko-check" :class="{'not-footer': isShowCheck}">
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
@@ -619,7 +670,9 @@ export default {
             <UniCol :span="24">
               <view style=" display: flex;align-items: center;justify-content: space-around;padding-top: 10px;">
                 <button style="width: 35%;" class="ko-basic-button__card" @click.stop="onClickTabs(true)">重置</button>
-                <button style="width: 35%;" class="ko-basic-button__card" @click.stop="getList(true)">搜索</button>
+                <button style="width: 35%;" class="ko-basic-button__card" @click.stop="isSearch = true; getList(true)">
+                  搜索
+                </button>
               </view>
             </UniCol>
           </UniRow>
@@ -628,191 +681,288 @@ export default {
     </view>
 
     <!-- #ifdef MP -->
-    <KoList :loading="loading" :no-data="!list.length" :no-more="noMore">
-      <view v-for="(item, key) of list" :key="key" class="ko-check__row">
-        <block v-if="isLogistics">
-          <UniSection :title="`订单编号：${key}`" type="line">
-            <BasicCard v-for="child of item" :key="child.id" :spacing="10">
-              <UniRow gutter="10">
-                <UniCol :span="12">
-                  <view>
-                    <label class="ko-basic-label">费用类型：</label>
-                    <text>{{ FEES_TYPE_ENUMS(child.feesType) }}</text>
-                  </view>
-                </UniCol>
-                <UniCol :span="12">
-                  <view>
-                    <label class="ko-basic-label">金额：</label>
-                    <text class="ko-basic-money">{{ toYuan(child.amount) }}元</text>
-                  </view>
-                </UniCol>
-                <UniCol :span="24">
-                  <view>
-                    <label class="ko-basic-label">日期：</label>
-                    <text>{{ child.updateTime }}</text>
-                  </view>
-                </UniCol>
-              </UniRow>
-            </BasicCard>
-          </UniSection>
-        </block>
-        <block v-else>
-          <view v-if="current < 2" class="ko-check__item">
-            <OrderCard
-              is-check-finance
-              :item="item"
-              @click.stop="onJumpDet(item, getPageType)"
-              is-finished
-              is-finance
-              is-hide-status
-              is-new
-              show-order-type
-            />
+    <view class="ko-address" v-if="!isSearch && !isLogistics">
+      <!-- 地址列表 -->
+      <KoList
+        :loading="aLoading"
+        :no-more="aMore"
+        :no-data="!aMore && !aLoading && !aList.length"
+        :data="aList"
+        @lower="onLowerAddress"
+        @load-next="onLowerAddress"
+        no-more-text="没有更多地址了"
+        :scroll-into-view="AViewId"
+      >
+        <view class="ko-address__wrap">
+          <view
+            class="ko-address__item"
+            v-for="dz of aList"
+            :key="dz.id"
+            :class="{'is-a-active': isEqual(dz.id, aId)}"
+            :id="`dz-${dz.id}`"
+          >
+            <view
+              class="ko-address__name ko-address__name--item"
+              @click.stop="onAChange(dz)"
+            >
+              <view class="ko-address__name--info">
+                <view class="ko-text-wrap">{{ dz.address }}</view>
 
-            <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
-              <UniRow :gutter="4">
-                <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
-                  <view style="font-size: 13px; padding-left: 30px;">
-                    <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
-                    <text style="padding-right: 10px; font-size: 12px">{{ GET_PAYMENT_ENUMS(item.orderType) }}:</text>
-                    <text class="ko-basic-money">
-                      {{ toYuan(child.totalAmount) }}元
-                    </text>
-                    <text
-                      style="font-size: 11px; padding-left: 6px;color: #c7c9ce;"
-                      v-if="['CREATED'].includes(child.orderStatus)"
+                <view class="ko-address__name--total" style="margin-top: 4px;">
+                  <view class="ko-address__name--num">
+                    待清帐: {{ dz.pendingQuantity }}
+                  </view>
+                  <view class="ko-address__name--num">
+                    待确认: {{ dz.pendingPaymentQuantity }}
+                  </view>
+                  <view class="ko-address__name--num">
+                    ¥{{ toYuan(dz.amount) }}
+                  </view>
+                </view>
+              </view>
+
+              <view class="ko-address__item--down">
+                <uni-icons type="down" :size="18" color="#8f939c" />
+              </view>
+            </view>
+            <view class="ko-address__list">
+              <KoList
+                :data="list"
+                :no-more="noMore"
+                :loading="loading"
+                :no-data="!noMore && !loading && !list.length"
+                @lower="RequestNextPage"
+                v-if="isEqual(dz.id, aId)"
+              >
+                <view style="padding-top: 6px;">
+                  <view class="ko-address__list--item" v-for="item of list" :key="item.id">
+                    <OrderCard
+                      is-check-finance
+                      :item="item"
+                      @click.stop="onJumpDet(item, getPageType)"
+                      is-finished
+                      is-finance
+                      is-hide-status
+                      hide-order-address
+                      is-new
+                      show-order-type
+                      is-hide-customer
+                    />
+                    <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
+                      <UniRow :gutter="4">
+                        <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
+                          <view style="font-size: 13px; padding-left: 30px;">
+                            <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
+                            <text style="padding-right: 10px; font-size: 12px">{{
+                                GET_PAYMENT_ENUMS(item.orderType)
+                              }}:
+                            </text>
+                            <text class="ko-basic-money">
+                              {{ toYuan(child.totalAmount) }}元
+                            </text>
+                            <text
+                              style="font-size: 11px; padding-left: 6px;color: #c7c9ce;"
+                              v-if="['CREATED'].includes(child.orderStatus)"
+                            >
+                              {{ GET_PROOFS_STATUS_ENUMS(child.orderStatus) }}
+                            </text>
+                          </view>
+                        </UniCol>
+                      </UniRow>
+                    </BasicCard>
+                    <block v-if="item.proofs && item.proofs.length">
+                      <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
+
+                      <BasicCard not-padding no-shadow>
+                        <UniRow :gutter="4">
+                          <UniCol :span="24">
+                            <view
+                              v-if="item.totalAmount || 0"
+                              style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                            >
+                              <block v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) > 0">
+                                <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                                  {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
+                                </text>
+                                <text class="ko-basic-money">
+                                  {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
+                                </text>
+                              </block>
+                              <text style="color: #008000;" v-else>
+                                已结清
+                              </text>
+                            </view>
+                          </UniCol>
+
+                          <UniCol :span="12" v-if="false">
+                            <view
+                              style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                            >
+                              <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                                共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
+                              </text>
+                              <text class="ko-basic-money">
+                                {{ toYuan(calculationCompleted(item.proofs)) }}元
+                              </text>
+                            </view>
+                          </UniCol>
+                        </UniRow>
+                      </BasicCard>
+                    </block>
+                    <button
+                      v-if="!['FINISHED'].includes(item.status) && isShowCheck && !item.confirmable"
+                      class="ko-check__item--button"
+                      @click.stop="onCheckboxItem(item)"
                     >
-                      {{ GET_PROOFS_STATUS_ENUMS(child.orderStatus) }}
-                    </text>
+                      <checkbox
+                        color="#256eff"
+                        style="transform:scale(1.2)"
+                        :checked="isCheckbox(item)"
+                        class="ko-check__item--button--checkbox"
+                      />
+                    </button>
                   </view>
-                </UniCol>
-              </UniRow>
-            </BasicCard>
+                </view>
+              </KoList>
+            </view>
+          </view>
+        </view>
+      </KoList>
+    </view>
 
-            <block v-if="item.proofs && item.proofs.length">
-              <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
-
-              <BasicCard not-padding no-shadow>
-                <UniRow :gutter="4">
-                  <UniCol :span="24">
-                    <view
-                      v-if="item.totalAmount || 0"
-                      style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
-                    >
-                      <block v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) > 0">
-                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
-                          {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
-                        </text>
-                        <text class="ko-basic-money">
-                          {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
-                        </text>
-                      </block>
-                      <text style="color: #008000;" v-else>
-                        已结清
-                      </text>
+    <view class="ko-address" v-else>
+      <KoList
+        :loading="loading"
+        :no-data="!list.length"
+        :no-more="noMore"
+        @lower="RequestNextPage"
+      >
+        <view v-for="(item, key) of list" :key="key" class="ko-check__row">
+          <block v-if="isLogistics">
+            <UniSection :title="`订单编号：${key}`" type="line">
+              <BasicCard v-for="child of item" :key="child.id" :spacing="10">
+                <UniRow gutter="10">
+                  <UniCol :span="12">
+                    <view>
+                      <label class="ko-basic-label">费用类型：</label>
+                      <text>{{ FEES_TYPE_ENUMS(child.feesType) }}</text>
                     </view>
                   </UniCol>
-
-                  <UniCol :span="12" v-if="false">
-                    <view
-                      style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
-                    >
-                      <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
-                        共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
-                      </text>
+                  <UniCol :span="12">
+                    <view>
+                      <label class="ko-basic-label">金额：</label>
+                      <text class="ko-basic-money">{{ toYuan(child.amount) }}元</text>
+                    </view>
+                  </UniCol>
+                  <UniCol :span="24">
+                    <view>
+                      <label class="ko-basic-label">日期：</label>
+                      <text>{{ child.updateTime }}</text>
+                    </view>
+                  </UniCol>
+                </UniRow>
+              </BasicCard>
+            </UniSection>
+          </block>
+          <block v-else>
+            <view class="ko-check__item">
+              <OrderCard
+                is-check-finance
+                :item="item"
+                @click.stop="onJumpDet(item, getPageType)"
+                is-finished
+                is-finance
+                is-hide-status
+                is-new
+                show-order-type
+                is-hide-customer
+              />
+              <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
+                <UniRow :gutter="4">
+                  <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
+                    <view style="font-size: 13px; padding-left: 30px;">
+                      <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
+                      <text style="padding-right: 10px; font-size: 12px">{{ GET_PAYMENT_ENUMS(item.orderType) }}:</text>
                       <text class="ko-basic-money">
-                        {{ toYuan(calculationCompleted(item.proofs)) }}元
+                        {{ toYuan(child.totalAmount) }}元
+                      </text>
+                      <text
+                        style="font-size: 11px; padding-left: 6px;color: #c7c9ce;"
+                        v-if="['CREATED'].includes(child.orderStatus)"
+                      >
+                        {{ GET_PROOFS_STATUS_ENUMS(child.orderStatus) }}
                       </text>
                     </view>
                   </UniCol>
                 </UniRow>
               </BasicCard>
-            </block>
+              <block v-if="item.proofs && item.proofs.length">
+                <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
 
-            <button
-              v-if="!['FINISHED'].includes(item.status) && isShowCheck && !item.confirmable"
-              class="ko-check__item--button"
-              @click.stop="onCheckboxItem(item)"
-            >
-              <checkbox
-                color="#256eff"
-                style="transform:scale(1.2)"
-                :checked="isCheckbox(item)"
-                class="ko-check__item--button--checkbox"
-              />
-            </button>
-          </view>
-          <template v-else>
-            <BasicCard :spacing="10">
-              <UniRow gutter="16">
-                <UniCol :span="24" v-if="item.voucher">
-                  <label class="ko-basic-label">凭证：</label>
-                  <UvAvatar
-                    :src="getImageUrl(item.voucher)"
-                    mode="scaleToFill"
-                    shape="square"
-                    :size="64"
-                  />
-                </UniCol>
-                <UniCol :span="24">
-                  <view>
-                    <label class="ko-basic-label">{{ current === 2 ? "收款金额" : "付款金额" }}：</label>
-                    <text class="ko-basic-money"> {{ toYuan(item.totalAmount) }}元</text>
-                  </view>
-                </UniCol>
-                <UniCol :span="24">
-                  <view style="display: flex; align-items: center;">
-                    <label class="ko-basic-label">客户/供应商：</label>
-                    <view style="margin-right: 10px;">
-                      <UvAvatar
-                        :size="38"
-                        :text="GET_FUNC(item, 'customer.name') || ''"
-                        :src="getImageUrl(GET_FUNC(item, 'customer.logo'))"
-                        random-bg-color
-                      />
-                    </view>
-                    <text>{{ GET_FUNC(item, "customer.name") || "-" }}</text>
-                  </view>
-                </UniCol>
-                <UniCol :span="24">
-                  <view style="display: flex; align-items: center;">
-                    <label class="ko-basic-label">操作人：</label>
-                    <view style="margin-right: 10px;">
-                      <UvAvatar
-                        :size="38"
-                        random-bg-color
-                        :src="getImageUrl(GET_FUNC(item, 'user.avatar'))"
-                        :text="GET_FUNC(item, 'user.nickName') || ''"
-                      />
-                    </view>
-                    <text>{{ GET_FUNC(item, "user.nickName") || "-" }}</text>
-                  </view>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">日期：</label>
-                  <text>{{ item.updateTime || "-" }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">备注：</label>
-                  <text>{{ item.remark || "-" }}</text>
-                </UniCol>
-              </UniRow>
-            </BasicCard>
-          </template>
-        </block>
-      </view>
-    </KoList>
+                <BasicCard not-padding no-shadow>
+                  <UniRow :gutter="4">
+                    <UniCol :span="24">
+                      <view
+                        v-if="item.totalAmount || 0"
+                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                      >
+                        <block v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) > 0">
+                          <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                            {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
+                          </text>
+                          <text class="ko-basic-money">
+                            {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
+                          </text>
+                        </block>
+                        <text style="color: #008000;" v-else>
+                          已结清
+                        </text>
+                      </view>
+                    </UniCol>
+
+                    <UniCol :span="12" v-if="false">
+                      <view
+                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                      >
+                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                          共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
+                        </text>
+                        <text class="ko-basic-money">
+                          {{ toYuan(calculationCompleted(item.proofs)) }}元
+                        </text>
+                      </view>
+                    </UniCol>
+                  </UniRow>
+                </BasicCard>
+              </block>
+              <button
+                v-if="!['FINISHED'].includes(item.status) && isShowCheck && !item.confirmable"
+                class="ko-check__item--button"
+                @click.stop="onCheckboxItem(item)"
+              >
+                <checkbox
+                  color="#256eff"
+                  style="transform:scale(1.2)"
+                  :checked="isCheckbox(item)"
+                  class="ko-check__item--button--checkbox"
+                />
+              </button>
+            </view>
+          </block>
+        </view>
+      </KoList>
+    </view>
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
     <view style="padding: 10px;">
       <KoTable
         :loading="loading"
-        :columns="current < 2 ? getCheckColumns : columns1"
+        :columns="getCheckColumns"
         :data="list"
         empty-text="暂无数据"
         stripe
-        @row-click="current < 2 ? onJumpDet($event, getPageType) : () => {}"
+        @row-click="onJumpDet($event, getPageType)"
         :no-more="noMore || loading"
         @next-load="RequestNextPage"
         :expand-row-keys="list.map(v => v.id)"
@@ -897,11 +1047,11 @@ export default {
     >
       <view style="line-height: 1.2; font-size: 12px;">
         <view>批量</view>
-        清帐
+        <view>清帐</view>
       </view>
     </KoMovable>
 
-    <view class="ko-check__footer ko-basic-box-shadow" v-if="isShowFooter && isShowCheck">
+    <view class="ko-check__footer ko-basic-box-shadow" v-if="isShowCheck">
       <view class="ko-check__footer--wrap">
         <view>
           <block v-if="totalAmount">
@@ -909,7 +1059,6 @@ export default {
             <text class="ko-basic-money">{{ toYuan(totalAmount) }}元</text>
           </block>
         </view>
-
         <view style="display: flex; align-items: center;">
           <button class="ko-basic-button__card" @click.stop="onBatchClearing">
             {{ isShowCheck ? "取消" : "批量清帐" }}
@@ -940,12 +1089,14 @@ export default {
   </view>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .ko-check {
-  padding-bottom: 40px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 
   &__tabs {
-    padding: 10px;
+    padding: 10px 0;
 
     // #ifdef H5
     width: 1024px;
@@ -1010,6 +1161,122 @@ export default {
 
   &__row {
     padding: 10px;
+  }
+}
+
+// 地址列表
+.ko-address {
+  flex: 1;
+  overflow: hidden;
+
+  &__wrap {
+    padding: 0 8px;
+  }
+
+  &__item {
+    border: 1px solid #E9EDF3;
+    border-radius: 6px;
+    margin-bottom: 8px;
+
+    &--down {
+      transition: transform .3s;
+    }
+
+    &.is-a-active {
+      .ko-address__item--down {
+        transform: rotate(-180deg);
+      }
+
+      .ko-address__name {
+        border-radius: 6px 6px 0 0;
+      }
+
+      .ko-address__list {
+        padding-top: 2px;
+        height: calc(100vh - 100px);
+      }
+    }
+  }
+
+  &__name {
+    font-size: 14px;
+    padding: 8px 6px 8px 8px;
+    background: #EFF6FF;
+    color: #4B5563;
+    border-radius: 6px;
+    transition: border-radius .3s;
+
+    &--info {
+      flex: 1;
+      overflow: hidden;
+
+      .ko-text-wrap {
+        &__btn {
+          margin-left: 6px;
+          font-size: 12px;
+          line-height: 1;
+          padding: 3px 8px;
+          border: 1px solid #2979ff;
+          border-radius: 12px;
+          background: #d4e4ff;
+          color: #2979ff;
+        }
+      }
+    }
+
+    &--total {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: -2px -2px;
+      padding-right: 4px;
+    }
+
+    &--num {
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #DBE9FE;
+      color: #1D40AF;
+      white-space: nowrap;
+      font-size: 10px;
+      margin: 2px;
+    }
+
+    &--item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  &__list {
+    transition: height .3s, padding .3s;
+    //height: calc(100vh - 20px);
+    height: 0;
+
+    &--item {
+      margin-bottom: 8px;
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+  }
+
+  &__operate {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: -2px;
+
+    .ko-basic-button__card {
+      margin: 2px;
+      padding: 6px 8px;
+    }
   }
 }
 

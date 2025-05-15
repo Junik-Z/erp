@@ -25,7 +25,8 @@ export default {
   name: "ApOrder",
   components: {
     UvActionSheet,
-    Pay, HistoryBar, UniEasyinput, OrderCard, UniCol, TopMenus, UvAvatar, KoList, PickerCalendars, UniRow},
+    Pay, HistoryBar, UniEasyinput, OrderCard, UniCol, TopMenus, UvAvatar, KoList, PickerCalendars, UniRow,
+  },
   mixins: [apMixins],
   data() {
     return {
@@ -189,7 +190,7 @@ export default {
       }
 
       this.aLoading = true;
-      console.log(this.GET_PAGE_MENU_FUNC);
+
       const Func = [financeCustomerAddressListApi, financeSupplierAddressListApi][this.GET_PAGE_MENU_FUNC];
       // payableOrReceivable: true 应付；false: 应收
       Func({id: this.rootId, ...this.aQuery, payableOrReceivable: true, queryNoAddress: true})
@@ -197,7 +198,8 @@ export default {
           const data = res.data;
           this.aList = this.onMergeArrays(this.aList, data, "id");
           this.aMore = _isEmpty(data) || data.length < this.aQuery.pageSize;
-          this.aId = this.aList?.[0]?.id || null;
+
+          if (data.length === 1) this.aId = this.aList?.[0]?.id || null;
 
           if (this.aId) {
             this.getOrderList(true);
@@ -553,6 +555,7 @@ export default {
                         :loading="oLoading"
                         :no-data="!oMore && !oLoading && !oList.length"
                         @lower="onNextOrderList"
+                        v-if="isEqual(dz.id, aId)"
                       >
                         <view style="padding-top: 6px;">
                           <view class="ko-address__list--item" v-for="item of oList" :key="item.id">
