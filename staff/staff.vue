@@ -87,7 +87,6 @@ export default {
           label: "绑定用户",
           prop: "name",
           render: (h, {row}) => {
-            console.log(row);
             return h(
               "div",
               {style: {display: "flex", justifyContent: "center", alignItems: "center"}},

@@ -1,6 +1,6 @@
 <script>
 import purchase from "./purchase";
-import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
 import { PageEnums } from "@/utils/config";
 import TopMenus from "./components/TopMenus.vue";
 import KoList from "@/components/List/List.vue";
@@ -15,6 +15,7 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "@/purchase/components/Pay/Pay.vue";
+import OMixins from "@/purchase/OMixins";
 
 // 索引列表
 const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -35,8 +36,9 @@ export default {
     KoList,
     TopMenus,
   },
-  mixins: [purchase],
+  mixins: [purchase, OMixins],
   data() {
+    const _this = this;
     return {
       rootId: null,
       cQuery: {
@@ -78,9 +80,76 @@ export default {
         orderCode: "",
         "user.nickName": "",
       },
+
+      // #ifdef H5
+      columns: [
+        {
+          label: "序号",
+          type: "index",
+          width: 80,
+        },
+        {
+          label: "编号",
+          prop: "orderCode",
+        },
+        {
+          label: "日期",
+          prop: "updateTime",
+        },
+        {
+          label: "状态",
+          prop: "status",
+          render: (h, {row}) => {
+            return h("div", [_this.ORDER_STATUS_ENUMS(row.status)]);
+          },
+        },
+        {
+          label: "金额(元)",
+          prop: "totalAmount",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.totalAmount)}`);
+          },
+        },
+        {
+          label: "下单用户",
+          prop: "customer",
+          children: [
+            {
+              label: "头像",
+              prop: "user.avatar",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 42}})],
+                );
+              },
+            },
+            {
+              label: "昵称",
+              prop: "user.nickName",
+            },
+          ],
+        },
+        {
+          label: "备注",
+          prop: "remark",
+        },
+        {
+          label: "操作",
+          slot: "operate",
+          width: 480,
+        },
+      ],
+      // #endif
     };
   },
   onLoad() {
+    // #ifdef H5
+    this.getList(true);
+    // #endif
   },
   methods: {
     getCNode(item) {
@@ -134,6 +203,7 @@ export default {
       this.onSReset();
 
       this.rootId = node.value;
+      this.aId = null;
       this.getAddressList(true);
 
       this.toRootItem();
@@ -172,10 +242,16 @@ export default {
 
     // 获取相应的地址
     getAddressList(reset) {
+      // #ifdef MP
       if (this.isSearch) {
         this.getSList();
         return false;
       }
+      // #endif
+
+      // #ifdef H5
+      if (!this.rootId) return false;
+      // #endif
 
       if (reset) {
         this.aList = [];
@@ -189,7 +265,13 @@ export default {
           this.aList = this.onMergeArrays(this.aList, data, "id");
           this.aMore = _isEmpty(data) || data.length < this.aQuery.pageSize;
 
+          // #ifdef MP
           if (data.length === 1) this.aId = this.aList?.[0]?.id || null;
+          // #endif
+
+          // #ifdef H5
+          this.aId = this.aList?.[0]?.id || null;
+          // #endif
 
           if (this.aId) {
             this.getOrderList(true);
@@ -205,7 +287,9 @@ export default {
     // 点击地址
     onAChange(dz) {
       if (_isEqual(dz.id, this.aId)) {
+        // #ifdef MP
         this.aId = null;
+        // #endif
         return false;
       }
 
@@ -219,16 +303,15 @@ export default {
         this.oList = [];
         this.oQuery.pageNum = 0;
       }
-
       this.oLoading = true;
 
-      const dz = this.aList.find(v => _isEqual(v.id, this.aId));
+      const dz = this.aList.find(v => _isEqual(v.id, this.aId)) || {};
       // const Func = [getSaleListApi, getSaleWaitPaymentListApi, getSaleHistoryApi][this.GET_PAGE_MENU_FUNC];
       getPurchaseList2Api({
         ...this.oQuery,
         supplierId: this.rootId,
         queryNoAddress: _isEqual(dz.id, "1"),
-        orderAddress: _isEqual(dz.id, "1") ? "" : dz.address,
+        addressId: (_isEqual(dz.id, "1") ? "" : dz.id) || "",
       })
         .then(res => {
           const data = res.data;
@@ -258,12 +341,14 @@ export default {
     // 重置搜索列表
     onResetList() {
       this.oQuery = _deepCopy(this.$options.data().oQuery);
+      // #ifdef H5
+      this.oQuery = _deepCopy(this.$options.data().oQuery);
+      // #endif
+
       // #ifdef MP
-      this.$refs.SearchRef && this.$refs?.SearchRef?.forEach(item => item?.onShowSearch?.(false));
       this.$refs.PCRef && this.$refs.PCRef?.forEach(item => item?.clearable?.());
       // #endif
       // #ifdef H5
-      this.$refs.SearchRef && this.$refs?.SearchRef?.onShowSearch?.(false);
       this.$refs.PCRef && this.$refs.PCRef?.clearable?.();
       // #endif
 
@@ -272,6 +357,7 @@ export default {
 
     // 确定开始结束时间了
     onCalendarConfirm(event) {
+      // #ifdef MP
       if (event) {
         const r = event.range || {};
         this.sQuery.startTime = r.before ? r.before + " 00:00:00" : "";
@@ -280,6 +366,17 @@ export default {
         this.sQuery.startTime = "";
         this.sQuery.endTime = "";
       }
+      // #endif
+      // #ifdef H5
+      if (event) {
+        const r = event.range || {};
+        this.oQuery.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.oQuery.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.oQuery.startTime = "";
+        this.oQuery.endTime = "";
+      }
+      // #endif
     },
 
     // 处理索引搜索
@@ -352,6 +449,7 @@ export default {
 
     // 开单
     toPlaceAnOrder(dz) {
+      this.uType = 1;
       const query = `?supplierId=${this.rootId}&isFast=true` + (_isEqual(dz.id, "1") ? "" : `&address=${dz.address}`);
       uni.navigateTo({url: PageEnums.NewPurchase + query});
     },
@@ -495,7 +593,7 @@ export default {
               class="ko-basic-button__card ko-supplier__switch"
               @click="onSwitchStyle"
             >
-              <uni-icons color="#fff" :type="!sSale ? 'list' : 'tune-filled'" />
+              <uni-icons color="#fff" :type="!sPurchase ? 'list' : 'tune-filled'" />
             </button>
           </view>
 
@@ -561,10 +659,10 @@ export default {
                       </view>
                       <view class="ko-address__name--item" style="margin-top: 2px;">
                         <view class="ko-address__name--total">
-                          <view class="ko-address__name--num">
+                          <view class="ko-address__name--num CREATED">
                             待处理: {{ dz.pendingQuantity }}
                           </view>
-                          <view class="ko-address__name--num">
+                          <view class="ko-address__name--num WAIT_PAY">
                             待付款: {{ dz.pendingPaymentQuantity }}
                           </view>
                           <view class="ko-address__name--num">
@@ -588,28 +686,28 @@ export default {
                         v-if="isEqual(dz.id, aId)"
                       >
                         <view style="padding-top: 6px;">
-                          <view class="ko-address__list--item" v-for="item of oList" :key="item.id">
+                          <view class="ko-address__list--item" v-for="(item, index) of oList" :key="item.id">
                             <OrderCard
                               :item="item"
                               @click="onJumpDetails(item, 'purchase')"
                               is-sales
                               is-new
                               is-new-sale
-                              :is-custom-status-name="isEqual(item.status, 'FINISHED')"
+                              :is-custom-status-name="isEqual(item.status, 'WAIT_PAY')"
                               custom-status-name="待付款"
                               hide-order-address
                             >
                               <template #operate>
                                 <view class="ko-address__operate">
                                   <button
-                                    v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
+                                    v-if="isPerm('SALE_PRINT')"
                                     class="ko-basic-button__card"
                                     @click.stop="onPrint(item, index)"
                                   >
                                     打印单据
                                   </button>
                                   <button
-                                    v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
+                                    v-if="['WAIT_PAY'].includes(item.status) && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
                                     class="ko-basic-button__card"
                                     @click.stop="onAddedDocuments(item, index)"
                                   >
@@ -618,7 +716,7 @@ export default {
                                   <button
                                     v-if="['CREATED'].includes(item.status) && isPerm('SALE_SUBMIT')"
                                     class="ko-basic-button__card"
-                                    @click.stop="submitSale(item, index)"
+                                    @click.stop="submitPurchase(item, index)"
                                     :disabled="item.__s_loading__"
                                     :loading="item.__s_loading__"
                                   >
@@ -654,27 +752,27 @@ export default {
                 @lower-next="onSNext"
               >
                 <view style="padding-top: 6px;">
-                  <view class="ko-address__list--item" v-for="item of sList" :key="item.id">
+                  <view class="ko-address__list--item" v-for="(item, index) of sList" :key="item.id">
                     <OrderCard
                       :item="item"
                       @click="onJumpDetails(item, 'purchase')"
                       is-sales
                       is-new
                       is-new-sale
-                      :is-custom-status-name="isEqual(item.status, 'FINISHED')"
+                      :is-custom-status-name="isEqual(item.status, 'WAIT_PAY')"
                       custom-status-name="待付款"
                     >
                       <template #operate>
                         <view class="ko-address__operate">
                           <button
-                            v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
+                            v-if="isPerm('SALE_PRINT')"
                             class="ko-basic-button__card"
                             @click.stop="onPrint(item, index)"
                           >
                             打印单据
                           </button>
                           <button
-                            v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
+                            v-if="['WAIT_PAY'].includes(item.status) && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
                             class="ko-basic-button__card"
                             @click.stop="onAddedDocuments(item, index)"
                           >
@@ -683,7 +781,7 @@ export default {
                           <button
                             v-if="['CREATED'].includes(item.status) && isPerm('SALE_SUBMIT')"
                             class="ko-basic-button__card"
-                            @click.stop="submitSale(item, index)"
+                            @click.stop="submitPurchase(item, index)"
                             :disabled="item.__s_loading__"
                             :loading="item.__s_loading__"
                           >
@@ -719,6 +817,256 @@ export default {
     />
     <!-- #endif -->
 
+
+    <!-- #ifdef H5 -->
+    <div class="ko-list">
+      <TopMenus :path="PageEnums.purchaseOrder" />
+
+      <div class="ko-list__wrap">
+        <div class="ko-supplier">
+          <div class="ko-supplier__search">
+            <uni-search-bar
+              v-model="cQuery.name"
+              placeholder="请输入"
+              @confirm="getList(true)"
+              @cancel="onClientCancel"
+              clear-button="none"
+              style="flex: 1; overflow: hidden;"
+              bg-color="transparent"
+              border
+            />
+
+            <button
+              class="ko-basic-button__card ko-supplier__switch"
+              @click="onSwitchStyle"
+            >
+              <uni-icons color="#fff" :type="!sPurchase ? 'list' : 'tune-filled'"></uni-icons>
+            </button>
+          </div>
+
+          <!-- 索引列表 -->
+          <view class="ko-supplier__index" v-if="false">
+            <view
+              class="ko-supplier__index--item"
+              v-for="item of IndexList"
+              :key="item"
+              :class="{'is-i-active': isEqual(item, cQuery.nameIndex)}"
+              @click.stop="onNameIndexSearch(item)"
+            >
+              {{ item }}
+            </view>
+          </view>
+
+          <KoList
+            class="ko-supplier"
+            :loading="cLoading"
+            :no-more="cMore"
+            :no-data="!cMore && !cLoading && !cList.length"
+            :data="cList"
+            @lower="onLowerSupplier"
+            @load-next="onLowerSupplier"
+            :scroll-into-view="ViewID"
+          >
+            <div class="ko-supplier__wrap">
+              <div
+                v-for="root of cList"
+                :key="root.value"
+                :class="{'is-root-active': isEqual(root.value, rootId)}"
+                class="ko-supplier__name"
+                @click.stop="onRootChange(root)"
+                :id="`root-${root.value}`"
+              >
+                <UvAvatar random-bg-color :text="root.label" :src="getImageUrl(root.logo)" :size="42" />
+                <div class="ko-supplier__name--wrap">
+                  <span class="ko-supplier__name--text ko-text-wrap">{{ root.label }}</span>
+                  <div class="ko-supplier__money">
+                    <!--<block v-if="root.amount < 0">欠</block>-->
+                    ¥{{ toYuan(Math.abs(root.amount || 0)) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </KoList>
+        </div>
+        <div class="ko-address">
+          <KoList
+            class="ko-address__table"
+            :loading="aLoading"
+            :no-more="aMore"
+            :no-data="!aMore && !aLoading && !aList.length"
+            :data="aList"
+            @lower="onLowerAddress"
+            @load-next="onLowerAddress"
+            no-more-text="该客户没有更多地址了"
+            :scroll-into-view="AViewId"
+          >
+            <div style="padding: 8px;">
+              <div
+                v-for="dz of aList"
+                :key="dz.id"
+                class="ko-address__item"
+              >
+                <view
+                  class="ko-address__name"
+                  @click.stop="onAChange(dz)"
+                  :class="{'is-a-active': isEqual(dz.id, aId)}"
+                >
+                  <view class="ko-address__name--info ko-address__name--item" style="overflow: hidden;">
+                    <view class="ko-text-wrap" style="flex: 1;">{{ dz.address }}</view>
+                    <button class="ko-text-wrap__btn" @click.stop="toPlaceAnOrder(dz)">开单</button>
+                  </view>
+                  <view class="ko-address__name--item" style="margin-top: 8px;">
+                    <view class="ko-address__name--total">
+                      <view class="ko-address__name--num CREATED">
+                        待处理: {{ dz.pendingQuantity }}
+                      </view>
+                      <view class="ko-address__name--num WAIT_PAY">
+                        待付款: {{ dz.pendingPaymentQuantity }}
+                      </view>
+                      <view class="ko-address__name--num">
+                        ¥{{ toYuan(dz.amount) }}
+                      </view>
+                    </view>
+
+                    <view class="ko-address__item--down" v-if="false">
+                      <uni-icons type="down" :size="18" color="#8f939c" />
+                    </view>
+                  </view>
+                </view>
+              </div>
+            </div>
+          </KoList>
+        </div>
+        <div class="ko-order-table" :class="{'no-address': !aId}">
+          <div class="ko-order-table__search">
+            <div class="ko-order-table__search--item">
+              <UniEasyinput v-model="oQuery.orderCode" placeholder="请输入编号" />
+            </div>
+            <div class="ko-order-table__search--item">
+              <UniEasyinput v-model="oQuery['user.nickName']" placeholder="请输入下单用户名称" />
+            </div>
+            <div class="ko-order-table__search--item" style="width: 260px;">
+              <PickerCalendars
+                placeholder="请选择开始结束时间"
+                mode="range"
+                @confirm="onCalendarConfirm"
+                ref="PCRef"
+              />
+            </div>
+
+            <div style="display: flex; align-items: center;">
+              <button class="ko-basic-button__card" @click.stop="onResetList">
+                重置
+              </button>
+              <button class="ko-basic-button__card" @click.stop="getOrderList(true)">
+                搜索
+              </button>
+            </div>
+          </div>
+
+          <KoTable
+            style="width: 100%"
+            :loading="oLoading"
+            :no-more="oMore || oLoading"
+            :columns="columns"
+            :data="oList"
+            empty-text="暂无数据"
+            stripe
+            @row-click="onRowClick"
+            @next-load="onNextOrderList"
+            class="ko-order-table__list"
+          >
+            <template #operate="{item, index}">
+              <view style="display: flex; align-items: center; justify-content: center;">
+                <button
+                  v-if="isPerm('PURCHASE_PRINT') && item.orderType !== 'CUSTOMIZED'"
+                  class="ko-basic-button__card"
+                  @click.stop="onJumpPrint(item, 'purchase')"
+                >
+                  打印单据
+                </button>
+                <button
+                  v-if="['WAIT_PAY'].includes(item.status) && (isPerm('PURCHASE_ADD_RETURNED_ORDER') || isPerm('PURCHASE_RETURNED_ORDER'))"
+                  class="ko-basic-button__card"
+                  @click.stop="onAddedDocuments(item, index)"
+                >
+                  付款
+                </button>
+                <button
+                  v-if="['CREATED'].includes(item.status)  && isPerm('PURCHASE_CONFIRM')"
+                  class="ko-basic-button__card"
+                  @click.stop="submitPurchase(item, index)"
+                  :disabled="item.__s_loading__"
+                  :loading="item.__s_loading__"
+                >
+                  提交订单
+                </button>
+
+                <button
+                  v-if="['WAIT_PAY'].includes(item.status) && isPerm('PURCHASE_QUICK_IN')"
+                  class="ko-basic-button__card"
+                  @click.stop="onQuickIn(item, index)"
+                >
+                  快捷入库
+                </button>
+
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onJumpPrint(item, 'purchase', {isA4: 'true'})"
+                  v-if="!['CUSTOMIZED'].includes(item.orderType) && isPerm('PURCHASE_PRINT')"
+                >
+                  打印采购单(A4)
+                </button>
+
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onGenerateSale(item)"
+                  v-if="['CUSTOMIZED'].includes(item.orderType) && !['CANCELLED'].includes(item.status) && false"
+                >
+                  生成销售单
+                </button>
+
+                <button
+                  v-if="['FINISHED'].includes(item.status) && !['CUSTOMIZED'].includes(item.orderType) && isPerm('PURCHASE_RETURN_ADD')"
+                  class="ko-basic-button__card"
+                  @click.stop="onReturn(item, index)"
+                >
+                  申请退货
+                </button>
+
+                <button
+                  v-if="['CREATED'].includes(item.status) && isPerm('PURCHASE_CANCEL')"
+                  class="ko-basic-button__card"
+                  @click.stop="cancelPurchase(item, index)"
+                >
+                  取消订单
+                </button>
+
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="onJump(item, index)"
+                  v-if="['CREATED', 'FINISHED'].includes(item.status) && isEditorButton(item)"
+                >
+                  编辑
+                </button>
+
+                <button
+                  class="ko-basic-button__card"
+                  @click.stop="removePurchase(item, index)"
+                  :loading="item.__r_loading__"
+                  :disabled="item.__r_loading__"
+                  v-if="['CANCELLED', 'CREATED'].includes(item.status) && isPerm('PURCHASE_DELETE')"
+                >
+                  删除
+                </button>
+              </view>
+            </template>
+          </KoTable>
+        </div>
+      </div>
+    </div>
+    <!-- #endif -->
+
     <KoMovable
       @click="onTrigger"
       v-if="isShowMovable"
@@ -737,7 +1085,6 @@ export default {
   width: 100vw;
 }
 
-// #ifdef MP
 .ko-list {
   padding-top: 8px;
   width: 100vw;
@@ -769,172 +1116,6 @@ export default {
   }
 }
 
-// 供应商列表
-.ko-supplier {
-  height: calc(100vh - 20px);
-
-  &__name {
-    display: flex;
-    align-items: center;
-    border: 1px solid #EFF1F3;
-    border-radius: 6px;
-    padding: 6px;
-    margin-bottom: 8px;
-    color: #170145;
-    font-size: 14px;
-
-    &.is-root-active {
-      background: rgba(128, 174, 250, 0.1);
-      border-color: #80AEFA;
-    }
-
-    &--wrap {
-      padding-left: 8px;
-      overflow: hidden;
-    }
-  }
-
-  &__money {
-    font-size: 12px;
-    color: #8CA1B8;
-  }
-
-  &__wrap {
-    padding: 0 8px;
-  }
-
-  &__search {
-    //display: flex;
-    //align-items: center;
-    padding-right: 4px;
-  }
-
-  &__switch {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    padding: 0;
-    align-items: center;
-    justify-content: center;
-    margin: 2px;
-  }
-}
-
-// 地址列表
-.ko-address {
-  height: calc(100vh - 20px);
-
-  &__wrap {
-    padding: 0 8px;
-  }
-
-  &__item {
-    border: 1px solid #E9EDF3;
-    border-radius: 6px;
-    margin-bottom: 8px;
-
-    &--down {
-      transition: transform .3s;
-    }
-
-    &.is-a-active {
-      .ko-address__item--down {
-        transform: rotate(-180deg);
-      }
-
-      .ko-address__name {
-        border-radius: 6px 6px 0 0;
-      }
-
-      .ko-address__list {
-        padding-top: 2px;
-        height: calc(100vh - 80px);
-      }
-    }
-  }
-
-  &__name {
-    font-size: 14px;
-    padding: 8px 6px 8px 8px;
-    background: #EFF6FF;
-    color: #4B5563;
-    border-radius: 6px;
-    transition: border-radius .3s;
-
-    &--info {
-      flex: 1;
-      overflow: hidden;
-
-      .ko-text-wrap {
-        &__btn {
-          margin-left: 6px;
-          font-size: 12px;
-          line-height: 1;
-          padding: 3px 8px;
-          border: 1px solid #2979ff;
-          border-radius: 12px;
-          background: #d4e4ff;
-          color: #2979ff;
-        }
-      }
-    }
-
-    &--total {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      margin: -2px -2px;
-      padding-right: 4px;
-    }
-
-    &--num {
-      padding: 2px 8px;
-      border-radius: 99px;
-      background: #DBE9FE;
-      color: #1D40AF;
-      white-space: nowrap;
-      font-size: 10px;
-      margin: 2px;
-    }
-
-    &--item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-  }
-
-  &__list {
-    transition: height .3s, padding .3s;
-    //height: calc(100vh - 20px);
-    height: 0;
-
-    &--item {
-      margin-bottom: 8px;
-    }
-  }
-
-  &__search {
-    display: flex;
-    align-items: center;
-    padding-right: 8px;
-  }
-
-  &__operate {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    width: 100%;
-    margin: -2px;
-
-    .ko-basic-button__card {
-      margin: 2px;
-      padding: 6px 8px;
-    }
-  }
-}
-
 // 订单列表搜素样式
 .ko-search {
   height: 0;
@@ -945,6 +1126,92 @@ export default {
   &.is-o-active {
     height: 200px;
     padding-bottom: 8px;
+  }
+}
+
+// #ifdef H5
+.ko-order {
+  height: calc(100vh - 45px);
+  width: 100vw;
+}
+
+.ko-list {
+  padding-top: 10px;
+  height: calc(100vh - 54px);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+
+  &__wrap {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+  }
+}
+
+// 供应商列表
+.ko-supplier {
+  height: 100%;
+  width: 280px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e9e9eb;
+}
+
+// 地址
+.ko-address {
+  width: 260px;
+  height: 100%;
+  border-right: 1px solid #e9e9eb;
+  overflow: hidden;
+
+  &__table {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.ko-order-table {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+
+  &__list {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &.no-address {
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 999;
+      background: rgba(255, 255, 255, .4);
+    }
+
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+
+    &--item {
+      width: 180px;
+      margin: 0 10px;
+    }
+
+    ::v-deep(.uni-easyinput) {
+      width: 160px;
+    }
   }
 }
 

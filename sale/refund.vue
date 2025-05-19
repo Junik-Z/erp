@@ -488,7 +488,7 @@ export default {
                 </button>
 
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_RETURN_ADD_RETURNED_ORDER') || isPerm('SALE_RETURN_RETURNED_ORDER'))"
+                  v-if="['WAIT_PAY'].includes(item.status) && (isPerm('SALE_RETURN_ADD_RETURNED_ORDER') || isPerm('SALE_RETURN_RETURNED_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
@@ -553,7 +553,7 @@ export default {
               快捷入库
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_RETURN_ADD_RETURNED_ORDER') || isPerm('SALE_RETURN_RETURNED_ORDER'))"
+              v-if="['WAIT_PAY'].includes(item.status) && (isPerm('SALE_RETURN_ADD_RETURNED_ORDER') || isPerm('SALE_RETURN_RETURNED_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >

@@ -9,7 +9,7 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
-import { _get } from "@/utils";
+import { _get, _isEmpty } from "@/utils";
 import { getBindInfoApi } from "@/api/erp/sale";
 import PickerAddress from "./PickerAddress.vue";
 import FeesList from "./FeesList/FeesList.vue";
@@ -36,6 +36,7 @@ export default {
     },
     isEdit: Boolean,
     isShare: Boolean,
+    isSale: Boolean,
   },
   data() {
     return {
@@ -70,29 +71,51 @@ export default {
       },
       bindList: [],
       current: 0,
-      tabs: ["客户", "其它客户"],
+      tabs: ["客户", "其它"],
+
+      noMore: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
     };
   },
-
+  mounted() {
+  },
   watch: {
+    value: {
+      handler() {
+        this.form = {...this.form, ...this.value};
+      },
+      deep: true,
+      immediate: true,
+    },
     form: {
       handler() {
-        console.log(this.form);
-        this.$emit("change", this.form);
+        const params = this.form;
+        if (this.current === 0) {
+          params.otherSupplier = "";
+          params.otherSupplierPhone = "";
+        }
+        if (this.current === 1) {
+          params.supplierId = "";
+        }
+        this.$emit("change", params);
       },
       deep: true,
     },
   },
   methods: {
     onTabItem() {
-      if (this.current === 0) {
+      /* if (this.current === 0) {
         this.form.otherSupplier = "";
         this.form.otherSupplierPhone = "";
       }
 
       if (this.current === 1) {
         this.form.supplierId = "";
-      }
+      } */
     },
 
     onSupplierId(val) {
@@ -108,27 +131,37 @@ export default {
     },
 
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
 
-          // this.form.supplierId = this.GET_USER_INFO?.userId;
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
 
-          if (this.bindList.length) {
-            this.current = 0;
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
-          } else {
-            this.current = 1;
+          if (this.bQuery.pageNum === 0) {
+
+            if (this.bindList.length) {
+              this.current = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.current = 1;
+            }
           }
         });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
     },
 
     updateFees() {
@@ -152,43 +185,85 @@ export default {
     ref="FormRef"
   >
     <UniSection title="基础信息" type="line">
-      <view style="margin: 0 30px 20px;" v-if="!isShare && noCustomerPerm">
-        <UniSegmentedControl
-          :current.sync="current"
-          :values="tabs"
-          style-type="text"
-          @clickItem="onTabItem"
-        />
-      </view>
-
-      <template v-if="current === 0 && noCustomerPerm">
-        <UniFormsItem label="客户：" name="supplierId">
-          <PickerUser
-            style="width: 100%;"
-            is-input
-            title="选择客户"
-            v-model="form.supplierId"
-            type="client"
-            ref="UserRef"
-
-            :placeholder-label="GET_FUNC(form, 'customer.name')"
-
-            :is-long-list="isShare"
-            :options="bindList"
-            @input="onSupplierId"
+      <block v-if="isSale">
+        <view style="margin: 0 30px 20px;" v-if="noCustomerPerm">
+          <UniSegmentedControl
+            :current.sync="current"
+            :values="tabs"
+            style-type="text"
+            @clickItem="onTabItem"
           />
-        </UniFormsItem>
-      </template>
+        </view>
 
-      <template v-if="current === 1 || !noCustomerPerm">
-        <UniFormsItem :label="`${isShare ? '姓名' : '姓名'}：`" name="otherSupplier">
-          <UniEasyinput
-            v-model="form.otherSupplier"
-            style="width: 100%;"
-            placeholder="请输入"
+        <template v-if="current === 0 && noCustomerPerm">
+          <UniFormsItem label="客户：" name="supplierId">
+            <PickerUser
+              style="width: 100%;"
+              is-input
+              title="选择客户"
+              v-model="form.supplierId"
+              type="client"
+              ref="UserRef"
+
+              :placeholder-label="GET_FUNC(form, 'customer.name')"
+
+              :is-long-list="isShare"
+              :options="bindList"
+              @input="onSupplierId"
+            />
+          </UniFormsItem>
+        </template>
+
+        <template v-if="current === 1 || !noCustomerPerm">
+          <UniFormsItem :label="`${isShare ? '姓名' : '姓名'}：`" name="otherSupplier">
+            <UniEasyinput
+              v-model="form.otherSupplier"
+              style="width: 100%;"
+              placeholder="请输入"
+            />
+          </UniFormsItem>
+        </template>
+      </block>
+
+      <block v-else>
+        <view style="margin: 0 30px 20px;" v-if="bindList.length">
+          <UniSegmentedControl
+            :current.sync="current"
+            :values="tabs"
+            style-type="text"
+            @clickItem="onTabItem"
           />
-        </UniFormsItem>
-      </template>
+        </view>
+
+        <template v-if="current === 0 && bindList.length">
+          <UniFormsItem label="客户：" name="supplierId">
+            <PickerUser
+              style="width: 100%;"
+              is-input
+              title="选择客户"
+              v-model="form.supplierId"
+              type="client"
+              ref="UserRef"
+              :placeholder-label="GET_FUNC(form, 'customer.name')"
+              :is-long-list="true"
+              :options="bindList"
+              @input="onSupplierId"
+              @lower="onLower"
+            />
+          </UniFormsItem>
+        </template>
+
+        <template v-if="current === 1">
+          <UniFormsItem :label="`${isShare ? '姓名' : '姓名'}：`" name="otherSupplier">
+            <UniEasyinput
+              v-model="form.otherSupplier"
+              style="width: 100%;"
+              placeholder="请输入"
+            />
+          </UniFormsItem>
+        </template>
+      </block>
+
 
       <UniFormsItem label="电话：" name="orderPhone">
         <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
@@ -199,7 +274,7 @@ export default {
             <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
           </view>
           <PickerAddress
-            v-if="form.supplierId && isPerm('CUSTOMER_ADDRESS_LIST')"
+            v-if="form.supplierId"
             :supplierId="form.supplierId"
             v-model="form.orderAddress"
             type="sale"

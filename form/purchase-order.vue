@@ -21,8 +21,8 @@ import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import { PageEnums } from "@/utils/config";
-import PickerAddress from "@/form/components/PickerAddress.vue";
-import SendMsg from "./components/SendMsg.vue";
+import PickerAddress from "@/components/PickerAddress.vue";
+import SendMsg from "../components/SendMsg.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -106,7 +106,7 @@ export default {
     this.isEdit = !!option.id;
     if (this.isEdit) this.getInfo();
     this.isNormal = option.isNormal === "true";
-    
+
     // 快捷开单
     this.isFast = _isEqual(option.isFast, "true");
 
@@ -162,7 +162,7 @@ export default {
 
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
-          this.isAgain = ["FINISHED"].includes(params.status);
+          this.isAgain = ["WAIT_PAY"].includes(params.status);
 
           this.form = params;
         });
@@ -176,6 +176,15 @@ export default {
 
           params.totalAmount = yuanToPoints(params.totalAmount);
           // params.details = this.$refs.PPRef.getDiscountedPrices();
+
+          if (this.current === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.current === 1) {
+            params.supplierId = "";
+          }
 
           this.loading = true;
           const Func = this.isAgain ? reOrderPurchaseApi : (this.isEdit ? updatePurchaseApi : addedPurchaseApi);
@@ -218,14 +227,14 @@ export default {
 
     },
     onTabItem() {
-      if (this.current === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
+      /* if (this.current === 0) {
+         this.form.otherSupplier = "";
+         this.form.otherSupplierPhone = "";
+       }
 
-      if (this.current === 1) {
-        this.form.supplierId = "";
-      }
+       if (this.current === 1) {
+         this.form.supplierId = "";
+       } */
 
     },
 

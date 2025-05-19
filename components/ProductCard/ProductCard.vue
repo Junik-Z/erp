@@ -80,7 +80,7 @@ export default {
     },
 
     getExtendList() {
-      getProductFieldApi({pageSize: 1000000, pageNum: 0})
+      getProductFieldApi({pageSize: 1000, pageNum: 0})
         .then(res => {
           this.FieldList = res.data;
           uni.$__FIELD_LIST__ = res.data;

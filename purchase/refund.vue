@@ -472,7 +472,7 @@ export default {
                   打印单据
                 </button>
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('PURCHASE_RETURN_ADD_PAID_ORDER') || isPerm('PURCHASE_RETURN_PAID_ORDER'))"
+                  v-if="['WAIT_PAY'].includes(item.status) && (isPerm('PURCHASE_RETURN_ADD_PAID_ORDER') || isPerm('PURCHASE_RETURN_PAID_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
@@ -527,7 +527,7 @@ export default {
               打印单据
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('PURCHASE_RETURN_ADD_PAID_ORDER') || isPerm('PURCHASE_RETURN_PAID_ORDER'))"
+              v-if="['WAIT_PAY'].includes(item.status) && (isPerm('PURCHASE_RETURN_ADD_PAID_ORDER') || isPerm('PURCHASE_RETURN_PAID_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >

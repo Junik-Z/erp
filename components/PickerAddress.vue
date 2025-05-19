@@ -22,6 +22,7 @@ export default {
       list: [],
       queryList: {
         pageNum: 0,
+        pageSize: 30,
       },
       noMore: false,
     };
@@ -41,10 +42,10 @@ export default {
 
       if (Fn) {
         this.loading = true;
-        Fn({id: this.supplierId, pageSize: 50, ...this.queryList})
+        Fn({id: this.supplierId, ...this.queryList})
           .then(res => {
             this.list = this.onMergeArrays(this.list, res.data);
-            this.noMore = _isEmpty(res.data) || res.data.length < 50;
+            this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
           })
           .finally(() => {
             this.loading = false;
@@ -60,6 +61,7 @@ export default {
 
     // 加载下一页
     onLower() {
+      if (this.noMore || this.loading) return false;
       this.queryList.pageNum += 1;
       this.getList();
     },

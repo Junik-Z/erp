@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  // type = "trial";
+  type = "trial";
   // #endif
 
   // #ifdef H5
@@ -51,7 +51,7 @@ export const CONFIG = {
   APP_ID: "wx525c19deacc41329",
   SystemVersion: type,
 
-  "T_VERSION": 4,
+  "T_VERSION": 5,
 
   ...(
     {
@@ -269,13 +269,13 @@ export const PageEnums = {
   // 服务续费
   adminRenewal: "/admin/renewal",
   // 店铺设置
-  adminSetShop: "/admin/set-shop",
+  adminSetShop: "/admin/set-sys",
   // 管理微信用户
   WeChat: "/admin/we-chat",
   // 设置权限
   SetRole: "/admin/set-role",
   // 个人中心
-  User: '/admin/user',
+  User: "/admin/user",
 
   // ———————————— 消息管理 ————————————
   // 消息列表
@@ -329,6 +329,10 @@ export const PageEnums = {
 
   // ——————————————— 订单状态 ————————————————
   orderStatus: "/order/status",
+
+  // ——————————————— 店铺 ———————————————————
+  // 店铺配置
+  shopUp: "/shop/set-up",
 };
 
 /**
@@ -442,6 +446,13 @@ export const MENU_LIST = [
     icon: "icon-kaoqindaka",
     value: PageEnums.attend,
     role: ["ADMIN", "BUSINESS", "PRODUCE_MEMBER", "PRODUCE_READ"],
+    isUpRole: false,
+  },
+  {
+    label: "店铺",
+    icon: "icon-dianpu",
+    value: PageEnums.shopUp,
+    role: ["ADMIN", "BUSINESS"],
     isUpRole: false,
   },
   {

@@ -43,6 +43,11 @@ export default {
     };
   },
   onShow() {
+    this.$nextTick(() => {
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 300);
+    });
   },
   created() {
   },
@@ -267,7 +272,7 @@ export default {
 
       index = index > -1 ? index : this.nodeIndex;
 
-      if (data?.confirmable && isPayment) {
+      if (["FINISHED"].includes(data.status) && isPayment) {
         this.list.splice(index, 1);
       } else if (_isString(info) && this.tab === 1) {
         this.list.splice(index, 1);
@@ -424,6 +429,8 @@ export default {
       return (type) => {
         return {
           CREATED: "待处理",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           FINISHED: "已完成",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
@@ -436,6 +443,8 @@ export default {
       return (type) => {
         return {
           CREATED: "待清帐",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           FINISHED: "已完成",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
@@ -463,6 +472,8 @@ export default {
       return (status) => {
         return {
           CREATED: "待生产",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           APPLY_MATERIAL: "生产中",
           FINISHED: "已完成",
           PAUSED: "已暂停",

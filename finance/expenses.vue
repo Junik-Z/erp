@@ -178,7 +178,7 @@ export default {
 
     // 获取分类
     getCategoryList() {
-      return getCategoryListApi({pageSize: 1000000, pageNum: 0})
+      return getCategoryListApi({pageSize: 10000, pageNum: 0})
         .then(res => {
           this.categoryList = [
             ...res.data?.map(item => ({

@@ -208,7 +208,12 @@ export default {
         {
           text: "新增",
           iconfont: "icon-tianjia",
+          // #ifdef MP
+          path: PageEnums.shopping + "?PAGE_TYPE=MY_SALE",
+          // #endif
+          // #ifdef H5
           path: PageEnums.NewSale + "?PAGE_TYPE=ADDED_SALE&isNormal=true",
+          // #endif
           perm: "SALE_ADD",
         },
       ],
@@ -303,11 +308,27 @@ export default {
           return false;
         }
 
-        this.jumpAddedSale({
+        let q = this.getQueryString({
           PAGE_TYPE: "ADDED_SALE",
           isNormal: true,
           ...(item?.id ? {id: item.id} : {}),
         });
+
+        let url = `${PageEnums.NewSale}${q}`;
+
+        // #ifdef MP
+        url = `${PageEnums.shopping}${
+          this.getQueryString({
+            ...(item?.id ? {id: item.id} : {}),
+            PAGE_TYPE: "MY_SALE",
+          })
+        }`
+        // #endif
+
+        uni.navigateTo({
+          url: `${url}`,
+        });
+
       }
     },
     onActionClick(item, index) {

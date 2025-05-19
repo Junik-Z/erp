@@ -20,7 +20,7 @@ import UniSegmentedControl
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
 import FeesList from "./components/FeesList/FeesList.vue";
-import PickerAddress from "@/form/components/PickerAddress.vue";
+import PickerAddress from "@/components/PickerAddress.vue";
 
 export default {
   name: "refund",
@@ -94,12 +94,20 @@ export default {
 
           await this.isTxFillPrices();
 
-          console.log(params);
           params.totalAmount = yuanToPoints(params.totalAmount);
           this.loading = true;
 
           if (this.orderId) {
             params.purchaseOrderId = this.orderId;
+          }
+
+          if (this.current === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.current === 1) {
+            params.supplierId = "";
           }
 
           const Func = this.isAgain ? reOrderPurchaseReturnApi : (this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi);
@@ -135,21 +143,20 @@ export default {
           params.totalAmount = transferYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
-          this.isAgain = ["FINISHED"].includes(params.status) && !this.orderId;
+          this.isAgain = ["WAIT_PAY"].includes(params.status) && !this.orderId;
 
           this.form = params;
         });
     },
 
     onTabItem() {
-      if (this.current === 0) {
+      /* if (this.current === 0) {
         this.form.otherSupplier = "";
         this.form.otherSupplierPhone = "";
       }
       if (this.current === 1) {
         this.form.supplierId = "";
-      }
-
+      } */
     },
 
     onSupplierId(val) {
@@ -160,7 +167,7 @@ export default {
 
 
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi({pageSize: 1000, pageNum: 0})
         .then(res => {
           this.bindList = res.data?.map(item => ({
             ...item,

@@ -20,7 +20,7 @@ import UniSegmentedControl
 import mixins from "@/mixins/mixins";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import FeesList from "./components/FeesList/FeesList.vue";
-import PickerAddress from "./components/PickerAddress.vue";
+import PickerAddress from "@/components/PickerAddress.vue";
 
 export default {
   name: "SaleRefundOrder",
@@ -100,7 +100,7 @@ export default {
 
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
-          this.isAgain = ["FINISHED"].includes(params.status) && !this.orderId;
+          this.isAgain = ["WAIT_PAY"].includes(params.status) && !this.orderId;
           this.form = params;
           console.log(res);
         });
@@ -118,6 +118,15 @@ export default {
 
           if (this.orderId) {
             params.saleOrderId = this.orderId;
+          }
+
+          if (this.current === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.current === 1) {
+            params.supplierId = "";
           }
 
           this.loading = true;
@@ -149,7 +158,7 @@ export default {
 
     // 获取绑定的客户列表
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi({pageSize: 1000, pageNum: 0})
         .then(res => {
           this.bindList = res.data?.map(item => ({
             ...item,
@@ -174,15 +183,14 @@ export default {
     },
 
     onTabItem() {
-      if (this.current === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
+      /*  if (this.current === 0) {
+         this.form.otherSupplier = "";
+         this.form.otherSupplierPhone = "";
+       }
 
-      if (this.current === 1) {
-        this.form.supplierId = "";
-      }
-
+       if (this.current === 1) {
+         this.form.supplierId = "";
+       } */
     },
   },
   computed: {
@@ -214,31 +222,6 @@ export default {
               @clickItem="onTabItem"
             />
           </view>
-
-          <UniFormsItem label="客户：" v-if="false" name="supplierId">
-            <PickerUser
-              style="width: 100%;"
-              is-input
-              title="选择客户"
-              v-model="form.supplierId"
-              type="client"
-              :disabled="!!orderId"
-              ref="UserRef"
-              :is-long-list="isClient"
-              :options="bindList"
-              @input="onSupplierId"
-
-              :placeholder-label="GET_FUNC(form, 'customer.name')"
-
-              v-if="isClient ? bindList.length : true"
-            />
-            <UniEasyinput
-              v-else
-              v-model="form.otherSupplier"
-              style="width: 100%;"
-              placeholder="请输入"
-            />
-          </UniFormsItem>
 
           <template v-if="(isClient ? bindList.length : current === 0) && noCustomerPerm">
             <UniFormsItem label="客户：" name="supplierId">

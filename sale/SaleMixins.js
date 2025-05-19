@@ -21,9 +21,16 @@ export default {
     // 跳转到添加修改销售订单
     jumpAddedSale(query = {}, index) {
       let q = this.getQueryString(query);
-      uni.navigateTo({
-        url: `${PageEnums.NewSale}${q}`,
-      });
+      const url = this.sBill
+        ? `${PageEnums.shopping}${
+          this.getQueryString({
+            ...query,
+            PAGE_TYPE: "MY_SALE",
+          })
+        }`
+        : `${PageEnums.NewSale}${q}`;
+
+      uni.navigateTo({url});
     },
 
     // 跳转到销售订单添加付款单据
@@ -190,11 +197,10 @@ export default {
       });
     },
   },
-
   computed: {
     // 判断是不是生产工单
     isProductionOrder() {
       return (type) => ["PRODUCTION", "CUSTOMIZED"].includes(type);
-    }
-  }
+    },
+  },
 };

@@ -156,7 +156,7 @@
           }
         },
         {
-          "path": "set-shop",
+          "path": "set-sys",
           "style": {
             "navigationBarTitleText": "信息设置"
           }
@@ -207,6 +207,12 @@
           "path": "binding/share",
           "style": {
             "navigationBarTitleText": "批量分享"
+          }
+        },
+        {
+          "path": "set-up",
+          "style": {
+            "navigationBarTitleText": "店铺配置"
           }
         }
       ]

@@ -53,7 +53,7 @@ export default {
       <UvAvatar
         :size="getAvatarSize"
         :src="getImageUrl(GET_CONFIG_INFO.logo)"
-        random-bg-color
+        :random-bg-color="false"
         :text="GET_SHOP_NAME"
         not-view
         @click.stop="onOpen()"

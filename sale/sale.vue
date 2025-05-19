@@ -2,7 +2,7 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import { getSaleHistoryApi, getSaleListApi, getSaleWaitPaymentListApi } from "@/api/erp/sale";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
+import { _deepCopy, _get, _isEmpty } from "@/utils";
 import OrderCard from "../components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import PrintList from "./components/PrintList.vue";
@@ -16,8 +16,8 @@ import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
 import GenerateCode from "./components/GenerateCode.vue";
 import sale from "./sale";
-import { PageEnums } from "@/utils/config";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import SaleMixins from "@/sale/SaleMixins";
 
 export default {
   name: "Sale",
@@ -37,7 +37,7 @@ export default {
     HistoryBar,
     BasicCard,
   },
-  mixins: [sale],
+  mixins: [sale, SaleMixins],
   data() {
     const _this = this;
 
@@ -175,7 +175,6 @@ export default {
       if (reset && !this.noRefresh) {
         this.queryList.pageNum = 0;
         this.list = [];
-        this.tableKey = +new Date();
       }
 
       const info = uni.getStorageSync("TENP_ORDER_INFO");
@@ -226,8 +225,7 @@ export default {
       }
     },
   },
-  computed: {
-  }
+  computed: {},
 };
 </script>
 
@@ -297,7 +295,7 @@ export default {
             @click="onToDetails(item, 'sale')"
             is-sales
             is-new
-            :is-custom-status-name="isEqual(GET_PAGE_MENU_FUNC, 1)"
+            :is-custom-status-name="isEqual(item.status, 'WAIT_PAY')"
             custom-status-name="待付款"
           >
             <template #operate>
@@ -310,7 +308,7 @@ export default {
                   打印单据
                 </button>
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
+                  v-if="['WAIT_PAY'].includes(item.status) && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
@@ -343,7 +341,6 @@ export default {
     <!-- #ifdef H5 -->
     <view style="padding: 10px;flex: 1;overflow: hidden;">
       <KoTable
-        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
@@ -358,7 +355,7 @@ export default {
         <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
+              v-if="['WAIT_PAY'].includes(item.status) && (isPerm('SALE_ADD_PAID_ORDER') || isPerm('SALE_PAID_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
@@ -372,14 +369,14 @@ export default {
               申请退货
             </button>
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
+              v-if="isPerm('SALE_PRINT')"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'sale')"
             >
               打印单据
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && isPerm('SALE_QUICK_OUT') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              v-if="['WAIT_PAY'].includes(item.status) && isPerm('SALE_QUICK_OUT')"
               class="ko-basic-button__card"
               @click.stop="onQuickOut(item, index)"
             >
@@ -397,7 +394,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && isEditorButton(item) && isPerm('SALE_UPDATE')"
+              v-if="['CREATED', 'WAIT_PAY'].includes(item.status) && isEditorButton(item) && isPerm('SALE_UPDATE')"
             >
               修改
             </button>

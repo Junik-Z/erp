@@ -7,12 +7,18 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import { _deepCopy, _get, _set, _toFinite, CustomToast } from "@/utils";
 import { addedSaleApi, getSaleDetailApi, reOrderSaleApi, updateSaleApi } from "@/api/erp/sale";
 import { PageEnums } from "@/utils/config";
+import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
+import UniIcons from "@/uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
+import SendMsg from "@/components/SendMsg.vue";
 
 export default {
   name: "CartList",
   mixins: [mixins, GoodsMixins],
   props: {
+    // 分享
     isShare: Boolean,
+    // 销售
+    isSale: Boolean,
   },
   data() {
     return {
@@ -39,7 +45,7 @@ export default {
       iVisible: false,
     };
   },
-  components: {OrderInfo, GoodsCard, UniSection},
+  components: {SendMsg, UniIcons, BasicPopup, OrderInfo, GoodsCard, UniSection},
   created() {
   },
   watch: {
@@ -58,7 +64,7 @@ export default {
           const params = res.data;
           params.totalAmount = this.toYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
-          this.isAgain = ["FINISHED"].includes(params.status);
+          this.isAgain = ["WAIT_PAY"].includes(params.status);
 
           const obj = {};
           params.details?.forEach(item => {
@@ -88,13 +94,14 @@ export default {
         return false;
       }
 
-
       if (!this.iVisible) {
         this.visible = false;
         this.iVisible = true;
 
         setTimeout(() => {
           this.$refs.FormRef.form = _deepCopy(this.form);
+
+          if (!this.isSale) this.$refs.FormRef.getBindInfo();
         }, 100);
         return false;
       }
@@ -119,7 +126,11 @@ export default {
 
               CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
-                success: () => {
+                success: async () => {
+                  if (this.isSale && this.isPerm("SEND_INTERNAL_MESSAGE")) {
+                    await this.$refs.SMRef.open();
+                  }
+
                   if (this.isShare) {
                     uni.$emit("$__get_all_info__");
                     uni.redirectTo({
@@ -129,7 +140,16 @@ export default {
                       },
                     });
                   } else {
-                    uni.navigateBack();
+                    uni.navigateBack({
+                      fail() {
+                        uni.redirectTo({
+                          url: PageEnums.saleClientAddedBack,
+                          fail() {
+                            uni.redirectTo({url: PageEnums.home});
+                          },
+                        });
+                      },
+                    });
                   }
                 },
               });
@@ -233,10 +253,14 @@ export default {
             @change="onUpdateForm"
             :is-edit="isEdit"
             :is-share="isShare"
+            :value="form"
+            :is-sale="isSale"
           />
         </view>
       </view>
     </BasicPopup>
+
+    <SendMsg ref="SMRef" />
   </view>
 </template>
 

@@ -6,6 +6,7 @@ import mixins from "@/mixins/mixins";
 import { getSaleCheckShareIdApi, getSaleDetailApi } from "@/api/erp/sale";
 import { PageEnums } from "@/utils/config";
 import GoodsMixins from "./components/GoodsMixins";
+import reLogin from "@/mixins/re-login";
 
 export default {
   name: "shopping",
@@ -21,13 +22,18 @@ export default {
       isShare: false,
 
       isShowSearch: false,
+
+      // 预览
+      isPreview: false,
     };
   },
   onLoad(option) {
     this.option = option;
     this.isSale = _isEqual(option.PAGE_TYPE, "SALE");
     // 分享
-    this.isShare = _isEqual(option.PAGE_TYPE, "ADDED_SALE");
+    this.isShare = _isEqual(option.PAGE_TYPE, "SALE_SHARE");
+    // 预览
+    this.isPreview = _isEqual(option.isPreview, "true");
 
     this.isEdit = !!option.id;
 
@@ -43,6 +49,12 @@ export default {
 
     if (this.isShare) this.handlerShare();
 
+    if (!this.isSale && !this.isPreview && !this.isShare) {
+      setTimeout(() => {
+        this.$refs.CLRef.getBindInfo();
+      }, 200);
+    }
+
     // 来自销售的订单
     if (this.isSale) {
       setTimeout(() => {
@@ -56,7 +68,7 @@ export default {
     // this.setOrderInfoByKey("isShare", this.isShare);
     // this.setOrderInfoByKey("isEdit", this.isEdit);
   },
-  mixins: [mixins, GoodsMixins],
+  mixins: [mixins, GoodsMixins, reLogin],
   methods: {
     async handlerShare() {
       await this.onLogInAgain(this.option)
@@ -91,6 +103,10 @@ export default {
       }
     },
 
+    getList() {
+      this.$refs.VTRef && this.$refs.VTRef.reset();
+    },
+
     // 获取订单详情
     getInfo(id) {
       getSaleDetailApi({id: id})
@@ -99,7 +115,7 @@ export default {
 
           params.totalAmount = this.toYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
-          this.isAgain = ["FINISHED"].includes(params.status);
+          this.isAgain = ["WAIT_PAY"].includes(params.status);
           const obj = {};
           params.details?.forEach(item => {
             _set(obj, item.productId, item);
@@ -180,7 +196,7 @@ export default {
       <uni-icons size="24" color="#000" type="left" />
     </button>
 
-    <view class="ko-shopping__content" :class="{'no-height': !isShare}">
+    <view class="ko-shopping__content" :class="{'no-height': isSale && !isPreview }">
       <view class="ko-shopping__header" :class="{' glass no-border': !isShowSearch}" v-if="!isSale">
         <view class="ko-shopping__swiper">
           <swiper
@@ -200,8 +216,10 @@ export default {
             </swiper-item>
           </swiper>
 
-          <view class="ko-shopping__header--wrap"
-                :class="{'no-bg': !sys.merchantBgImg, 'merchantProfile': sys.merchantProfile}">
+          <view
+            class="ko-shopping__header--wrap"
+            :class="{'no-bg': !sys.merchantBgImg, 'merchantProfile': sys.merchantProfile}"
+          >
             <view class="ko-shopping__info">
               <view class="ko-shopping__info--image" :class="{'no-logo': !sys.logo}">
                 <image
@@ -251,13 +269,13 @@ export default {
           ref="VTRef"
           is-shopping
           @switch="onSwitch"
-          :show-switch="!(isEdit || isShare)"
+          :show-switch="isSale && !isEdit"
           :is-show-search.sync="isShowSearch"
         />
       </view>
     </view>
 
-    <CartList ref="CLRef" :is-share="isShare" />
+    <CartList ref="CLRef" :is-share="isShare" :is-sale="isSale" />
   </view>
 </template>
 

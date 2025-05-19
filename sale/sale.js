@@ -1,10 +1,8 @@
 import { CONFIG, PageEnums } from "@/utils/config";
-import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _groupBy, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
 import { getSaleDetailApi, printSaleApi, quickOutApi } from "@/api/erp/sale";
 import { getOrderCodeDetailApi } from "@/api/erp/produce";
 import mixins from "@/mixins/mixins";
-import SaleMixins from "@/sale/SaleMixins";
 import reLogin from "@/mixins/re-login";
 
 const PageMenu = [
@@ -26,7 +24,7 @@ const PageMenu = [
 ];
 
 export default {
-  mixins: [mixins, SaleMixins, reLogin],
+  mixins: [mixins, reLogin],
   data() {
     const _this = this;
     return {
@@ -41,7 +39,7 @@ export default {
             title: `邀请您来下单啦！`,
             path: PageEnums.shopping,
             query: {
-              PAGE_TYPE: "ADDED_SALE",
+              PAGE_TYPE: "SALE_SHARE",
             },
           },
           perm: "SALE_SHARE",
@@ -128,7 +126,7 @@ export default {
       this.noRefresh = true;
       if (this.isProductionOrder(item.orderType)) {
         uni.navigateTo({
-          url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE&isAgain=${_isEqual(this.GET_PAGE_MENU_FUNC, 1)}`,
+          url: PageEnums.produceWork + `?id=${item.orderCode}&ADDED_TYPE=packing&FORM=SALE&isAgain=${_isEqual(item.status, "WAIT_PAY")}`,
         });
         return false;
       }
@@ -228,6 +226,8 @@ export default {
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
       const Func = _isEqual("customized", info?.produceType) ? getOrderCodeDetailApi : getSaleDetailApi;
 
+      !id && (this.uType = null);
+
       id && Func({id})
         .then(res => {
           const data = res.data || {};
@@ -258,7 +258,6 @@ export default {
 
                 if (_isEmpty(resp.data)) {
                   uni.showToast({title: "出库成功"});
-                  // this.list.splice(index, 1);
                 } else {
                   this.visible = true;
                 }
@@ -284,9 +283,8 @@ export default {
           uni.redirectTo({url: PageEnums.sale});
         }
       });
-    }
+    },
   },
-
   computed: {
     actionList() {
       const node = this.node;
@@ -318,7 +316,7 @@ export default {
         {
           name: "快捷出库",
           func: "onQuickOut",
-          status: ["FINISHED"],
+          status: ["WAIT_PAY"],
           perm: "SALE_QUICK_OUT",
           color: "#e43d33",
         },
@@ -331,7 +329,7 @@ export default {
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED", "FINISHED"],
+          status: ["CREATED", "WAIT_PAY"],
           perm: "SALE_UPDATE",
         },
         {
@@ -358,7 +356,7 @@ export default {
           }
 
           if (_isEqual("onQuickOut", item.func)) {
-            return isPerm && isStatus && _isEqual(this.GET_PAGE_MENU_FUNC, 1);
+            return isPerm && isStatus;
           }
 
           return isPerm && isStatus || (isPerm && _isEqual(item.openType, "share") && this.isProductionOrder(node.orderType));
@@ -367,20 +365,19 @@ export default {
     // 判断是不是要显示编辑按钮
     isEditorButton() {
       return (node) => {
-        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && this.isProductionOrder(node.orderType)) {
+        if (_isEqual(node.status, "CREATED") && this.isProductionOrder(node.orderType)) {
           return this.isPerm("SALE_PRODUCE_UPDATE");
         }
 
         // 是否可以重新下单
-        if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
+        if (_isEqual(node.status, "WAIT_PAY")) {
           return this.isPerm("SALE_RE_ORDER");
         }
 
-        return !_isEqual(this.GET_PAGE_MENU_FUNC, 2) && this.isPerm("SALE_UPDATE");
+        return !_isEqual(node.status, "FINISHED") && this.isPerm("SALE_UPDATE");
       };
     },
   },
-
   // #ifdef MP
   // 分享相关
   onShareAppMessage(res) {

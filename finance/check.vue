@@ -10,7 +10,7 @@ import {
   getPayableCheckApi,
   getReceivableCheckApi,
 } from "@/api/erp/finance";
-import OrderCard from "./components/OrderCard/OrderCard.vue";
+import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -335,7 +335,14 @@ export default {
           this.aList = this.onMergeArrays(this.aList, data, "id");
           this.aMore = _isEmpty(data) || data.length < this.aQuery.pageSize;
 
+          // #ifdef MP
           if (data.length === 1) this.aId = this.aList?.[0]?.id || null;
+          // #endif
+
+          // #ifdef H5
+          this.aId = this.aList?.[0]?.id || null;
+          // #endif
+
           if (this.aId) {
             this.getList(true);
           }
@@ -354,6 +361,7 @@ export default {
         this.queryList.pageNum = 0;
         this.list = [];
       }
+
       const Func = this.isLogistics ? checkListApi : _get(this.showTabList || [], `${this.current}.func`);
       this.loading = true;
 
@@ -369,7 +377,7 @@ export default {
           ? {}
           : {
             queryNoAddress: _isEqual(dz.id, "1"),
-            orderAddress: _isEqual(dz.id, "1") ? "" : dz.address || "",
+            addressId: (_isEqual(dz.id, "1") ? "" : dz.id) || "",
           }),
       })
         .then(res => {
@@ -388,7 +396,7 @@ export default {
     },
 
     onCheckboxItem(node) {
-      if (!(!["FINISHED"].includes(node.status) && !node.confirmable)) return false;
+      if (!["WAIT_PAY", "CREATED"].includes(node.status)) return false;
 
       if (this.isCheckbox(node)) {
         this.checked = this.checked.filter(v => v.id !== node.id);
@@ -485,6 +493,7 @@ export default {
 
         this.checked = [];
         this.isShowCheck = false;
+        this.uploadAddress();
         this.getList();
       }
     },
@@ -559,6 +568,35 @@ export default {
       this.aId = dz.id;
       this.getList(true);
     },
+
+    // 更新地址列表
+    uploadAddress() {
+      const Func = {
+        sale: financeCustomerAddressListApi,
+        purchase: financeSupplierAddressListApi,
+      }[this.option?.customer_type];
+
+      // 获取当前选中的tab数据
+      const item = this.showTabList[this.current] || {};
+
+      // payableOrReceivable: true 应付；false: 应收
+      Func({
+        id: this.option.id,
+        ...this.aQuery,
+        payableOrReceivable: _isEqual(item.pageType, "payable"),
+        queryNoAddress: true,
+      })
+        .then(res => {
+          const data = res.data;
+          this.aList = this.onMergeArrays(this.aList, data, "id");
+        })
+        .catch(() => {
+          this.aMore = true;
+        })
+        .finally(() => {
+          this.aLoading = false;
+        });
+    },
   },
   computed: {
     getPageType() {
@@ -595,7 +633,7 @@ export default {
                     class: `ko-table-checked`,
                     props: {
                       value: this.isCheckbox(row),
-                      disabled: !(!["FINISHED"].includes(row.status) && !row.confirmable),
+                      disabled: !["WAIT_PAY", "CREATED"].includes(row.status),
                     },
                   },
                 ),
@@ -706,9 +744,9 @@ export default {
               @click.stop="onAChange(dz)"
             >
               <view class="ko-address__name--info">
-                <view class="ko-text-wrap">{{ dz.address }}</view>
+                <view class="ko-text-wrap" v-if="dz.address" style="margin-bottom: 4px;">{{ dz.address }}</view>
 
-                <view class="ko-address__name--total" style="margin-top: 4px;">
+                <view class="ko-address__name--total">
                   <view class="ko-address__name--num">
                     待清帐: {{ dz.pendingQuantity }}
                   </view>
@@ -753,9 +791,8 @@ export default {
                         <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
                           <view style="font-size: 13px; padding-left: 30px;">
                             <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
-                            <text style="padding-right: 10px; font-size: 12px">{{
-                                GET_PAYMENT_ENUMS(item.orderType)
-                              }}:
+                            <text style="padding-right: 10px; font-size: 12px">
+                              {{ GET_PAYMENT_ENUMS(item.orderType) }}:
                             </text>
                             <text class="ko-basic-money">
                               {{ toYuan(child.totalAmount) }}元
@@ -772,7 +809,6 @@ export default {
                     </BasicCard>
                     <block v-if="item.proofs && item.proofs.length">
                       <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
-
                       <BasicCard not-padding no-shadow>
                         <UniRow :gutter="4">
                           <UniCol :span="24">
@@ -810,7 +846,7 @@ export default {
                       </BasicCard>
                     </block>
                     <button
-                      v-if="!['FINISHED'].includes(item.status) && isShowCheck && !item.confirmable"
+                      v-if="!['FINISHED', 'PAID'].includes(item.status) && isShowCheck"
                       class="ko-check__item--button"
                       @click.stop="onCheckboxItem(item)"
                     >
@@ -936,7 +972,7 @@ export default {
                 </BasicCard>
               </block>
               <button
-                v-if="!['FINISHED'].includes(item.status) && isShowCheck && !item.confirmable"
+                v-if="!['FINISHED', 'PAID'].includes(item.status) && isShowCheck"
                 class="ko-check__item--button"
                 @click.stop="onCheckboxItem(item)"
               >
@@ -955,90 +991,138 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view style="padding: 10px;">
-      <KoTable
-        :loading="loading"
-        :columns="getCheckColumns"
-        :data="list"
-        empty-text="暂无数据"
-        stripe
-        @row-click="onJumpDet($event, getPageType)"
-        :no-more="noMore || loading"
-        @next-load="RequestNextPage"
-        :expand-row-keys="list.map(v => v.id)"
-        row-key="id"
-      >
-        <template #expand="{item}">
-          <div style="display: flex; justify-content: flex-end; align-items: flex-end; flex-direction: column;">
-            <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
-              <UniRow :gutter="4">
-                <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
-                  <view style="font-size: 13px; display: flex; align-items: center; justify-content: flex-end;">
-                    <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
-                    <text style="padding-right: 10px; font-size: 12px">{{ GET_PAYMENT_ENUMS(item.orderType) }}:</text>
-                    <text class="ko-basic-money">
-                      {{ toYuan(child.totalAmount) }}元
-                    </text>
-                    <text
-                      style="font-size: 11px; padding-left: 6px;color: #c7c9ce;"
-                      v-if="['CREATED'].includes(child.orderStatus)"
-                    >
-                      {{ GET_PROOFS_STATUS_ENUMS(child.orderStatus) }}
-                    </text>
-                  </view>
-                </UniCol>
-              </UniRow>
-            </BasicCard>
-
-            <block v-if="item.proofs && item.proofs.length">
-              <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
-              <BasicCard not-padding no-shadow>
-                <UniRow :gutter="4">
-                  <UniCol :span="24">
-                    <view
-                      v-if="item.totalAmount || 0"
-                      style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
-                    >
-                      <block v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) > 0">
-                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
-                          {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
-                        </text>
-                        <text class="ko-basic-money">
-                          {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
-                        </text>
-                      </block>
-                      <text style="color: #008000;" v-else>
-                        已结清
-                      </text>
+    <div class="ko-check__wrap">
+      <div class="ko-address">
+        <KoList
+          class="ko-address__table"
+          :loading="aLoading"
+          :no-more="aMore"
+          :no-data="!aMore && !aLoading && !aList.length"
+          :data="aList"
+          @lower="onLowerAddress"
+          @load-next="onLowerAddress"
+          no-more-text="该客户没有更多地址了"
+          :scroll-into-view="AViewId"
+        >
+          <div style="padding: 8px;">
+            <div
+              v-for="dz of aList"
+              :key="dz.id"
+              class="ko-address__item"
+            >
+              <view
+                class="ko-address__name"
+                @click.stop="onAChange(dz)"
+                :class="{'is-a-active': isEqual(dz.id, aId)}"
+              >
+                <view class="ko-address__name--info ko-address__name--item" style="overflow: hidden;">
+                  <view class="ko-text-wrap" style="flex: 1;">{{ dz.address }}</view>
+                </view>
+                <view class="ko-address__name--item" style="margin-top: 8px;">
+                  <view class="ko-address__name--total">
+                    <view class="ko-address__name--num">
+                      待处理: {{ dz.pendingQuantity }}
                     </view>
-                  </UniCol>
+                    <view class="ko-address__name--num">
+                      待付款: {{ dz.pendingPaymentQuantity }}
+                    </view>
+                    <view class="ko-address__name--num">
+                      ¥{{ toYuan(dz.amount) }}
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </div>
+          </div>
+        </KoList>
+      </div>
 
-                  <UniCol :span="12" v-if="false">
-                    <view
-                      style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
-                    >
-                      <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
-                        共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
-                      </text>
+      <view class="ko-check__table">
+        <KoTable
+          :loading="loading"
+          :columns="getCheckColumns"
+          :data="list"
+          empty-text="暂无数据"
+          stripe
+          @row-click="onJumpDet($event, getPageType)"
+          :no-more="noMore || loading"
+          @next-load="RequestNextPage"
+          :expand-row-keys="list.map(v => v.id)"
+          row-key="id"
+        >
+          <template #expand="{item}">
+            <div
+              style="display: flex; justify-content: flex-end; align-items: flex-end; flex-direction: column; color: #333;">
+              <BasicCard v-if="item.proofs && item.proofs.length" @click.stop="toTicket(item)">
+                <UniRow :gutter="4">
+                  <UniCol :span="24" v-for="child of item.proofs" :key="child.id">
+                    <view style="font-size: 13px; display: flex; align-items: center; justify-content: flex-end;">
+                      <text style="padding-right: 10px; font-size: 12px">{{ child.updateTime || "-" }}</text>
+                      <text style="padding-right: 10px; font-size: 12px">{{ GET_PAYMENT_ENUMS(item.orderType) }}:</text>
                       <text class="ko-basic-money">
-                        {{ toYuan(calculationCompleted(item.proofs)) }}元
+                        {{ toYuan(child.totalAmount) }}元
+                      </text>
+                      <text
+                        style="font-size: 11px; padding-left: 6px;color: #c7c9ce;"
+                        v-if="['CREATED'].includes(child.orderStatus)"
+                      >
+                        {{ GET_PROOFS_STATUS_ENUMS(child.orderStatus) }}
                       </text>
                     </view>
                   </UniCol>
                 </UniRow>
               </BasicCard>
-            </block>
 
-            <p
-              style="text-align: center; color: #c7c9ce; padding-right: 50px;"
-              v-if="!(item.proofs && item.proofs.length)"
-            >
-              暂无清帐记录
-            </p>
-          </div>
-        </template>
-      </KoTable>
-    </view>
+              <block v-if="item.proofs && item.proofs.length">
+                <view style="border-bottom: 0.5px solid #dcdcdc; margin: 5px 0;"></view>
+                <BasicCard not-padding no-shadow>
+                  <UniRow :gutter="4">
+                    <UniCol :span="24">
+                      <view
+                        v-if="item.totalAmount || 0"
+                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                      >
+                        <block v-if="(item.totalAmount || 0) - calculationCompleted(item.proofs) > 0">
+                          <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                            {{ GET_PAYMENT_REMAINING_ENUMS(item.orderType) }}：
+                          </text>
+                          <text class="ko-basic-money">
+                            {{ toYuan((item.totalAmount || 0) - calculationCompleted(item.proofs)) }}元
+                          </text>
+                        </block>
+                        <text style="color: #008000;" v-else>
+                          已结清
+                        </text>
+                      </view>
+                    </UniCol>
+
+                    <UniCol :span="12" v-if="false">
+                      <view
+                        style="font-size: 12px; padding: 5px 10px 5px 30px; display: flex; align-items: center; justify-content: flex-end;"
+                      >
+                        <text style="padding-right: 10px; font-size: 12px; white-space: nowrap;">
+                          共计{{ GET_PAYMENT_ENUMS(item.orderType) }}：
+                        </text>
+                        <text class="ko-basic-money">
+                          {{ toYuan(calculationCompleted(item.proofs)) }}元
+                        </text>
+                      </view>
+                    </UniCol>
+                  </UniRow>
+                </BasicCard>
+              </block>
+
+              <p
+                style="text-align: center; color: #c7c9ce; padding-right: 50px;"
+                v-if="!(item.proofs && item.proofs.length)"
+              >
+                暂无清帐记录
+              </p>
+            </div>
+          </template>
+        </KoTable>
+      </view>
+    </div>
     <!-- #endif -->
 
     <KoMovable
@@ -1164,89 +1248,9 @@ export default {
   }
 }
 
-// 地址列表
 .ko-address {
-  flex: 1;
-  overflow: hidden;
-
   &__wrap {
     padding: 0 8px;
-  }
-
-  &__item {
-    border: 1px solid #E9EDF3;
-    border-radius: 6px;
-    margin-bottom: 8px;
-
-    &--down {
-      transition: transform .3s;
-    }
-
-    &.is-a-active {
-      .ko-address__item--down {
-        transform: rotate(-180deg);
-      }
-
-      .ko-address__name {
-        border-radius: 6px 6px 0 0;
-      }
-
-      .ko-address__list {
-        padding-top: 2px;
-        height: calc(100vh - 100px);
-      }
-    }
-  }
-
-  &__name {
-    font-size: 14px;
-    padding: 8px 6px 8px 8px;
-    background: #EFF6FF;
-    color: #4B5563;
-    border-radius: 6px;
-    transition: border-radius .3s;
-
-    &--info {
-      flex: 1;
-      overflow: hidden;
-
-      .ko-text-wrap {
-        &__btn {
-          margin-left: 6px;
-          font-size: 12px;
-          line-height: 1;
-          padding: 3px 8px;
-          border: 1px solid #2979ff;
-          border-radius: 12px;
-          background: #d4e4ff;
-          color: #2979ff;
-        }
-      }
-    }
-
-    &--total {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      margin: -2px -2px;
-      padding-right: 4px;
-    }
-
-    &--num {
-      padding: 2px 8px;
-      border-radius: 99px;
-      background: #DBE9FE;
-      color: #1D40AF;
-      white-space: nowrap;
-      font-size: 10px;
-      margin: 2px;
-    }
-
-    &--item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
   }
 
   &__list {
@@ -1255,14 +1259,9 @@ export default {
     height: 0;
 
     &--item {
+      position: relative;
       margin-bottom: 8px;
     }
-  }
-
-  &__search {
-    display: flex;
-    align-items: center;
-    padding-right: 8px;
   }
 
   &__operate {
@@ -1279,6 +1278,15 @@ export default {
     }
   }
 }
+
+// #ifdef MP
+// 地址列表
+.ko-address {
+  flex: 1;
+  overflow: hidden;
+}
+
+// #endif
 
 // #ifdef H5
 ::v-deep .ko-table-checked {
@@ -1312,6 +1320,55 @@ export default {
       width: 5px;
       height: 10px;
       left: 6px;
+    }
+  }
+}
+
+.ko-check {
+  height: calc(100vh - 54px);
+
+  &__wrap {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+  }
+
+  &__table {
+    flex: 1;
+    overflow: hidden;
+  }
+}
+
+// 地址
+.ko-address {
+  width: 360px;
+  height: 100%;
+  border-right: 1px solid #e9e9eb;
+
+  &__table {
+    height: 100%;
+    width: 100%;
+  }
+
+  &__item {
+    border: none;
+  }
+
+  &__name {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: color .3s, background-color .3s, border .3s;
+    background: #fff;
+    border-radius: 6px;
+
+    border: 1px solid #E9EDF3;
+
+    &.is-a-active {
+      color: #2979FF;
+      background: #EFF6FF;
+      border-color: #2979FF;
     }
   }
 }

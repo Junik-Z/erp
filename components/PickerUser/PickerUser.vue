@@ -126,7 +126,7 @@ export default {
     // 空数据显示占位
     placeholderLabel: String,
 
-    noSafeBottom: Boolean
+    noSafeBottom: Boolean,
   },
   created() {
     if ((this.isInput && !this.isLongList && !this.isExternalOpen) && !this.notCreatedRequest) {
@@ -326,6 +326,8 @@ export default {
     },
 
     onLower() {
+      if (this.isLongList) this.$emit("lower");
+
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList();

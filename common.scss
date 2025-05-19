@@ -351,6 +351,16 @@ button::after {
   color: #d97706;
 }
 
+.WAIT_PAY {
+  background: #FFF3E0;
+  color: #333;
+}
+
+.PAID {
+  background: rgba(209, 246, 213, 0.5);
+  color: #058a0b;
+}
+
 .PAUSED {
   background: #fef3c7;
   color: #dc2626;
@@ -358,7 +368,7 @@ button::after {
 
 .FINISHED {
   background: #dcfce7;
-  color: #16a34a;
+  color: rgba(22, 163, 74, 0.9);
 }
 
 .CANCELLED {
@@ -400,6 +410,353 @@ button::after {
   word-break: break-all;
   word-wrap: normal;
 }
+
+
+// 供应商列表
+.ko-supplier {
+  height: calc(100vh - 20px);
+
+  &__name {
+    display: flex;
+    align-items: center;
+    border: 1px solid #EFF1F3;
+    border-radius: 6px;
+    padding: 6px;
+    margin-bottom: 8px;
+    color: #170145;
+    font-size: 16px;
+
+    &.is-root-active {
+      background: rgba(128, 174, 250, 0.1);
+      border-color: #80AEFA;
+    }
+
+    &--wrap {
+      padding-left: 8px;
+      overflow: hidden;
+    }
+  }
+
+  &__money {
+    font-size: 13px;
+    color: #8CA1B8;
+  }
+
+  &__wrap {
+    padding: 0 8px;
+  }
+
+  &__search {
+    //display: flex;
+    //align-items: center;
+    padding-right: 4px;
+  }
+
+  &__switch {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    margin: 2px;
+  }
+}
+
+// 地址列表
+.ko-address {
+  height: calc(100vh - 20px);
+
+  &__wrap {
+    padding: 0 8px;
+  }
+
+  &__item {
+    border: 1px solid #E9EDF3;
+    border-radius: 6px;
+    margin-bottom: 8px;
+
+    &--down {
+      transition: transform .3s;
+    }
+
+    &.is-a-active {
+      .ko-address__item--down {
+        transform: rotate(-180deg);
+      }
+
+      .ko-address__name {
+        border-radius: 6px 6px 0 0;
+      }
+
+      .ko-address__list {
+        padding-top: 2px;
+        height: calc(100vh - 80px);
+      }
+    }
+  }
+
+  &__name {
+    font-size: 16px;
+    padding: 8px 6px 8px 8px;
+    background: #EFF6FF;
+    color: #4B5563;
+    border-radius: 6px;
+    transition: border-radius .3s;
+
+    &--info {
+      flex: 1;
+      overflow: hidden;
+
+      .ko-text-wrap {
+        &__btn {
+          margin-left: 6px;
+          font-size: 16px;
+          line-height: 1;
+          padding: 5px 12px;
+          border: 1px solid #2979ff;
+          border-radius: 16px;
+          background: #d4e4ff;
+          color: #2979ff;
+        }
+      }
+    }
+
+    &--total {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: -2px -2px;
+      padding-right: 4px;
+    }
+
+    &--num {
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #DBE9FE;
+      color: #1D40AF;
+      white-space: nowrap;
+      font-size: 10px;
+      margin: 2px;
+
+      &.CREATED {
+        background: rgba(217, 119, 6, 0.1);
+        color: rgba(217, 119, 6, 0.8);
+      }
+
+      &.WAIT_PAY {
+        background: rgba(255, 107, 107, 0.1);
+        color: rgba(255, 107, 107, 0.8);
+      }
+    }
+
+    &--item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  &__list {
+    transition: height .3s, padding .3s;
+    //height: calc(100vh - 20px);
+    height: 0;
+
+    &--item {
+      margin-bottom: 8px;
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+  }
+
+  &__operate {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: -2px;
+
+    .ko-basic-button__card {
+      margin: 2px;
+      padding: 6px 8px;
+    }
+  }
+}
+
+// 订单列表搜素样式
+.ko-search {
+  height: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  transition: padding .3s, height .3s;
+
+  &.is-o-active {
+    height: 200px;
+    padding-bottom: 8px;
+  }
+}
+
+// #ifdef H5
+
+// 供应商列表
+.ko-supplier {
+  height: 100%;
+  width: 280px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e9e9eb;
+
+  &__search {
+    display: flex;
+    align-items: center;
+  }
+
+  &__switch {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+  }
+
+  &__name {
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    transition: color .3s, background-color .3s;
+    border-radius: 6px;
+    border-bottom: 1rpx solid #e9e9eb;
+
+    // 选中的客户
+    &.is-root-active {
+      color: #2979FF;
+      background: rgba(41, 121, 255, 0.1);
+    }
+
+    &--num {
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+  }
+
+  &__table {
+    flex: 1;
+    overflow: hidden;
+    padding-right: 16px;
+  }
+
+  &__index {
+    position: absolute;
+    top: 20%;
+    right: 4px;
+    z-index: 99;
+
+    &--item {
+      font-size: 14px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      transition: all .3s;
+
+      &.is-i-active {
+        background: #007AFF;
+        color: #fff;
+      }
+    }
+  }
+}
+
+// 地址
+.ko-address {
+  width: 260px;
+  height: 100%;
+  border-right: 1px solid #e9e9eb;
+  overflow: hidden;
+
+  &__table {
+    height: 100%;
+    width: 100%;
+  }
+
+  &__item {
+    border: none;
+  }
+
+  &__name {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: color .3s, background-color .3s, border .3s;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #E9EDF3;
+
+    &.is-a-active {
+      color: #2979FF;
+      background: #EFF6FF;
+      border-color: #2979FF;
+    }
+  }
+}
+
+.ko-order-table {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+
+  &__list {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &.no-address {
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 999;
+      background: rgba(255, 255, 255, .4);
+    }
+
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+
+    &--item {
+      width: 180px;
+      margin: 0 10px;
+    }
+
+    ::v-deep(.uni-easyinput) {
+      width: 160px;
+    }
+  }
+}
+
+// #endif
 
 
 // ———————————————————————— WEB ——————————————————————————

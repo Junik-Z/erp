@@ -1,6 +1,5 @@
 import mixins from "@/mixins/mixins";
 import reLogin from "@/mixins/re-login";
-import PurchaseMixins from "./PurchaseMixins";
 import { PageEnums } from "@/utils/config";
 import { _deepCopy, _isEqual, _isString, _pick, CustomToast } from "@/utils";
 import { getPurchaseDetailApi, printA4PurchaseApi, printPurchaseApi, quickInApi } from "@/api/erp/purchase";
@@ -24,7 +23,7 @@ const PageMenu = [
 ];
 
 export default {
-  mixins: [mixins, PurchaseMixins, reLogin],
+  mixins: [mixins, reLogin],
   data() {
     return {
       MOVABLE_LIST: [
@@ -194,7 +193,9 @@ export default {
       const info = uni.getStorageSync("TENP_ORDER_INFO");
       const id = info ? (_isString(info) ? info : info.id) : this.node.id;
 
-      getPurchaseDetailApi({id})
+      !id && (this.uType = null);
+
+      id && getPurchaseDetailApi({id})
         .then(res => {
           const data = res.data || {};
           this.onProcessingListData(data, isPayment);
@@ -244,6 +245,7 @@ export default {
   computed: {
     actionList() {
       const node = this.node;
+
       return [
         {
           name: "打印采购单(A4)",
@@ -254,7 +256,7 @@ export default {
         {
           name: "快捷入库",
           func: "onQuickIn",
-          status: ["FINISHED"],
+          status: ["WAIT_PAY"],
           perm: "PURCHASE_QUICK_IN",
           color: "#e43d33",
         },
@@ -273,7 +275,7 @@ export default {
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED", "FINISHED"],
+          status: ["CREATED", "WAIT_PAY"],
           perm: "PURCHASE_UPDATE",
         },
         {
@@ -293,7 +295,7 @@ export default {
           }
 
           if (_isEqual(item.func, "onReturn")) {
-            return isPerm && !_isEqual(node.orderType, "CUSTOMIZED");
+            return isPerm && isStatus && !_isEqual(node.orderType, "CUSTOMIZED");
           }
 
           if (_isEqual(item.func, "onJump")) {
@@ -301,7 +303,7 @@ export default {
           }
 
           if (_isEqual(item.func, "onQuickIn")) {
-            return (_isEqual(this.GET_PAGE_MENU_FUNC, 1) && isStatus) && isPerm;
+            return isStatus && isPerm;
           }
 
           return isStatus && isPerm;
@@ -311,11 +313,11 @@ export default {
     // 判断是不是要显示编辑按钮
     isEditorButton() {
       return (node) => {
-        if (_isEqual(this.GET_PAGE_MENU_FUNC, 0) && _isEqual(node.orderType, "CUSTOMIZED")) {
+        if (_isEqual(node.status, "CREATED") && _isEqual(node.orderType, "CUSTOMIZED")) {
           return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
         }
 
-        if (_isEqual(this.GET_PAGE_MENU_FUNC, 1)) {
+        if (_isEqual(node.status, "WAIT_PAY")) {
           // 待付款生产工单不能编辑
           if (_isEqual(node.orderType, "CUSTOMIZED")) {
             return false;
@@ -325,11 +327,10 @@ export default {
           return this.isPerm("PURCHASE_UPDATE");
         }
 
-        return !_isEqual(this.GET_PAGE_MENU_FUNC, 2) && this.isPerm("PURCHASE_UPDATE");
+        return !_isEqual(node.status, "FINISHED") && this.isPerm("PURCHASE_UPDATE");
       };
     },
   },
-
   // #ifdef MP
   onShareAppMessage(res) {
     const obj = res.target.dataset.params;

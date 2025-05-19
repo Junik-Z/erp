@@ -22,8 +22,8 @@ import FeesList from "./components/FeesList/FeesList.vue";
 
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { PageEnums } from "@/utils/config";
-import PickerAddress from "./components/PickerAddress.vue";
-import SendMsg from "./components/SendMsg.vue";
+import PickerAddress from "@/components/PickerAddress.vue";
+import SendMsg from "../components/SendMsg.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -162,7 +162,7 @@ export default {
           params.totalAmount = transferYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
-          this.isAgain = ["FINISHED"].includes(params.status);
+          this.isAgain = ["WAIT_PAY"].includes(params.status);
           this.form = params;
         });
     },
@@ -175,6 +175,15 @@ export default {
 
           params.totalAmount = yuanToPoints(params.totalAmount);
           // params.details = this.$refs.PPRef.getDiscountedPrices();
+
+          if (this.current === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.current === 1) {
+            params.supplierId = "";
+          }
 
           this.loading = true;
 
@@ -218,14 +227,14 @@ export default {
       });
     },
     onTabItem() {
-      if (this.current === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
-
-      if (this.current === 1) {
-        this.form.supplierId = "";
-      }
+      // if (this.current === 0) {
+      //   this.form.otherSupplier = "";
+      //   this.form.otherSupplierPhone = "";
+      // }
+      //
+      // if (this.current === 1) {
+      //   this.form.supplierId = "";
+      // }
     },
 
     onSupplierId(val) {
@@ -235,7 +244,7 @@ export default {
     },
 
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi({pageSize: 1000, pageNum: 0})
         .then(res => {
           this.bindList = res.data?.map(item => ({
             ...item,

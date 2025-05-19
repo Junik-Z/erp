@@ -7,7 +7,7 @@ import { CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { getConfigApi } from "@/api/user";
-import FilePicker from './components/FilePicker/FilePicker.vue'
+import FilePicker from "./components/FilePicker/FilePicker.vue";
 
 export default {
   name: "Store",
@@ -63,8 +63,7 @@ export default {
 <template>
   <view class="ko-store ko-basic-added-form">
     <UniForms label-width="70px" label-align="right">
-      <UniSection title="店铺信息" type="line">
-
+      <UniSection title="店铺信息" type="line" v-if="false">
         <view style="padding-left: 20px;">
           <UniFormsItem label="LOGO">
             <FilePicker
@@ -134,7 +133,7 @@ export default {
 
     <view class="ko-store__footer">
       <button
-        class="ko-basic-button"
+        class="ko-basic-button__card"
         @click="onSubmit"
         :loading="loading"
         :disabled="loading"
@@ -151,16 +150,19 @@ export default {
 
   &__footer {
     padding: 50px;
-    /* #ifdef H5 */
     display: flex;
     justify-content: center;
 
-    .ko-basic-button {
+    .ko-basic-button__card {
+      width: 120px;
+    }
+
+    /* #ifdef H5 */
+    .ko-basic-button__card {
       width: 260px;
     }
 
     /* #endif */
   }
-
 }
 </style>

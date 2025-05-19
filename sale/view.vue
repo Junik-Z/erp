@@ -147,7 +147,7 @@ export default {
     getCountValue() {
       return (item) => {
         const value = _get(this.data, item.key);
-        const v = item.unit === "元" ? this.toYuan(value) : item.unit === "%" ? _round(value, 2) : value;
+        const v = item.unit === "元" ? this.toYuan(value) : item.unit === "%" ? _round((value * 100), 2) : value;
         return isNaN(v) ? 0 : v;
       };
     },

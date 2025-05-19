@@ -488,7 +488,7 @@ export default {
                     style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
                   >
                     <button
-                      v-if="item.confirmable && isPerm('FINANCE_RECEIVABLE_FINISH')"
+                      v-if="['PAID'].includes(item.status) &&  isPerm('FINANCE_RECEIVABLE_FINISH')"
                       class="ko-basic-button__card"
                       @click.stop="onConfirm(item, index)"
                     >
@@ -497,7 +497,7 @@ export default {
                     <button
                       class="ko-basic-button__card"
                       @click.stop="onAddedTicket(item, index)"
-                      v-if="isPerm('FINANCE_ADD_PAID_ORDER') || isPerm('FINANCE_PAID_ORDER')"
+                      v-if="['WAIT_PAY', 'CREATED'].includes(item.status) && (isPerm('FINANCE_ADD_PAID_ORDER') || isPerm('FINANCE_PAID_ORDER'))"
                     >
                       添加单据
                     </button>
@@ -533,7 +533,7 @@ export default {
                 style="display: flex; align-items: center; justify-content: center;"
               >
                 <button
-                  v-if="item.confirmable && isPerm('FINANCE_RECEIVABLE_FINISH')"
+                  v-if="['PAID'].includes(item.status) &&  isPerm('FINANCE_RECEIVABLE_FINISH')"
                   class="ko-basic-button__card"
                   @click.stop="onConfirm(item, index)"
                 >
@@ -542,7 +542,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onAddedTicket(item, index)"
-                  v-if="isPerm('FINANCE_ADD_PAID_ORDER') || isPerm('FINANCE_PAID_ORDER')"
+                  v-if="['WAIT_PAY', 'CREATED'].includes(item.status) && (isPerm('FINANCE_ADD_PAID_ORDER') || isPerm('FINANCE_PAID_ORDER'))"
                 >
                   添加单据
                 </button>

@@ -44,7 +44,6 @@ import BinPacking from "./pages/BinPacking.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import { getMyInfoApi } from "@/api/user";
 import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
 import { getBindInfoApi, getSaleCheckShareIdApi, getShareOrderApi } from "@/api/erp/sale";
@@ -383,6 +382,15 @@ export default {
             params.planFinishDate = params.planFinishDate ? dayjs(params.planFinishDate).format("YYYY-MM-DD 23:59:59") : null;
           }
 
+          if (this.clientType === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.clientType === 1) {
+            params.supplierId = "";
+          }
+
           this.loading = true;
 
           Func(params)
@@ -531,14 +539,14 @@ export default {
 
     // 处理 tab 切换
     onTabItem() {
-      if (this.clientType === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
+      /*  if (this.clientType === 0) {
+         this.form.otherSupplier = "";
+         this.form.otherSupplierPhone = "";
+       }
 
-      if (this.clientType === 1) {
-        this.form.supplierId = "";
-      }
+       if (this.clientType === 1) {
+         this.form.supplierId = "";
+       } */
     },
 
     // 计算总金额

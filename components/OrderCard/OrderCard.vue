@@ -64,6 +64,9 @@ export default {
 
     // 隐藏地址
     hideOrderAddress: Boolean,
+
+    // 隐藏客户
+    isHideCustomer: Boolean
   },
   methods: {
     onClickOperate(child, item) {
@@ -173,7 +176,7 @@ export default {
             </text>
           </view>
           <view
-            v-if="!isNewSale && item.customer && (isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType))"
+            v-if="!isHideCustomer && !isNewSale && item.customer && (isCheckStock ? !['PRODUCTION', 'CHECK_IN'].includes(item.orderType) : !['CHECK_IN'].includes(item.orderType))"
           >
             <block v-if="isLogistics">
               <view class="ko-basic-label__images-wrap">
@@ -514,10 +517,10 @@ export default {
 .is-new-sale {
   .ko-order-card {
     &__item {
-      font-size: 12px;
+      font-size: 14px;
 
       .order-code {
-        font-size: 13px;
+        font-size: 14px;
         font-weight: normal;
       }
     }
@@ -525,7 +528,7 @@ export default {
 
     &__status {
       padding: 2px 4px;
-      font-size: 10px;
+      font-size: 12px;
 
       &.CREATED {
         background: #fef3c7;

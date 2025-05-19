@@ -25,6 +25,7 @@ import Pay from "./components/Pay/Pay.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
 import purchase from "./purchase";
+import PurchaseMixins from "@/purchase/PurchaseMixins";
 
 export default {
   name: "OrderList",
@@ -43,7 +44,7 @@ export default {
     LoadMore,
     TopMenus,
   },
-  mixins: [purchase],
+  mixins: [purchase, PurchaseMixins],
   data() {
     const _this = this;
 
@@ -230,7 +231,6 @@ export default {
       this.$refs.PCRef && this.$refs.PCRef.clearable();
       this.getList(true);
     },
-
   },
   computed: {
   },
@@ -303,21 +303,21 @@ export default {
             :item="item"
             @click="onJumpDetails(item, 'purchase')"
             is-new
-            :is-custom-status-name="isEqual(GET_PAGE_MENU_FUNC, 1)"
+            :is-custom-status-name="isEqual(item.status, 'WAIT_PAY')"
             custom-status-name="待付款"
           >
             <template #operate>
               <view style="display: flex; align-items: center; justify-content: flex-end;">
                 <button
                   class="ko-basic-button__card"
-                  v-if="['FINISHED', 'CREATED'].includes(item.status) && item.orderType !== 'CUSTOMIZED' && isPerm('PURCHASE_PRINT')"
+                  v-if="item.orderType !== 'CUSTOMIZED' && isPerm('PURCHASE_PRINT')"
                   @click.stop="onPrint(item, index)"
                 >
                   打印单据
                 </button>
 
                 <button
-                  v-if="['FINISHED'].includes(item.status) && !item.confirmable && (isPerm('PURCHASE_ADD_RETURNED_ORDER') || isPerm('PURCHASE_RETURNED_ORDER'))"
+                  v-if="['WAIT_PAY'].includes(item.status) && (isPerm('PURCHASE_ADD_RETURNED_ORDER') || isPerm('PURCHASE_RETURNED_ORDER'))"
                   class="ko-basic-button__card"
                   @click.stop="onAddedDocuments(item, index)"
                 >
@@ -351,7 +351,6 @@ export default {
     <!-- #ifdef H5 -->
     <view style="padding: 10px; flex: 1; overflow: hidden">
       <KoTable
-        :key="tableKey"
         :loading="loading"
         :columns="columns"
         :data="list"
@@ -365,14 +364,14 @@ export default {
         <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('PURCHASE_PRINT')"
+              v-if="isPerm('PURCHASE_PRINT') && item.orderType !== 'CUSTOMIZED'"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'purchase')"
             >
               打印单据
             </button>
             <button
-              v-if="['FINISHED'].includes(item.status) && !item.confirmable&& (isPerm('PURCHASE_ADD_RETURNED_ORDER') || isPerm('PURCHASE_RETURNED_ORDER'))"
+              v-if="['WAIT_PAY'].includes(item.status) && (isPerm('PURCHASE_ADD_RETURNED_ORDER') || isPerm('PURCHASE_RETURNED_ORDER'))"
               class="ko-basic-button__card"
               @click.stop="onAddedDocuments(item, index)"
             >
@@ -389,7 +388,7 @@ export default {
             </button>
 
             <button
-              v-if="['FINISHED'].includes(item.status)  && isPerm('PURCHASE_QUICK_IN') && isEqual(GET_PAGE_MENU_FUNC, 1)"
+              v-if="['WAIT_PAY'].includes(item.status)  && isPerm('PURCHASE_QUICK_IN') && isEqual(GET_PAGE_MENU_FUNC, 1)"
               class="ko-basic-button__card"
               @click.stop="onQuickIn(item, index)"
             >
@@ -431,7 +430,7 @@ export default {
             <button
               class="ko-basic-button__card"
               @click.stop="onJump(item, index)"
-              v-if="['CREATED', 'CANCELLED', 'FINISHED'].includes(item.status) && isEditorButton(item)"
+              v-if="['CREATED', 'WAIT_PAY'].includes(item.status) && isEditorButton(item)"
             >
               编辑
             </button>

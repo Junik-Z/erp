@@ -55,15 +55,14 @@ export default {
     isShowSearch: Boolean,
   },
   methods: {
-    reset() {
-      this.getClassifyList();
-      this.getFieldList();
-      this.getList(true);
+    async reset() {
+      await this.getClassifyList();
+      await this.getFieldList();
     },
     // 获取分类列表
     getClassifyList() {
       // 加载分类
-      getProductClassApi({pageNum: 0, pageSize: 1000})
+      return getProductClassApi({pageNum: 0, pageSize: 1000})
         .then(res => {
           const data = res.data;
           this.classList = data;
@@ -75,7 +74,7 @@ export default {
 
     // 获取扩张字段
     getFieldList() {
-      getProductFieldApi({pageSize: 100, pageNum: 0})
+      return getProductFieldApi({pageSize: 100, pageNum: 0})
         .then(res => {
           console.log(res.data);
           this.fieldList = res.data;
