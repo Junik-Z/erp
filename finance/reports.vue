@@ -179,7 +179,9 @@ export default {
 
           // #ifdef H5
           this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
+            if (this.$refs.WrapRef) {
+              this.$refs.WrapRef.scrollTop = top;
+            }
           });
           // #endif
         });

@@ -11,7 +11,7 @@ import OrderCard from "./components/OrderCard/OrderCard.vue";
 import UvCountTo from "./components/uv-count-to/uv-count-to.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _keys, _pick } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _keys, _pick } from "@/utils";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
@@ -334,6 +334,22 @@ export default {
         this.queryList.startTime = "";
         this.queryList.endTime = "";
       }
+    },
+
+    // 更新系统数据
+    updateAddressNode(item) {
+      const node = this.node;
+      const index = this.nodeIndex;
+      getReceivableDetailApi({id: node.id || item.id})
+        .then(res => {
+          const data = _pick(res.data, _keys(node));
+          if (_isEqual("FINISHED", data.status)) {
+            this.list.splice(index, 1);
+          } else {
+            this.$set(this.list, index, data);
+          }
+        });
+
     },
   },
   computed: {

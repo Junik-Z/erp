@@ -1,7 +1,7 @@
 import mixins from "@/mixins/mixins";
 import reLogin from "@/mixins/re-login";
 import { PageEnums } from "@/utils/config";
-import { _deepCopy, _isEqual, _isString, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _isBoolean, _isEqual, _isString, _pick, CustomToast } from "@/utils";
 import { getPurchaseDetailApi, printA4PurchaseApi, printPurchaseApi, quickInApi } from "@/api/erp/purchase";
 
 const PageMenu = [
@@ -26,41 +26,6 @@ export default {
   mixins: [mixins, reLogin],
   data() {
     return {
-      MOVABLE_LIST: [
-        // #ifdef MP
-        {
-          text: "分享",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: `邀请您来下单啦！`,
-            path: PageEnums.NewPurchase,
-            query: {
-              PAGE_TYPE: "ADDED_PURCHASE",
-            },
-          },
-          perm: "PURCHASE_SHARE",
-        },
-        // #endif
-
-        // #ifdef H5
-        {
-          text: "定制",
-          iconfont: "icon-dingzhishengchan",
-          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=PURCHASE",
-          perm: "PURCHASE_CUSTOMIZED_ADD",
-        },
-        // #endif
-
-        {
-          text: "开单",
-          iconfont: "icon-tianjia",
-          path: PageEnums.NewPurchase,
-          perm: "PURCHASE_ADD",
-        },
-      ],
-
       node: {},
       nodeIndex: null,
 
@@ -329,6 +294,47 @@ export default {
 
         return !_isEqual(node.status, "FINISHED") && this.isPerm("PURCHASE_UPDATE");
       };
+    },
+
+    MOVABLE_LIST() {
+      const produceEnable = (this.GET_CONFIG_INFO || {})?.produceEnable || false;
+      const dProduceEnable = _isBoolean(produceEnable) ? !produceEnable : false;
+
+      return [
+        // #ifdef MP
+        {
+          text: "分享",
+          iconfont: "icon-icon-test",
+          path: "share",
+          openType: "share",
+          params: {
+            title: `邀请您来下单啦！`,
+            path: PageEnums.NewPurchase,
+            query: {
+              PAGE_TYPE: "ADDED_PURCHASE",
+            },
+          },
+          perm: "PURCHASE_SHARE",
+        },
+        // #endif
+
+        // #ifdef H5
+        {
+          text: "定制",
+          iconfont: "icon-dingzhishengchan",
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=PURCHASE",
+          perm: "PURCHASE_CUSTOMIZED_ADD",
+          disabled: dProduceEnable,
+        },
+        // #endif
+
+        {
+          text: "开单",
+          iconfont: "icon-tianjia",
+          path: PageEnums.NewPurchase,
+          perm: "PURCHASE_ADD",
+        },
+      ];
     },
   },
   // #ifdef MP

@@ -23,7 +23,7 @@ import FeesList from "./components/FeesList/FeesList.vue";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { PageEnums } from "@/utils/config";
 import PickerAddress from "@/components/PickerAddress.vue";
-import SendMsg from "../components/SendMsg.vue";
+import SendMsg from "@/components/SendMsg.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -95,6 +95,11 @@ export default {
       isNormal: false,
       // 编辑模式
       isEdit: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
     };
   },
   async onLoad(option) {
@@ -244,27 +249,36 @@ export default {
     },
 
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
 
-          // this.form.supplierId = UserInfo.userId;
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
 
-          if (this.bindList.length) {
-            this.current = 0;
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
-          } else {
-            this.current = 1;
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.current = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.current = 1;
+            }
           }
         });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
     },
 
     // 切换下单样式
@@ -282,7 +296,6 @@ export default {
       });
     },
   },
-
   computed: {
     noCustomerPerm() {
       return this.isPerm("CUSTOMER_LIST");
@@ -337,9 +350,10 @@ export default {
 
                 :placeholder-label="GET_FUNC(form, 'customer.name')"
 
-                :is-long-list="isClient"
+                :is-long-list="isClient || !!bindList.length"
                 :options="bindList"
                 @input="onSupplierId"
+                @lower="onLower"
               />
             </UniFormsItem>
           </template>
@@ -401,6 +415,24 @@ export default {
         </view>
       </UniSection>
 
+      <!-- 业务员 -->
+      <UniSection title="业务员" type="line" v-if="isEdit">
+        <view style="padding: 10px;">
+          <UniFormsItem label="业务员：" name="remark">
+            <PickerUser
+              style="width: 100%;"
+              is-input
+              title="选择业务员"
+              v-model="form.purchaserId"
+              type="staffUserList"
+              ref="SRef"
+              :placeholder-label="GET_FUNC(form, 'user.nickName')"
+            />
+          </UniFormsItem>
+        </view>
+      </UniSection>
+
+      <!-- 其它费用 -->
       <UniSection title="其它费用" type="line">
         <view style="padding: 10px;">
           <FeesList ref="FLRes" v-model="form.fees" is-form />
@@ -457,7 +489,6 @@ export default {
 
   &__footer {
     padding: 10px 50px 50px;
-
 
     // #ifdef H5
     display: flex;

@@ -6,7 +6,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniDataSelect from "./components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import {
   addedSaleReturnApi,
   getBindInfoApi,
@@ -68,6 +68,11 @@ export default {
 
       isAgain: false,
       isNormal: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
     };
   },
   created() {
@@ -158,20 +163,28 @@ export default {
 
     // 获取绑定的客户列表
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
 
-          if (this.bindList.length) {
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
+
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.current = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.current = 1;
+            }
           }
         });
     },
@@ -191,6 +204,12 @@ export default {
        if (this.current === 1) {
          this.form.supplierId = "";
        } */
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
     },
   },
   computed: {
@@ -233,11 +252,12 @@ export default {
                 :disabled="!!orderId"
                 type="client"
                 ref="UserRef"
-                :is-long-list="isClient"
+                :is-long-list="isClient || !!bindList.length"
                 :options="bindList"
                 @input="onSupplierId"
 
                 :placeholder-label="GET_FUNC(form, 'customer.name')"
+                @lower="onLower"
               />
             </UniFormsItem>
           </template>

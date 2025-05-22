@@ -28,11 +28,13 @@ import { addedSalePaidOrderApi } from "@/api/erp/sale";
 import { addedSPurchaseReturnedOrderApi } from "@/api/erp/purchase";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
+import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 
 export default {
   name: "check",
   mixins: [mixins],
   components: {
+    UniSearchBar,
     HistoryBar,
     KoList,
     KoMovable,
@@ -597,6 +599,14 @@ export default {
           this.aLoading = false;
         });
     },
+
+
+    // 取消地址搜索
+    onAddressCancel() {
+      this.aQuery = _deepCopy(this.$options.data().aQuery);
+      this.getAddressList(true);
+    },
+
   },
   computed: {
     getPageType() {
@@ -720,6 +730,19 @@ export default {
 
     <!-- #ifdef MP -->
     <view class="ko-address" v-if="!isSearch && !isLogistics">
+      <div class="ko-address__search" v-if="false">
+        <uni-search-bar
+          v-model="aQuery.address"
+          placeholder="请输入地址"
+          @confirm="getAddressList(true)"
+          @cancel="onAddressCancel"
+          clear-button="none"
+          style="flex: 1;"
+          bg-color="transparent"
+          border
+        />
+      </div>
+
       <!-- 地址列表 -->
       <KoList
         :loading="aLoading"
@@ -993,6 +1016,19 @@ export default {
     <!-- #ifdef H5 -->
     <div class="ko-check__wrap">
       <div class="ko-address">
+        <div class="ko-address__search" v-if="false">
+          <uni-search-bar
+            v-model="aQuery.address"
+            placeholder="请输入地址"
+            @confirm="getAddressList(true)"
+            @cancel="onAddressCancel"
+            clear-button="none"
+            style="flex: 1;"
+            bg-color="transparent"
+            border
+          />
+        </div>
+
         <KoList
           class="ko-address__table"
           :loading="aLoading"

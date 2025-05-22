@@ -86,7 +86,6 @@ export default {
       this.loading = true;
       getCategoryListApi()
         .then(res => {
-          console.log(res.data);
           this.list = res.data;
         })
         .finally(() => {

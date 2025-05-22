@@ -76,7 +76,6 @@ export default {
     getFieldList() {
       return getProductFieldApi({pageSize: 100, pageNum: 0})
         .then(res => {
-          console.log(res.data);
           this.fieldList = res.data;
         });
     },

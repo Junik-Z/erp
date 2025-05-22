@@ -64,7 +64,6 @@ export default {
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
-          console.log(res.data);
         })
         .catch(() => {
           this.noMore = true;

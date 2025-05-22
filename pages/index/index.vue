@@ -263,9 +263,13 @@ export default {
           const role = this.GET_USER_ROLE;
 
           // 判断是否有单独的字段校验
-          const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
+          const checkField = !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
 
-          if ((_haveCommonElements(role, item.role) && checkField && !this.isExpired) || item.role.includes("*")) {
+          if (
+            (_haveCommonElements(role, item.role) && checkField && !this.isExpired)
+            || item.role.includes("*")
+            || this.isAdmin
+          ) {
             return [item];
           } else {
             return [];
@@ -322,42 +326,44 @@ export default {
       </view>
     </view>
 
-    <!-- #ifdef MP -->
-    <UniRow
-      @click.stop="() => {}"
-      :gutter="20"
-    >
-      <UniCol
-        v-for="(item, index) of getMenuList"
-        :key="item.value"
-        :index="index"
-        :span="8"
+    <view class="ko-home__center">
+      <!-- #ifdef MP -->
+      <UniRow
+        @click.stop="() => {}"
+        :gutter="20"
       >
-        <!-- #endif -->
+        <UniCol
+          v-for="(item, index) of getMenuList"
+          :key="item.value"
+          :index="index"
+          :span="8"
+        >
+          <!-- #endif -->
 
-        <!-- #ifdef H5 -->
-        <div class="ko-home__wrap">
-          <div class="ko-home__content">
-            <button
-              v-for="(item) of getMenuList"
-              :key="item.value"
-              class="ko-home__item--button"
-            >
-              <!-- #endif -->
-              <view class="ko-home__item" @click="onChange(item)">
-                <i :class="['iconfont', item.icon]"></i>
-                <text>{{ item.label }}</text>
-              </view>
-              <!-- #ifdef H5 -->
-            </button>
+          <!-- #ifdef H5 -->
+          <div class="ko-home__wrap">
+            <div class="ko-home__content">
+              <button
+                v-for="(item) of getMenuList"
+                :key="item.value"
+                class="ko-home__item--button"
+              >
+                <!-- #endif -->
+                <view class="ko-home__item" @click="onChange(item)">
+                  <i :class="['iconfont', item.icon]"></i>
+                  <text>{{ item.label }}</text>
+                </view>
+                <!-- #ifdef H5 -->
+              </button>
+            </div>
           </div>
-        </div>
-        <!-- #endif -->
+          <!-- #endif -->
 
-        <!-- #ifdef MP -->
-      </UniCol>
-    </UniRow>
-    <!-- #endif -->
+          <!-- #ifdef MP -->
+        </UniCol>
+      </UniRow>
+      <!-- #endif -->
+    </view>
 
     <view class="ko-home__not-role" v-if="!getMenuList.length">
       您还没有任何权限，请联系管理员给您授权！
@@ -481,7 +487,9 @@ export default {
 // #ifdef MP
 .ko-home {
   height: 100vh;
-  padding: 120px 20px;
+  padding: 120px 20px 40px;
+  display: flex;
+  flex-direction: column;
 
   &__item {
     height: 100%;
@@ -511,6 +519,12 @@ export default {
       justify-content: flex-end;
       height: 30px;
     }
+  }
+
+  &__center {
+    flex: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   &__button {
@@ -562,6 +576,13 @@ export default {
   padding-bottom: 200px;
   position: relative;
 
+
+  &__store {
+    button {
+      line-height: 1.4;
+    }
+  }
+
   &__header {
     &--title {
       font-size: 60px;
@@ -596,6 +617,10 @@ export default {
     justify-content: center;
     max-width: 1366px;
     margin: 0 auto;
+  }
+
+  &__center {
+    height: 100%;
   }
 
   &__content {

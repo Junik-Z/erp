@@ -130,6 +130,7 @@ export default {
       });
     },
 
+    // 获取用户绑定的列表
     getBindInfo() {
       getBindInfoApi(this.bQuery)
         .then(res => {
@@ -144,7 +145,6 @@ export default {
           this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
 
           if (this.bQuery.pageNum === 0) {
-
             if (this.bindList.length) {
               this.current = 0;
               const one = _get(res.data, "0") || {};

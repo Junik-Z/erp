@@ -7,7 +7,7 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import FilePicker from "../components/FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";

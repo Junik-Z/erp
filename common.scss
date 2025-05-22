@@ -287,8 +287,12 @@ button::after {
 .ko-ws-notify {
   &__content {
     font-size: 14px;
-    height: 260px;
+    //height: 260px;
     overflow-y: auto;
+    
+    &.not-images {
+      height: 260px;
+    }
   }
 
   &__footer {
@@ -342,6 +346,16 @@ button::after {
       height: 22px;
       border-radius: 50%;
       margin-right: 8px;
+    }
+  }
+
+  &__images {
+    margin-top: 10px;
+
+    &.center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 }
@@ -410,7 +424,6 @@ button::after {
   word-break: break-all;
   word-wrap: normal;
 }
-
 
 // 供应商列表
 .ko-supplier {
@@ -686,10 +699,14 @@ button::after {
   height: 100%;
   border-right: 1px solid #e9e9eb;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   &__table {
-    height: 100%;
+    padding-top: 0 !important;
     width: 100%;
+    flex: 1;
+    overflow: hidden;
   }
 
   &__item {
@@ -711,8 +728,13 @@ button::after {
       border-color: #2979FF;
     }
   }
+
+  &__search {
+    padding-right: 0;
+  }
 }
 
+// 订单的列表
 .ko-order-table {
   flex: 1;
   height: 100%;
@@ -870,6 +892,24 @@ body {
   &__content {
     font-size: 14px;
     height: auto;
+
+    &.not-images {
+      height: 260px;
+    }
+  }
+
+  &__images {
+    margin-top: 10px;
+
+    .uv-album__row__wrapper img {
+      border-radius: 6px;
+    }
+
+    &.center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
   &__time {
@@ -890,6 +930,11 @@ body {
       margin-right: 8px;
     }
   }
+}
+
+.el-message-box {
+  width: auto;
+  min-width: 420px;
 }
 
 // #endif

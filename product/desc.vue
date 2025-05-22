@@ -9,7 +9,7 @@ import { _deepCopy, _isEqual } from "@/utils";
 import { CONFIG } from "@/utils/config";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
-import FilePicker from './components/FilePicker/FilePicker.vue'
+import FilePicker from '@/components/FilePicker/FilePicker.vue'
 
 
 export default {

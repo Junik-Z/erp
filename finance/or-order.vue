@@ -21,10 +21,12 @@ import PrintList from "./components/PrintList/PrintList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import { getCustomerListApi } from "@/api/erp/sale";
 import { getSupplierListApi } from "@/api/erp/purchase";
+import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 
 export default {
   name: "OrOrder",
   components: {
+    UniSearchBar,
     UvActionSheet,
     PrintList,
     Pay, HistoryBar, UniEasyinput, OrderCard, UniCol, TopMenus, UvAvatar, KoList, PickerCalendars, UniRow,
@@ -467,11 +469,8 @@ export default {
       const index = this.nodeIndex;
       getReceivableDetailApi({id: node.id})
         .then(res => {
-          console.log(res);
           const item = _pick(res.data, _keys(node));
-
-          this[this.isSearch ? "sList" : "oList"][index] && this.$set(this[this.isSearch ? "sList" : "oList"], index, item);
-
+          this[this.isSearch ? "sList" : "oList"]?.[index] && this.$set(this[this.isSearch ? "sList" : "oList"], index, item);
           this?.updateAddressNode?.(item);
         });
     },
@@ -488,6 +487,7 @@ export default {
     // 更新地址列表
     updateAddressNode(node) {
       if (_isEmpty(node)) return false;
+
       if (_isEqual(this.rootId, node.supplierId)) {
         const orderAddress = node.orderAddress;
 
@@ -505,7 +505,6 @@ export default {
 
             if (this.aId && !this.oList.length) {
               this.getOrderList(true);
-
               console.log("请求了");
             }
           });
@@ -901,6 +900,19 @@ export default {
           </KoList>
         </div>
         <div class="ko-address">
+          <div class="ko-address__search">
+            <uni-search-bar
+              v-model="aQuery.address"
+              placeholder="请输入地址"
+              @confirm="getAddressList(true)"
+              @cancel="onAddressCancel"
+              clear-button="none"
+              style="flex: 1;"
+              bg-color="transparent"
+              border
+            />
+          </div>
+
           <KoList
             class="ko-address__table"
             :loading="aLoading"

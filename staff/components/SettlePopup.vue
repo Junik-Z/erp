@@ -3,7 +3,7 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import FilePicker from "./FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import mixins from "@/mixins/mixins";
 import { _deepCopy, _isNotUnNil, _keys, CustomToast } from "@/utils";
 import { addSettlementApi, removeSubsidyApi } from "@/api/erp/produce";

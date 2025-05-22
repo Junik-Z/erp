@@ -10,10 +10,11 @@ import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { bindStaffApi, getStaffInfoApi, getStaffListApi, removeStaffApi, unbindStaffApi } from "@/api/erp/product";
 import { PageEnums } from "@/utils/config";
+import BindUserQrcode from "@/components/BindUserQrcode.vue";
 
 export default {
   name: "Staff",
-  components: {KoMovable, PickerUser, UvActionSheet, IndexList, TopMenus},
+  components: {BindUserQrcode, KoMovable, PickerUser, UvActionSheet, IndexList, TopMenus},
   mixins: [mixins],
   data() {
     const _this = this;
@@ -317,12 +318,19 @@ export default {
     },
 
     // 处理索引点击按钮
-    onClickEvent(query) {
-      this.onBindPopup(query.item, query.button.isBind, query.$index);
+    onClickEvent({button, item, $index}) {
+      if (_isEqual(button.value, "bind")) {
+        this.onBindPopup(item, button.isBind, $index);
+      }
+
+      if (_isEqual(button.value, "qrcode")) {
+        this.$refs.BUQRef.open(item, "staff");
+      }
     },
 
     // 判断是否显示索引列表内的按钮
     setShowEventButtonFunc(obj) {
+      if (_isEqual(obj.button.value, "qrcode")) return true;
       if (obj.button.isBind) {
         return obj.item._no_bind_;
       } else {
@@ -357,15 +365,16 @@ export default {
     // #ifdef MP
     getIndexEventList() {
       return [
-        {label: "绑定员工", isBind: true, perm: "STAFF_BIND"},
-        {label: "解绑员工", isBind: false, perm: "STAFF_UNBIND"},
-      ].filter(item => this.isPerm(item.perm));
+        {label: "二维码", value: "qrcode", perm: "STAFF_UNBIND"},
+        {label: "绑定员工", isBind: true, perm: "STAFF_BIND", value: "bind"},
+        {label: "解绑员工", isBind: false, perm: "STAFF_UNBIND", value: "bind"},
+      ].filter(item => {
+        if (item.perm) return this.isPerm(item.perm);
+        return true;
+      });
     },
 
-
     // #endif
-
-
   },
 };
 </script>
@@ -465,6 +474,8 @@ export default {
       :is-selected="!isBind"
       :is-not-selected="isBind"
     />
+
+    <BindUserQrcode ref="BUQRef" />
 
     <KoMovable
       v-if="isPerm('STAFF_ADD')"

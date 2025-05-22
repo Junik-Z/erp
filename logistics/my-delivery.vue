@@ -166,7 +166,6 @@ export default {
       this.loading = true;
       getDeliveryMyListApi(this.queryList)
         .then(res => {
-          console.log(res.data);
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
         })

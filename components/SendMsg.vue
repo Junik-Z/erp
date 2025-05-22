@@ -6,6 +6,8 @@ import { _deepCopy, _get, _isEmpty, _isEqual, CustomToast } from "@/utils";
 import { sendInternalMessageApi } from "@/api/user";
 import { getStaffListApi } from "@/api/erp/product";
 import mixins from "@/mixins/mixins";
+import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 let pType = "bottom";
 let pPosition = "left";
@@ -17,6 +19,7 @@ pPosition = "top";
 pAlign = "left";
 // #endif
 
+
 export default {
   name: "SendMsg",
   data() {
@@ -25,6 +28,21 @@ export default {
       form: {
         staffIds: [],
         content: "",
+        images: [],
+
+        /* content: "消息内容",
+        images: [
+          "/files/down/png20250521/54921d03dd6847bfb07aeb0806cfd56f.png",
+          "/files/down/png20250521/e5c79ee848d144049bc402f62dcb5ffe.png",
+          "/files/down/png20250521/ffbb224353bd48cfbeb3852ce4ba0b6d.png",
+          "/files/down/png20250521/0398b76d9466448aa02048032f4bcaab.png",
+          "/files/down/png20250521/573515706c5f4810987efed5f9b66df3.png",
+          "/files/down/png20250521/bf4b7bf91be447819b267ba4ad0ab4b2.png",
+          "/files/down/png20250521/7595d9d3045f454383a2c3d3a31a007c.png",
+          "/files/down/png20250521/95685fbb3b414654ab686a6476ce5991.png",
+          "/files/down/png20250521/5cae72290f504edc824dd402a9f3d520.png",
+        ],
+        staffIds: [], */
       },
 
       loading: false,
@@ -70,8 +88,22 @@ export default {
       pAlign,
     };
   },
+  props: {
+    // 层级
+    zIndex: {
+      type: [String, Number],
+      // #ifdef H5
+      default: 997,
+      // #endif
+      // #ifndef H5
+      default: 10075,
+      // #endif
+    },
+  },
   mixins: [mixins],
   components: {
+    FilePicker,
+    BasicPopup,
     UniForms,
     UniFormsItem,
     UniEasyinput,
@@ -130,9 +162,15 @@ export default {
     onSendInternal() {
       this.$refs.FRef.validate(async (valid) => {
         if (!valid) {
-          sendInternalMessageApi(this.form)
+          const params = _deepCopy(this.form);
+          params.images = (params.images || []).join(",");
+
+          sendInternalMessageApi(params)
             .then(() => {
               this.visible = false;
+
+              uni.$emit("$__update_msg_list__");
+
               CustomToast({
                 title: "发送成功",
                 success: () => {
@@ -233,6 +271,8 @@ export default {
     :visible.sync="visible"
     title="发送系统消息"
     :type="pType"
+    :z-index="zIndex"
+    no-safe-bottom
   >
     <view class="ko-send__popup">
       <UniForms
@@ -295,6 +335,18 @@ export default {
                 maxlength="100"
               />
             </UniFormsItem>
+
+            <UniFormsItem :label-align="pAlign" label="图片：" name="content">
+              <FilePicker
+                v-model="form.images"
+                :image-styles="{border: {radius: '6px'}, width: 100, height: 100}"
+                :limit="9"
+                file-extname="png,jpg,jpeg,gif"
+                show-update-list
+                return-type="array"
+              />
+            </UniFormsItem>
+
           </view>
         </view>
       </UniForms>
@@ -333,6 +385,8 @@ export default {
   // #ifdef MP
   &__popup {
     width: 100vw;
+    height: 70vh;
+    overflow-y: auto;
   }
 
   &__staff {

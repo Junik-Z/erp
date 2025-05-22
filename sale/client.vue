@@ -19,10 +19,12 @@ import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { PageEnums } from "@/utils/config";
 import TopMenus from "./components/TopMenus.vue";
+import BindUserQrcode from "@/components/BindUserQrcode.vue";
 
 export default {
   name: "Client",
   components: {
+    BindUserQrcode,
     TopMenus,
     UniEasyinput,
     HistoryBar,
@@ -315,6 +317,7 @@ export default {
       }
     },
 
+    // 点击更多按钮了
     onActionClick(item, index) {
       this.node = item;
       this.nodeIndex = index;
@@ -382,8 +385,14 @@ export default {
     },
 
     // 处理索引点击按钮
-    onClickEvent(query) {
-      this.onBindPopup(query.item, query.$index);
+    onClickEvent({button, item, $index}) {
+      if (_isEqual(button.value, "bind")) {
+        this.onBindPopup(item, $index);
+      }
+
+      if (_isEqual(button.value, "qrcode")) {
+        this.$refs.BUQRef.open(item, "client");
+      }
     },
   },
   computed: {
@@ -466,10 +475,12 @@ export default {
 
     // #ifdef MP
     getIndexEventList() {
+      const event = this.isPerm("CUSTOMER_BIND") ? [{label: "二维码", value: "qrcode"}] : [];
+
       if (this.isPerm("CUSTOMER_BIND") || this.isPerm("CUSTOMER_UNBIND")) {
-        return [{label: "绑定"}];
+        event.push({label: "绑定", value: "bind"});
       }
-      return [];
+      return event;
 
       /*  return [
          {label: "绑定客户", isBind: true, perm: "CUSTOMER_BIND"},
@@ -597,6 +608,8 @@ export default {
       v-if="isPerm('CUSTOMER_ADD')"
       @click="onTrigger('')"
     />
+
+    <BindUserQrcode ref="BUQRef" />
 
     <!-- #ifdef MP -->
     <UvActionSheet

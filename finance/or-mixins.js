@@ -36,8 +36,7 @@ export default {
               .then(() => {
                 uni.showToast({title: "取消成功"});
                 this.onRemoveList(index);
-
-                this?.updateAddressNode?.(item)
+                this?.updateAddressNode?.(item);
               });
           }
         },
@@ -55,12 +54,13 @@ export default {
             finishReceivableApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this[this.isSearch ? "sList" : "oList"][index] && this.$set(this[this.isSearch ? "sList" : "oList"], index, {
+
+                this[this.isSearch ? "sList" : "oList"]?.[index] && this.$set(this[this.isSearch ? "sList" : "oList"], index, {
                   ...item,
                   status: "FINISHED",
                 });
 
-                this?.updateAddressNode?.(item)
+                this?.updateAddressNode?.(item, index);
               });
           }
         },

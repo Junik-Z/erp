@@ -16,6 +16,7 @@ import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import Pay from "@/purchase/components/Pay/Pay.vue";
 import OMixins from "@/purchase/OMixins";
+import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 
 // 索引列表
 const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -23,6 +24,7 @@ const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 export default {
   name: "Order",
   components: {
+    UniSearchBar,
     Pay,
     UniEasyinput,
     OrderCard,
@@ -889,6 +891,19 @@ export default {
           </KoList>
         </div>
         <div class="ko-address">
+          <div class="ko-address__search">
+            <uni-search-bar
+              v-model="aQuery.address"
+              placeholder="请输入地址"
+              @confirm="getAddressList(true)"
+              @cancel="onAddressCancel"
+              clear-button="none"
+              style="flex: 1;"
+              bg-color="transparent"
+              border
+            />
+          </div>
+
           <KoList
             class="ko-address__table"
             :loading="aLoading"

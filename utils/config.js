@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // #endif
 
   // #ifdef H5
@@ -333,6 +333,13 @@ export const PageEnums = {
   // ——————————————— 店铺 ———————————————————
   // 店铺配置
   shopUp: "/shop/set-up",
+
+  // ——————————————— 用户绑定 ———————————————
+  clientBinding: "/client/binding",
+  // 绑定供应商
+  supplierBinding: "/client/supplier",
+  // 绑定员工
+  staffBinding: "/client/staff",
 };
 
 /**

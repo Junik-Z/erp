@@ -12,7 +12,7 @@ import {
   updatePurchaseApi,
 } from "@/api/erp/purchase";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
@@ -22,7 +22,7 @@ import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import { PageEnums } from "@/utils/config";
 import PickerAddress from "@/components/PickerAddress.vue";
-import SendMsg from "../components/SendMsg.vue";
+import SendMsg from "@/components/SendMsg.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
@@ -97,6 +97,11 @@ export default {
 
       // 正常跳转
       isNormal: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
     };
   },
   created() {
@@ -244,21 +249,38 @@ export default {
       this.form.orderPhone = _get(node, "contacts.0.phone");
     },
 
+    // 获取用户绑定的列表
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({...item, value: item.id, label: item.name, logo: item.logo}));
-          this.form.supplierId = UserInfo.userId;
-          if (this.bindList.length) {
-            this.current = 0;
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
-          } else {
-            this.current = 1;
+          const data = res.data?.map(item => ({
+            ...item,
+            value: item.id,
+            label: item.name,
+            logo: item.logo,
+          }));
+
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
+
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.current = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.current = 1;
+            }
           }
         });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
     },
   },
   computed: {
@@ -302,11 +324,11 @@ export default {
                 is-input
                 type="supplier"
                 ref="UserRef"
-                :is-long-list="isClient"
+                :is-long-list="isClient || !!bindList.length"
                 :options="bindList"
                 @input="onSupplierId"
-
                 :placeholder-label="GET_FUNC(form, 'customer.name')"
+                @lower="onLower"
               />
             </UniFormsItem>
           </template>

@@ -9,7 +9,7 @@ import { _deepCopy, _isEqual } from "@/utils";
 import { updateMyInfoApi, uploadBase64Api } from "@/api/user";
 import { getImageBase64 } from "@/utils/processingFiles";
 import LongPressButton from "@/admin/components/LongPressButton/LongPressButton.vue";
-import FilePicker from "./components/FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { generateQRCodeBusinessesApi } from "@/api/admin";
 
 export default {

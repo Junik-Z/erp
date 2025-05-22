@@ -121,7 +121,16 @@ export default {
       };
       _deepCopy(data)
         .forEach((item) => {
-          obj.categories.push(item.name);
+          const N = (item.name || "");
+
+          let name = N.substring(0, 15) || "";
+
+          if (N.length > name.length) {
+            name = `${name}...`;
+          }
+
+          obj.categories.push(name);
+
           obj.series[0].data.push(this.toYuan(item.amount));
         });
 

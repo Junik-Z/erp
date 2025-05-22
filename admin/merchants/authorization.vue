@@ -15,6 +15,8 @@ import {
 import { _deepCopy, _get, _isEqual, _xor, CustomToast } from "@/utils";
 import { getRolePermListApi, setUserRoleApi } from "@/api/admin";
 import mixins from "@/mixins/mixins";
+import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
+import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 
 const TREE_DATA = {
   stock: STOCK_PERM_TREE,
@@ -32,7 +34,7 @@ const User = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "authorization",
-  components: {PickerUser, BasicCard},
+  components: {UniFormsItem, UniForms, PickerUser, BasicCard},
   mixins: [mixins],
   onLoad(option) {
     this.option = option;
@@ -136,6 +138,8 @@ export default {
   },
   computed: {
     getTreeList() {
+      if (!this.option.model_key) return [];
+
       return (_get(TREE_DATA, this.option.model_key) || [])
         .map(item => {
           item.children = item.children.flatMap(child => {
@@ -267,7 +271,10 @@ export default {
                     v-else
                   />
                 </block>
-                <view style="font-size: 13px; line-height: 1.2" :style="[child.color ? {color: child.color} : {}]">
+                <view
+                  style="font-size: 13px; line-height: 1.2"
+                  :style="[child.color ? {color: child.color} : {}]"
+                >
                   {{ child.label }}
                   <text style="font-size: 8px">
                     ({{ ["目录", "按钮", "页面"][child.type - 1] || "" }})

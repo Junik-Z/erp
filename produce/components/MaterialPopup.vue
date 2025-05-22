@@ -6,7 +6,7 @@ import PickerProduct from "../components/PickerProduct/PickerProduct.vue";
 import { _deepCopy, _isEmpty, CustomToast } from "@/utils";
 import { requestUploadMaterialFileApi } from "@/request";
 import mixins from "@/mixins/mixins";
-import FilePicker from "./FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 function mergeProductArrays(arr1, arr2) {
   const mergedMap = new Map();

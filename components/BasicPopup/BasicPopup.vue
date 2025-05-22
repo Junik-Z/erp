@@ -20,6 +20,17 @@ export default {
     noFooterPadding: Boolean,
     noFooter: Boolean,
     noSafeBottom: Boolean,
+
+    // 层级
+    zIndex: {
+      type: [String, Number],
+      // #ifdef H5
+      default: 997,
+      // #endif
+      // #ifndef H5
+      default: 10075
+      // #endif
+    },
   },
   data() {
     return {};
@@ -60,6 +71,7 @@ export default {
     :round="10"
     bg-color="transparent"
     :adjustPosition="false"
+    :z-index="zIndex"
   >
     <view
       class="ko-basic-popup"
@@ -124,7 +136,7 @@ export default {
 
   &.bottom {
     &.show-footer .ko-basic-popup__footer {
-      padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 0px);
     }
 
     &.hide-footer {
@@ -155,7 +167,9 @@ export default {
   &__close {
     position: absolute;
     right: 10px;
-    top: -8px;
+    top: 8px;
+
+    line-height: 1.4;
 
     .iconfont {
       font-size: 26px;

@@ -11,10 +11,14 @@ import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import Billing from "./components/billing/billing.vue";
 import TopMenus from "./components/TopMenus.vue";
+import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
+import Notice from "@/components/Notice/Notice.vue";
 
 export default {
   name: "SetRole",
   components: {
+    Notice,
+    UniSection,
     KoMovable,
     PickerUser,
     UvAvatar,
@@ -45,30 +49,16 @@ export default {
     this.getList();
   },
   methods: {
+    // 获取用户组
     getList() {
       this.loading = true;
       getPermissionsApi()
         .then(res => {
-          console.log(res.data);
           this.premList = _deepCopy(res.data) || [];
         })
         .finally(() => {
           this.loading = false;
         });
-    },
-
-    // 开启设置用户权限
-    onSetRole(type, item) {
-      this.role = (item?.role || []).find(v => v.indexOf(type) > -1);
-
-      this.$refs.PickerUserRef.open({role: this.role});
-
-      /* getRolePermUsersApi({role: this.role})
-        .then(res => {
-          console.log(res);
-        }); */
-
-      // this.backup = _deepCopy(_get(this.premList, this.role))?.map(v => v.userId) || [];
     },
 
     // 跳转到会员管理
@@ -144,9 +134,55 @@ export default {
     },
 
     // 前往菜单详情设置
-    onToAuth(type, item) {
+    async onToAuth(type, item) {
+      try {
+        await this.judgeAuth(item);
+      } catch (e) {
+        console.log(e);
+        return false;
+      }
+
       const role = (item?.role || []).find(v => v.indexOf(type) > -1);
       role && uni.navigateTo({url: `${PageEnums.adminAuthorization}?model_key=${item.modelKey}&role=${role}`});
+    },
+
+    // 开启设置用户权限
+    async onSetRole(type, item) {
+      try {
+        await this.judgeAuth(item);
+      } catch (e) {
+        console.log(e);
+        return false;
+      }
+
+
+      this.role = (item?.role || []).find(v => v.indexOf(type) > -1);
+      this.$refs.PickerUserRef.open({role: this.role});
+    },
+
+    // 处理判断权限
+    judgeAuth(item) {
+      return new Promise((resolve, reject) => {
+        // 生产模块
+        if (_isEqual(item.modelKey, "produce")) {
+          if (this.GET_CONFIG_INFO[item.checkField]) {
+            resolve();
+          } else {
+            this.$refs.BRef.open({
+              images: [
+                "/files/down/static/produce1.png",
+                "/files/down/static/produce2.png",
+                "/files/down/static/produce3.png",
+              ],
+              tis: "尊敬的用户，您尚未开通生产模块相关功能。如需使用，请联系商务进行开通，感谢您的支持！",
+            });
+            reject();
+          }
+          return false;
+        }
+
+        resolve();
+      });
     },
 
     // 开启取消定制
@@ -155,7 +191,14 @@ export default {
     },
 
     // 跳转到自定义权限页面
-    onJumpCustom(type, item, custom) {
+    async onJumpCustom(type, item, custom) {
+      try {
+        await this.judgeAuth(item);
+      } catch (e) {
+        console.log(e);
+        return false;
+      }
+
       if (item.role.includes("CNC_MEMBER")) {
         this.onCncEnable(type, item, custom);
       } else if (item.role.includes("FINANCE_RECENT")) {
@@ -177,19 +220,31 @@ export default {
           Func && this[Func](type, item);
         }
       } else {
-        this.$refs.BRef.open();
+        this.$refs.BRef.open({
+          images: [
+            "/files/down/static/cnc1.png",
+            "/files/down/static/cnc2.png",
+            "/files/down/static/cnc3.png",
+            "/files/down/static/cnc4.png",
+            "/files/down/static/cnc5.png",
+          ],
+          tis: "尊敬的用户，您尚未开通板材加工功能。如需使用，请联系商务进行开通，感谢您的支持！",
+        });
       }
     },
   },
   computed: {
+    // 菜单列表
     getMenuList() {
       return this.MenuList.filter(item => item.isUpRole);
     },
 
+    // 显示设置的弹窗名称
     getTitle() {
       return (ROLE_LIST_ENUMS[this.role] || "") + "权限设置";
     },
 
+    // 获取头像列表
     getAvatarList() {
       return (type, item) => {
         const role = (item?.role || []).find(v => v.indexOf(type) > -1);
@@ -202,6 +257,7 @@ export default {
       };
     },
 
+    // 获取用户名称列表
     getNameList() {
       return (type, item) => {
         const role = (item?.role || []).find(v => v.indexOf(type) > -1);

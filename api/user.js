@@ -304,3 +304,70 @@ export function setMaintenanceApi(data) {
     data,
   });
 }
+
+// —————————————————— 用户绑定接口 ——————————————
+/**
+ * @description 生成客户绑定二维码
+ */
+export function customerCodeApi(data) {
+  return request({
+    url: "/customer/bind-code",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 客户绑定
+ */
+export function applyCustomerCodeApi(data) {
+  return request({
+    url: "/customer/bind-apply",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 生成员工绑定二维码
+ */
+export function staffCodeApi(data) {
+  return request({
+    url: "/staff/bind-code",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 员工绑定
+ */
+export function applyStaffCodeApi(data) {
+  return request({
+    url: "/staff/bind-apply",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 生成供应商绑定二维码
+ */
+export function supplierCodeApi(data) {
+  return request({
+    url: "/supplier/bind-code",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 供应商绑定
+ */
+export function applySupplierCodeApi(data) {
+  return request({
+    url: "/supplier/bind-apply",
+    method: "get",
+    data,
+  });
+}

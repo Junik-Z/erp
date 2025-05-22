@@ -20,10 +20,12 @@ import apMixins from "@/finance/ap-mixins";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import { getCustomerListApi } from "@/api/erp/sale";
 import { getSupplierListApi } from "@/api/erp/purchase";
+import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 
 export default {
   name: "ApOrder",
   components: {
+    UniSearchBar,
     UvActionSheet,
     Pay, HistoryBar, UniEasyinput, OrderCard, UniCol, TopMenus, UvAvatar, KoList, PickerCalendars, UniRow,
   },
@@ -827,7 +829,6 @@ export default {
     />
     <!-- #endif -->
 
-
     <!-- #ifdef H5 -->
     <div class="ko-list">
       <TopMenus :path="PageEnums.financeApPay" />
@@ -910,6 +911,19 @@ export default {
           </KoList>
         </div>
         <div class="ko-address">
+          <div class="ko-address__search">
+            <uni-search-bar
+              v-model="aQuery.address"
+              placeholder="请输入地址"
+              @confirm="getAddressList(true)"
+              @cancel="onAddressCancel"
+              clear-button="none"
+              style="flex: 1;"
+              bg-color="transparent"
+              border
+            />
+          </div>
+
           <KoList
             class="ko-address__table"
             :loading="aLoading"

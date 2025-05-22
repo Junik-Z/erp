@@ -31,6 +31,24 @@
           "style": {
             "navigationBarTitleText": "自助关联"
           }
+        },
+        {
+          "path": "binding",
+          "style": {
+            "navigationBarTitleText": "客户绑定"
+          }
+        },
+        {
+          "path": "supplier",
+          "style": {
+            "navigationBarTitleText": "供应商绑定"
+          }
+        },
+        {
+          "path": "staff",
+          "style": {
+            "navigationBarTitleText": "员工绑定"
+          }
         }
       ]
     },

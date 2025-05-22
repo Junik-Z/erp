@@ -2,6 +2,7 @@
 import { getConfigApi, getMyInfoApi, getSubscribeApi, getWSUrl, isLogin, readMessageApi } from "@/api/user";
 import { _deepCopy, _get, _isDev, _isEmpty, _isEqual, _omit } from "@/utils";
 import { CONFIG, MSG_TYPE_ENUMS, PageEnums } from "@/utils/config";
+import getCacheFile from "@/utils/fileCache";
 
 const AC = uni.createInnerAudioContext();
 
@@ -65,17 +66,39 @@ export default {
   },
   onShow() {
     console.log("App Show");
-    // #ifdef H5
-    uni.__HIDE_TIME_VM__ && clearTimeout(uni.__HIDE_TIME_VM__);
 
-    if (uni.__TITLE__) {
-      document.title = uni.__TITLE__;
-      uni.__TITLE__ = "";
+    // #ifdef MP-WEIXIN
+    if (wx?.setVisualEffectOnCapture) {
+      wx.setVisualEffectOnCapture({
+        visualEffect: "hidden",
+        complete: function (res) {
+        },
+      });
+    }
+    // #endif
+
+
+    // #ifdef H5
+    uni.$__HIDE_TIME_VM__ && clearTimeout(uni.$__HIDE_TIME_VM__);
+
+    if (uni.$__TITLE__) {
+      document.title = uni.$__TITLE__;
+      uni.$__TITLE__ = "";
     }// 恢复默认标题
     // #endif
   },
   onHide() {
     console.log("App Hide");
+    // #ifdef MP-WEIXIN
+    if (wx?.setVisualEffectOnCapture) {
+      wx.setVisualEffectOnCapture({
+        visualEffect: "none",
+        complete: function (res) {
+        },
+      });
+    }
+    // #endif
+
     this.onFlash();
   },
   methods: {
@@ -314,21 +337,19 @@ export default {
     // 开启Title闪烁
     onFlash() {
       // #ifdef H5
-      uni.__TITLE__ = _deepCopy(document.title);
+      uni.$__TITLE__ = _deepCopy(document.title);
       let flag = false;
-
-      const _this = this;
 
       function flashTitle() {
         if (!document.hasFocus()) { // 检测窗口是否失去焦点
           flag = !flag;
-          document.title = flag ? `【您有新消息】${uni.__TITLE__?.replace("【您有新消息】", "")}` : " "; // 切换标题内容
-          uni.__HIDE_TIME_VM__ = setTimeout(flashTitle, 500); // 每0.5秒切换一次
+          document.title = flag ? `【您有新消息】${(uni.$__TITLE__ || "")?.replace("【您有新消息】", "")}` : " "; // 切换标题内容
+          uni.$__HIDE_TIME_VM__ = setTimeout(flashTitle, 500); // 每0.5秒切换一次
 
           window.focus();
           window.blur();
         } else {
-          document.title = uni.__TITLE__; // 恢复默认标题
+          document.title = uni.$__TITLE__; // 恢复默认标题
         }
       }
 
@@ -356,10 +377,11 @@ export default {
         uni.$emit("$__web_socket_notice__", data);
         // #endif
 
+
         // #ifndef MP
         const isSender = !_isEmpty(data.sender) && _get(data, "sender.nickName");
         const h = this.$createElement;
-        /* <img src="${getCacheFile(_get(data, "sender.avatar"))}" alt=""/> */
+
         const not = this.$notify({
           title: MSG_TYPE_ENUMS[data.type],
           dangerouslyUseHTMLString: isSender,
@@ -382,9 +404,21 @@ export default {
                   title: MSG_TYPE_ENUMS[data.type],
                   message: h("div", {class: "ko-ws-notify"}, [
                     h("div", {
-                      class: "ko-ws-notify__content",
-                      style: {height: "360px", overflowY: "auto"},
+                      class: ["ko-ws-notify__content", {"not-images": !data.images}],
+                      style: {maxHeight: "360px", overflowY: "auto"},
                     }, [data.content]),
+
+                    data.images ? h("div", {class: "ko-ws-notify__images", style: {padding: "20px 10px"}}, [
+                      h("UvAlbum", {
+                        props: {
+                          space: 10,
+                          singleSize: 150,
+                          multipleSize: 150,
+                          urls: (data.images || "").split(",")?.map(url => getCacheFile(url)),
+                        },
+                      }),
+                    ]) : null,
+
                     h("div", {class: "ko-ws-notify__footer"}, [
                       h("div", {class: "ko-ws-notify__time"}, [data.createTime || ""]),
                       h("p", {class: "ko-ws-notify__form"}, [
@@ -400,6 +434,7 @@ export default {
               .finally(() => {
                 uni.$emit("$__update_msg_count__");
                 not.close();
+                uni.$__HIDE_TIME_VM__ && clearTimeout(uni.$__HIDE_TIME_VM__);
               });
           },
         });
@@ -415,6 +450,17 @@ export default {
     },
   },
   onUnload() {
+    // #ifdef MP-WEIXIN
+    if (wx?.setVisualEffectOnCapture) {
+      wx.setVisualEffectOnCapture({
+        visualEffect: "none",
+        complete: function (res) {
+        },
+      });
+    }
+    // #endif
+
+
     if (uni.$__SOCKET_TASK__) uni.$__SOCKET_TASK__.close();
     console.log("uni.$__SOCKET_TASK__", uni.$__SOCKET_TASK__);
   },

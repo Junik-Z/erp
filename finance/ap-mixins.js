@@ -53,7 +53,7 @@ export default {
             finishPayableApi(item)
               .then(() => {
                 uni.showToast({title: "操作成功"});
-                this[this.isSearch ? "sList" : "oList"][index] && this.$set(this[this.isSearch ? "sList" : "oList"], index, {
+                this[this.isSearch ? "sList" : "oList"]?.[index] && this.$set(this[this.isSearch ? "sList" : "oList"], index, {
                   ...item,
                   status: "FINISHED",
                 });

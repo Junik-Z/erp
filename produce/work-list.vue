@@ -515,7 +515,7 @@ export default {
   computed: {
     // #ifdef H5
     getColumns() {
-      return this.columns.filter(item => this.GET_PAGE_MENU_FUNC === 2 ? !_isEqual(item.label, "操作") : true);
+      return this.columns;
     },
     // #endif
 
@@ -535,14 +535,14 @@ export default {
         {
           name: "修改物料",
           func: "onAddedMaterial",
-          status: ['APPLY_MATERIAL', 'CANCELLED'],
+          status: ["APPLY_MATERIAL", "FINISHED", "PAUSED"],
           perm: "PRODUCE_UPDATE_MATERIAL",
-          params: [true]
+          params: [true],
         },
         {
           name: "修改工艺",
           func: "onTechnology",
-          status: ['APPLY_MATERIAL', 'PAUSED'],
+          status: ["APPLY_MATERIAL", "PAUSED"],
           perm: "PRODUCE_UPDATE_CRAFT_PROCESS",
         },
         {
@@ -554,7 +554,7 @@ export default {
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED"],
+          status: ["CREATED"],
           perm: "PRODUCE_UPDATE",
         },
         {
@@ -594,6 +594,7 @@ export default {
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
+
     <TopMenus :tabs="TabList" :path="PageEnums.produceWorkList" />
 
     <HistoryBar
@@ -687,7 +688,7 @@ export default {
                   </button>
                   <button
                     class="ko-basic-button__card"
-                    v-if="['APPLY_MATERIAL', 'CANCELLED'].includes(item.status) && isPerm('PRODUCE_UPDATE_MATERIAL') && false"
+                    v-if="['APPLY_MATERIAL', 'FINISHED', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_MATERIAL') && false"
                     @click.stop="onAddedMaterial(item, index, true)"
                   >
                     修改物料
@@ -770,14 +771,14 @@ export default {
             <block>
               <button
                 class="ko-basic-button__card"
-                v-if="GET_PAGE_MENU_FUNC === 0 && isPerm('PRODUCE_UPDATE')"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_UPDATE')"
                 @click.stop="onAddedMaterial(item, index)"
               >
                 添加物料
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="[1, 2].includes(GET_PAGE_MENU_FUNC) && isPerm('PRODUCE_UPDATE_MATERIAL')"
+                v-if="['APPLY_MATERIAL', 'FINISHED', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_MATERIAL')"
                 @click.stop="onAddedMaterial(item, index, true)"
               >
                 修改物料
@@ -827,7 +828,7 @@ export default {
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('PRODUCE_UPDATE')"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_UPDATE')"
                 @click.stop="onJump(item, index)"
               >
                 编辑

@@ -7,7 +7,7 @@ import { CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import { getConfigApi } from "@/api/user";
-import FilePicker from "./components/FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 export default {
   name: "Store",

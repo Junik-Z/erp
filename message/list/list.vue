@@ -18,7 +18,14 @@ import { bindSupplierApi } from "@/api/erp/purchase";
 import { bindCustomerApi } from "@/api/erp/sale";
 import reLogin from "@/mixins/re-login";
 import KoMovable from "@/components/Movable/index.vue";
-import SendMsg from "../components/SendMsg.vue";
+import SendMsg from "@/components/SendMsg.vue";
+import UvAlbum from "@/uni_modules/uv-album/components/uv-album/uv-album.vue";
+
+let multipleSize = 80;
+
+// #ifdef H5
+multipleSize = 150;
+// #endif
 
 export default {
   name: "List",
@@ -30,6 +37,7 @@ export default {
     PickerUser,
 
     SendMsg,
+    UvAlbum,
   },
   data() {
     return {
@@ -52,23 +60,27 @@ export default {
       pType: "client",
 
       showNewUsers: false,
+
+      multipleSize,
     };
   },
   mixins: [mixins, reLogin],
   onShow() {
-    this.getList(true);
+    this.reRequest();
   },
   onLoad(option) {
     console.log("消息列表的参数：", option);
     this.list = [];
-
-    uni.$on("$__web_socket_message__", () => this.getList(true));
-
-    uni.$on("$__update_msg_list__", () => this.getList(true));
+    uni.$on("$__web_socket_message__", this.reRequest);
+    uni.$on("$__update_msg_list__", this.reRequest);
   },
   methods: {
     reRequest() {
-      this.getList(true);
+      uni.$__MSG_LIST_TIME_VM__ && clearTimeout(uni.$__MSG_LIST_TIME_VM__);
+
+      uni.$__MSG_LIST_TIME_VM__ = setTimeout(() => {
+        this.getList(true);
+      }, 1000);
     },
 
     // 请求下一页数据
@@ -100,6 +112,9 @@ export default {
           .then(() => {
             this.$set(this.list[index], "isRead", true);
           });
+        // 更新未读数量
+        uni.$emit("$__update_msg_count__");
+        uni.$__HIDE_TIME_VM__ && clearTimeout(uni.$__HIDE_TIME_VM__);
       }
 
       uni.$emit("$__web_socket_mark_read__", item.id);
@@ -261,12 +276,17 @@ export default {
         });
       };
     },
+
+    // 图片列表
+    getImageList() {
+      return (image) => (image || "").split(",")?.map(url => this.getImageUrl(url));
+    },
   },
   onUnload() {
     console.log("数据销毁了");
     uni.$off("$__get_config_info_success__", this.reRequest);
-    uni.$off("$__web_socket_message__", this.getList);
-    uni.$off("$__update_msg_list__", this.getList);
+    uni.$off("$__web_socket_message__", this.reRequest);
+    uni.$off("$__update_msg_list__", this.reRequest);
   },
 };
 </script>
@@ -295,7 +315,20 @@ export default {
 
                 <view class="ko-message__item--info">
                   <view class="ko-message__item--info--title">{{ getMessageType(item.type) }}</view>
-                  <view class="ko-message__item--info--content">{{ item.content }}</view>
+                  <view class="ko-message__item--info--content">
+                    {{ item.content }}
+                  </view>
+
+                  <view class="ko-ws-notify__images" v-if="item.images">
+                    <UvAlbum
+                      :space="10"
+                      :multiple-size="multipleSize"
+                      :urls="getImageList(item.images)"
+                      :single-size="multipleSize"
+                    />
+                  </view>
+
+
                   <view class="ko-ws-notify__footer">
                     <view class="ko-ws-notify__time">{{ item.createTime }}</view>
 
@@ -304,7 +337,7 @@ export default {
                         v-if="isEqual(item.type, 'InternalStaffNoticeSender')"
                         class="ko-ws-notify__form"
                       >
-                        <text style="white-space: nowrap; margin-top: 2px;">发给：</text>
+                        <text style="white-space: nowrap;">发给：</text>
                         <view class="ko-ws-notify__form--wrap">
                           <view
                             v-for="child of getToUser(item)"
@@ -354,8 +387,17 @@ export default {
 
     <BasicPopup no-footer-padding :visible.sync="visible" :title="title" :no-footer="!showNewUsers">
       <view class="ko-message__popup">
-        <view class="ko-ws-notify__content">
+        <view class="ko-ws-notify__content" :class="{'not-images': !node.images}">
           {{ node.content }}
+        </view>
+
+        <view class="ko-ws-notify__images" v-if="node.images">
+          <UvAlbum
+            :space="10"
+            :multiple-size="multipleSize"
+            :urls="getImageList(node.images)"
+            :single-size="multipleSize"
+          />
         </view>
 
         <view class="ko-ws-notify__footer">
@@ -535,19 +577,14 @@ export default {
   }
 
   &__popup {
-    padding: 10px 10px 0;
-
     // #ifdef MP
+    padding: 10px 16px;
     width: 90vw;
     // #endif
 
     // #ifndef MP
+    padding: 20px;
     width: 600px;
-
-    .ko-ws-notify__content {
-      height: 360px;
-    }
-
     // #endif
 
     &--footer {

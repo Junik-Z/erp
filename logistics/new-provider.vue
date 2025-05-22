@@ -7,7 +7,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import FilePicker from "./components/FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, _isNumber as isNumber, CustomToast } from "@/utils";
 import { validatePhone } from "@/utils/validate";
 import { addedLogisticsApi, editLogisticsApi, getLogisticsInfoApi } from "@/api/erp/logistics";

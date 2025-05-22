@@ -473,7 +473,7 @@ export default {
                 <button
                   class="ko-basic-button__card"
                   @click.stop="onPrint(item, index)"
-                  v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
+                  v-if="isPerm('SALE_PRINT')"
                 >
                   打印单据
                 </button>
@@ -530,7 +530,7 @@ export default {
             style="display: flex; align-items: center; justify-content: center;"
           >
             <button
-              v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
+              v-if="isPerm('SALE_PRINT')"
               class="ko-basic-button__card"
               @click.stop="onJumpPrint(item, 'saleReturn')"
             >

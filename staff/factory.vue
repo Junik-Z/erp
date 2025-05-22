@@ -24,8 +24,8 @@ import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import reLogin from "@/mixins/re-login";
-import SendList from "./components/SendMsg.vue";
-import FilePicker from "./components/FilePicker/FilePicker.vue";
+import SendList from "@/components/SendMsg.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 const PageMenu = [
   {

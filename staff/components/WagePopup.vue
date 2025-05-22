@@ -7,7 +7,7 @@ import mixins from "@/mixins/mixins";
 import { _deepCopy, CustomToast } from "@/utils";
 import { editSubsidyApi, removeSubsidyApi } from "@/api/erp/produce";
 import { addedCostApi } from "@/api/erp/finance";
-import FilePicker from "./FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 export default {
   name: "WagePopup",

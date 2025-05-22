@@ -6,10 +6,17 @@ import { bindSupplierApi } from "@/api/erp/purchase";
 import { bindCustomerApi } from "@/api/erp/sale";
 import mixins from "@/mixins/mixins";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
+import UvAlbum from "@/uni_modules/uv-album/components/uv-album/uv-album.vue";
+
+let multipleSize = 80;
+
+// #ifdef H5
+multipleSize = 150;
+// #endif
 
 export default {
   name: "Notice",
-  components: {UvAvatar},
+  components: {UvAvatar, UvAlbum},
   props: {
     path: String,
     isCustom: Boolean,
@@ -29,6 +36,8 @@ export default {
       showNewUsers: false,
       visible: false,
       vTitle: "",
+
+      multipleSize,
     };
   },
   mounted() {
@@ -79,9 +88,9 @@ export default {
     async onMarkRead(node, index) {
       if (!node.isRead && !["InternalStaffNoticeSender"].includes(node.type)) {
         await readMessageApi({id: node.id});
+        uni.$emit("$__update_msg_count__");
+        uni.$__HIDE_TIME_VM__ && clearTimeout(uni.$__HIDE_TIME_VM__);
       }
-
-      uni.$emit("$__update_msg_count__");
 
       this.node = _deepCopy(node);
       this.nodeIndex = index;
@@ -203,6 +212,11 @@ export default {
         });
       };
     },
+
+    // 图片列表
+    getImageList() {
+      return (image) => (image || "").split(",")?.map(url => this.getImageUrl(url));
+    },
   },
   beforeDestroy() {
     uni.$off("$__web_socket_notice__");
@@ -278,8 +292,17 @@ export default {
 
     <BasicPopup @close="onClose" no-footer-padding :visible.sync="visible" :title="vTitle" :no-footer="!showNewUsers">
       <view class="ko-notice__popup">
-        <view class="ko-notice__popup--content ko-ws-notify__content">
+        <view class="ko-notice__popup--content ko-ws-notify__content" :class="{'not-images': !node.images}">
           {{ node.content }}
+        </view>
+
+        <view class="ko-ws-notify__images" v-if="node.images">
+          <UvAlbum
+            :space="10"
+            :multiple-size="multipleSize"
+            :single-size="multipleSize"
+            :urls="getImageList(node.images)"
+          />
         </view>
 
         <view class="ko-ws-notify__footer">
@@ -393,7 +416,7 @@ export default {
 
     &--content {
       font-size: 12px;
-      height: 260px;
+      //height: 260px;
       overflow-y: auto;
 
       // #ifdef H5

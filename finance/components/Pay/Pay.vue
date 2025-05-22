@@ -6,7 +6,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
-import FilePicker from "../FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import OrderCard from "../OrderCard/OrderCard.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";

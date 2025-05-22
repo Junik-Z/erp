@@ -80,11 +80,11 @@ export default {
     },
 
     getExtendList() {
-      getProductFieldApi({pageSize: 1000, pageNum: 0})
+     /*  getProductFieldApi({pageSize: 1000, pageNum: 0})
         .then(res => {
           this.FieldList = res.data;
           uni.$__FIELD_LIST__ = res.data;
-        });
+        }); */
     },
     onChangePrice(node, event) {
       this.$emit("change-price", node, event);
@@ -109,10 +109,6 @@ export default {
   },
   mounted() {
     _isEmpty(uni.$__FIELD_LIST__) && this.getExtendList();
-
-    /*  setTimeout(() => {
-       this.getVmRect();
-     }, 10); */
   },
   computed: {
     // 获取已经选的产品列表

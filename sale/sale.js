@@ -1,5 +1,5 @@
 import { CONFIG, PageEnums } from "@/utils/config";
-import { _deepCopy, _groupBy, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _groupBy, _isBoolean, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
 import { getSaleDetailApi, printSaleApi, quickOutApi } from "@/api/erp/sale";
 import { getOrderCodeDetailApi } from "@/api/erp/produce";
 import mixins from "@/mixins/mixins";
@@ -26,68 +26,7 @@ const PageMenu = [
 export default {
   mixins: [mixins, reLogin],
   data() {
-    const _this = this;
     return {
-      MOVABLE_LIST: [
-        // #ifdef MP
-        {
-          text: "分享",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: `邀请您来下单啦！`,
-            path: PageEnums.shopping,
-            query: {
-              PAGE_TYPE: "SALE_SHARE",
-            },
-          },
-          perm: "SALE_SHARE",
-        },
-        {
-          text: "板材",
-          iconfont: "icon-icon-test",
-          path: "share",
-          openType: "share",
-          params: {
-            title: `邀请您来下单啦！`,
-            path: PageEnums.produceWork,
-            query: {
-              PAGE_TYPE: "ADDED_PRODUCE_PACKING",
-              ADDED_TYPE: "packing",
-              FORM: "SALE",
-            },
-          },
-          perm: "CNC_ADD_CUSTOMIZED_BOARD",
-        },
-        // #endif
-        /*  {
-           text: "生产",
-           iconfont: "icon-shengchan",
-           path: PageEnums.produceWork + "?ADDED_TYPE=common&FORM=SALE",
-         }, */
-        // #ifdef H5
-        {
-          text: "定制",
-          iconfont: "icon-dingzhishengchan",
-          perm: "SALE_PRODUCE_ADD",
-          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE",
-        },
-        // #endif
-        {
-          text: "板材",
-          iconfont: "icon-ziyuanicon",
-          perm: "CNC_ADD_CUSTOMIZED_BOARD",
-          path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE",
-        },
-        {
-          text: "开单",
-          iconfont: "icon-tianjia",
-          perm: "SALE_ADD",
-          path: PageEnums.NewSale,
-        },
-      ],
-
       loading: false,
       list: [],
 
@@ -377,7 +316,77 @@ export default {
         return !_isEqual(node.status, "FINISHED") && this.isPerm("SALE_UPDATE");
       };
     },
+
+    // 下拉列表数据
+    MOVABLE_LIST() {
+      const produceEnable = (this.GET_CONFIG_INFO || {})?.produceEnable || false;
+      const dProduceEnable = _isBoolean(produceEnable) ? !produceEnable : false
+
+      return [
+        // #ifdef MP
+        {
+          text: "分享",
+          iconfont: "icon-icon-test",
+          path: "share",
+          openType: "share",
+          params: {
+            title: `邀请您来下单啦！`,
+            path: PageEnums.shopping,
+            query: {
+              PAGE_TYPE: "SALE_SHARE",
+            },
+          },
+          perm: "SALE_SHARE",
+        },
+        {
+          text: "板材",
+          iconfont: "icon-icon-test",
+          path: "share",
+          openType: "share",
+          params: {
+            title: `邀请您来下单啦！`,
+            path: PageEnums.produceWork,
+            query: {
+              PAGE_TYPE: "ADDED_PRODUCE_PACKING",
+              ADDED_TYPE: "packing",
+              FORM: "SALE",
+            },
+          },
+          disabled: dProduceEnable,
+          perm: "CNC_ADD_CUSTOMIZED_BOARD",
+        },
+        // #endif
+        /*  {
+           text: "生产",
+           iconfont: "icon-shengchan",
+           path: PageEnums.produceWork + "?ADDED_TYPE=common&FORM=SALE",
+         }, */
+        // #ifdef H5
+        {
+          text: "定制",
+          iconfont: "icon-dingzhishengchan",
+          perm: "SALE_PRODUCE_ADD",
+          disabled: dProduceEnable,
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx&FORM=SALE",
+        },
+        // #endif
+        {
+          text: "板材",
+          iconfont: "icon-ziyuanicon",
+          perm: "CNC_ADD_CUSTOMIZED_BOARD",
+          disabled: dProduceEnable,
+          path: PageEnums.produceWork + "?ADDED_TYPE=packing&FORM=SALE",
+        },
+        {
+          text: "开单",
+          iconfont: "icon-tianjia",
+          perm: "SALE_ADD",
+          path: PageEnums.NewSale,
+        },
+      ];
+    },
   },
+
   // #ifdef MP
   // 分享相关
   onShareAppMessage(res) {

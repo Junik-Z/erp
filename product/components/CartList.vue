@@ -260,7 +260,7 @@ export default {
       </view>
     </BasicPopup>
 
-    <SendMsg ref="SMRef" />
+    <SendMsg ref="SMRef" :z-index="9999999" />
   </view>
 </template>
 

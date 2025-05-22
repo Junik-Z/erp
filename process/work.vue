@@ -48,10 +48,10 @@ import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
 import { getBindInfoApi, getSaleCheckShareIdApi, getShareOrderApi } from "@/api/erp/sale";
 import FeesList from "./components/FeesList/FeesList.vue";
-import FilePicker from "./components/FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import PickerAddress from "./components/PickerAddress.vue";
 import { PageEnums } from "@/utils/config";
-import SendMsg from "./components/SendMsg.vue";
+import SendMsg from "@/components/SendMsg.vue";
 
 export default {
   name: "Work",
@@ -153,6 +153,11 @@ export default {
 
       // 来自销售的生产订单
       bySale: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
     };
   },
   async onLoad(option) {
@@ -563,24 +568,37 @@ export default {
 
     // 获取绑定的客户
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
-          if (this.bindList.length) {
-            this.clientType = 0;
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
-          } else {
-            this.clientType = 1;
-          }
+
+
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
+
+            if (this.bQuery.pageNum === 0) {
+              if (this.bindList.length) {
+                this.clientType = 0;
+                const one = _get(res.data, "0") || {};
+                this.form.supplierId = one.id;
+                this.form.orderPhone = _get(one, "contacts.0.phone");
+                this.form.orderAddress = _get(one, "address");
+              } else {
+                this.clientType = 1;
+              }
+            }
         });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
     },
 
     // 切换生产类型
@@ -780,11 +798,12 @@ export default {
                     ref="UserRef"
                     @input="onSupplierId"
 
-                    :is-long-list="isClient"
+                    :is-long-list="isClient || !!bindList.length"
                     :options="bindList"
 
                     :placeholder-label="GET_FUNC(form, 'customer.name')"
                     :disabled="bySale"
+                    @lower="onLower"
                   />
                 </uni-forms-item>
               </block>

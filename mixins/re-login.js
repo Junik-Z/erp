@@ -5,6 +5,7 @@ export default {
   data() {
     return {
       Q_ID: null,
+      login_loading: false,
     };
   },
   onLoad(option) {
@@ -13,12 +14,16 @@ export default {
 
     // 当参数上有带商户标识的时候触发重新登录
     if (scene && !_isEqual(scene, "undefined")) {
+      this.login_loading = true;
+
       this.onLogInAgain({scene: scene}, true)
         .then(() => {
           const info = uni.getStorageSync("__USER_INFO__");
-
           console.log("触发重新登录了", scene, __q_id__, info);
           this.RE_REQUEST();
+        })
+        .finally(() => {
+          this.login_loading = false;
         });
     } else {
       this.RE_REQUEST();
@@ -37,7 +42,7 @@ export default {
         } catch (error) {
           console.log("【RE_LOGIN ERROR】: getList 方法不存在");
         }
-      }, 200);
+      }, 300);
     },
   },
   onUpload() {

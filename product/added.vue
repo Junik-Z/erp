@@ -11,7 +11,7 @@ import {
   getProductClassApi,
   getProductFieldApi,
 } from "@/api/erp/product";
-import FilePicker from "./components/FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, _get, _isEmpty, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -135,7 +135,6 @@ export default {
     getFieldList() {
       getProductFieldApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
-          console.log(res.data);
           this.fieldList = res.data;
         });
     },

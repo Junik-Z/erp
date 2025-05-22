@@ -21,6 +21,7 @@ import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sh
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import { PageEnums } from "@/utils/config";
 import OMixins from "./OMixins";
+import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 
 // 索引列表
 const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -29,6 +30,7 @@ export default {
   name: "OrderList",
   mixins: [sale, OMixins],
   components: {
+    UniSearchBar,
     BasicCard,
     GenerateCode,
     KoMovable,
@@ -913,6 +915,19 @@ export default {
           </KoList>
         </div>
         <div class="ko-address">
+          <div class="ko-address__search">
+            <uni-search-bar
+              v-model="aQuery.address"
+              placeholder="请输入地址"
+              @confirm="getAddressList(true)"
+              @cancel="onAddressCancel"
+              clear-button="none"
+              style="flex: 1;"
+              bg-color="transparent"
+              border
+            />
+          </div>
+
           <KoList
             class="ko-address__table"
             :loading="aLoading"
@@ -1017,7 +1032,7 @@ export default {
                   申请退货
                 </button>
                 <button
-                  v-if="['FINISHED', 'CREATED', 'WAIT_PAY'].includes(item.status) && isPerm('SALE_PRINT')"
+                  v-if="isPerm('SALE_PRINT')"
                   class="ko-basic-button__card"
                   @click.stop="onJumpPrint(item, 'sale')"
                 >
@@ -1228,5 +1243,6 @@ export default {
     }
   }
 }
+
 // #endif
 </style>

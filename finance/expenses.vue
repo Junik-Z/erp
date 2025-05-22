@@ -21,7 +21,7 @@ import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import FilePicker from "./components/FilePicker/FilePicker.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 import dayjs from "@/utils/dayjs";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";

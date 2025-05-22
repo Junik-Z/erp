@@ -114,7 +114,17 @@ export default {
           };
 
           ;(data.warningTrend || [])?.forEach(item => {
-            warningTrend.categories.push(item.name);
+            const N = (item.name || "");
+
+            let name = N.substring(0, 15) || "";
+
+            if (N.length > name.length) {
+              name = `${name}...`;
+            }
+
+            warningTrend.categories.push(name);
+
+            // warningTrend.categories.push(item.name);
             warningTrend.series[0].data.push(_get(item, "amounts.0") || 0);
             warningTrend.series[1].data.push(_get(item, "amounts.1") || 0);
           });

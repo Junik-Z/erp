@@ -234,14 +234,14 @@ export default {
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
+
     <TopMenus :path="PageEnums.sale" />
 
     <HistoryBar
       v-model="PAGE_MENU_INDEX"
       :values="GET_PAGE_MENU"
       label-key="label"
-
-      @change="onResetList()"
+      @change="onResetList"
       is-show-search
       ref="SearchRef"
     >
@@ -250,7 +250,7 @@ export default {
           class="ko-basic-button__card ko-order__switch"
           @click="onSwitchStyle"
         >
-          <uni-icons color="#fff" :type="!sSale ? 'list' : 'tune-filled'"></uni-icons>
+          <uni-icons color="#fff" :type="!sSale ? 'list' : 'tune-filled'" />
         </button>
       </template>
 
@@ -301,7 +301,7 @@ export default {
             <template #operate>
               <view style="display: flex; align-items: center; justify-content: flex-end;">
                 <button
-                  v-if="['FINISHED', 'CREATED'].includes(item.status) && isPerm('SALE_PRINT')"
+                  v-if="isPerm('SALE_PRINT')"
                   class="ko-basic-button__card"
                   @click.stop="onPrint(item, index)"
                 >
@@ -314,6 +314,7 @@ export default {
                 >
                   付款
                 </button>
+
                 <button
                   v-if="['CREATED'].includes(item.status) && isPerm('SALE_SUBMIT')"
                   class="ko-basic-button__card"
@@ -437,6 +438,7 @@ export default {
       @select="onSelect"
     />
     <!-- #endif -->
+
     <!-- 提示库存不足 -->
     <BasicPopup :visible.sync="visible" title="库存不足">
       <view class="ko-order__popup">

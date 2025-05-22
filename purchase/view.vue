@@ -111,12 +111,22 @@ export default {
           }))
 
           ;(data.productPurchaseRank || []).forEach((item) => {
-            obj.categories.push(item.name);
+            const N = (item.name || "");
+
+            let name = N.substring(0, 15) || "";
+
+            if (N.length > name.length) {
+              name = `${name}...`;
+            }
+
+            obj.categories.push(name);
             obj.series = obj.series.map((v, i) => {
               v.data.push(this.toYuan(_get(item, `amounts.${i}`) || 0));
               return v;
             });
           });
+
+          console.log(obj.categories);
 
           this.productPurchaseRank = _deepCopy(obj);
 
@@ -164,8 +174,6 @@ export default {
     },
 
     onFunc(item) {
-      console.log(item);
-
       if (item.func) {
         this[item.func](item);
       }

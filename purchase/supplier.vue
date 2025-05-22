@@ -8,7 +8,7 @@ import {
   removeSupplierApi,
   unbindSupplierApi,
 } from "@/api/erp/purchase";
-import { _deepCopy, _get, _isEmpty, _isString, _set, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _set, CustomToast } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
@@ -18,10 +18,12 @@ import KoMovable from "@/components/Movable/index.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import { PageEnums } from "@/utils/config";
 import TopMenus from "./components/TopMenus.vue";
+import BindUserQrcode from "@/components/BindUserQrcode.vue";
 
 export default {
   name: "ClientList",
   components: {
+    BindUserQrcode,
     TopMenus,
     HistoryBar,
     KoMovable,
@@ -379,8 +381,14 @@ export default {
     },
 
     // 处理索引点击按钮
-    onClickEvent(query) {
-      this.onBindPopup(query.item, query.$index);
+    onClickEvent({button, item, $index}) {
+      if (_isEqual(button.value, "bind")) {
+        this.onBindPopup(item, $index);
+      }
+
+      if (_isEqual(button.value, "qrcode")) {
+        this.$refs.BUQRef.open(item, "supplier");
+      }
     },
   },
   computed: {
@@ -441,15 +449,12 @@ export default {
 
     // #ifdef MP
     getIndexEventList() {
-      if (this.isPerm("SUPPLIER_BIND") || this.isPerm("SUPPLIER_UNBIND")) {
-        return [{label: "绑定"}];
-      }
-      return [];
+      const event = this.isPerm("SUPPLIER_BIND") ? [{label: "二维码", value: "qrcode"}] : [];
 
-      /*  return [
-         {label: "绑定客户", isBind: true, perm: "SUPPLIER_BIND"},
-         {label: "解绑客户", isBind: false, perm: "SUPPLIER_UNBIND"},
-       ].filter(item => this.isPerm(item.perm)); */
+      if (this.isPerm("SUPPLIER_BIND") || this.isPerm("SUPPLIER_UNBIND")) {
+        event.push({label: "绑定", value: "bind"});
+      }
+      return event;
     },
     // #endif
   },
@@ -461,7 +466,7 @@ export default {
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
-    <TopMenus :path="PageEnums.purchaseClient"/>
+    <TopMenus :path="PageEnums.purchaseClient" />
 
     <view class="ko-purchase-client__content">
       <HistoryBar
@@ -573,6 +578,8 @@ export default {
       v-if="isPerm('SUPPLIER_ADD')"
       @click="onTrigger('')"
     />
+
+    <BindUserQrcode ref="BUQRef" />
 
     <!-- #ifdef MP -->
     <UvActionSheet
