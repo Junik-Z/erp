@@ -17,7 +17,7 @@ import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { PageEnums } from "@/utils/config";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
-import GoodsMixins from "./GoodsMixins";
+import GoodsMixins from "../../mixins/GoodsMixins";
 
 export default {
   name: "ProductList",

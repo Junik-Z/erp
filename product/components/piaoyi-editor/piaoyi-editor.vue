@@ -158,9 +158,9 @@ export default {
       //获取一下是否有数据
       let that = this;
       setTimeout(() => {
-        that.editorCtx.setContents({
-          "html": that.values,
-        });
+        that.editorCtx.setContents({"html": that.values});
+        that.editorCtx.blur({});
+        that.$emit("init");
       }, 1000);
     },
     onEditorReady() {

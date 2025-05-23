@@ -1,6 +1,6 @@
 <script>
 import mixins from "@/mixins/mixins";
-import GoodsMixins from "./GoodsMixins";
+import GoodsMixins from "../../mixins/GoodsMixins";
 import GoodsCard from "./GoodsCard.vue";
 import OrderInfo from "./OrderInfo.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";

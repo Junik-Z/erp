@@ -1,11 +1,11 @@
 <script>
-import BasicPopup from "../../components/BasicPopup/BasicPopup.vue";
-import mixins from "../../mixins/mixins";
-import KNumberInput from "./KNumberInput.vue";
-import { getDetailApi } from "../../api/erp/product";
-import UvLoadingIcon from "../../uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
-import { _get, _isEmpty, _isEqual } from "../../utils";
-import GoodsMixins from "./GoodsMixins";
+import BasicPopup from "./BasicPopup/BasicPopup.vue";
+import mixins from "../mixins/mixins";
+import KNumberInput from "../product/components/KNumberInput.vue";
+import { getDetailApi } from "../api/erp/product";
+import UvLoadingIcon from "../uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
+import { _get, _isEmpty, _isEqual } from "../utils";
+import GoodsMixins from "../mixins/GoodsMixins";
 
 export default {
   name: "PickerStandard",
@@ -85,7 +85,13 @@ export default {
     // 点击产品
     onClickProducts(node) {
       this.pId = node.id;
-      const obj = this.handleGoodItem({...node, productId: node.id/* , name: this.node.name */});
+
+      const obj = this.handleGoodItem({
+        ...node,
+        productId: node.id,
+        ...(node.subFlag ? {name: node.longName} : {}),
+      });
+
       this.cForm = {...obj, productQuantity: 1};
     },
   },

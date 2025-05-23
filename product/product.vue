@@ -5,7 +5,7 @@ import { shareProductApi } from "@/api/erp/product";
 import TopMenus from "./components/TopMenus.vue";
 
 import CommodityList from "./components/CommodityList.vue";
-import GoodsMixins from "./components/GoodsMixins";
+import GoodsMixins from "../mixins/GoodsMixins";
 
 export default {
   name: "product",

@@ -65,6 +65,8 @@ export default {
       carousel: [],
       // 子产品
       subClasses: [],
+
+      sIVId: null,
     };
   },
   methods: {
@@ -87,7 +89,7 @@ export default {
       if (!this.readOnly) {
         const html = this.html || this.values;
         const carousel = this.carousel;
-        const subClasses = this.subClasses
+        const subClasses = this.subClasses;
 
         // #ifndef H5
         const EC = this.getOpenerEventChannel();
@@ -114,12 +116,23 @@ export default {
     onSuccessFiles(files) {
       console.log("上传成功的文件", files);
     },
+
+    // 初始化
+    onInitEditor() {
+      console.log("到顶部");
+      this.sIVId = null;
+      setTimeout(() => {
+        this.sIVId = "BannerId";
+      }, 10);
+    },
   },
 };
 </script>
 
 <template>
-  <view class="ko-desc">
+  <scroll-view scroll-y class="ko-desc" :scroll-into-view="sIVId">
+    <view id="BannerId" style="height: 0;overflow: hidden"></view>
+    
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
@@ -194,6 +207,7 @@ export default {
           :api="api"
           :name="name"
           @changes="saveContens"
+          @init="onInitEditor"
         />
         <!-- #endif -->
       </view>
@@ -204,11 +218,12 @@ export default {
         {{ readOnly ? "返回" : "编辑完成" }}
       </button>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
 <style scoped lang="scss">
 .ko-desc {
+  height: 100vh;
   padding-bottom: 30px;
 
   // #ifdef H5

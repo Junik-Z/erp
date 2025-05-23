@@ -10,6 +10,12 @@ import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons
 import StandardItem from "./StandardItem.vue";
 import mixins from "../../mixins/mixins";
 
+let type = "bottom";
+
+// #ifdef H5
+type = "center";
+// #endif
+
 export default {
   name: "Standard",
   components: {StandardItem, UniIcons, BasicCard, FilePicker, UvInput, UvFormItem, UvForm, BasicPopup},
@@ -139,6 +145,8 @@ export default {
       cParam: null,
       // 列表的类型
       cType: null,
+
+      type,
     };
   },
   mixins: [mixins],
@@ -440,7 +448,7 @@ export default {
     <BasicPopup
       :visible.sync="visible"
       :title="(isEdit ? '编辑' : '添加') + (isClassify ? '' : '产品')"
-      type="bottom"
+      :type="type"
     >
       <view class="ko-standard__popup">
         <UvForm
@@ -476,8 +484,10 @@ export default {
             <UvInput placeholder="请输入入库价格" type="digit" v-model="form.purchasePrice" />
           </UvFormItem>
           <UvFormItem label="预警数量：" prop="stockWarning">
-            <UvInput placeholder="请输入预警数量" type="digit" v-model="form.stockWarning" />
-            <view style="font-size: 12px; color: #c7c9ce;">注: 当产品库存少于此数量时会触预警。</view>
+            <view style="width: 100%;">
+              <UvInput placeholder="请输入预警数量" type="digit" v-model="form.stockWarning" />
+              <view style="font-size: 12px; color: #c7c9ce;">注: 当产品库存少于此数量时会触预警。</view>
+            </view>
           </UvFormItem>
           <UvFormItem label="产品图片：" prop="images">
             <view>
@@ -488,7 +498,6 @@ export default {
                 height: '100px',
               }"
               />
-
               <view style="font-size: 12px; color: #c7c9ce; margin-top: 6px;">推荐图片尺寸：1:1</view>
             </view>
           </UvFormItem>
@@ -528,4 +537,23 @@ export default {
     }
   }
 }
+
+// #ifdef H5
+.ko-standard {
+  &__added {
+    width: 120px;
+  }
+
+  &__popup {
+    width: 500px;
+    height: auto;
+    padding: 20px;
+  }
+
+  &--footer {
+    padding-bottom: 30px;
+  }
+}
+
+// #endif
 </style>

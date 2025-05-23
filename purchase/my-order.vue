@@ -276,7 +276,7 @@ export default {
         });
       } else {
         this.jumpAddedPurchase({
-          PAGE_TYPE: "ADDED_PURCHASE",
+          PAGE_TYPE: "SHARE_PURCHASE",
           isNormal: true,
           ...(item?.id ? {id: item.id} : {}),
         });

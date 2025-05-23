@@ -67,16 +67,16 @@ export default {
 
       // 添加分享出去唯一的下单ID
       if ([
-        "ADDED_SALE",
-        "ADDED_PURCHASE",
-        "ADDED_PRODUCE_PACKING",
+        "SALE_SHARE",
+        "SHARE_PURCHASE",
+        "SHARE_PRODUCE_PACKING",
         "SHARE_ORDER",
       ].includes(query.PAGE_TYPE)) {
         try {
           const Func = {
-            ADDED_SALE: getSaleShareIdApi,
-            ADDED_PRODUCE_PACKING: getSaleShareIdApi,
-            ADDED_PURCHASE: getPurchaseShareIdApi,
+            SALE_SHARE: getSaleShareIdApi,
+            SHARE_PRODUCE_PACKING: getSaleShareIdApi,
+            SHARE_PURCHASE: getPurchaseShareIdApi,
             SHARE_ORDER: shareOrderApi,
           }[query.PAGE_TYPE];
           const res = await Func?.(obj?.query?.queryList || {});

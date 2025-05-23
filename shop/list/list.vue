@@ -114,7 +114,9 @@ export default {
       checked: [],
 
       // 是否显示现有库存
-      showQuantity: false
+      showQuantity: false,
+      // 分享ID
+      shareId: null,
     };
   },
   components: {
@@ -132,6 +134,7 @@ export default {
     setShopList(data = {}) {
       const list = _deepCopy(data?.list || []);
       this.type = data?.type;
+      this.shareId = data?.shareId;
 
       this.isClient = data?.isClient;
       this.isWork = data?.isWork;
@@ -179,7 +182,11 @@ export default {
       const Func = this.isJudge ? getCheckListApi : getProductListApi;
 
       // 盘点的不需要区分上下架
-      Func({...this.queryList, ...(this.isJudge ? {} : params)})
+      Func({
+        ...this.queryList,
+        ...(this.isJudge ? {} : params),
+        ...(this.shareId ? {shareId: this.shareId || "", shareType: this.type} : {}),
+      })
         .then(res => {
           const list = res.data
             .map(item => {
@@ -191,6 +198,9 @@ export default {
                 this.onItemNumberChange(obj, obj.quantity);
               }
               return obj;
+            })
+            .filter(item => {
+              return !item.hasSub;
             });
 
           this.list = this.onMergeArrays(this.list, list, "productId");
@@ -609,7 +619,13 @@ export default {
         </view>
         <!-- #ifdef MP -->
         <view class="ko-shop-list__class">
-          <PickerClass watch-type :type="type" v-model="queryList.classId" @change="getList(true)" />
+          <PickerClass
+            watch-type
+            :type="type"
+            v-model="queryList.classId"
+            @change="getList(true)"
+            :shareId="shareId"
+          />
         </view>
         <!-- #endif -->
       </view>

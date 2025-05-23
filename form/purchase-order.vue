@@ -102,6 +102,8 @@ export default {
         pageNum: 0,
         pageSize: 20,
       },
+
+      shareId: null,
     };
   },
   created() {
@@ -121,9 +123,10 @@ export default {
     }
 
     // 是否是客户下单
-    this.isClient = _isEqual("ADDED_PURCHASE", option.PAGE_TYPE);
+    this.isClient = _isEqual("SHARE_PURCHASE", option.PAGE_TYPE);
 
     if (this.isClient) {
+      this.shareId = this.option.SHARE_ID && decodeURIComponent(this.option.SHARE_ID) || "";
       this.current = 1;
       await this.onLogInAgain(this.option)
         .finally(() => {
@@ -136,10 +139,9 @@ export default {
         });
 
       if (this.option.SHARE_ID) {
-        await getPurchaseCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getPurchaseCheckShareIdApi({id: this.shareId})
           .then(res => {
-            this.form.id = decodeURIComponent(this.option.SHARE_ID);
-            console.log(res);
+            this.form.id = this.shareId;
             if (res.data) {
               uni.redirectTo({
                 url: PageEnums.purchaseClientAddedBack,
@@ -375,6 +377,7 @@ export default {
                 :is-client="isClient"
                 is-actual
                 ref="PPRef"
+                :shareId="shareId"
 
                 is-show-recent
                 :supplier-id="form.supplierId"

@@ -485,24 +485,24 @@ export const MENU_LIST = [
 export const HOME_PAGE_TYPE_ENUMS = {
   logout: "退出登录",
   reselect: "重新选择商户",
-  ADDED_SALE: "分享出去添加销售单",
-  ADDED_PURCHASE: "分享出去添加采购单",
+  SALE_SHARE: "分享出去添加销售单",
+  SHARE_PURCHASE: "分享出去添加采购单",
   ADDED_REFUND_PURCHASE: "分享出去添加采购退货单",
   ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",
   BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
   BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修",
   BINDING_PRODUCT: "分享出去批量绑定产品",
-  ADDED_PRODUCE_PACKING: "分享出去下单板材",
+  SHARE_PRODUCE_PACKING: "分享出去下单板材",
 };
 
 /**
  * @description 页面类型对呀的页面地址
  */
 export const PAGE_TYPE_CORRESPOND_PATH = {
-  ADDED_SALE: PageEnums.NewSale,
+  SALE_SHARE: PageEnums.NewSale,
   BINDING_CLIENT_BY_SALE: "/client/binding/binding",
-  ADDED_PURCHASE: PageEnums.NewPurchase,
+  SHARE_PURCHASE: PageEnums.NewPurchase,
   BINDING_CLIENT_BY_PURCHASE: "/client/binding/binding",
 };
 

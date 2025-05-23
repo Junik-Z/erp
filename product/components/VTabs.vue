@@ -7,7 +7,7 @@ import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
 import GoodsCard from "./GoodsCard.vue";
 import { PageEnums } from "@/utils/config";
 import DaTreeVue2 from "./da-tree-vue2/index.vue";
-import GoodsMixins from "./GoodsMixins";
+import GoodsMixins from "../../mixins/GoodsMixins";
 
 export default {
   name: "VTabs",
@@ -35,8 +35,7 @@ export default {
     };
   },
   created() {
-    this.getClassifyList();
-    this.getFieldList();
+    this.reset()
   },
   components: {GoodsCard, DaTreeVue2, UniSearchBar},
   props: {
@@ -53,6 +52,7 @@ export default {
 
     // 更新显示搜索状态
     isShowSearch: Boolean,
+    shareId: String,
   },
   methods: {
     async reset() {
@@ -62,7 +62,12 @@ export default {
     // 获取分类列表
     getClassifyList() {
       // 加载分类
-      return getProductClassApi({pageNum: 0, pageSize: 1000})
+      return getProductClassApi({
+        pageNum: 0,
+        pageSize: 1000,
+        ...(this.shareId ? {shareId: this.shareId || '', shareType: "sale"} : {}),
+
+      })
         .then(res => {
           const data = res.data;
           this.classList = data;
@@ -88,7 +93,10 @@ export default {
       }
 
       this.loading = true;
-      getProductListApi(this.queryList)
+      getProductListApi({
+        ...this.queryList,
+        ...(this.shareId ? {shareId: this.shareId || '', shareType: "sale"} : {}),
+      })
         .then(res => {
           const data = res.data || [];
           this.list = this.onMergeArrays(this.list, data.map(v => ({...v, productId: v.id})));

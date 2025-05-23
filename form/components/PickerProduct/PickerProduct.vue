@@ -60,7 +60,9 @@ export default {
     hideTotalPrices: Boolean,
 
     // 显示库存
-    showQuantity: Boolean
+    showQuantity: Boolean,
+    // 分享ID
+    shareId: String,
   },
   data() {
     return {
@@ -103,7 +105,8 @@ export default {
             isWork: this.isWork,
 
             // 显示库存
-            showQuantity: this.showQuantity
+            showQuantity: this.showQuantity,
+            shareId: this.shareId,
           });
         },
       });

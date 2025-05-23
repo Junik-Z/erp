@@ -311,7 +311,7 @@ export default {
             title: `邀请您来下单啦！`,
             path: PageEnums.NewPurchase,
             query: {
-              PAGE_TYPE: "ADDED_PURCHASE",
+              PAGE_TYPE: "SHARE_PURCHASE",
             },
           },
           perm: "PURCHASE_SHARE",

@@ -85,6 +85,7 @@ export default {
       current: null,
       tabs: ["客户", "其它客户"],
 
+      // 客户下单
       isClient: false,
 
       // 客户绑定用户列表
@@ -100,6 +101,11 @@ export default {
         pageNum: 0,
         pageSize: 20,
       },
+
+      shareId: null,
+
+      // 分享下单
+      isShare: false,
     };
   },
   async onLoad(option) {
@@ -120,9 +126,12 @@ export default {
     if (this.isEdit) this.getInfo();
 
     // 客户点击分享页面下单
-    this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
+    this.isShare = _isEqual("SALE_SHARE", option.PAGE_TYPE);
 
-    if (this.isClient) {
+    this.isClient = _isEqual("MY_SALE", option.PAGE_TYPE);
+
+    if (this.isShare) {
+      this.shareId = decodeURIComponent(this.option.SHARE_ID)
       this.current = 1;
       await this.onLogInAgain(this.option)
         .finally(() => {
@@ -135,10 +144,9 @@ export default {
         });
 
       if (this.option.SHARE_ID) {
-        await getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getSaleCheckShareIdApi({id: this.shareId})
           .then(res => {
-            this.form.id = decodeURIComponent(this.option.SHARE_ID);
-
+            this.form.id = this.shareId
             if (res.data) {
               uni.redirectTo({
                 url: PageEnums.saleClientAddedBack,
@@ -402,6 +410,7 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
+                :shareId="shareId"
 
                 is-show-recent
                 :supplier-id="form.supplierId"

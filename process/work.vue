@@ -158,6 +158,8 @@ export default {
         pageNum: 0,
         pageSize: 20,
       },
+
+      shareId: null,
     };
   },
   async onLoad(option) {
@@ -176,7 +178,7 @@ export default {
     this.isAgain = _isEqual(option.isAgain, "true");
 
     // 是否是来自分享页面
-    this.isShare = _isEqual(option.PAGE_TYPE, "ADDED_PRODUCE_PACKING");
+    this.isShare = _isEqual(option.PAGE_TYPE, "SHARE_PRODUCE_PACKING");
 
     // 采购定制单
     this.isPurchase = _isEqual(option.FORM, "PURCHASE");
@@ -237,6 +239,8 @@ export default {
 
     // 处理分享页面
     if (this.isShare) {
+      this.shareId = decodeURIComponent(this.option.SHARE_ID);
+
       await this.onLogInAgain(this.option)
         .finally(() => {
           setTimeout(() => {
@@ -247,9 +251,9 @@ export default {
         });
 
       if (this.option.SHARE_ID) {
-        await getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getSaleCheckShareIdApi({id: this.shareId})
           .then(res => {
-            this.form.id = decodeURIComponent(this.option.SHARE_ID);
+            this.form.id = this.shareId;
             this.form.totalAmount = 1;
 
             console.log("分享ID逻辑", res.data);
@@ -581,17 +585,17 @@ export default {
           this.bindList = this.onMergeArrays(this.bindList, data, "value");
           this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
 
-            if (this.bQuery.pageNum === 0) {
-              if (this.bindList.length) {
-                this.clientType = 0;
-                const one = _get(res.data, "0") || {};
-                this.form.supplierId = one.id;
-                this.form.orderPhone = _get(one, "contacts.0.phone");
-                this.form.orderAddress = _get(one, "address");
-              } else {
-                this.clientType = 1;
-              }
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.clientType = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.clientType = 1;
             }
+          }
         });
     },
 
@@ -705,6 +709,7 @@ export default {
                     type="purchase"
                     is-work
                     hide-total-prices
+                    :shareId="shareId"
 
                     is-show-recent
                     :supplier-id="form.supplierId"
@@ -905,6 +910,8 @@ export default {
                     :is-work="isPurchase"
                     :total.sync="pTotal"
                     hide-total-prices
+
+                    :shareId="shareId"
 
                     is-show-recent
                     :supplier-id="form.supplierId"

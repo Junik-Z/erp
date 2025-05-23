@@ -5,9 +5,9 @@ import CartList from "./components/CartList.vue";
 import mixins from "@/mixins/mixins";
 import { getSaleCheckShareIdApi, getSaleDetailApi } from "@/api/erp/sale";
 import { PageEnums } from "@/utils/config";
-import GoodsMixins from "./components/GoodsMixins";
+import GoodsMixins from "../mixins/GoodsMixins";
 import reLogin from "@/mixins/re-login";
-import PickerStandard from "./components/PickerStandard.vue";
+import PickerStandard from "../components/PickerStandard.vue";
 
 export default {
   name: "shopping",
@@ -26,9 +26,15 @@ export default {
 
       // 预览
       isPreview: false,
+      // 分享id
+      shareId: null,
+
+      // 显示产品列表
+      showVTList: false,
     };
   },
   onLoad(option) {
+    this.showVTList = false;
     this.option = option;
     this.isSale = _isEqual(option.PAGE_TYPE, "SALE");
     // 分享
@@ -48,7 +54,14 @@ export default {
       // this.getInfo(option.id);
     }
 
-    if (this.isShare) this.handlerShare();
+    if (this.isShare) {
+      this.shareId = decodeURIComponent(this.option.SHARE_ID);
+      this.handlerShare();
+    }
+
+    setTimeout(() => {
+      this.showVTList = true;
+    }, 200);
 
     if (!this.isSale && !this.isPreview && !this.isShare) {
       setTimeout(() => {
@@ -83,9 +96,7 @@ export default {
           }, 10);
         });
       if (this.option.SHARE_ID) {
-        const id = decodeURIComponent(this.option.SHARE_ID);
-
-        await getSaleCheckShareIdApi({id})
+        await getSaleCheckShareIdApi({id: this.shareId})
           .then(res => {
             this.setOrderForm({id});
 
@@ -266,18 +277,21 @@ export default {
 
       <view class="ko-shopping__goods-list">
         <VTabs
+          v-if="showVTList"
           @operate="onOperate"
           ref="VTRef"
           is-shopping
           @switch="onSwitch"
           :show-switch="isSale && !isEdit"
           :is-show-search.sync="isShowSearch"
+          :share-id="shareId"
         />
       </view>
     </view>
 
     <CartList ref="CLRef" :is-share="isShare" :is-sale="isSale" />
 
+    <!-- 选择规则 -->
     <PickerStandard ref="PSRef" />
   </view>
 </template>

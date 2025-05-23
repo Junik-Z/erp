@@ -347,7 +347,7 @@ export default {
             title: `邀请您来下单啦！`,
             path: PageEnums.produceWork,
             query: {
-              PAGE_TYPE: "ADDED_PRODUCE_PACKING",
+              PAGE_TYPE: "SHARE_PRODUCE_PACKING",
               ADDED_TYPE: "packing",
               FORM: "SALE",
             },

@@ -212,7 +212,7 @@ export default {
           path: PageEnums.shopping + "?PAGE_TYPE=MY_SALE",
           // #endif
           // #ifdef H5
-          path: PageEnums.NewSale + "?PAGE_TYPE=ADDED_SALE&isNormal=true",
+          path: PageEnums.NewSale + "?PAGE_TYPE=MY_SALE&isNormal=true",
           // #endif
           perm: "SALE_ADD",
         },
@@ -309,7 +309,7 @@ export default {
         }
 
         let q = this.getQueryString({
-          PAGE_TYPE: "ADDED_SALE",
+          PAGE_TYPE: "SALE_SHARE",
           isNormal: true,
           ...(item?.id ? {id: item.id} : {}),
         });
