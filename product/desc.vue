@@ -9,12 +9,13 @@ import { _deepCopy, _isEqual } from "@/utils";
 import { CONFIG } from "@/utils/config";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
-import FilePicker from '@/components/FilePicker/FilePicker.vue'
-
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import Standard from "./components/Standard.vue";
 
 export default {
-  name: "desc",
+  name: "SetDesc",
   components: {
+    Standard,
     // #ifdef MP
     PiaoyiEditor,
     // #endif
@@ -62,18 +63,20 @@ export default {
       takeOverName: null,
 
       carousel: [],
+      // 子产品
+      subClasses: [],
     };
   },
   methods: {
     info(info) {
       const data = _deepCopy(info);
       console.log(data);
-
       this.readOnly = _isEqual("view", data.type);
 
       this.values = data.value;
       this.takeOverName = data.takeOverName;
       this.carousel = data.carousel;
+      this.subClasses = data.subClasses;
     },
 
     saveContens({html}) {
@@ -84,14 +87,15 @@ export default {
       if (!this.readOnly) {
         const html = this.html || this.values;
         const carousel = this.carousel;
+        const subClasses = this.subClasses
 
         // #ifndef H5
         const EC = this.getOpenerEventChannel();
-        EC?.emit?.("on_good_desc_over", {html, carousel});
+        EC?.emit?.("on_good_desc_over", {html, carousel, subClasses});
         // #endif
 
         // #ifdef H5
-        uni.$emit(this.takeOverName, {html, carousel});
+        uni.$emit(this.takeOverName, {html, carousel, subClasses});
         // #endif
       }
 
@@ -163,7 +167,15 @@ export default {
                </view>
              </button>-->
           </FilePicker>
+
+          <view style="font-size: 12px; color: #c7c9ce; margin-top: 6px;">推荐图片尺寸：16:9</view>
         </view>
+      </view>
+    </UniSection>
+
+    <UniSection title="产品规格: " type="line">
+      <view class="ko-desc__swiper">
+        <Standard v-model="subClasses" :readonly="readOnly" />
       </view>
     </UniSection>
 

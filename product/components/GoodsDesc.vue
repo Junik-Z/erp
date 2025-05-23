@@ -1,5 +1,6 @@
 <script>
 import { PageEnums } from "@/utils/config";
+import { _isEmpty } from "../../utils";
 
 export default {
   name: "GoodsDesc",
@@ -11,6 +12,7 @@ export default {
         return [];
       },
     },
+    subClasses: Array,
   },
   data() {
     return {
@@ -24,9 +26,9 @@ export default {
   methods: {
     getTakList(data) {
       console.log("接收到的数据轮播图数据", data);
-
       this.$emit("input", data.html);
       this.$emit("update:carousel", data.carousel);
+      this.$emit("update:subClasses", data.subClasses);
     },
 
     // 商品详情
@@ -48,12 +50,17 @@ export default {
             value: this.value,
             takeOverName: this.takeOverName,
             carousel: this.carousel,
+            subClasses: this.subClasses,
           });
         },
       });
     },
   },
-
+  computed: {
+    showAdded() {
+      return _isEmpty(this.value) || _isEmpty(this.carousel) || _isEmpty(this.subClasses);
+    },
+  },
   onUnload() {
     uni.$off(this.takeOverName, this.getTakList);
   },
@@ -65,7 +72,7 @@ export default {
 
 <template>
   <view class="ko-goods-desc">
-    <button class="ko-basic-button__card" v-if="!value" @click="toDesc('added')">添加</button>
+    <button class="ko-basic-button__card" v-if="!showAdded" @click="toDesc('added')">添加</button>
     <block v-else>
       <button class="ko-basic-button__card" @click="toDesc('view')">查看</button>
       <button class="ko-basic-button__card" @click="toDesc('edit')">修改</button>

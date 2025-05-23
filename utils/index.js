@@ -772,7 +772,6 @@ export function loadCss(url, callback) {
 
   document.head.appendChild(link);
 }
-
 // #endif
 
 // 判断是不是相片

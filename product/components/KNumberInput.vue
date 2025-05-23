@@ -46,7 +46,8 @@ export default {
           value = this.trimStr(value, this.trim);
         }
       }
-      this.val = value;
+
+      this.val = this.min > value ? this.min : value;
       this.onChange();
     },
 

@@ -121,7 +121,7 @@ export default {
 
     // 处理点击产品项目
     onOperate(item, index) {
-      this.$emit("click-item", item, index);
+      this.$emit("operate", item, index);
     },
 
     // 删除列表项目

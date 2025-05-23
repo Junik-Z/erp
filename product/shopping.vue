@@ -1,5 +1,5 @@
 <script>
-import VTabs from "@/product/components/VTabs.vue";
+import VTabs from "./components/VTabs.vue";
 import { _isEqual, _set, getRect } from "@/utils";
 import CartList from "./components/CartList.vue";
 import mixins from "@/mixins/mixins";
@@ -7,10 +7,11 @@ import { getSaleCheckShareIdApi, getSaleDetailApi } from "@/api/erp/sale";
 import { PageEnums } from "@/utils/config";
 import GoodsMixins from "./components/GoodsMixins";
 import reLogin from "@/mixins/re-login";
+import PickerStandard from "./components/PickerStandard.vue";
 
 export default {
   name: "shopping",
-  components: {VTabs, CartList},
+  components: {PickerStandard, VTabs, CartList},
   data() {
     return {
       hHeight: 0,
@@ -81,7 +82,6 @@ export default {
             this.$refs.VTRef && this.$refs.VTRef.reset();
           }, 10);
         });
-
       if (this.option.SHARE_ID) {
         const id = decodeURIComponent(this.option.SHARE_ID);
 
@@ -134,14 +134,15 @@ export default {
         });
     },
 
-    onClickItem() {
+    // 点击
+    onOperate(item, index) {
+      this.$refs.PSRef.open(item, index);
     },
 
     // 获取表单顶部高度
     getHeaderRect() {
       getRect(".ko-shopping__header", this)
         .then(res => {
-          console.log(res);
           this.hHeight = res?.height || 0;
         });
     },
@@ -265,7 +266,7 @@ export default {
 
       <view class="ko-shopping__goods-list">
         <VTabs
-          @click-item="onClickItem"
+          @operate="onOperate"
           ref="VTRef"
           is-shopping
           @switch="onSwitch"
@@ -276,6 +277,8 @@ export default {
     </view>
 
     <CartList ref="CLRef" :is-share="isShare" :is-sale="isSale" />
+
+    <PickerStandard ref="PSRef" />
   </view>
 </template>
 

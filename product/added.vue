@@ -266,13 +266,16 @@ export default {
             </view>
           </UniFormsItem>
           <UniFormsItem label="产品图片：">
-            <FilePicker
-              v-model="form.images"
-              :image-styles="{
+            <view>
+              <FilePicker
+                v-model="form.images"
+                :image-styles="{
                 width: '100px',
                 height: '100px',
               }"
-            />
+              />
+              <view style="font-size: 12px; color: #c7c9ce; margin-top: 6px;">推荐图片尺寸：1:1</view>
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
@@ -311,6 +314,7 @@ export default {
             <GoodsDesc
               v-model="form.description"
               :carousel.sync="form.carousel"
+              :sub-classes.sync="form.subClasses"
             />
           </UniFormsItem>
           <UniFormsItem label="备注：" name="remark">

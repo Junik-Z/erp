@@ -384,11 +384,9 @@ export default {
     getImageUrl() {
       return getCacheFile;
     },
-
     isEqual() {
       return _isEqual;
     },
-
     // 判断空数据
     isEmpty() {
       return _isEmpty;

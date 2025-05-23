@@ -28,6 +28,7 @@ export default {
         price: _get(item, this.moneyKey),
         productQuantity: 0,
         extend: item.extend,
+        longName: item.longName,
       };
     },
 
@@ -39,7 +40,6 @@ export default {
       let nObj;
       if (productQuantity) {
         nObj = {...sGoods, [nItem.productId]: obj};
-        this.setGoodsObjAsync(nObj);
       } else {
         nObj = _omit(sGoods, [item.productId]);
       }

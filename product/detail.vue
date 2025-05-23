@@ -190,7 +190,7 @@ export default {
     }
 
     &--wrap {
-      height: 328px;
+      height: 422rpx;
     }
 
     &--item {

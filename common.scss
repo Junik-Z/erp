@@ -94,10 +94,11 @@ button::after {
 }
 
 .ko-basic-button__link {
+  width: auto;
   border-radius: 55px;
   color: $ko-primary-color;
-  font-size: 11px;
-  padding: 4px 10px;
+  font-size: 12px;
+  padding: 4px 6px;
   line-height: 1.2;
 
   // #ifdef H5
@@ -109,7 +110,7 @@ button::after {
 
   // #endif
 
-  & + .ko-basic-button__user {
+  & + .ko-basic-button__link {
     margin-left: 6px;
   }
 }
@@ -289,7 +290,7 @@ button::after {
     font-size: 14px;
     //height: 260px;
     overflow-y: auto;
-    
+
     &.not-images {
       height: 260px;
     }

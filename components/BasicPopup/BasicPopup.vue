@@ -28,9 +28,11 @@ export default {
       default: 997,
       // #endif
       // #ifndef H5
-      default: 10075
+      default: 10075,
       // #endif
     },
+
+    noPaddingTop: Boolean,
   },
   data() {
     return {};
@@ -81,7 +83,8 @@ export default {
          'show-title': !!title,
           'no-safe-bottom': noSafeBottom,
            'show-footer': $slots.footer && !noFooter,
-           'hide-footer': !($slots.footer && !noFooter)
+           'hide-footer': !($slots.footer && !noFooter),
+           'no-padding-top': noPaddingTop
       }]"
     >
       <button
@@ -148,6 +151,10 @@ export default {
     padding-bottom: 0;
   }
 
+  &.no-padding-top {
+    padding-top: 0;
+  }
+
   &__header {
     height: 50px;
     font-size: 18px;
@@ -168,6 +175,7 @@ export default {
     position: absolute;
     right: 10px;
     top: 8px;
+    width: 36px;
 
     line-height: 1.4;
 

@@ -1,7 +1,7 @@
 <template>
-	<view
-		v-if="showPopup"
-		class="uv-popup"
+	<view 
+		v-if="showPopup" 
+		class="uv-popup" 
 		:class="[popupClass, isDesktop ? 'fixforpc-z-index' : '']"
 		:style="[{zIndex: zIndex}]"
 	>
@@ -17,22 +17,24 @@
 			  :zIndex="zIndex"
 				@click="onTap"
 			></uv-overlay>
-			<uv-transition
-				key="2"
-				:mode="ani"
-				name="content"
-				:custom-style="transitionStyle"
+			<uv-transition 
+				key="2" 
+				:mode="ani" 
+				name="content" 
+				:custom-style="transitionStyle" 
 				:duration="duration"
-				:show="showTrans"
+				:show="showTrans" 
 				@click="onTap"
 			>
-				<view
-					class="uv-popup__content"
-					:style="[contentStyle]"
-					:class="[popupClass, {'safe-area-inset-bottom': safeAreaInsetBottom}]"
+				<view 
+					class="uv-popup__content" 
+					:style="[contentStyle]" 
+					:class="[popupClass]" 
 					@click="clear"
 				>
+					<uv-status-bar v-if="safeAreaInsetTop"></uv-status-bar>
 					<slot />
+					<uv-safe-bottom v-if="safeAreaInsetBottom"></uv-safe-bottom>
 					<view
 						v-if="closeable"
 						@tap.stop="close"
@@ -41,12 +43,12 @@
 						hover-class="uv-popup__content__close--hover"
 						hover-stay-time="150"
 					>
-						<uni-icons
-							type="close"
+						<uv-icon
+							name="close"
 							color="#909399"
 							size="18"
 							bold
-						/>
+						></uv-icon>
 					</view>
 				</view>
 			</uv-transition>
@@ -75,7 +77,7 @@
 	* 	@value right  右侧弹出
 	* @property {Number} duration 动画时长，默认300
 	* @property {Boolean} overlay 是否显示遮罩，默认true
-	* @property {Boolean} overlayOpacity 遮罩透明度，默认0.5
+	* @property {Boolean} overlayOpacity 遮罩透明度，默认0.5 
 	* @property {Object} overlayStyle 遮罩自定义样式
 	* @property {Boolean} closeOnClickOverlay = [true|false] 蒙版点击是否关闭弹窗，默认true
 	* @property {Number | String} zIndex 弹出层的层级
@@ -260,7 +262,7 @@
 						style.borderTopRightRadius = value
 					} else if(mode === 'center') {
 						style.borderRadius = value
-					}
+					} 
 				}
 				return this.$uv.deepMerge(style, this.$uv.addStyle(this.customStyle))
 			}
@@ -485,10 +487,6 @@
 			/* #endif */
 			position: relative;
 
-      &.safe-area-inset-bottom {
-        padding-bottom: env(safe-area-inset-bottom);
-      }
-
 			&.left,
 			&.right {
 				/* #ifdef H5 */
@@ -506,22 +504,22 @@
 					opacity: 0.4;
 				}
 			}
-
+			
 			&__close--top-left {
 				top: 15px;
 				left: 15px;
 			}
-
+			
 			&__close--top-right {
 				top: 15px;
 				right: 15px;
 			}
-
+			
 			&__close--bottom-left {
 				bottom: 15px;
 				left: 15px;
 			}
-
+			
 			&__close--bottom-right {
 				right: 15px;
 				bottom: 15px;

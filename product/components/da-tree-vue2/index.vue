@@ -7,7 +7,8 @@
           :class="{'is-show': item.show, 'tree-active-key glass': activeKey === item.key}"
           :style="{paddingLeft: item.level * indent + 'rpx'}"
           v-for="item in datalist"
-          :key="item.key">
+          :key="item.key"
+        >
           <view
             v-if="item.showArrow"
             class="da-tree-item__icon"

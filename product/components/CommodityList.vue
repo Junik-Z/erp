@@ -183,7 +183,7 @@ export default {
   <view class="ko-commodity">
     <view class="ko-commodity__wrap">
       <VTabs
-        @click-item="onClickItem"
+        @operate="onClickItem"
         ref="VTRef"
       />
     </view>

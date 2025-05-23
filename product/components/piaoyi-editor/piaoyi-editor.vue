@@ -64,8 +64,7 @@
             :read-only="readOnly"
             @ready="onEditorReady"
             @input="saveContens"
-          >
-          </editor>
+          />
         </view>
       </view>
     </view>
