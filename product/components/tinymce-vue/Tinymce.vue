@@ -32,8 +32,8 @@ export default {
         min_height: _this.height,
         toolbar_mode: "wrap",
         menubar: false,
-        plugins:
-          "preview autolink image link hr advlist lists imagetools autoresize",
+        // imagetools: 图片编辑功能。
+        plugins: "preview autolink image link hr advlist lists autoresize",
         toolbar:
           "undo redo removeformat | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright outdent indent lineheight formatpainter | \
     formatselect fontsizeselect | bullist numlist | \

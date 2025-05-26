@@ -37,5 +37,5 @@ build/
 ### VS Code ###
 .vscode/
 
-__vue.config.js
+vue.config.js
 

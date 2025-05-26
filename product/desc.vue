@@ -5,7 +5,7 @@ import PiaoyiEditor from "./components/piaoyi-editor/piaoyi-editor.vue";
 // #ifndef MP
 import Tinymce from "./components/tinymce-vue/Tinymce.vue";
 // #endif
-import { _deepCopy, _isEqual } from "@/utils";
+import { _deepCopy, _isEqual, _isHttpOrHttps } from "@/utils";
 import { CONFIG } from "@/utils/config";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import mixins from "@/mixins/mixins";
@@ -75,6 +75,11 @@ export default {
       this.readOnly = _isEqual("view", data.type);
       this.values = (data.value || "")
         ?.replace?.(/<img([^>]*)src="(.*?)"([^>]*)>/gi, (match, p1, p2, p3) => {
+
+          if (_isHttpOrHttps(p2)) {
+            return `<img${p1}src="${p2}"${p3}>`;
+          }
+
           return `<img${p1}src="${CONFIG.BASE_URL + p2}"${p3}>`;
         });
 
