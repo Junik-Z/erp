@@ -85,22 +85,25 @@ export default {
   &__wrap {
     display: flex;
     align-items: center;
+    justify-content: center;
     width: 100%;
     margin-bottom: 36px;
 
     &.no-logo {
       padding-top: 30px;
-      justify-content: center;
+
+      .ko-title__wrap {
+        padding-right: 0;
+      }
     }
   }
 
   .ko-logo {
-    margin-right: 20px;
-    padding-right: 20px;
+    margin-right: 10px;
+    padding-right: 10px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    width: 30%;
   }
 
   .ko-title {
@@ -111,6 +114,8 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
+      text-align: center;
+      padding-right: 50px;
     }
 
     &__desc {
@@ -123,7 +128,6 @@ export default {
   // #ifdef H5
   &__wrap {
     justify-content: center;
-    padding-right: 80px;
 
     &.no-logo {
       padding-right: 0;
@@ -131,12 +135,18 @@ export default {
   }
 
   .ko-logo {
-    width: auto;
+    padding-right: 30px;
   }
 
   .ko-title {
     font-size: 80px;
     line-height: 1.2;
+
+    &__wrap {
+      padding-right: 50px;
+      flex: none;
+      width: auto;
+    }
 
     &__desc {
       margin-top: 20px;

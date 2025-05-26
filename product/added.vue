@@ -276,7 +276,7 @@ export default {
           </UniFormsItem>
         </view>
       </UniSection>
-      <UniSection title="其它字段" type="line">
+      <UniSection title="其它字段" type="line" v-if="fieldList.length">
         <view style="padding: 10px;">
           <UniFormsItem
             v-for="(item, index) of fieldList"

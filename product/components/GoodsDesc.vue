@@ -58,7 +58,7 @@ export default {
   },
   computed: {
     showAdded() {
-      return _isEmpty(this.value) || _isEmpty(this.carousel) || _isEmpty(this.subClasses);
+      return _isEmpty(this.value) && _isEmpty(this.carousel) && _isEmpty(this.subClasses);
     },
   },
   onUnload() {

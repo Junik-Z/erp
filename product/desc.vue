@@ -72,10 +72,12 @@ export default {
   methods: {
     info(info) {
       const data = _deepCopy(info);
-      console.log(data);
       this.readOnly = _isEqual("view", data.type);
+      this.values = (data.value || "")
+        ?.replace?.(/<img([^>]*)src="(.*?)"([^>]*)>/gi, (match, p1, p2, p3) => {
+          return `<img${p1}src="${CONFIG.BASE_URL + p2}"${p3}>`;
+        });
 
-      this.values = data.value;
       this.takeOverName = data.takeOverName;
       this.carousel = data.carousel;
       this.subClasses = data.subClasses;
@@ -87,7 +89,11 @@ export default {
 
     onSubmit() {
       if (!this.readOnly) {
-        const html = this.html || this.values;
+        const html = (this.html || this.values)
+          ?.replace?.(/<img([^>]*)src="(.*?)"([^>]*)>/gi, (match, p1, p2, p3) => {
+            let p = p2?.replace(/^.*?(?=\/files)/, "");
+            return `<img${p1}src="${p}"${p3}>`;
+          });
         const carousel = this.carousel;
         const subClasses = this.subClasses;
 
@@ -132,7 +138,7 @@ export default {
 <template>
   <scroll-view scroll-y class="ko-desc" :scroll-into-view="sIVId">
     <view id="BannerId" style="height: 0;overflow: hidden"></view>
-    
+
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
@@ -186,7 +192,7 @@ export default {
       </view>
     </UniSection>
 
-    <UniSection title="产品规格: " type="line">
+    <UniSection title="产品规格: " type="line" v-if="readOnly && subClasses.length">
       <view class="ko-desc__swiper">
         <Standard v-model="subClasses" :readonly="readOnly" />
       </view>

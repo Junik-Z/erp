@@ -41,7 +41,8 @@ export default {
           params.carousel = params.carousel ? params.carousel.split(",") : [];
 
           params.description = params.description?.replace?.(/<img([^>]*)src="(.*?)"([^>]*)>/gi, (match, p1, p2, p3) => {
-            const p = p2?.replace(CONFIG.BASE_URL, "") || "";
+            let p = p2?.replace(CONFIG.BASE_URL, "") || "";
+            p = p?.replace(/^(\/)?api/, "") || "";
             return `<img${p1}src="${this.getImageUrl(p)}"${p3}>`;
           });
 
