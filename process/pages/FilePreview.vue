@@ -1,7 +1,6 @@
 <script>
 // #ifdef H5
 import VPdfVm from "./libs/js-preview-lib/pdf.umd";
-import ExcelVm from "./libs/js-preview-lib/excel.umd";
 import VWordVm from "./libs/js-preview-lib/docx.umd";
 import "./libs/js-preview-lib/excel.css";
 import "./libs/js-preview-lib/docx.css";
@@ -101,7 +100,21 @@ export default {
             }
 
           } else if (isExcelType(extname)) {
-            if (["XLS"].includes(extname.toUpperCase())) {
+            const DOM = document.createElement("iframe");
+            DOM.style.height = "calc(100% + 154px)";
+            DOM.style.width = "100%";
+            DOM.style.marginTop = "-154px";
+
+            let url = getFileUrl(id);
+            if (!(/^https?:\/\//.test(url))) {
+              url = `https://erp.kuaouyun.cn${url}`;
+            }
+
+            DOM.src = `https://view.officeapps.live.com/op/view.aspx?src=${url}&&embed=true`;
+            this.dom = DOM;
+            this.$refs.RRef.appendChild(DOM);
+
+            /* if (["XLS"].includes(extname.toUpperCase())) {
               const DOM = document.createElement("iframe");
               DOM.style.height = "calc(100% + 154px)";
               DOM.style.width = "100%";
@@ -118,7 +131,7 @@ export default {
             } else {
               const EVM = ExcelVm.init(this.$refs.RRef);
               EVM.preview(getFileUrl(id));
-            }
+            } */
           } else if (isCDAType(id)) {
             uni.showModal({
               title: "温馨提示",

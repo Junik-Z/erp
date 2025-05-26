@@ -1,5 +1,5 @@
 <script>
-import UvPopup from "@/uni_modules/uv-popup/components/uv-popup/uv-popup.vue";
+import UvPopup from "./../../uni_modules/uv-popup/components/uv-popup/uv-popup.vue";
 
 export default {
   name: "BasicPopup",
