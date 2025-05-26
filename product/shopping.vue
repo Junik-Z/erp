@@ -247,13 +247,13 @@ export default {
               </view>
               <view style="padding-left: 10px;">
                 <view class="ko-shopping__info--name">{{ GET_SHOP_NAME }}</view>
-                <view style="display: flex; align-items: center; font-size: 12px; color: rgba(75, 85, 99, 1);">
+                <view style="display: flex; align-items: center; font-size: 12px; color: #000;">
                   <view
                     @click.stop="onCopyText(sys.merchantPhone)"
                     style="display: flex; align-items: center; margin-right: 10px"
                     v-if="sys.merchantPhone"
                   >
-                    <uni-icons size="14" color="rgba(75, 85, 99, 1)" type="phone-filled" />
+                    <uni-icons size="14" color="#000" type="phone-filled" />
                     <text>{{ sys.merchantPhone }}</text>
                   </view>
                   <view
@@ -261,10 +261,9 @@ export default {
                     style="display: flex; align-items: center"
                     v-if="sys.merchantAddress"
                   >
-                    <uni-icons size="14" color="rgba(75, 85, 99, 1)" type="location-filled" />
+                    <uni-icons size="14" color="#000" type="location-filled" />
                     <text>{{ sys.merchantAddress }}</text>
-                  </view
-                  >
+                  </view>
                 </view>
               </view>
             </view>
@@ -396,7 +395,7 @@ export default {
       //background: linear-gradient(90deg, #ff6b6b, #ff8e53);
       //-webkit-background-clip: text;
       //-webkit-text-fill-color: transparent;
-      color: #333;
+      color: #000;
       font-size: 18px;
       font-weight: bold;
     }

@@ -4,20 +4,23 @@
       <view :style="[{paddingBottom: `${paddingBottom || 0}px`, paddingTop: `${paddingTop || 0}px`}]">
         <view
           class="da-tree-item"
-          :class="{'is-show': item.show, 'tree-active-key glass': activeKey === item.key}"
+          :class="{'is-show': item.show, 'tree-active-key glass': activeKey === item.key, 'da-tree-item__tabs': tTabItem, 'hide-arrow': hideArrow}"
           :style="{paddingLeft: item.level * indent + 'rpx'}"
           v-for="item in datalist"
           :key="item.key"
         >
-          <view
-            v-if="item.showArrow"
-            class="da-tree-item__icon"
-            @click="handleExpandedChange(item)"
-          >
-            <view :class="['da-tree-item__icon--arr','is-loading']" v-if="loadLoading && item.loading"></view>
-            <view :class="['da-tree-item__icon--arr','is-expand', {'is-right':!item.expand}]" v-else></view>
-          </view>
-          <view v-else class="da-tree-item__icon"></view>
+          <block v-if="!hideArrow">
+            <view
+              v-if="item.showArrow"
+              class="da-tree-item__icon"
+              @click="handleExpandedChange(item)"
+            >
+              <view :class="['da-tree-item__icon--arr','is-loading']" v-if="loadLoading && item.loading"></view>
+              <view :class="['da-tree-item__icon--arr','is-expand', {'is-right':!item.expand}]" v-else></view>
+            </view>
+            <view v-else class="da-tree-item__icon"></view>
+          </block>
+
           <view
             class="da-tree-item__checkbox"
             :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
@@ -56,6 +59,7 @@
               v-else
             />
           </view>
+
           <view
             class="da-tree-item__label"
             :class="'da-tree-item__label--'+item.checkedStatus"
@@ -131,6 +135,10 @@ export default {
 
     paddingBottom: Number,
     paddingTop: Number,
+
+    hideArrow: Boolean,
+
+    tTabItem: Boolean,
   },
   data() {
     return {
@@ -1052,6 +1060,28 @@ export default {
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.2s linear, background .3s, box-shadow .3s;
+
+    // 产品左侧
+    &.da-tree-item__tabs {
+
+      &.hide-arrow {
+        .da-tree-item__label {
+          text-align: center;
+        }
+      }
+
+      .da-tree-item__label {
+        min-height: 0;
+        padding: 14px 2px;
+      }
+
+      &.is-show {
+        height: auto;
+        visibility: visible;
+        padding: 0;
+        opacity: 1;
+      }
+    }
 
     &.tree-active-key {
       color: rgba(239, 68, 68, 1);

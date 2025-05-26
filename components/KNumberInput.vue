@@ -115,7 +115,7 @@ export default {
 
 <style scoped lang="scss">
 .ko-number-input {
-  --k-number-input-btn-size: 26px;
+  --k-number-input-btn-size: 28px;
   --k-number-input-btn-font-size: 20px;
 
   width: 100%;
@@ -143,7 +143,7 @@ export default {
 
   &__input {
     flex: 1;
-    margin: 0 4px;
+    margin: 0 10px;
     text-align: center;
     font-size: 14px;
   }

@@ -16,30 +16,7 @@ export default {
     VM: null,
     image: "",
   }),
-  watch: {
-    code: {
-      handler() {
-        this.$nextTick(() => {
-          setTimeout(() => {
-            this.drawQRCode();
-          }, 1);
-        });
-      },
-      deep: true,
-      immediate: true,
-    },
-    avatar: {
-      handler() {
-        this.$nextTick(() => {
-          setTimeout(() => {
-            this.drawQRCode();
-          }, 1);
-        });
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
+  watch: {},
   methods: {
     // 将图片存储到本地
     base64Save(base64File) { //base64File 需要加前缀
@@ -100,44 +77,47 @@ export default {
 
     // 生产图片
     async drawQRCode() {
-      if (!this.code) return false;
+      if (!this.code || this.image) return false;
+      uni.$__DRAW_TIME_VM__ && clearTimeout(uni.$__DRAW_TIME_VM__);
 
-      this.image = "";
-      const vm = uni.createCanvasContext("qr_code", this);
+      uni.$__DRAW_TIME_VM__ = setTimeout(async () => {
+        this.image = "";
+        const vm = uni.createCanvasContext("qr_code", this);
 
-      const qrSize = 300;
-      const size = 136;
-      const loc = qrSize / 2 - size / 2;
+        const qrSize = 300;
+        const size = 136;
+        const loc = qrSize / 2 - size / 2;
 
-      // 清除画布
-      vm.clearRect(0, 0, qrSize, qrSize);
+        // 清除画布
+        vm.clearRect(0, 0, qrSize, qrSize);
 
-      const code = await this.onLoadImage(this.code);
-      vm.drawImage(code, 0, 0, qrSize, qrSize);
+        const code = await this.onLoadImage(this.code);
+        vm.drawImage(code, 0, 0, qrSize, qrSize);
 
-      if (this.avatar) {
-        vm.beginPath();
-        vm.arc(loc + size / 2, loc + size / 2, size / 2, 0, 2 * Math.PI);
-        vm.closePath();
-        vm.clip();
+        if (this.avatar) {
+          vm.beginPath();
+          vm.arc(loc + size / 2, loc + size / 2, size / 2, 0, 2 * Math.PI);
+          vm.closePath();
+          vm.clip();
 
-        vm.setFillStyle("#ffffff"); // 背景颜色，可自定义（如 #f5f5f5）
-        vm.fill();
+          vm.setFillStyle("#ffffff"); // 背景颜色，可自定义（如 #f5f5f5）
+          vm.fill();
 
-        const avatar = await this.onLoadImage(this.avatar);
-        vm.drawImage(avatar, loc, loc, size, size);
-      }
-
-      vm.draw(false, (res) => {
-        if (res.errMsg === "drawCanvas:ok") {
-          console.log("绘制成功");
-          setTimeout(() => {
-            this.onToBasic64();
-          }, 0);
-        } else {
-          console.error("绘制错误", res.errMsg);
+          const avatar = await this.onLoadImage(this.avatar);
+          vm.drawImage(avatar, loc, loc, size, size);
         }
-      });
+
+        vm.draw(false, (res) => {
+          if (res.errMsg === "drawCanvas:ok") {
+            console.log("绘制成功");
+            setTimeout(() => {
+              this.onToBasic64();
+            }, 0);
+          } else {
+            console.error("绘制错误", res.errMsg);
+          }
+        });
+      }, 50);
     },
 
     onToBasic64() {
@@ -168,6 +148,12 @@ export default {
       }, this);
     },
   },
+
+  computed: {
+    computedList() {
+      return [this.code, this.avatar];
+    },
+  },
 };
 </script>
 
@@ -185,11 +171,9 @@ export default {
       show-menu-by-longpress="true"
       class="ko-qr-code-draw__image"
     />
-
     <view class="ko-qr-code-draw__loading" v-if="!image">
       <uv-loading-icon :size="60" />
     </view>
-
   </view>
 </template>
 
@@ -222,6 +206,7 @@ export default {
     border-radius: 30rpx;
     z-index: 99;
   }
+
   // #endif
 
   // #ifdef H5
@@ -231,6 +216,7 @@ export default {
     border-radius: 30rpx;
     z-index: 99;
   }
+
   // #endif
 }
 </style>

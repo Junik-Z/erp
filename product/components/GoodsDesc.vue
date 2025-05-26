@@ -72,7 +72,7 @@ export default {
 
 <template>
   <view class="ko-goods-desc">
-    <button class="ko-basic-button__card" v-if="!showAdded" @click="toDesc('added')">添加</button>
+    <button class="ko-basic-button__card" v-if="showAdded" @click="toDesc('added')">添加</button>
     <block v-else>
       <button class="ko-basic-button__card" @click="toDesc('view')">查看</button>
       <button class="ko-basic-button__card" @click="toDesc('edit')">修改</button>

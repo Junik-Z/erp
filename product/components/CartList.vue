@@ -1,7 +1,7 @@
 <script>
 import mixins from "@/mixins/mixins";
 import GoodsMixins from "../../mixins/GoodsMixins";
-import GoodsCard from "./GoodsCard.vue";
+import GoodsCard from "../../components/GoodsCard.vue";
 import OrderInfo from "./OrderInfo.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { _deepCopy, _get, _set, _toFinite, CustomToast } from "@/utils";

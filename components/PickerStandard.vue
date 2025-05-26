@@ -1,15 +1,24 @@
 <script>
 import BasicPopup from "./BasicPopup/BasicPopup.vue";
 import mixins from "../mixins/mixins";
-import KNumberInput from "../product/components/KNumberInput.vue";
+import KNumberInput from "./KNumberInput.vue";
 import { getDetailApi } from "../api/erp/product";
 import UvLoadingIcon from "../uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
-import { _get, _isEmpty, _isEqual } from "../utils";
+import { _get, _isEmpty, _isEqual, CustomToast } from "../utils";
 import GoodsMixins from "../mixins/GoodsMixins";
+import GoodsCard from "./GoodsCard.vue";
+
+let type = "bottom";
+let zIndex = 9999991;
+
+// #ifdef H5
+type = "center";
+zIndex = 9;
+// #endif
 
 export default {
   name: "PickerStandard",
-  components: {UvLoadingIcon, KNumberInput, BasicPopup},
+  components: {GoodsCard, UvLoadingIcon, KNumberInput, BasicPopup},
   mixins: [mixins, GoodsMixins],
   data() {
     return {
@@ -24,13 +33,29 @@ export default {
 
       rClass: null,
       pId: null,
+      pType: type,
     };
+  },
+  props: {
+    // 不是购物车模式
+    noShoppingCart: Boolean,
+    // 选择类型
+    type: {
+      type: String,
+      default: "sale",
+    },
+
+    zIndex: {
+      type: Number,
+      default: zIndex,
+    },
   },
   methods: {
     open(item, index) {
       this.nodeIndex = index;
       this.node = item;
       this.visible = true;
+
       this.getInfo();
     },
 
@@ -67,9 +92,25 @@ export default {
       const obj = this.cForm;
       const sGoods = this.sGoods;
       const nObj = {...sGoods, [obj.productId]: obj};
-      this.setGoodsObjAsync(nObj);
 
-      this.visible = false;
+      if (this.noShoppingCart) {
+        this.$emit("confirm", nObj);
+      } else {
+        this.setGoodsObjAsync(nObj);
+      }
+
+      // #ifdef MP
+      CustomToast({title: `${obj.name} 添加成功`, icon: "none"});
+      // #endif
+
+      // #ifdef H5
+      this.$message({
+        message: `${obj.name} 添加成功`,
+        type: "success",
+      });
+      // #endif
+
+      // this.visible = false;
     },
 
     // 点击
@@ -134,14 +175,31 @@ export default {
         return `${root.name}(${this.getSubProducts(root).length || 0})`;
       };
     },
+
+    // 获取金额
+    getMoney() {
+      return (item) => _get(item, `${{sale: "salePrice", purchase: "purchasePrice"}[this.type]}`) || 0;
+    },
   },
 };
 </script>
 
 <template>
-  <BasicPopup no-padding-top :visible.sync="visible" type="bottom" :z-index="9999991">
-    <view class="ko-picker-standard ko-sku" :class="{loading: loading}">
+  <BasicPopup no-padding-top :visible.sync="visible" :type="pType" :z-index="zIndex">
 
+    <template #header v-if="node && false">
+      <view class="ko-sku__cp">
+        <GoodsCard
+          :show-purchase-price="false"
+          :node="node"
+          :is-shopping="true"
+          picker-header
+          :image-size="120"
+        />
+      </view>
+    </template>
+
+    <view class="ko-picker-standard ko-sku" :class="{loading: loading}">
       <UvLoadingIcon v-if="loading" :size="50" />
 
       <block v-else>
@@ -150,7 +208,8 @@ export default {
             <image
               :src="getImageUrl(cForm.images)"
               style="width: 100%;height: 100%;"
-              mode="heightFix"
+              mode="aspectFill"
+              @click="lookImage(getImageUrl(cForm.images))"
             />
           </view>
           <view class="ko-sku__info">
@@ -188,13 +247,14 @@ export default {
                           mode="aspectFit"
                           class="ko-sku__p-item--image"
                           v-if="p.images"
+                          @click="lookImage(getImageUrl(p.images))"
                         />
 
                         <view class="ko-sku__p-item--name">
                           {{ p.name }}
                         </view>
 
-                        <view class="ko-sku__p-item--money">¥{{ toYuan(p.salePrice) }}</view>
+                        <view class="ko-sku__p-item--money">¥{{ toYuan(getMoney(p)) }}</view>
                       </view>
                     </view>
                   </block>
@@ -228,6 +288,7 @@ export default {
                         >
                           <image
                             :src="getImageUrl(p.images)"
+                            @click="lookImage(getImageUrl(p.images))"
                             mode="aspectFit"
                             class="ko-sku__p-item--image"
                             v-if="p.images"
@@ -237,7 +298,7 @@ export default {
                             {{ p.name }}
                           </view>
 
-                          <view class="ko-sku__p-item--money">¥{{ toYuan(p.salePrice) }}</view>
+                          <view class="ko-sku__p-item--money">¥{{ toYuan(getMoney(p)) }}</view>
                         </view>
                       </view>
                     </block>
@@ -261,8 +322,11 @@ export default {
 
 <style scoped lang="scss">
 .ko-picker-standard {
+  // #ifdef MP
   width: 100vw;
-  height: 74vh;
+  height: calc(74vh);
+  // #endif
+  
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -290,20 +354,29 @@ export default {
   }
 }
 
+// #ifdef H5
+.ko-picker-standard {
+  width: 600px;
+  height: 600px;
+}
+
+// #endif
+
 .ko-sku {
-  --sku-image-size: 100px;
+  --sku-cp-image-size: 90px;
+  --sku-image-size: 80px;
   --sku-p-image-size: 32px;
 
   &__header {
     display: flex;
+    align-items: center;
     padding: 0 16px;
   }
 
   &__info {
     flex: 1;
     overflow: hidden;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding: 4px 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -435,5 +508,14 @@ export default {
     }
   }
 
+  &__cp {
+    position: absolute;
+    left: 16px;
+    top: 0;
+    transform: translateY(calc(-100% - 10px));
+    z-index: 999999;
+    background: #fff;
+    border-radius: 16px;
+  }
 }
 </style>

@@ -68,13 +68,13 @@ export default {
     console.log("App Show");
 
     // #ifdef MP-WEIXIN
-    if (wx?.setVisualEffectOnCapture) {
+    /* if (wx?.setVisualEffectOnCapture) {
       wx.setVisualEffectOnCapture({
         visualEffect: "hidden",
         complete: function (res) {
         },
       });
-    }
+    } */
     // #endif
 
 
@@ -90,13 +90,13 @@ export default {
   onHide() {
     console.log("App Hide");
     // #ifdef MP-WEIXIN
-    if (wx?.setVisualEffectOnCapture) {
+    /* if (wx?.setVisualEffectOnCapture) {
       wx.setVisualEffectOnCapture({
         visualEffect: "none",
         complete: function (res) {
         },
       });
-    }
+    } */
     // #endif
 
     this.onFlash();
@@ -451,13 +451,13 @@ export default {
   },
   onUnload() {
     // #ifdef MP-WEIXIN
-    if (wx?.setVisualEffectOnCapture) {
+    /* if (wx?.setVisualEffectOnCapture) {
       wx.setVisualEffectOnCapture({
         visualEffect: "none",
         complete: function (res) {
         },
       });
-    }
+    } */
     // #endif
 
 

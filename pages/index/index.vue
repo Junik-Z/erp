@@ -487,9 +487,10 @@ export default {
 // #ifdef MP
 .ko-home {
   height: 100vh;
-  padding: 120px 20px 40px;
-  display: flex;
-  flex-direction: column;
+  padding: 110px 20px 40px;
+  //display: flex;
+  //flex-direction: column;
+  overflow-y: auto;
 
   &__item {
     height: 100%;
@@ -521,11 +522,11 @@ export default {
     }
   }
 
-  &__center {
-    flex: 1;
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
+  //&__center {
+  //  flex: 1;
+  //  overflow-x: hidden;
+  //  overflow-y: auto;
+  //}
 
   &__button {
     position: fixed;
@@ -575,6 +576,7 @@ export default {
   padding-top: 100px;
   padding-bottom: 200px;
   position: relative;
+  overflow-y: auto;
 
 
   &__store {
@@ -620,7 +622,9 @@ export default {
   }
 
   &__center {
-    height: 100%;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
   }
 
   &__content {

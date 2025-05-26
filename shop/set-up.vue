@@ -7,7 +7,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { advertisingBusinessesApi, generateQRCodeApi } from "@/api/admin";
-import { _deepCopy, _isEqual, CustomToast } from "@/utils";
+import { _deepCopy, CustomToast } from "@/utils";
 import { PageEnums } from "@/utils/config";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import Draw from "./Draw.vue";
@@ -47,7 +47,7 @@ export default {
           this.form = data;
           this.logo = _deepCopy(data.logo);
           this.$store.dispatch("setConfigInfoAsync", data);
-          if (this.form.enableShop) this.generateQRCode();
+          // if (this.form.enableShop) this.generateQRCode();
         });
     },
     // 提交配置
@@ -66,9 +66,9 @@ export default {
     onChangeSwitch(event, key) {
       this.$set(this.form, key, event.detail.value);
 
-      if (_isEqual(key, "enableShop") && event.detail.value) {
-        this.generateQRCode();
-      }
+      /*  if (_isEqual(key, "enableShop") && event.detail.value) {
+         this.generateQRCode();
+       } */
       console.log(this.form);
     },
 
@@ -81,14 +81,18 @@ export default {
 
     // 生产网店二维码
     generateQRCode() {
+      this.visible = true;
+
       this.gLoading = true;
       generateQRCodeApi()
         .then(res => {
           this.qrCode = res.data;
-          // this.visible = true;
         })
         .finally(() => {
           this.gLoading = false;
+          setTimeout(() => {
+            this.$refs.DRef && this.$refs.DRef.drawQRCode();
+          }, 500);
         });
     },
   },
@@ -109,24 +113,36 @@ export default {
           <view
             class="ko-shop-up__header--info--text"
             :class="{'is-active': form.enableShop}"
-            @click="generateQRCode"
           >
             {{ form.enableShop ? "启用" : "关闭" }}店铺
           </view>
+
+
+          <button
+            v-if="form.enableShop"
+            class="ko-basic-button__card"
+            style="margin-left: 10px;"
+            @click.stop="generateQRCode"
+          >
+            <view style="display: flex; align-items: center; justify-content: center;">
+              <i style="margin-right: 2px; font-size: 13px" class="iconfont icon-erweima"></i>
+              二维码
+            </view>
+          </button>
         </view>
 
         <!-- #ifdef MP -->
-        <button :disabled="!form.enableShop" class="ko-basic-button__card" @click.stop="onPreview">预览店铺</button>
+        <button class="ko-basic-button__card" @click.stop="onPreview">预览店铺</button>
         <!-- #endif -->
       </view>
 
-      <view v-if="form.enableShop" class="ko-shop-up__qr-code ko-generate-qr">
+      <!--<view v-if="form.enableShop" class="ko-shop-up__qr-code ko-generate-qr">
         <view class="ko-generate-qr__wrap">
           <view class="ko-generate-qr__code">
             <image
               mode="aspectFill"
               :src="getImageUrl(qrCode)"
-              class="ko-generate-qr__code--image"
+              class="ko-generate-qr__code&#45;&#45;image"
               show-menu-by-longpress
               style="z-index: 99;"
               lazy-load
@@ -135,16 +151,16 @@ export default {
             <Draw :code="qrCode" :avatar="logo ? getImageUrl(logo) : ''" />
           </view>
 
-          <view class="ko-generate-qr__wrap--line"></view>
+          <view class="ko-generate-qr__wrap&#45;&#45;line"></view>
         </view>
-        <!-- <image
+        &lt;!&ndash; <image
            class="ko-shop-up__qr-code&#45;&#45;image"
            :src="getImageUrl(qrCode)"
            mode="aspectFill"
            show-menu-by-longpress
            lazy-load
-         />-->
-      </view>
+         />&ndash;&gt;
+      </view>-->
 
       <UniSection title="店铺信息" type="line">
         <view>
@@ -198,24 +214,31 @@ export default {
 
     <BasicPopup :visible.sync="visible" title="店铺二维码">
       <view class="ko-shop-up__popup">
-        <view class="ko-shop-up__popup--qrcode" v-if="qrCode">
-          <image
-            class="ko-shop-up__popup--qrcode--image"
-            :src="getImageUrl(qrCode)"
-            mode="aspectFill"
-            show-menu-by-longpress
-            lazy-load
-          />
-        </view>
+        <view class="ko-shop-up__qr-code ko-generate-qr">
+          <view class="ko-generate-qr__wrap">
+            <view class="ko-generate-qr__code">
+              <!--<image
+                mode="aspectFill"
+                :src="getImageUrl(qrCode)"
+                class="ko-generate-qr__code&#45;&#45;image"
+                show-menu-by-longpress
+                style="z-index: 99;"
+                lazy-load
+                v-if="false"
+              />-->
+              <Draw ref="DRef" :code="qrCode" :avatar="logo ? getImageUrl(logo) : ''" />
+            </view>
 
-        <button
-          class="ko-basic-button__card"
-          style="margin: 0 40px 10px;"
-          @click="visible = false"
-          v-if="false"
-        >
-          关闭
-        </button>
+            <view class="ko-generate-qr__wrap--line"></view>
+          </view>
+          <!-- <image
+             class="ko-shop-up__qr-code&#45;&#45;image"
+             :src="getImageUrl(qrCode)"
+             mode="aspectFill"
+             show-menu-by-longpress
+             lazy-load
+           />-->
+        </view>
       </view>
     </BasicPopup>
   </view>
@@ -352,7 +375,7 @@ $borderRadius: 30rpx;
     opacity: 1;
     border-radius: $borderRadius;
     background: white;
-    box-shadow: 0 0 20rpx #00000022;
+    //box-shadow: 0 0 20rpx #00000022;
     position: relative;
 
     /*&--line {

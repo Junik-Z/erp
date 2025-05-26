@@ -5,12 +5,12 @@ import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import { _deepCopy, _get, _isEmpty, getRect } from "@/utils";
-import { getProductFieldApi } from "@/api/erp/product";
+import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
 
 export default {
   // 产品卡片
   name: "ProductCard",
-  components: {UniCol, UniRow, UniNumberBox, BasicCard},
+  components: {UniIcons, UniCol, UniRow, UniNumberBox, BasicCard},
   mixins: [mixins],
   props: {
     className: String,
@@ -80,11 +80,11 @@ export default {
     },
 
     getExtendList() {
-     /*  getProductFieldApi({pageSize: 1000, pageNum: 0})
-        .then(res => {
-          this.FieldList = res.data;
-          uni.$__FIELD_LIST__ = res.data;
-        }); */
+      /*  getProductFieldApi({pageSize: 1000, pageNum: 0})
+         .then(res => {
+           this.FieldList = res.data;
+           uni.$__FIELD_LIST__ = res.data;
+         }); */
     },
     onChangePrice(node, event) {
       this.$emit("change-price", node, event);
@@ -105,6 +105,11 @@ export default {
           urls: [url],
         });
       }
+    },
+
+    // 选择子产品
+    onHasSub() {
+      this.$emit("has-sub", this.node);
     },
   },
   mounted() {
@@ -332,6 +337,7 @@ export default {
           </UniCol>
         </template>
 
+        <!-- 选择产品时的产品卡片显示 -->
         <template v-else-if="isEditor">
           <UniCol :span="24" v-for="field of FieldList" :key="field.id">
             <view class="ko-product-card__item">
@@ -360,7 +366,13 @@ export default {
               :value="getSelectNumber(node)"
               type="digit"
               @change="onItemNumberChange(node, $event)"
+              v-if="!node.hasSub"
             />
+            <view v-else style="display: flex; align-items: center; justify-content: flex-end;">
+              <button class="ko-product-card__open-btn" @click="onHasSub">
+                <UniIcons type="cart" />
+              </button>
+            </view>
           </UniCol>
         </template>
 
@@ -460,6 +472,20 @@ export default {
 
   .cai {
     margin-right: 16px;
+  }
+
+  &__open-btn {
+    width: 32px;
+    height: 32px;
+    line-height: 20px;
+    margin-bottom: 2px;
+    font-size: 26px;
+    font-weight: 300;
+    color: #333;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

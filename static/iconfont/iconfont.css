@@ -1,3 +1,7 @@
+.icon-erweima:before {
+  content: "\e642";
+}
+
 .icon-dianpu:before {
   content: "\e622";
 }

@@ -416,9 +416,7 @@ export default {
       this.pType = "editor";
       this.visible = true;
       const node = _deepCopy(this.node);
-
       node.price = ["commission", "priceCommission"].includes(node.pricingMethod) ? node.price / 10000 : _isNotUnNil(node.price) ? this.toYuan(node.price) : null;
-
       node.placeholderLabel = (node.staffs || []).map(v => v.name).join("、");
       this.form = node;
 

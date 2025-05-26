@@ -4,10 +4,12 @@ import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar
 import { getProductClassApi, getProductFieldApi, getProductListApi } from "@/api/erp/product";
 import mixins from "@/mixins/mixins";
 import { _deepCopy, _get, _isEmpty, _isEqual } from "@/utils";
-import GoodsCard from "./GoodsCard.vue";
+import GoodsCard from "../../components/GoodsCard.vue";
 import { PageEnums } from "@/utils/config";
 import DaTreeVue2 from "./da-tree-vue2/index.vue";
 import GoodsMixins from "../../mixins/GoodsMixins";
+import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
+import UvLoadingIcon from "../../uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
 export default {
   name: "VTabs",
@@ -19,7 +21,7 @@ export default {
       queryList: {
         classId: "",
         pageNum: 0,
-        pageSize: 30,
+        pageSize: 10,
         name: "",
       },
       CurrentItemId: null,
@@ -32,12 +34,14 @@ export default {
 
       // 显示搜索
       showSearch: false,
+
+      hideArrow: false,
     };
   },
   created() {
-    this.reset()
+    this.reset();
   },
-  components: {GoodsCard, DaTreeVue2, UniSearchBar},
+  components: {UvLoadingIcon, UniIcons, GoodsCard, DaTreeVue2, UniSearchBar},
   props: {
     // 购物模式
     isShopping: Boolean,
@@ -65,14 +69,14 @@ export default {
       return getProductClassApi({
         pageNum: 0,
         pageSize: 1000,
-        ...(this.shareId ? {shareId: this.shareId || '', shareType: "sale"} : {}),
+        ...(this.shareId ? {shareId: this.shareId || "", shareType: "sale"} : {}),
 
       })
         .then(res => {
           const data = res.data;
           this.classList = data;
           !data && (this.queryList.classId = _get(data, "0.id"));
-
+          this.hideArrow = data.every(v => _isEmpty(v.children));
           this.getList();
         });
     },
@@ -95,7 +99,7 @@ export default {
       this.loading = true;
       getProductListApi({
         ...this.queryList,
-        ...(this.shareId ? {shareId: this.shareId || '', shareType: "sale"} : {}),
+        ...(this.shareId ? {shareId: this.shareId || "", shareType: "sale"} : {}),
       })
         .then(res => {
           const data = res.data || [];
@@ -249,6 +253,8 @@ export default {
             :active-key="queryList.classId"
             :padding-bottom="80"
             :padding-top="20"
+            :hide-arrow="hideArrow"
+            t-tab-item
           />
           <!-- <view
              v-for="(item, index) of classList"

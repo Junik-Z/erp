@@ -52,6 +52,7 @@ export default {
   methods: {
     onChange(event) {
       this.$emit("update:visible", event.show);
+
       if (!event.show) {
         this.$emit("close", false);
       }
@@ -75,6 +76,7 @@ export default {
     :adjustPosition="false"
     :z-index="zIndex"
   >
+    <slot name="header" />
     <view
       class="ko-basic-popup"
       :style="[maxHeight ? {'max-height': maxHeight} : {}]"
@@ -139,7 +141,7 @@ export default {
 
   &.bottom {
     &.show-footer .ko-basic-popup__footer {
-      padding-bottom: calc(env(safe-area-inset-bottom) + 0px);
+      padding-bottom: 30px;
     }
 
     &.hide-footer {

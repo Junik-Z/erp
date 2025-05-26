@@ -300,6 +300,11 @@ export default {
     onMoreClick(item, index) {
       this.$emit("click-more", item, index);
     },
+
+    onHasSub(...arg) {
+
+      this.$emit("has-sub", ...arg);
+    },
   },
   computed: {
     WX_USER_TAG_ENUMS() {
@@ -436,7 +441,7 @@ export default {
               <block v-if="isSelected">
                 <view
                   class="ko-index-list__item"
-                  v-for="(item) in data"
+                  v-for="(item, index) in data"
                   :key="item.id"
                 >
                   <view v-if="isChecked" class="ko-index-list__item--checked" @click.stop="onClick(item)">
@@ -456,6 +461,7 @@ export default {
                     :is-work="isWork"
                     :is-hide-quantity="isChecked"
                     :show-quantity="showQuantity"
+                    @has-sub="onHasSub(item, index)"
                   />
                 </view>
               </block>
@@ -610,9 +616,9 @@ export default {
                           >
                             {{ WX_USER_TAG_ENUMS[c] }}
                           </text>
-                         <!-- <text class="newUser ko-index-list__we-chat&#45;&#45;item">
-                            新用户
-                          </text>-->
+                          <!-- <text class="newUser ko-index-list__we-chat&#45;&#45;item">
+                             新用户
+                           </text>-->
                         </view>
                       </view>
                       <view class="ko-user__buttons" v-if="buttonPerm ? isPerm(buttonPerm) : true">

@@ -269,10 +269,7 @@ export default {
             <view>
               <FilePicker
                 v-model="form.images"
-                :image-styles="{
-                width: '100px',
-                height: '100px',
-              }"
+                :image-styles="{width: '100px',height: '100px',}"
               />
               <view style="font-size: 12px; color: #c7c9ce; margin-top: 6px;">推荐图片尺寸：1:1</view>
             </view>
