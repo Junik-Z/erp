@@ -29,8 +29,11 @@ export default {
     readonly: Boolean,
   },
   watch: {
-    value(val) {
-      this.list = val;
+    value: {
+      handler(val) {
+        this.list = val;
+      },
+      immediate: true,
     },
   },
   data() {

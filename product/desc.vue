@@ -197,7 +197,7 @@ export default {
       </view>
     </UniSection>
 
-    <UniSection title="产品规格: " type="line" v-if="readOnly && subClasses.length">
+    <UniSection title="产品规格: " type="line" v-if="(readOnly && subClasses.length) || !readOnly">
       <view class="ko-desc__swiper">
         <Standard v-model="subClasses" :readonly="readOnly" />
       </view>
