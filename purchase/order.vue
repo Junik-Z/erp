@@ -7,14 +7,14 @@ import KoList from "@/components/List/List.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { getPurchaseList2Api, getSupplierAddressListApi, getSupplierListApi } from "@/api/erp/purchase";
 import KoMovable from "@/components/Movable/index.vue";
-import PrintList from "./components/PrintList.vue";
+import PrintList from "@/components/PrintList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import OrderCard from "@/components/OrderCard/OrderCard.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import Pay from "@/purchase/components/Pay/Pay.vue";
+import Pay from "@/components/Pay/Pay.vue";
 import OMixins from "@/purchase/OMixins";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 

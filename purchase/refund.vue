@@ -13,7 +13,7 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isString, _keys, _pick, CustomToast } from "@/utils";
 import OrderCard from "./components/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "./components/PrintList.vue";
+import PrintList from "@/components/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG } from "@/utils/config";
 import PurchaseMixins from "./PurchaseMixins";
@@ -21,7 +21,7 @@ import KoList from "@/components/List/List.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import Pay from "./components/Pay/Pay.vue";
+import Pay from "@/components/Pay/Pay.vue";
 import TopMenus from "./components/TopMenus.vue";
 
 const PageMenu = [
@@ -412,7 +412,7 @@ export default {
     <!-- #ifdef MP -->
     <Notice />
     <!-- #endif -->
-    <TopMenus :path="PageEnums.purchaseRefundList"/>
+    <TopMenus :path="PageEnums.purchaseRefundList" />
 
     <HistoryBar
       v-model="PAGE_MENU_INDEX"

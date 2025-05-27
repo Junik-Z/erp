@@ -1,27 +1,19 @@
 <script>
-import {
-  getPurchaseDetailApi,
-  getPurchaseHistoryListApi,
-  getPurchaseListApi,
-  getPurchaseWaitPaymentListApi,
-  printA4PurchaseApi,
-  printPurchaseApi,
-  quickInApi,
-} from "@/api/erp/purchase";
+import { getPurchaseHistoryListApi, getPurchaseListApi, getPurchaseWaitPaymentListApi } from "@/api/erp/purchase";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
 import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
+import { _deepCopy, _get, _isEmpty } from "@/utils";
 import OrderCard from "./components/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "./components/PrintList.vue";
+import PrintList from "@/components/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import { CONFIG, PageEnums } from "@/utils/config";
+import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import Pay from "./components/Pay/Pay.vue";
+import Pay from "@/components/Pay/Pay.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
 import purchase from "./purchase";
@@ -232,8 +224,7 @@ export default {
       this.getList(true);
     },
   },
-  computed: {
-  },
+  computed: {},
 };
 </script>
 

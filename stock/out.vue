@@ -11,7 +11,7 @@ import HistoryBar from "@/components/HistoryBar/HistoryBar.vue";
 import OrderCard from "./components/OrderCard/OrderCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import { _deepCopy, _get, _groupBy, _isEmpty, _keys, CustomToast } from "@/utils";
-import PrintList from "./components/PrintList/PrintList.vue";
+import PrintList from "@/components/PrintList.vue";
 import { CONFIG } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";

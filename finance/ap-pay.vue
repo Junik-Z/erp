@@ -15,7 +15,7 @@ import {
   getPayableCheckApi,
   getPayableDetailApi,
 } from "@/api/erp/finance";
-import Pay from "./components/Pay/Pay.vue";
+import Pay from "@/components/Pay/Pay.vue";
 import apMixins from "@/finance/ap-mixins";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import { getCustomerListApi } from "@/api/erp/sale";

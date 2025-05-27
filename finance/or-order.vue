@@ -16,8 +16,8 @@ import {
   getReceivableCheckApi,
   getReceivableDetailApi,
 } from "@/api/erp/finance";
-import Pay from "./components/Pay/Pay.vue";
-import PrintList from "./components/PrintList/PrintList.vue";
+import Pay from "@/components/Pay/Pay.vue";
+import PrintList from "@/components/PrintList.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import { getCustomerListApi } from "@/api/erp/sale";
 import { getSupplierListApi } from "@/api/erp/purchase";

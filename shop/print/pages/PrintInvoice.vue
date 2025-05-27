@@ -214,7 +214,7 @@ export default {
         const item = list[0] || {};
         return {
           isPrint: true,
-          label: item?.className,
+          label: item?.className || "未分类产品",
           classId: item.classId,
           list,
         };

@@ -15,7 +15,7 @@ import { _deepCopy, _get, _isEmpty, _isEqual, _keys, _pick } from "@/utils";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import Pay from "./components/Pay/Pay.vue";
+import Pay from "@/components/Pay/Pay.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
 import orMixins from "@/finance/or-mixins";

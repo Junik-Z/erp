@@ -8,18 +8,15 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import OrderCard from "../../../components/OrderCard/OrderCard.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { _deepCopy, _get, _isEqual } from "@/utils";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "../PrintList.vue";
 
 export default {
   name: "ToPay",
   components: {
-    PrintList, UvActionSheet,
+    UvActionSheet,
     UniSection,
-    OrderCard,
     UniForms,
     FilePicker,
     UniFormsItem,
@@ -54,7 +51,7 @@ export default {
     },
 
     onLast() {
-      if (this.last > 0 || this.isEdit) {
+      if (this.last > 0 || this.isEdit || this.lastAmount) {
         this.onSubmit();
       } else {
         this.visible = false;
@@ -91,21 +88,40 @@ export default {
         {
           name: "修改",
           func: "addedTicket",
+          status: ["CREATED"],
+        },
+        {
+          name: "删除",
+          func: "onRemoveOrder",
+          status: ["CREATED"],
+          color: "#e43d33",
         },
         {
           name: "确认单据金额",
           func: "onConfirmOrder",
+          status: ["CREATED"],
         },
       ].filter(item => {
+        const isStatus = (item.status || [])?.includes(node.orderStatus);
+
         if (_isEqual(item.func, "addedTicket")) {
-          return node.orderStatus !== "FINISHED" && !this.isDetails;
+          return isStatus && !this.isDetails;
         }
 
         if (_isEqual(item.func, "onConfirmOrder")) {
-          return ((node.orderStatus !== "FINISHED" && !this.isDetails) && !this.noUnable) && ({
-            RECEIVABLE: this.isPerm("FINANCE_CONFIRM_PAID_ORDER"),
-            PAY_LISE: this.isPerm("FINANCE_CONFIRM_RETURNED_ORDER"),
-          }[this.option.FORM]);
+          return ((isStatus && !this.isDetails) && !this.noUnable)
+            && ({
+              RECEIVABLE: this.isPerm("FINANCE_CONFIRM_PAID_ORDER"),
+              PAY_LISE: this.isPerm("FINANCE_CONFIRM_RETURNED_ORDER"),
+            }[this.option.FORM]);
+        }
+
+        if (_isEqual(item.func, "onRemoveOrder")) {
+          return ((isStatus && !this.isDetails) && !this.noUnable)
+            && ({
+              RECEIVABLE: this.isPerm("FINANCE_DELETE_PAID_ORDER"),
+              PAY_LISE: this.isPerm("FINANCE_DELETE_RETURNED_ORDER"),
+            }[this.option.FORM]);
         }
 
         return true;
@@ -192,7 +208,16 @@ export default {
           </KoList>
         </view>
       </UniSection>
-      <UniSection :title="`${isEdit ? '修改' : ''}剩余`" type="line" v-if="last > 0 || isEdit">
+
+      <view v-if="lastAmount" style="font-size: 12px; text-align: center; color: #e43d33;">
+        该订单已多付 ¥{{ lastAmount }} 元
+      </view>
+
+      <UniSection
+        :title="lastAmount ? '' : `${isEdit ? '修改' : ''}剩余`"
+        :type="lastAmount ? '' : 'line'"
+        v-if="last > 0 || isEdit || lastAmount"
+      >
         <view class="ko-pay__added">
           <UniForms
             label-width="100px"
@@ -245,7 +270,7 @@ export default {
           :loading="sLoading"
           :disabled="sLoading"
         >
-          {{ last > 0 ? "付款" : isEdit ? "修改" : "完成" }}
+          {{ isEdit ? "修改" : (last > 0 ? "付款" : lastAmount ? "添加" : "完成") }}
         </button>
       </view>
     </template>

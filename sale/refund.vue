@@ -17,13 +17,13 @@ import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue
 import { _deepCopy, _get, _isEmpty, _isEqual, _isString, _pick, CustomToast } from "@/utils";
 import OrderCard from "../components/OrderCard/OrderCard.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
-import PrintList from "./components/PrintList.vue";
+import PrintList from "@/components/PrintList.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG } from "@/utils/config";
 import SaleMixins from "./SaleMixins";
 import KoList from "@/components/List/List.vue";
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import Pay from "./components/Pay/Pay.vue";
+import Pay from "@/components/Pay/Pay.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import TopMenus from "./components/TopMenus.vue";
 
