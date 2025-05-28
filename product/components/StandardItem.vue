@@ -1,7 +1,7 @@
 <script>
-import BasicCard from "../../components/BasicCard/BasicCard.vue";
-import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
-import mixins from "../../mixins/mixins";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import UniIcons from "@/uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
+import mixins from "@/mixins/mixins";
 
 export default {
   name: "StandardItem",

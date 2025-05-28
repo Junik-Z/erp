@@ -130,7 +130,6 @@ export default {
 
     // 初始化
     onInitEditor() {
-      console.log("到顶部");
       this.sIVId = null;
       setTimeout(() => {
         this.sIVId = "BannerId";
@@ -142,7 +141,7 @@ export default {
 
 <template>
   <scroll-view scroll-y class="ko-desc" :scroll-into-view="sIVId">
-    <view id="BannerId" style="height: 0;overflow: hidden"></view>
+    <view id="BannerId" style="height: 0;overflow: hidden" />
 
     <!-- #ifdef MP -->
     <Notice />

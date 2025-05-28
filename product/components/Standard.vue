@@ -1,14 +1,14 @@
 <script>
-import BasicPopup from "../../components/BasicPopup/BasicPopup.vue";
-import UvForm from "../../uni_modules/uv-form/components/uv-form/uv-form.vue";
-import UvFormItem from "../../uni_modules/uv-form/components/uv-form-item/uv-form-item.vue";
-import UvInput from "../../uni_modules/uv-input/components/uv-input/uv-input.vue";
-import FilePicker from "../../components/FilePicker/FilePicker.vue";
-import { _deepCopy, _generateUUID, _get, _isEmpty, _isEqual } from "../../utils";
-import BasicCard from "../../components/BasicCard/BasicCard.vue";
-import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
+import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
+import UvForm from "@/uni_modules/uv-form/components/uv-form/uv-form.vue";
+import UvFormItem from "@/uni_modules/uv-form/components/uv-form-item/uv-form-item.vue";
+import UvInput from "@/uni_modules/uv-input/components/uv-input/uv-input.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
+import { _deepCopy, _generateUUID, _get, _isEmpty, _isEqual } from "@/utils";
+import BasicCard from "@/components/BasicCard/BasicCard.vue";
+import UniIcons from "@/uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
 import StandardItem from "./StandardItem.vue";
-import mixins from "../../mixins/mixins";
+import mixins from "@/mixins/mixins";
 
 let type = "bottom";
 
