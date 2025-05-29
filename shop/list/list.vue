@@ -12,6 +12,8 @@ import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import { checkInOutOrderApi, getCheckListApi } from "@/api/erp/stock";
+import PickerStandard from "../../components/PickerStandard.vue";
+import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
 
 export default {
   name: "list",
@@ -19,6 +21,8 @@ export default {
     this.isJudge = _isEqual(option.judge, "true");
 
     this.getFieldList();
+
+    this.getList(true);
 
     if (_isEnv()) {
       // this.setShopList({isSelect: true});
@@ -104,8 +108,6 @@ export default {
       noMore: false,
       sLoading: false,
 
-      tableKey: +new Date().getTime(),
-
       // 选择模式
       isSelect: false,
       // 是否多选
@@ -114,10 +116,13 @@ export default {
       checked: [],
 
       // 是否显示现有库存
-      showQuantity: false
+      showQuantity: false,
+      // 分享ID
+      shareId: null,
     };
   },
   components: {
+    PickerStandard,
     IndexList,
     ProductCard,
     PickerClass,
@@ -132,6 +137,7 @@ export default {
     setShopList(data = {}) {
       const list = _deepCopy(data?.list || []);
       this.type = data?.type;
+      this.shareId = data?.shareId;
 
       this.isClient = data?.isClient;
       this.isWork = data?.isWork;
@@ -163,11 +169,9 @@ export default {
 
     // 获取商品列表
     getList(reset = false) {
-
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
-        this.tableKey = +new Date().getTime();
       }
 
       this.loading = true;
@@ -179,7 +183,11 @@ export default {
       const Func = this.isJudge ? getCheckListApi : getProductListApi;
 
       // 盘点的不需要区分上下架
-      Func({...this.queryList, ...(this.isJudge ? {} : params)})
+      Func({
+        ...this.queryList,
+        ...(this.isJudge ? {} : params),
+        ...(this.shareId ? {shareId: this.shareId || "", shareType: this.type} : {}),
+      })
         .then(res => {
           const list = res.data
             .map(item => {
@@ -192,6 +200,9 @@ export default {
               }
               return obj;
             });
+          // .filter(item => {
+          //   return !item.hasSub;
+          // });
 
           this.list = this.onMergeArrays(this.list, list, "productId");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -250,8 +261,9 @@ export default {
 
     // 点击选好了
     onSubmit() {
-
       const list = _deepCopy(Object.values(this.selected));
+
+      console.log("选好了", list);
 
       if (this.isJudge) {
         const details = (list || []).filter(item => !!this.list.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
@@ -382,6 +394,21 @@ export default {
       });
     },
     // #endif
+
+    // 点击选择子产品
+    onHasSub(node, index) {
+      this.$refs.PSRef.open(node, index);
+    },
+
+    // 确认选中的子产品
+    onConfirm(node) {
+      console.log(node);
+
+      for (const key in node) {
+        const item = node[key];
+        this.$set(this.selected, key, item);
+      }
+    },
   },
   computed: {
     // 获取已选的件数
@@ -476,7 +503,27 @@ export default {
           prop: "productQuantity",
           fixed: "right",
           width: 220,
-          render: (h, {row}) => {
+          render: (h, {row, index}) => {
+
+            if (row.hasSub) {
+              return h("ElButton", {
+                props: {
+                  size: "mini",
+                },
+                on: {
+                  click: (event) => {
+                    event.stopPropagation();
+                    this.onHasSub(row, index);
+                  },
+                },
+              }, [
+                h(
+                  UniIcons,
+                  {props: {type: "cart"}},
+                ),
+              ]);
+            }
+
             return h(
               "el-Input-number",
               {
@@ -501,8 +548,18 @@ export default {
           fixed: "right",
           width: 220,
           render: (h, {row}) => {
+
             const item = _get(this.selected, `${row.productId}`) || {};
             const price = item?.price || _get(row, this.getMoneyKey);
+
+            if (row.hasSub) {
+              return h(
+                "label",
+                {class: "ko-basic-money"},
+                [this.toYuan(price)],
+              );
+            }
+
 
             if (this.isClient || this.isWork) {
               return h(
@@ -610,7 +667,13 @@ export default {
         </view>
         <!-- #ifdef MP -->
         <view class="ko-shop-list__class">
-          <PickerClass watch-type :type="type" v-model="queryList.classId" @change="getList(true)" />
+          <PickerClass
+            watch-type
+            :type="type"
+            v-model="queryList.classId"
+            @change="getList(true)"
+            :shareId="shareId"
+          />
         </view>
         <!-- #endif -->
       </view>
@@ -641,21 +704,8 @@ export default {
         :value="getIndexCheckedIds"
         :is-checked="isSelect"
         @click="onSelect"
-      >
-        <!-- <template #cell="{node, selected, hidePrices, extra}">
-           <view class="ko-shop-list__card">
-             <ProductCard
-               :node="node"
-               is-editor
-               is-list
-               :selected="selected"
-               @number-change="onItemNumberChange"
-               :hide-prices="hidePrices"
-               :type="extra.type"
-             />
-           </view>
-         </template>-->
-      </IndexList>
+        @has-sub="onHasSub"
+      />
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
@@ -675,7 +725,6 @@ export default {
         </div>
         <div style="height: 100%; overflow: hidden; flex: 1;">
           <KoTable
-            :key="tableKey"
             :columns="getTableColumns"
             :loading="loading"
             :data="list"
@@ -755,6 +804,8 @@ export default {
     </BasicPopup>-->
     <!-- #endif -->
 
+    <!-- 选择规则 -->
+    <PickerStandard ref="PSRef" @confirm="onConfirm" :type="type" no-shopping-cart />
   </view>
 </template>
 

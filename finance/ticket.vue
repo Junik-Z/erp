@@ -318,6 +318,9 @@ export default {
 
 <template>
   <view class="ko-ticket">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <view class="ko-ticket__wrap">
       <!-- #ifdef MP -->
       <view style="padding: 10px;">

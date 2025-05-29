@@ -60,7 +60,9 @@ export default {
     hideTotalPrices: Boolean,
 
     // 显示库存
-    showQuantity: Boolean
+    showQuantity: Boolean,
+    // 分享ID
+    shareId: String,
   },
   data() {
     return {
@@ -103,7 +105,8 @@ export default {
             isWork: this.isWork,
 
             // 显示库存
-            showQuantity: this.showQuantity
+            showQuantity: this.showQuantity,
+            shareId: this.shareId,
           });
         },
       });
@@ -556,7 +559,7 @@ export default {
                 <label class="ko-basic-label">备注：</label>
                 <uni-easyinput
                   v-if="!readonly"
-                  v-model="item.remark"
+                  v-model.trim="item.remark"
                   placeholder="请输入备注"
                   maxlength="7"
                 />

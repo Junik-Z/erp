@@ -9,6 +9,7 @@ import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-sec
 import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
 import {
   _deepCopy,
+  _flattenDeep,
   _get,
   _isEmpty,
   _isEqual,
@@ -18,6 +19,7 @@ import {
   _pick,
   _set,
   _sum,
+  _uniqBy,
   CustomToast,
 } from "@/utils";
 import {
@@ -25,6 +27,7 @@ import {
   addedSaleProduceApi,
   getProduceDetailApi,
   getProduceOrderDetailApi,
+  reOrderSaleProduceApi,
   updateCraftProcessApi,
   updateProduceApi,
   updateSaleProduceApi,
@@ -41,7 +44,6 @@ import BinPacking from "./pages/BinPacking.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import FastPopup from "./components/FastProduce/FastPopup.vue";
 import KoMovable from "@/components/Movable/index.vue";
-import { getMyInfoApi } from "@/api/user";
 import BinCount from "./components/BinCount.vue";
 import { addedPurchaseCustomizedApi, getPurchaseInfoApi, updatePurchaseCustomizedApi } from "@/api/erp/purchase";
 import { getBindInfoApi, getSaleCheckShareIdApi, getShareOrderApi } from "@/api/erp/sale";
@@ -49,10 +51,12 @@ import FeesList from "./components/FeesList/FeesList.vue";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import PickerAddress from "./components/PickerAddress.vue";
 import { PageEnums } from "@/utils/config";
+import SendMsg from "@/components/SendMsg.vue";
 
 export default {
   name: "Work",
   components: {
+    SendMsg,
     PickerAddress,
     BinCount,
     KoMovable,
@@ -143,6 +147,19 @@ export default {
 
       // 添加分享的订单
       isShareOrder: false,
+
+      // 是否重新下单
+      isAgain: false,
+
+      // 来自销售的生产订单
+      bySale: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
+
+      shareId: null,
     };
   },
   async onLoad(option) {
@@ -151,11 +168,17 @@ export default {
     // 销售定制单
     this.isSale = _isEqual(option.FORM, "SALE");
 
+    // 来自销售的订单
+    this.bySale = _isEqual(option.bySale, "true");
+
     // 客户下单
     this.isClient = _isEqual(option.isClient, "true");
 
+    // 重新下单
+    this.isAgain = _isEqual(option.isAgain, "true");
+
     // 是否是来自分享页面
-    this.isShare = _isEqual(option.PAGE_TYPE, "ADDED_PRODUCE_PACKING");
+    this.isShare = _isEqual(option.PAGE_TYPE, "SHARE_PRODUCE_PACKING");
 
     // 采购定制单
     this.isPurchase = _isEqual(option.FORM, "PURCHASE");
@@ -183,7 +206,7 @@ export default {
     }
 
     if (this.isSale) {
-      this.form.produceType = "customized";
+      this.form.produceType = "internal";
       uni.setNavigationBarTitle({title: "定制工单"});
     }
 
@@ -196,11 +219,11 @@ export default {
       this.type = option.ADDED_TYPE;
     }
 
-    if (this.isEdit) this.getInfo();
+    if (this.isEdit || this.isAgain) this.getInfo();
 
     // 采购生成销售订单
     if (this.isGenerateSales) {
-      this.form.produceType = "customized";
+      this.form.produceType = "internal";
       this.isEdit = false;
       this.isPurchase = false;
 
@@ -216,6 +239,8 @@ export default {
 
     // 处理分享页面
     if (this.isShare) {
+      this.shareId = decodeURIComponent(this.option.SHARE_ID);
+
       await this.onLogInAgain(this.option)
         .finally(() => {
           setTimeout(() => {
@@ -226,9 +251,9 @@ export default {
         });
 
       if (this.option.SHARE_ID) {
-        await getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getSaleCheckShareIdApi({id: this.shareId})
           .then(res => {
-            this.form.id = decodeURIComponent(this.option.SHARE_ID);
+            this.form.id = this.shareId;
             this.form.totalAmount = 1;
 
             console.log("分享ID逻辑", res.data);
@@ -291,7 +316,7 @@ export default {
       }, 200);
     }
 
-    this.onKeepAlive();
+    // this.onKeepAlive();
   },
   methods: {
     // 获取详情
@@ -343,7 +368,7 @@ export default {
               this.isEdit ? updatePurchaseCustomizedApi : addedPurchaseCustomizedApi
               : this.isTechnology ? updateCraftProcessApi :
                 (this.isSale ?
-                  this.isEdit ? updateSaleProduceApi : addedSaleProduceApi
+                  this.isAgain ? reOrderSaleProduceApi : (this.isEdit ? updateSaleProduceApi : addedSaleProduceApi)
                   : this.isEdit ? updateProduceApi : addedProduceApi);
 
           const params = _deepCopy(this.form);
@@ -366,6 +391,15 @@ export default {
             params.planFinishDate = params.planFinishDate ? dayjs(params.planFinishDate).format("YYYY-MM-DD 23:59:59") : null;
           }
 
+          if (this.clientType === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.clientType === 1) {
+            params.supplierId = "";
+          }
+
           this.loading = true;
 
           Func(params)
@@ -374,7 +408,12 @@ export default {
 
               CustomToast({
                 title: `${this.isEdit ? "编辑" : "新增"}成功`,
-                success: () => {
+                success: async () => {
+                  if ((this.isEdit || this.isAgain) && this.isPerm("SEND_INTERNAL_MESSAGE")) {
+                    const staffs = _uniqBy(_flattenDeep(params?.craftProcesses?.map(v => v.staffs) || []), "id") || [];
+                    await this.$refs.SMRef.open(staffs.map(v => v.id), staffs.map(v => v.name)?.join("、"));
+                  }
+
                   if (this.isShare || this.isShareOrder) {
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
@@ -501,22 +540,22 @@ export default {
     },
 
     // 处理保活
-    onKeepAlive() {
+    /* onKeepAlive() {
       this.TimeVM = setTimeout(() => {
         getMyInfoApi();
       }, 10 * 60 * 1000);
-    },
+    }, */
 
     // 处理 tab 切换
     onTabItem() {
-      if (this.clientType === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
+      /*  if (this.clientType === 0) {
+         this.form.otherSupplier = "";
+         this.form.otherSupplierPhone = "";
+       }
 
-      if (this.clientType === 1) {
-        this.form.supplierId = "";
-      }
+       if (this.clientType === 1) {
+         this.form.supplierId = "";
+       } */
     },
 
     // 计算总金额
@@ -533,24 +572,37 @@ export default {
 
     // 获取绑定的客户
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
-          if (this.bindList.length) {
-            this.clientType = 0;
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
-          } else {
-            this.clientType = 1;
+
+
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
+
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.clientType = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.clientType = 1;
+            }
           }
         });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
     },
 
     // 切换生产类型
@@ -581,7 +633,7 @@ export default {
       ]
         .flatMap(item => {
           // 从销售或者采购进入页面时
-          if ((this.isSale || this.isPurchase) && ["crafts"].includes(item.value)) return [];
+          if ((/* this.isSale ||  */this.isPurchase) && ["crafts"].includes(item.value)) return [];
 
           if (_isEqual(this.type, "xlsx")) {
             if (_isEqual(item.value, "type")) item.label = "自定义工单";
@@ -612,6 +664,10 @@ export default {
 
 <template>
   <view class="ko-work ko-basic-added-form" :key="VmKey">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <!-- #ifdef MP -->
     <view v-if="isShareOrder" class="ko-work__header ko-basic-box-shadow">
       <view class="ko-work__header--name">{{ GET_SHOP_NAME }}</view>
@@ -653,6 +709,7 @@ export default {
                     type="purchase"
                     is-work
                     hide-total-prices
+                    :shareId="shareId"
 
                     is-show-recent
                     :supplier-id="form.supplierId"
@@ -721,48 +778,54 @@ export default {
         </block>
 
         <block v-if="isEqual(getCurrentValue, 'other')">
-          <view style="padding: 10px 0 0;">
-            <view
-              style="margin: 0 10px 10px;"
-              v-if="(isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient) && !isShare"
-            >
-              <uni-segmented-control
-                :current.sync="clientType"
-                :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
-                style-type="text"
-                @clickItem="onTabItem"
-              />
+          <block v-if="isPurchase || isSale || bySale">
+            <view style="padding-top: 10px;">
+              <view
+                style="margin: 0 10px 10px;"
+                v-if="(isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && !isClient) && !isShare && (isSale || isPurchase)"
+              >
+                <uni-segmented-control
+                  :current.sync="clientType"
+                  :values="isPurchase ? ['供应商', '其它供应商'] : clientTabs"
+                  style-type="text"
+                  @clickItem="onTabItem"
+                />
+              </view>
+
+              <block v-if="clientType === 0 && isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
+                <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
+                  <PickerUser
+                    style="width: 100%;"
+                    is-input
+                    :title="`选择${isPurchase ? '供应商' : '客户'}`"
+                    v-model="form.supplierId"
+                    :type="isPurchase ? 'supplier' : 'client'"
+                    ref="UserRef"
+                    @input="onSupplierId"
+
+                    :is-long-list="isClient || !!bindList.length"
+                    :options="bindList"
+
+                    :placeholder-label="GET_FUNC(form, 'customer.name')"
+                    :disabled="bySale"
+                    @lower="onLower"
+                  />
+                </uni-forms-item>
+              </block>
+
+              <block
+                v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST') && (isSale || isPurchase)">
+                <uni-forms-item label="姓名：" name="otherSupplier" key="otherSupplier">
+                  <UniEasyinput
+                    v-model="form.otherSupplier"
+                    style="width: 100%;"
+                    placeholder="请输入"
+                    :disabled="bySale"
+                  />
+                </uni-forms-item>
+              </block>
             </view>
-
-            <block v-if="clientType === 0 && isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
-              <uni-forms-item :label="`${isPurchase ? '供应商' : '客户'}：`" name="supplierId">
-                <PickerUser
-                  style="width: 100%;"
-                  is-input
-                  :title="`选择${isPurchase ? '供应商' : '客户'}`"
-                  v-model="form.supplierId"
-                  :type="isPurchase ? 'supplier' : 'client'"
-                  ref="UserRef"
-                  @input="onSupplierId"
-
-                  :is-long-list="isClient"
-                  :options="bindList"
-
-                  :placeholder-label="GET_FUNC(form, 'customer.name')"
-                />
-              </uni-forms-item>
-            </block>
-
-            <block v-if="clientType === 1 || !isPerm(isPurchase ? 'SUPPLIER_LIST' : 'CUSTOMER_LIST')">
-              <uni-forms-item label="姓名：" name="otherSupplier" key="otherSupplier">
-                <UniEasyinput
-                  v-model="form.otherSupplier"
-                  style="width: 100%;"
-                  placeholder="请输入"
-                />
-              </uni-forms-item>
-            </block>
-          </view>
+          </block>
 
           <block v-if="!isPurchase && !isSale">
             <uni-forms-item
@@ -779,25 +842,28 @@ export default {
             </uni-forms-item>
           </block>
 
-          <uni-forms-item label="联系电话：" name="orderPhone">
-            <uni-easyinput v-model="form.orderPhone" placeholder="请输入" />
-          </uni-forms-item>
 
-          <uni-forms-item label="配送地址：" name="orderAddress" key="orderAddress">
-            <view style="display: flex; align-items: center; width: 100%">
-              <view style="flex: 1; width: 100%">
-                <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+          <block v-if="isPurchase || isSale || bySale">
+            <uni-forms-item label="联系电话：" name="orderPhone">
+              <uni-easyinput v-model.trim="form.orderPhone" placeholder="请输入" />
+            </uni-forms-item>
+
+            <uni-forms-item label="配送地址：" name="orderAddress" key="orderAddress">
+              <view style="display: flex; align-items: center; width: 100%">
+                <view style="flex: 1; width: 100%">
+                  <UniEasyinput v-model.trim="form.orderAddress" placeholder="请输入地址" />
+                </view>
+                <block v-if="form.supplierId && isPerm(isPurchase ? 'SUPPLIER_ADDRESS_LIST' : 'CUSTOMER_ADDRESS_LIST')">
+                  <PickerAddress
+                    :supplierId="form.supplierId"
+                    v-model="form.orderAddress"
+                    :type="isPurchase ? 'purchase' : 'sale'"
+                    @input="form.orderAddress = $event"
+                  />
+                </block>
               </view>
-              <block v-if="form.supplierId && isPerm(isPurchase ? 'SUPPLIER_ADDRESS_LIST' : 'CUSTOMER_ADDRESS_LIST')">
-                <PickerAddress
-                  :supplierId="form.supplierId"
-                  v-model="form.orderAddress"
-                  :type="isPurchase ? 'purchase' : 'sale'"
-                  @input="form.orderAddress = $event"
-                />
-              </block>
-            </view>
-          </uni-forms-item>
+            </uni-forms-item>
+          </block>
 
           <block v-if="!isPurchase && isSale && !isEdit">
             <uni-forms-item
@@ -845,6 +911,8 @@ export default {
                     :total.sync="pTotal"
                     hide-total-prices
 
+                    :shareId="shareId"
+
                     is-show-recent
                     :supplier-id="form.supplierId"
                     :order-address="form.orderAddress"
@@ -855,7 +923,7 @@ export default {
             </view>
           </UniSection>
 
-          <UniSection title="总价" type="line">
+          <UniSection title="总价" type="line" v-if="isPurchase || isSale || bySale">
             <block v-if="isEqual(type, 'packing')">
               <BinCount v-model="form.customizedBoards[0]" @change-total="countTotalAmount" />
             </block>
@@ -886,7 +954,7 @@ export default {
             </view>
           </UniSection>
 
-          <UniSection v-if="!isPurchase" title="其它费用" type="line">
+          <UniSection v-if="isPurchase || isSale || bySale" title="其它费用" type="line">
             <view style="padding: 10px;">
               <FeesList v-model="form.fees" is-form />
             </view>
@@ -947,6 +1015,8 @@ export default {
     </view>
 
     <FastPopup ref="FPRef" @apply-fast="onApplyFast" />
+
+    <SendMsg ref="SMRef" />
   </view>
 </template>
 

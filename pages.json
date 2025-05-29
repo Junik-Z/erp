@@ -31,36 +31,30 @@
           "style": {
             "navigationBarTitleText": "自助关联"
           }
+        },
+        {
+          "path": "binding",
+          "style": {
+            "navigationBarTitleText": "客户绑定"
+          }
+        },
+        {
+          "path": "supplier",
+          "style": {
+            "navigationBarTitleText": "供应商绑定"
+          }
+        },
+        {
+          "path": "staff",
+          "style": {
+            "navigationBarTitleText": "员工绑定"
+          }
         }
       ]
     },
     {
       "root": "erp",
       "pages": [
-        {
-          "path": "sale/sale",
-          "style": {
-            "navigationBarTitleText": "销售"
-          }
-        },
-        {
-          "path": "sale/client",
-          "style": {
-            "navigationBarTitleText": "客户"
-          }
-        },
-        {
-          "path": "purchase/purchase",
-          "style": {
-            "navigationBarTitleText": "采购"
-          }
-        },
-        {
-          "path": "purchase/client",
-          "style": {
-            "navigationBarTitleText": "供应商"
-          }
-        },
         {
           "path": "qrcode/qrcode",
           "style": {
@@ -73,9 +67,45 @@
       "root": "finance",
       "pages": [
         {
-          "path": "finance",
+          "path": "loading",
           "style": {
             "navigationBarTitleText": "财务"
+          }
+        },
+        {
+          "path": "receivable",
+          "style": {
+            "navigationBarTitleText": "应收款"
+          }
+        },
+        {
+          "path": "or-order",
+          "style": {
+            "navigationBarTitleText": "应收款"
+          }
+        },
+        {
+          "path": "pay",
+          "style": {
+            "navigationBarTitleText": "应付款"
+          }
+        },
+        {
+          "path": "ap-pay",
+          "style": {
+            "navigationBarTitleText": "应付款"
+          }
+        },
+        {
+          "path": "expenses",
+          "style": {
+            "navigationBarTitleText": "其它支出"
+          }
+        },
+        {
+          "path": "verification",
+          "style": {
+            "navigationBarTitleText": "核对款项"
           }
         },
         {
@@ -126,7 +156,7 @@
           }
         },
         {
-          "path": "merchants/merchants",
+          "path": "set-role",
           "style": {
             "navigationBarTitleText": "员工管理"
           }
@@ -138,21 +168,27 @@
           }
         },
         {
-          "path": "user/user",
+          "path": "user",
           "style": {
             "navigationBarTitleText": "个人中心"
           }
         },
         {
-          "path": "admin/store",
+          "path": "set-sys",
           "style": {
             "navigationBarTitleText": "信息设置"
           }
         },
         {
-          "path": "renewal/renewal",
+          "path": "renewal",
           "style": {
             "navigationBarTitleText": "服务续费"
+          }
+        },
+        {
+          "path": "we-chat",
+          "style": {
+            "navigationBarTitleText": "用户管理"
           }
         }
       ]
@@ -189,6 +225,12 @@
           "path": "binding/share",
           "style": {
             "navigationBarTitleText": "批量分享"
+          }
+        },
+        {
+          "path": "set-up",
+          "style": {
+            "navigationBarTitleText": "店铺配置"
           }
         }
       ]
@@ -270,13 +312,47 @@
         {
           "path": "product",
           "style": {
-            "navigationBarTitleText": "产品"
+            "navigationBarTitleText": "产品",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "shopping",
+          "style": {
+            "navigationBarTitleText": "产品",
+            "disableScroll": false,
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "desc",
+          "style": {
+            "navigationBarTitleText": "产品描述"
+          }
+        },
+        {
+          "path": "classify",
+          "style": {
+            "navigationBarTitleText": "产品分类"
+          }
+        },
+        {
+          "path": "field",
+          "style": {
+            "navigationBarTitleText": "扩展字段"
           }
         },
         {
           "path": "added",
           "style": {
             "navigationBarTitleText": "产品"
+          }
+        },
+        {
+          "path": "detail",
+          "style": {
+            "navigationBarTitleText": "商品详情",
+            "navigationStyle": "custom"
           }
         }
       ]
@@ -319,13 +395,31 @@
       "root": "logistics",
       "pages": [
         {
-          "path": "logistics",
+          "path": "loading",
           "style": {
             "navigationBarTitleText": "配送"
           }
         },
         {
-          "path": "client",
+          "path": "delivery",
+          "style": {
+            "navigationBarTitleText": "配送"
+          }
+        },
+        {
+          "path": "provider",
+          "style": {
+            "navigationBarTitleText": "物流商"
+          }
+        },
+        {
+          "path": "my-delivery",
+          "style": {
+            "navigationBarTitleText": "我的配送"
+          }
+        },
+        {
+          "path": "new-provider",
           "style": {
             "navigationBarTitleText": "物流商"
           }
@@ -336,9 +430,33 @@
       "root": "stock",
       "pages": [
         {
-          "path": "stock",
+          "path": "loading",
           "style": {
-            "navigationBarTitleText": "库存"
+            "navigationBarTitleText": "库存管理"
+          }
+        },
+        {
+          "path": "view",
+          "style": {
+            "navigationBarTitleText": "库存看板"
+          }
+        },
+        {
+          "path": "warehouse",
+          "style": {
+            "navigationBarTitleText": "入库审批"
+          }
+        },
+        {
+          "path": "out",
+          "style": {
+            "navigationBarTitleText": "出库审批"
+          }
+        },
+        {
+          "path": "verification",
+          "style": {
+            "navigationBarTitleText": "核对库存"
           }
         },
         {
@@ -378,9 +496,9 @@
           }
         },
         {
-          "path": "complete-process",
+          "path": "wages",
           "style": {
-            "navigationBarTitleText": "员工生产记录",
+            "navigationBarTitleText": "员工工资",
             "disableScroll": false
           }
         },
@@ -402,6 +520,123 @@
             "navigationBarTitleText": "智能客服",
             "disableScroll": true,
             "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "sale",
+      "pages": [
+        {
+          "path": "loading",
+          "style": {
+            "navigationBarTitleText": "销售"
+          }
+        },
+        {
+          "path": "view",
+          "style": {
+            "navigationBarTitleText": "销售看板"
+          }
+        },
+        {
+          "path": "sale",
+          "style": {
+            "navigationBarTitleText": "销售订单"
+          }
+        },
+        {
+          "path": "client",
+          "style": {
+            "navigationBarTitleText": "客户"
+          }
+        },
+        {
+          "path": "refund",
+          "style": {
+            "navigationBarTitleText": "退货订单"
+          }
+        },
+        {
+          "path": "my-order",
+          "style": {
+            "navigationBarTitleText": "我的订单"
+          }
+        },
+        {
+          "path": "new-client",
+          "style": {
+            "navigationBarTitleText": "客户"
+          }
+        },
+        {
+          "path": "order-list",
+          "style": {
+            "navigationBarTitleText": "订单列表"
+          }
+        }
+      ]
+    },
+    {
+      "root": "purchase",
+      "pages": [
+        {
+          "path": "loading",
+          "style": {
+            "navigationBarTitleText": "采购"
+          }
+        },
+        {
+          "path": "view",
+          "style": {
+            "navigationBarTitleText": "采购看板"
+          }
+        },
+        {
+          "path": "purchase",
+          "style": {
+            "navigationBarTitleText": "采购订单"
+          }
+        },
+        {
+          "path": "order",
+          "style": {
+            "navigationBarTitleText": "采购订单"
+          }
+        },
+        {
+          "path": "supplier",
+          "style": {
+            "navigationBarTitleText": "供应商"
+          }
+        },
+        {
+          "path": "refund",
+          "style": {
+            "navigationBarTitleText": "退货订单"
+          }
+        },
+        {
+          "path": "my-order",
+          "style": {
+            "navigationBarTitleText": "我的订单"
+          }
+        },
+        {
+          "path": "new-supplier",
+          "style": {
+            "navigationBarTitleText": "供应商"
+          }
+        }
+      ]
+    },
+    {
+      "root": "order",
+      "pages": [
+        {
+          "path": "status",
+          "style": {
+            "navigationBarTitleText": "订单"
           }
         }
       ]

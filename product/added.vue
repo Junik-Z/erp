@@ -19,6 +19,7 @@ import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import KoList from "@/components/List/List.vue";
 import PickerClass from "./components/PickerClass/PickerClass.vue";
+import GoodsDesc from "./components/GoodsDesc.vue";
 
 export default {
   name: "Added",
@@ -35,78 +36,82 @@ export default {
     UniSection,
 
     PickerClass,
+    GoodsDesc,
   },
-  data: () => ({
-    form: {
-      "name": "",
-      "classId": "",
-      "levelIds": "",
-      "images": "",
-      "description": "",
-      "purchasePrice": "",
-      "salePrice": "",
-      "stockWarning": "",
-      "remark": "",
-      "extend": {},
-    },
-    classList: [],
-    option: {},
-    loading: false,
-    isEdit: false,
-
-    rules: {
-      name: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入产品名称",
-          },
-        ],
-        validateTrigger: "submit",
+  data() {
+    return {
+      form: {
+        "name": "",
+        "classId": "",
+        "levelIds": "",
+        "images": "",
+        "description": "",
+        "purchasePrice": "",
+        "salePrice": "",
+        "stockWarning": "",
+        "remark": "",
+        "extend": {},
+        carousel: [],
       },
-      classId: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请选择分类",
-          },
-        ],
-        validateTrigger: "submit",
-      },
-      purchasePrice: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入采购价格",
-          },
-        ],
-        validateTrigger: "submit",
-      },
-      salePrice: {
-        rules: [
-          {
-            required: true,
-            errorMessage: "请输入销售价格",
-          },
-        ],
-        validateTrigger: "submit",
-      },
-    },
-    fieldList: [],
+      classList: [],
+      option: {},
+      loading: false,
+      isEdit: false,
 
-    // 重复产品列表
-    DuplicateProducts: [],
-    queryList: {
-      pageSize: 1000,
-      pageNum: 0,
-    },
+      rules: {
+        name: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入产品名称",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+        classId: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请选择分类",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+        purchasePrice: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入采购价格",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+        salePrice: {
+          rules: [
+            {
+              required: true,
+              errorMessage: "请输入销售价格",
+            },
+          ],
+          validateTrigger: "submit",
+        },
+      },
+      fieldList: [],
 
-    submitQuery: {},
-    visible: false,
+      // 重复产品列表
+      DuplicateProducts: [],
+      queryList: {
+        pageSize: 1000,
+        pageNum: 0,
+      },
 
-    noMore: false,
-    sLoading: false,
-  }),
+      submitQuery: {},
+      visible: false,
+
+      noMore: false,
+      sLoading: false,
+    };
+  },
   onLoad(option) {
     this.getClassList();
     this.getFieldList();
@@ -130,7 +135,6 @@ export default {
     getFieldList() {
       getProductFieldApi({pageSize: 1000000, pageNum: 0})
         .then(res => {
-          console.log(res.data);
           this.fieldList = res.data;
         });
     },
@@ -143,6 +147,7 @@ export default {
 
           params.purchasePrice = transferYuan(params.purchasePrice);
           params.salePrice = transferYuan(params.salePrice);
+          params.carousel = params.carousel ? (params.carousel).split(",") : [];
 
           this.form = params;
         })
@@ -202,6 +207,7 @@ export default {
           const params = _deepCopy(this.form);
           params.purchasePrice = yuanToPoints(params.purchasePrice);
           params.salePrice = yuanToPoints(params.salePrice);
+          params.carousel = (params.carousel || []).join(",");
 
           this.submitQuery = params;
 
@@ -214,12 +220,20 @@ export default {
         }
       });
     },
+
+    // 商品详情
+    toDesc(type) {
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-order ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <UniForms
       :model-value="form"
       label-width="90px"
@@ -252,17 +266,17 @@ export default {
             </view>
           </UniFormsItem>
           <UniFormsItem label="产品图片：">
-            <FilePicker
-              v-model="form.images"
-              :image-styles="{
-                width: '100px',
-                height: '100px',
-              }"
-            />
+            <view>
+              <FilePicker
+                v-model="form.images"
+                :image-styles="{width: '100px',height: '100px',}"
+              />
+              <view style="font-size: 12px; color: #c7c9ce; margin-top: 6px;">推荐图片尺寸：1:1</view>
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
-      <UniSection title="其它字段" type="line">
+      <UniSection title="其它字段" type="line" v-if="fieldList.length">
         <view style="padding: 10px;">
           <UniFormsItem
             v-for="(item, index) of fieldList"
@@ -278,14 +292,26 @@ export default {
           </UniFormsItem>
         </view>
       </UniSection>
-      <UniSection title="其它信息" type="line" v-if="false">
+      <UniSection title="产品详情" type="line">
         <view style="padding: 10px;">
+          <!--<UniFormsItem label="Banner：" name="description">
+            <FilePicker
+              v-model="form.carousel"
+              :limit="9"
+              file-extname="png,jpg,jpeg,gif"
+              show-update-list
+              return-type="array"
+              :image-styles="{
+                width: '100px',
+                height: '100px',
+              }"
+            />
+          </UniFormsItem>-->
           <UniFormsItem label="产品描述：" name="description">
-            <UniEasyinput
-              type="textarea"
+            <GoodsDesc
               v-model="form.description"
-              style="width: 100%;"
-              placeholder="请输入"
+              :carousel.sync="form.carousel"
+              :sub-classes.sync="form.subClasses"
             />
           </UniFormsItem>
           <UniFormsItem label="备注：" name="remark">
@@ -313,7 +339,12 @@ export default {
 
     <BasicPopup :visible.sync="visible" title="产品名称重复">
       <view class="ko-order__popup">
-        <KoList @lower="getCheckDuplicate" :loading="sLoading" :no-more="noMore" :no-data="!DuplicateProducts.length">
+        <KoList
+          @lower="getCheckDuplicate"
+          :loading="sLoading"
+          :no-more="noMore"
+          :no-data="!DuplicateProducts.length"
+        >
           <view>
             <BasicCard :spacing="10" v-for="item of DuplicateProducts" :key="item.id">
               <UniRow :gutter="10">

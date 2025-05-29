@@ -145,6 +145,17 @@ export function getSaleListApi(data) {
 }
 
 /**
+ * @description 获取销售订单2
+ */
+export function getSaleList2Api(data) {
+  return request({
+    url: "/sale/list2",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取销售待付款订单
  */
 export function getSaleWaitPaymentListApi(data) {
@@ -618,6 +629,30 @@ export function shareOrderApi(data) {
 export function getShareOrderApi(data) {
   return request({
     url: "/share/getShareOrder",
+    method: "get",
+    data,
+  });
+}
+
+
+// ————————————————————— 订单状态 —————————————————————
+/**
+ * @description 获取订单状态
+ */
+export function getOrderStatusApi(data) {
+  return request({
+    url: "/sale/order-status",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取定制订单详情
+ */
+export function getProduceInfoApi(data) {
+  return request({
+    url: "/sale/produce/detail",
     method: "get",
     data,
   });

@@ -133,6 +133,17 @@ export function getPurchaseListApi(data) {
 }
 
 /**
+ * @description 获取采购新订单
+ */
+export function getPurchaseList2Api(data) {
+  return request({
+    url: "/purchase/list2",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取采购订单待付款列表
  */
 export function getPurchaseWaitPaymentListApi(data) {

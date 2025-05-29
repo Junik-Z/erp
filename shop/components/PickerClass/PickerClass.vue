@@ -48,6 +48,9 @@ export default {
     watchType: Boolean,
 
     isInput: Boolean,
+
+    // 分享ID
+    shareId: String
   },
   watch: {
     type: {
@@ -79,7 +82,12 @@ export default {
         sale: {saleOff: false},
       }[this.type];
 
-      getProductClassApi({...params, pageNum: 0, pageSize: 1000})
+      getProductClassApi({
+        ...params,
+        pageNum: 0,
+        pageSize: 1000,
+        ...(this.shareId ? {shareId: this.shareId || '', shareType: this.type} : {}),
+      })
         .then(res => {
           this.classList = res.data;
           this.getCheckedItem();

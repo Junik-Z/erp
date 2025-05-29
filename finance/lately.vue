@@ -58,29 +58,18 @@ export default {
       this.loading = true;
       const params = _deepCopy(this.queryList);
 
-      // #ifdef H5
-      const top = _deepCopy(this.$refs?.WrapRef?.scrollTop);
-      // #endif
-
       params.type = _get(this.Tabs, `${this.tab}.value`);
 
       getReportRecentListApi(params)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
-          console.log(res.data);
         })
         .catch(() => {
           this.noMore = true;
         })
         .finally(() => {
           this.loading = false;
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
-          });
-          // #endif
         });
     },
 
@@ -113,7 +102,7 @@ export default {
     // 表格头部
     // #ifdef H5
     columns() {
-      const col = [
+      return [
         {
           label: "序号",
           type: "index",
@@ -193,8 +182,6 @@ export default {
           prop: "remark",
         },
       ];
-
-      return col;
     },
     // #endif
   },
@@ -203,18 +190,21 @@ export default {
 
 <template>
   <!-- #ifdef H5 -->
-  <view
+  <KoList
     class="ko-lately__h5"
-    v-infinite-scroll="RequestNextPage"
-    infinite-scroll-immediate
-    :infinite-scroll-delay="200"
-    :infinite-scroll-disabled="noMore"
-    :infinite-scroll-distance="200"
-    ref="WrapRef"
-    :key="tableKey"
+    :no-more="noMore"
+    hide-tips
+    @load-next="RequestNextPage"
+    @lower="RequestNextPage"
+    :data="list"
+    :loading="loading"
   >
     <!-- #endif -->
     <view class="ko-lately">
+      <!-- #ifdef MP -->
+      <Notice />
+      <!-- #endif -->
+
       <HistoryBar
         v-model="tab"
         :values="Tabs"
@@ -276,19 +266,19 @@ export default {
       <!-- #ifdef H5 -->
       <view style="padding: 10px; height: 100%; overflow: hidden;">
         <KoTable
-          :loading="loading"
           :columns="columns"
           :data="list"
           empty-text="暂无数据"
           stripe
-          no-more
+          :no-more="noMore"
+          no-refresh
         />
       </view>
       <!-- #endif -->
     </view>
 
     <!-- #ifdef H5 -->
-  </view>
+  </KoList>
   <!-- #endif -->
 </template>
 

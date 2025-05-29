@@ -65,6 +65,14 @@ export function uploadFileApi() {
 
 
 /**
+ * @description 上传物料
+ */
+export function readMaterialListFileApi() {
+  return `${CONFIG.BASE_URL}/produce/readMaterialListFile`;
+}
+
+
+/**
  * @description 获取我的信息
  */
 export function getMyInfoApi(data) {
@@ -189,11 +197,33 @@ export function getMessageListApi(data) {
 }
 
 /**
+ * @description 获取我的未读消息数据
+ */
+export function getMessageCountApi(data) {
+  return request({
+    url: "/message/myUnreadMessageCount",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 删除消息
  */
 export function removeMessageApi(data) {
   return request({
     url: "/message/deleteMessage",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 发送内部员工消息
+ */
+export function sendInternalMessageApi(data) {
+  return request({
+    url: "/message/sendInternalMessage",
     method: "post",
     data,
   });
@@ -229,6 +259,115 @@ export function bindCustomerMessageApi(data) {
   return request({
     url: "/message/createAndBindCustomer",
     method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取登录段数据
+ */
+export function getMonitorJumpApi(data) {
+  return request({
+    url: "/index/monitor/jump",
+    method: "get",
+    data,
+  });
+}
+
+// ———————————————————— 微信用户管理 ————————————
+export function getWxUsersApi(data) {
+  return request({
+    url: "/user/get-all-users",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 设置用户标签
+ */
+export function setUserTagApi(data) {
+  return request({
+    url: "/user/set-tag",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 设置维护人员
+ */
+export function setMaintenanceApi(data) {
+  return request({
+    url: "/manage/setMaintenance",
+    method: "post",
+    data,
+  });
+}
+
+// —————————————————— 用户绑定接口 ——————————————
+/**
+ * @description 生成客户绑定二维码
+ */
+export function customerCodeApi(data) {
+  return request({
+    url: "/customer/bind-code",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 客户绑定
+ */
+export function applyCustomerCodeApi(data) {
+  return request({
+    url: "/customer/bind-apply",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 生成员工绑定二维码
+ */
+export function staffCodeApi(data) {
+  return request({
+    url: "/staff/bind-code",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 员工绑定
+ */
+export function applyStaffCodeApi(data) {
+  return request({
+    url: "/staff/bind-apply",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 生成供应商绑定二维码
+ */
+export function supplierCodeApi(data) {
+  return request({
+    url: "/supplier/bind-code",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 供应商绑定
+ */
+export function applySupplierCodeApi(data) {
+  return request({
+    url: "/supplier/bind-apply",
+    method: "get",
     data,
   });
 }

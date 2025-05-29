@@ -120,7 +120,6 @@ export default {
     onApply(item) {
       this.getDetails(_pick(item, ["id"]), this.type)
         .then(res => {
-          console.log(res.data);
           this.$emit("apply-fast", res.data);
         });
     },

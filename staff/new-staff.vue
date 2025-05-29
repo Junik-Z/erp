@@ -153,6 +153,9 @@ export default {
 
 <template>
   <view class="ko-client ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniForms
       :rules="rules"
       ref="FormRef"

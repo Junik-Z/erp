@@ -1,0 +1,941 @@
+@import "@/static/iconfont/index.scss";
+
+@font-face {
+  font-family: 'da-tree-iconfont'; /* Project id  */
+  src: url('data:application/octet-stream;base64,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') format('truetype');
+}
+
+page, view, text, video, image, button, rich-text, progress, scroll-view {
+  box-sizing: border-box;
+}
+
+button {
+  border: none;
+  outline: none;
+  background-color: initial;
+  box-shadow: none;
+  margin-left: initial;
+  margin-right: initial;
+  padding-left: initial;
+  padding-right: initial;
+  border-width: 0;
+  padding-block: 0;
+}
+
+button::after {
+  border: none;
+  display: none;
+}
+
+.ko-basic-border__bottom {
+  border-bottom: 0.5px solid #c7c9ce;
+}
+
+// 通用主按钮
+.ko-basic-button {
+  border-radius: 55px;
+  background: $ko-primary-color;
+  color: #fff;
+  padding: 0 15px;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+
+  // #endif
+}
+
+.ko-basic-button__card {
+  border-radius: 55px;
+  background: $ko-primary-color;
+  color: #fff;
+  font-size: 12px;
+  padding: 8px 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+
+  // #endif
+
+  & + .ko-basic-button__card {
+    margin-left: 6px;
+  }
+}
+
+.ko-basic-button__user {
+  border-radius: 55px;
+  background: $ko-primary-color;
+  color: #fff;
+  font-size: 11px;
+  padding: 6px 10px;
+  line-height: 1.2;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+
+  // #endif
+
+  & + .ko-basic-button__user {
+    margin-left: 6px;
+  }
+}
+
+.ko-basic-button__link {
+  width: auto;
+  border-radius: 55px;
+  color: $ko-primary-color;
+  font-size: 12px;
+  padding: 4px 6px;
+  line-height: 1.2;
+
+  // #ifdef H5
+  border: 0.1px solid transparent;
+
+  &[disabled="disabled"] {
+    opacity: 0.6;
+  }
+
+  // #endif
+
+  & + .ko-basic-button__link {
+    margin-left: 6px;
+  }
+}
+
+.ko-basic-box-shadow {
+  box-shadow: $uni-shadow-base;
+
+  // 0 1px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2)
+  &__top {
+    box-shadow: 0 -8px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2);
+  }
+}
+
+.ko-basic-label {
+  color: $uni-info;
+
+  &__images-wrap {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.ko-basic-money {
+  color: #e43d33;
+  font-weight: bold;
+}
+
+.ko-basic-footer {
+  height: 80px;
+  padding: 10px 10px 26px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9;
+  background: #FFF;
+  box-shadow: $uni-shadow-base;
+}
+
+.ko-basic-count {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  box-shadow: $uni-shadow-base;
+  padding: 6px 0;
+
+  &__wrap {
+    padding: 4px;
+  }
+
+  &__label {
+    padding: 6px 0 0;
+    // #ifdef MP
+    font-size: 12px;
+    // #endif
+  }
+
+  &__info {
+    padding: 6px 0;
+    // #ifdef MP
+    font-size: 14px;
+    // #endif
+
+    &--unit {
+      margin-left: 2px;
+    }
+  }
+}
+
+.ko-link {
+  color: #4177f6;
+}
+
+.ko-basic-table {
+  --ko-table-border-color: #e9e9eb;
+
+  display: grid;
+  grid-template-columns: var(--ko-basic-table-grid-col);
+  white-space: break-spaces;
+  box-sizing: border-box;
+  border-left: 1px solid var(--ko-table-border-color);
+  border-top: 1px solid var(--ko-table-border-color);
+
+  &.ko-basic-table__not-border {
+    border: none;
+
+    .ko-basic-table {
+      &--th, &--cell {
+        border: none;
+      }
+    }
+  }
+
+  &--th {
+    text-align: center;
+    border-bottom: 1px solid var(--ko-table-border-color);
+    padding: 6px 2px;
+    font-size: 12px;
+    font-weight: bold;
+    border-right: 1px solid var(--ko-table-border-color);
+  }
+
+  &--cell {
+    text-align: center;
+    border-bottom: 1px solid var(--ko-table-border-color);
+    padding: 6px 2px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--ko-table-border-color);
+
+    .ko-basic-button__card {
+      padding: 4px 8px;
+      font-size: 12px;
+      margin: 2px;
+    }
+  }
+}
+
+.ko-checkbox--icon {
+  --checkbox-size: 26px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+
+  &::after {
+    position: relative;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    overflow: hidden;
+    font-family: 'da-tree-iconfont' !important;
+    font-size: calc(var(--checkbox-size) * 0.8);
+    font-style: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  &.checkbox-outline::after {
+    color: #bbb;
+    content: '\ead5';
+  }
+
+  &.checkbox-checked::after {
+    color: var(--theme-color, #007aff);
+    content: '\ead4';
+  }
+
+  &.checkbox-indeterminate::after {
+    color: var(--theme-color, #007aff);
+    content: '\ebce';
+  }
+}
+
+.ko-not-perm {
+  width: 100%;
+  padding: 50px 20px;
+
+  &::before {
+    content: "您还未获取该模块的任何权限，请联系管理员授权！";
+    display: block;
+    font-size: 12px;
+    color: #c7c9ce;
+    text-align: center;
+  }
+}
+
+// 消息列表
+.ko-ws-notify {
+  &__content {
+    font-size: 14px;
+    //height: 260px;
+    overflow-y: auto;
+
+    &.not-images {
+      height: 260px;
+    }
+  }
+
+  &__footer {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  &__time {
+    font-size: 10px;
+    color: #8f939c;
+    white-space: nowrap;
+  }
+
+  &__form {
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: #8f939c;
+
+    &--wrap {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    &--user {
+      display: flex;
+      align-items: center;
+      margin-right: 10px;
+      color: #c7c9ce;
+
+      &.is-read {
+        color: #333;
+      }
+    }
+
+    img {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+  }
+
+  &__images {
+    margin-top: 10px;
+
+    &.center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+.CREATED {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.WAIT_PAY {
+  background: #FFF3E0;
+  color: #333;
+}
+
+.PAID {
+  background: rgba(209, 246, 213, 0.5);
+  color: #058a0b;
+}
+
+.PAUSED {
+  background: #fef3c7;
+  color: #dc2626;
+}
+
+.FINISHED {
+  background: #dcfce7;
+  color: rgba(22, 163, 74, 0.9);
+}
+
+.CANCELLED {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.APPLY_MATERIAL {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  &.no-border {
+    border: none;
+  }
+}
+
+.basic-hover-class {
+  opacity: .7;
+  background: rgba(0, 0, 0, .1);
+}
+
+.ko-no-more {
+  font-size: 12px;
+  color: #c7c9ce;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.ko-text-wrap {
+  white-space: wrap;
+  word-break: break-all;
+  word-wrap: normal;
+}
+
+// 供应商列表
+.ko-supplier {
+  height: calc(100vh - 20px);
+
+  &__name {
+    display: flex;
+    align-items: center;
+    border: 1px solid #EFF1F3;
+    border-radius: 6px;
+    padding: 6px;
+    margin-bottom: 8px;
+    color: #170145;
+    font-size: 16px;
+
+    &.is-root-active {
+      background: rgba(128, 174, 250, 0.1);
+      border-color: #80AEFA;
+    }
+
+    &--wrap {
+      padding-left: 8px;
+      overflow: hidden;
+    }
+  }
+
+  &__money {
+    font-size: 13px;
+    color: #8CA1B8;
+  }
+
+  &__wrap {
+    padding: 0 8px;
+  }
+
+  &__search {
+    //display: flex;
+    //align-items: center;
+    padding-right: 4px;
+  }
+
+  &__switch {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    margin: 2px;
+  }
+}
+
+// 地址列表
+.ko-address {
+  height: calc(100vh - 20px);
+
+  &__wrap {
+    padding: 0 8px;
+  }
+
+  &__item {
+    border: 1px solid #E9EDF3;
+    border-radius: 6px;
+    margin-bottom: 8px;
+
+    &--down {
+      transition: transform .3s;
+    }
+
+    &.is-a-active {
+      .ko-address__item--down {
+        transform: rotate(-180deg);
+      }
+
+      .ko-address__name {
+        border-radius: 6px 6px 0 0;
+      }
+
+      .ko-address__list {
+        padding-top: 2px;
+        height: calc(100vh - 80px);
+      }
+    }
+  }
+
+  &__name {
+    font-size: 16px;
+    padding: 8px 6px 8px 8px;
+    background: #EFF6FF;
+    color: #4B5563;
+    border-radius: 6px;
+    transition: border-radius .3s;
+
+    &--info {
+      flex: 1;
+      overflow: hidden;
+
+      .ko-text-wrap {
+        &__btn {
+          margin-left: 6px;
+          font-size: 16px;
+          line-height: 1;
+          padding: 5px 12px;
+          border: 1px solid #2979ff;
+          border-radius: 16px;
+          background: #d4e4ff;
+          color: #2979ff;
+        }
+      }
+    }
+
+    &--total {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: -2px -2px;
+      padding-right: 4px;
+    }
+
+    &--num {
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #DBE9FE;
+      color: #1D40AF;
+      white-space: nowrap;
+      font-size: 10px;
+      margin: 2px;
+
+      &.CREATED {
+        background: rgba(217, 119, 6, 0.1);
+        color: rgba(217, 119, 6, 0.8);
+      }
+
+      &.WAIT_PAY {
+        background: rgba(255, 107, 107, 0.1);
+        color: rgba(255, 107, 107, 0.8);
+      }
+    }
+
+    &--item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  &__list {
+    transition: height .3s, padding .3s;
+    //height: calc(100vh - 20px);
+    height: 0;
+
+    &--item {
+      margin-bottom: 8px;
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+  }
+
+  &__operate {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: -2px;
+
+    .ko-basic-button__card {
+      margin: 2px;
+      padding: 6px 8px;
+    }
+  }
+}
+
+// 订单列表搜素样式
+.ko-search {
+  height: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  transition: padding .3s, height .3s;
+
+  &.is-o-active {
+    height: 200px;
+    padding-bottom: 8px;
+  }
+}
+
+// #ifdef H5
+
+// 供应商列表
+.ko-supplier {
+  height: 100%;
+  width: 280px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e9e9eb;
+
+  &__search {
+    display: flex;
+    align-items: center;
+  }
+
+  &__switch {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+  }
+
+  &__name {
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    transition: color .3s, background-color .3s;
+    border-radius: 6px;
+    border-bottom: 1rpx solid #e9e9eb;
+
+    // 选中的客户
+    &.is-root-active {
+      color: #2979FF;
+      background: rgba(41, 121, 255, 0.1);
+    }
+
+    &--num {
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+  }
+
+  &__table {
+    flex: 1;
+    overflow: hidden;
+    padding-right: 16px;
+  }
+
+  &__index {
+    position: absolute;
+    top: 20%;
+    right: 4px;
+    z-index: 99;
+
+    &--item {
+      font-size: 14px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      transition: all .3s;
+
+      &.is-i-active {
+        background: #007AFF;
+        color: #fff;
+      }
+    }
+  }
+}
+
+// 地址
+.ko-address {
+  width: 260px;
+  height: 100%;
+  border-right: 1px solid #e9e9eb;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  &__table {
+    padding-top: 0 !important;
+    width: 100%;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &__item {
+    border: none;
+  }
+
+  &__name {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: color .3s, background-color .3s, border .3s;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #E9EDF3;
+
+    &.is-a-active {
+      color: #2979FF;
+      background: #EFF6FF;
+      border-color: #2979FF;
+    }
+  }
+
+  &__search {
+    padding-right: 0;
+  }
+}
+
+// 订单的列表
+.ko-order-table {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+
+  &__list {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &.no-address {
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 999;
+      background: rgba(255, 255, 255, .4);
+    }
+
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+
+    &--item {
+      width: 180px;
+      margin: 0 10px;
+    }
+
+    ::v-deep(.uni-easyinput) {
+      width: 160px;
+    }
+  }
+}
+
+// #endif
+
+
+// ———————————————————————— WEB ——————————————————————————
+// #ifdef H5
+body {
+  font-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.ko-basic-tabs-list {
+}
+
+.el-form-item {
+  //margin-bottom: 22px;
+}
+
+.uni-section-content .uni-forms-item {
+  //max-width: 800px;
+}
+
+.ko-basic-button {
+  max-width: 260px;
+}
+
+.ko-basic-popup {
+  max-width: 900px;
+
+  .uni-forms-item__content {
+    width: 300px;
+  }
+
+  .ko-basic-popup__wrap {
+  }
+
+  .ko-basic-button {
+    margin: 0 auto !important;
+  }
+}
+
+.ko-basic-page-background {
+  background: -webkit-radial-gradient(50% 35%, farthest-corner, #034f8e, #034987, #02366d, #002353);
+  background: radial-gradient(50% 35%, farthest-corner, #034f8e, #034987, #02366d, #002353);
+  color: #fff;
+}
+
+.ko-basic-count {
+  &__label {
+    font-size: 18px;
+    padding: 20px 0 0;
+  }
+
+  &__info {
+    padding: 20px 0;
+  }
+
+  ::v-deep .uv-count-num {
+    span {
+      font-size: 30px
+    }
+  }
+}
+
+.uni-section__content-title.distraction {
+  font-size: 18px !important;
+  font-weight: bold;
+}
+
+.ko-basic-added-form {
+  width: 1024px;
+  margin: 0 auto;
+}
+
+.ko-basic__content {
+  width: 1024px;
+  margin: 0 auto;
+}
+
+.ko-pointer {
+  cursor: pointer;
+}
+
+.el-table .el-table__cell {
+  padding: 6px 0;
+  transition: color .3s;
+}
+
+.el-table thead th.el-table__cell {
+  background: #F5F7FA;
+}
+
+.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell,
+.el-table__body tr.hover-row.current-row > td.el-table__cell,
+.el-table__body tr.hover-row.el-table__row--striped.current-row > td.el-table__cell,
+.el-table__body tr.hover-row.el-table__row--striped.selection-row > td.el-table__cell,
+.el-table__body tr.hover-row.el-table__row--striped > td.el-table__cell,
+.el-table__body tr.hover-row.selection-row > td.el-table__cell,
+.el-table__body tr.hover-row > td.el-table__cell {
+  background: rgba(37, 110, 255, 0.7);
+  color: #fff;
+}
+
+.el-notification__group {
+  width: 100%;
+}
+
+// 消息样式
+.ko-ws-notify {
+  &__content {
+    font-size: 14px;
+    height: auto;
+
+    &.not-images {
+      height: 260px;
+    }
+  }
+
+  &__images {
+    margin-top: 10px;
+
+    .uv-album__row__wrapper img {
+      border-radius: 6px;
+    }
+
+    &.center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  &__time {
+    font-size: 12px;
+  }
+
+  &__form {
+    font-size: 12px;
+
+    &--wrap {
+      font-size: 12px;
+    }
+
+    img {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+  }
+}
+
+.el-message-box {
+  width: auto;
+  min-width: 420px;
+}
+
+// #endif

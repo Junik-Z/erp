@@ -32,6 +32,7 @@
 					:class="[popupClass]"
 					@click="clear"
 				>
+					<uv-status-bar v-if="safeAreaInsetTop"></uv-status-bar>
 					<slot />
 					<uv-safe-bottom v-if="safeAreaInsetBottom"></uv-safe-bottom>
 					<view

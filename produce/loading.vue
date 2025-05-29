@@ -21,7 +21,7 @@ export default {
     onJumpPath(path) {
       setTimeout(() => {
         uni.redirectTo({url: path});
-      }, 200);
+      }, 400);
     },
   },
 };

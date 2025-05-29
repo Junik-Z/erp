@@ -234,3 +234,8 @@ export function queryOrderApi(data) {
     data,
   });
 }
+
+// -—————————————————————— 网店二维码 ——————————————
+export function generateQRCodeApi(data) {
+  return request({url: "/main/generateQRCode", method: "get", data});
+}

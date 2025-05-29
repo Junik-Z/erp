@@ -1,6 +1,6 @@
 <script>
 import KoList from "@/components/List/List.vue";
-import { CONFIG } from "@/utils/config";
+import { CONFIG, MSG_TYPE_ENUMS } from "@/utils/config";
 import {
   bindCustomerMessageApi,
   bindSupplierMessageApi,
@@ -16,18 +16,28 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import { bindSupplierApi } from "@/api/erp/purchase";
 import { bindCustomerApi } from "@/api/erp/sale";
+import reLogin from "@/mixins/re-login";
+import KoMovable from "@/components/Movable/index.vue";
+import SendMsg from "@/components/SendMsg.vue";
+import UvAlbum from "@/uni_modules/uv-album/components/uv-album/uv-album.vue";
 
-const M_TYPE = {
-  NewUserNotice: "新用户提醒",
-};
+let multipleSize = 80;
+
+// #ifdef H5
+multipleSize = 150;
+// #endif
 
 export default {
   name: "List",
   components: {
+    KoMovable,
     KoList,
     BasicCard,
     BasicPopup,
     PickerUser,
+
+    SendMsg,
+    UvAlbum,
   },
   data() {
     return {
@@ -48,29 +58,29 @@ export default {
       nodeIndex: null,
 
       pType: "client",
+
+      showNewUsers: false,
+
+      multipleSize,
     };
   },
-  mixins: [mixins],
-
+  mixins: [mixins, reLogin],
+  onShow() {
+    this.reRequest();
+  },
   onLoad(option) {
     console.log("消息列表的参数：", option);
     this.list = [];
-
-    // 当参数上有带商户标识的时候触发重新登录
-    if (option.scene) {
-      this.onLogInAgain({scene: option.scene}, true)
-        .then(() => {
-          console.log(option, uni.getStorageSync("__USER_INFO__"));
-        });
-    } else {
-      this.getList(true);
-    }
-
-    uni.$on("$__get_config_info_success__", this.reRequest);
+    uni.$on("$__web_socket_message__", this.reRequest);
+    uni.$on("$__update_msg_list__", this.reRequest);
   },
   methods: {
     reRequest() {
-      this.getList(true);
+      uni.$__MSG_LIST_TIME_VM__ && clearTimeout(uni.$__MSG_LIST_TIME_VM__);
+
+      uni.$__MSG_LIST_TIME_VM__ = setTimeout(() => {
+        this.getList(true);
+      }, 1000);
     },
 
     // 请求下一页数据
@@ -97,12 +107,21 @@ export default {
 
     // 点击消息列表
     onClickItem(item, index) {
-      if (!item.isRead) {
+      if (!item.isRead && !["InternalStaffNoticeSender"].includes(item.type)) {
         readMessageApi({id: item.id})
           .then(() => {
             this.$set(this.list[index], "isRead", true);
           });
+        // 更新未读数量
+        uni.$emit("$__update_msg_count__");
+        uni.$__HIDE_TIME_VM__ && clearTimeout(uni.$__HIDE_TIME_VM__);
       }
+
+      uni.$emit("$__web_socket_mark_read__", item.id);
+
+      this.showNewUsers = ["NewUserNotice"].includes(item.type);
+
+      // if (["InternalStaffNoticeSender"].includes(item.type)) return false;
 
       this.node = _deepCopy(item);
       this.nodeIndex = index;
@@ -203,22 +222,71 @@ export default {
         this.$refs.PURef.close();
       }
     },
+
+    // 发送系统消息
+    onTrigger() {
+      this.$refs.SMRef.open([], "", true);
+    },
+
+    // 滚动到底部了
+    onLower() {
+      if (this.noMore) return false;
+      this.queryList.pageNum += 1;
+      this.getList();
+    },
   },
   computed: {
     getMessageType() {
       return (type) => {
-        return M_TYPE[type];
+        return MSG_TYPE_ENUMS[type];
       };
     },
 
     getPTitle() {
       return {client: "请选中客户", supplier: "请选择供应商"}[this.pType];
     },
-  },
 
+    getIconsType() {
+      return (item) => {
+        // NewUserNotice: 新用户, InternalStaffNoticeReceiver: 内部员工接收, InternalStaffNoticeSender: 内部员工发送；
+        const obj = item.isRead ? {
+          NewUserNotice: "personadd",
+          InternalStaffNoticeSender: "paperplane",
+          InternalStaffNoticeReceiver: "mail-open",
+        } : {
+          NewUserNotice: "personadd-filled",
+          InternalStaffNoticeSender: "paperplane-filled",
+          InternalStaffNoticeReceiver: "email-filled",
+        };
+
+        return obj?.[item.type];
+      };
+    },
+
+    // 获取接收用户
+    getToUser() {
+      return (item) => {
+        return item?.receivers?.map((v, index) => {
+          const isRead = item.receiverReadStatus?.[index];
+
+          return {
+            ...v,
+            isRead,
+          };
+        });
+      };
+    },
+
+    // 图片列表
+    getImageList() {
+      return (image) => (image || "").split(",")?.map(url => this.getImageUrl(url));
+    },
+  },
   onUnload() {
     console.log("数据销毁了");
     uni.$off("$__get_config_info_success__", this.reRequest);
+    uni.$off("$__web_socket_message__", this.reRequest);
+    uni.$off("$__update_msg_list__", this.reRequest);
   },
 };
 </script>
@@ -231,6 +299,8 @@ export default {
       :loading="loading"
       :no-more="noMore"
       :no-data="!list.length"
+      @lower="onLower"
+      @load-next="onLower"
     >
       <view class="ko-message__list">
         <block v-for="(item, index) of list" :key="item.id">
@@ -238,36 +308,137 @@ export default {
             <BasicCard @click.stop="onClickItem(item, index)">
               <view class="ko-message__item" :class="{'is-read': item.isRead}">
                 <uni-icons
-                  :type="item.isRead ? 'chatboxes' : 'chatboxes-filled'"
+                  :type="getIconsType(item)"
                   size="30"
                   :color="item.isRead ? '#e9e9eb' : '#3a3a3a'"
                 />
 
                 <view class="ko-message__item--info">
                   <view class="ko-message__item--info--title">{{ getMessageType(item.type) }}</view>
-                  <view class="ko-message__item--info--content">{{ item.content }}</view>
-                  <view class="ko-message__item--info--time">{{ item.createTime }}</view>
-                </view>
+                  <view class="ko-message__item--info--content">
+                    {{ item.content }}
+                  </view>
 
-                <button v-if="item.isRead && isPerm('DELETE_MESSAGE')" class="ko-basic-button__card"
-                        @click.stop="onRemove(item, index)">删除
-                </button>
+                  <view class="ko-ws-notify__images" v-if="item.images">
+                    <UvAlbum
+                      :space="10"
+                      :multiple-size="multipleSize"
+                      :urls="getImageList(item.images)"
+                      :single-size="multipleSize"
+                    />
+                  </view>
+
+
+                  <view class="ko-ws-notify__footer">
+                    <view class="ko-ws-notify__time">{{ item.createTime }}</view>
+
+                    <view class="ko-ws-notify__user">
+                      <view
+                        v-if="isEqual(item.type, 'InternalStaffNoticeSender')"
+                        class="ko-ws-notify__form"
+                      >
+                        <text style="white-space: nowrap;">发给：</text>
+                        <view class="ko-ws-notify__form--wrap">
+                          <view
+                            v-for="child of getToUser(item)"
+                            :key="child.userId"
+                            class="ko-ws-notify__form--user"
+                            :class="{'is-read': child.isRead}"
+                          >
+                            <uni-icons
+                              :type="child.isRead ? 'mail-open-filled' : 'email-filled'"
+                              size="16px"
+                              :color="child.isRead ? '#333' : '#c7c9ce'"
+                            />
+                            <text style="margin-left: 2px;">{{ child.nickName }}</text>
+                          </view>
+                        </view>
+                      </view>
+
+                      <view
+                        class="ko-ws-notify__form"
+                        v-if="isEqual(item.type, 'InternalStaffNoticeReceiver')"
+                      >
+                        <uni-icons v-if="false" type="paperplane-filled" size="12px" color="#8f939c" />
+                        来自：
+                        <text style="color: #8f939c;">{{ GET_FUNC(item, "sender.nickName") || "" }}</text>
+                      </view>
+                    </view>
+                  </view>
+                </view>
               </view>
             </BasicCard>
+
+            <button
+              v-if="(item.isRead || ['InternalStaffNoticeSender'].includes(item.type)) && isPerm('DELETE_MESSAGE')"
+              class="ko-message__item--remove"
+              @click.stop="onRemove(item, index)"
+            >
+              <uni-icons type="close" size="32" color="#333" />
+            </button>
           </view>
         </block>
       </view>
     </KoList>
 
-    <BasicPopup no-footer-padding :visible.sync="visible" :title="title">
+    <view class="ko-message__tis">
+      注意：系统将自动清除一月前的消息
+    </view>
+
+    <BasicPopup no-footer-padding :visible.sync="visible" :title="title" :no-footer="!showNewUsers">
       <view class="ko-message__popup">
-        <view class="ko-message__popup--content">
-          <view class="ko-message__popup--content--time">{{ node.createTime }}</view>
+        <view class="ko-ws-notify__content" :class="{'not-images': !node.images}">
           {{ node.content }}
+        </view>
+
+        <view class="ko-ws-notify__images" v-if="node.images">
+          <UvAlbum
+            :space="10"
+            :multiple-size="multipleSize"
+            :urls="getImageList(node.images)"
+            :single-size="multipleSize"
+          />
+        </view>
+
+        <view class="ko-ws-notify__footer">
+          <view class="ko-ws-notify__time">{{ node.createTime }}</view>
+
+          <view class="ko-ws-notify__user">
+            <view
+              v-if="isEqual(node.type, 'InternalStaffNoticeSender')"
+              class="ko-ws-notify__form"
+            >
+              <text style="white-space: nowrap; margin-top: 2px;">发给：</text>
+              <view class="ko-ws-notify__form--wrap">
+                <view
+                  v-for="child of getToUser(node)"
+                  :key="child.userId"
+                  class="ko-ws-notify__form--user"
+                  :class="{'is-read': child.isRead}"
+                >
+                  <uni-icons
+                    :type="child.isRead ? 'mail-open-filled' : 'email-filled'"
+                    size="16px"
+                    :color="child.isRead ? '#333' : '#c7c9ce'"
+                  />
+                  <text style="margin-left: 2px;">{{ child.nickName }}</text>
+                </view>
+              </view>
+            </view>
+
+            <view
+              class="ko-ws-notify__form"
+              v-if="isEqual(node.type, 'InternalStaffNoticeReceiver')"
+            >
+              <uni-icons v-if="false" type="paperplane-filled" size="12px" color="#8f939c" />
+              来自：
+              <text style="color: #8f939c;">{{ GET_FUNC(node, "sender.nickName") || "" }}</text>
+            </view>
+          </view>
         </view>
       </view>
 
-      <template #footer>
+      <template #footer v-if="showNewUsers">
         <view class="ko-message__popup--footer" style="--ko-basic-table-grid-col: auto auto;">
           <view class="ko-basic-table ko-basic-table__not-border">
             <view
@@ -299,7 +470,6 @@ export default {
               <button class="ko-basic-button__card" @click.stop="onPBind('supplier')">绑定供应商</button>
             </view>
           </view>
-
         </view>
       </template>
     </BasicPopup>
@@ -315,10 +485,19 @@ export default {
 
       @confirm="onConfirm"
     />
+
+    <KoMovable @click="onTrigger" v-if="isPerm('SEND_INTERNAL_MESSAGE')">
+      <view style="font-size: 10px; line-height: 1.1;">
+        <uni-icons type="paperplane-filled" color="#fff" />
+        <view style="margin-bottom: 8px;">系统消息</view>
+      </view>
+    </KoMovable>
+
+    <SendMsg ref="SMRef" />
   </view>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .ko-message {
   &__list {
     padding: 10px 0;
@@ -344,8 +523,28 @@ export default {
     overflow: hidden;
 
     &--wrap {
-      padding: 5px 10px;
+      padding: 10px;
+      position: relative;
     }
+
+    &--remove {
+      position: absolute;
+      top: 0;
+      right: 6px;
+      height: 32px;
+      width: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    // #ifdef H5
+    &--remove {
+      right: 0;
+    }
+
+    // #endif
 
     &.is-read {
       .ko-message__item--info {
@@ -355,6 +554,7 @@ export default {
 
     &--info {
       padding-left: 10px;
+      //padding-right: 10px;
       flex: 1;
       color: #3a3a3a;
 
@@ -371,41 +571,42 @@ export default {
       &--time {
         font-size: 10px;
         margin-top: 3px;
+        white-space: nowrap;
       }
     }
   }
 
   &__popup {
-    padding: 10px;
-
     // #ifdef MP
-    width: 98vw;
+    padding: 10px 16px;
+    width: 90vw;
     // #endif
 
-    &--content {
-      font-size: 12px;
-      height: 260px;
-      overflow-y: auto;
-
-      // #ifdef H5
-      width: 600px;
-      // #endif
-
-      &--time {
-        font-size: 10px;
-        color: #8f939c;
-        margin-bottom: 10px;
-        text-align: center;
-      }
-    }
+    // #ifndef MP
+    padding: 20px;
+    width: 600px;
+    // #endif
 
     &--footer {
-
       .ko-basic-button__card {
         padding: 8px 16px;
         width: 120px;
       }
     }
+  }
+
+  &__tis {
+    font-size: 10px;
+    color: #f29e99;
+    text-align: center;
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99;
+    background: rgba(255, 255, 255, .6);
+    padding: 6px 10px;
+    border-radius: 6px;
   }
 }
 </style>

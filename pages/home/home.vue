@@ -40,7 +40,7 @@ export default {
 
       this.VM_TIME && clearTimeout(this.VM_TIME);
 
-      // #ifdef MP
+      // #ifdef MP | H5
       // uni.$emit("$__init_web_socket__");
       // #endif
 
@@ -53,7 +53,7 @@ export default {
             }, 100);
           }, */
         });
-      }, 200)
+      }, 100);
     },
 
     // 处理 MP 的信息

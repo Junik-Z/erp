@@ -1,5 +1,5 @@
 <script>
-import Verification from "./pages/Verification.vue";
+import Verification from "./verification.vue";
 
 export default {
   name: "reconcile",
@@ -23,6 +23,6 @@ export default {
 
 <style scoped lang="scss">
 .ko-reconcile {
-  padding-bottom: 80px;
+  //padding-bottom: 80px;
 }
 </style>

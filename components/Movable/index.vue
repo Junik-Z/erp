@@ -119,6 +119,7 @@ export default {
               @click="_onItemClick(index, item, $event)"
               :open-type="item.openType"
               :data-params="item.params"
+              :disabled="item.disabled"
             >
               <image
                 v-if="item.iconPath"
@@ -233,10 +234,10 @@ $uni-shadow-base: 0 1px 5px 2px rgba($color: #000000, $alpha: 0.3) !default;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-
       border-radius: 0;
       height: 60px;
       padding: 2px 10px;
+      color: #333;
 
       &--image {
         width: 25px;
@@ -254,7 +255,6 @@ $uni-shadow-base: 0 1px 5px 2px rgba($color: #000000, $alpha: 0.3) !default;
 
       &--text {
         font-size: 12px;
-        color: #333;
       }
     }
   }

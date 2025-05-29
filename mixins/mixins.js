@@ -1,13 +1,11 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-
 // #endif
 import {
   _deepCopy,
   _get,
   _haveCommonElements,
   _isEmpty,
-  _isEnv,
   _isEqual,
   _isString,
   _keys,
@@ -25,61 +23,37 @@ import { goLogin, logoutApi } from "@/api/user";
 
 import { getSaleShareIdApi, shareOrderApi } from "@/api/erp/sale";
 import { getPurchaseShareIdApi } from "@/api/erp/purchase";
+import { NO_CLEAR_KEY } from "@/store";
 
-const User = uni.getStorageSync("__USER_INFO__");
-const Sys = uni.getStorageSync("__CONFIG_INFO__");
+// #ifdef MP
+const MenuButtonRect = uni.getMenuButtonBoundingClientRect();
+// #endif
 
 export default {
   data() {
     return {
-      MIXINS_OBJ: {
-        USER: User || {},
-        SYS: Sys || {},
-      },
       TABS_LIST: [],
       TAB: 0,
-
       PAGE_MENU: [],
-
       PAGE_MENU_INDEX: 0,
-
       TK_FILL_INFO: {},
+      // #ifdef MP
+      MenuButtonRect,
+      // #endif
     };
   },
   onShow() {
     this.$nextTick(() => {
-      this._UP_INGO();
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 300);
     });
   },
   created() {
-    this.$nextTick(() => {
-      this._UP_INGO();
-
-      uni.$on("$__get_info_success__", () => {
-        // this?.getList?.();
-        this._UP_INGO();
-      });
-
-      uni.$on("$__get_user_info_success__", () => {
-        this._UP_INGO();
-      });
-
-      uni.$on("$__get_config_info_success__", () => {
-        this._UP_INGO();
-      });
-    });
   },
   mounted() {
   },
   methods: {
-    _UP_INGO(res) {
-      const UserInfo = uni.getStorageSync("__USER_INFO__") || _get(res, "0");
-      const SysInfo = uni.getStorageSync("__CONFIG_INFO__") || _get(res, "1");
-
-      this.$set(this.MIXINS_OBJ, "USER", UserInfo);
-      this.$set(this.MIXINS_OBJ, "SYS", SysInfo);
-    },
-
     // 获取通用的分享 query 参数
     async _GET_SHARE_APP_PARAMS_(obj, sceneName = "scene") {
       const scene = uni.getStorageSync("__APP_SCENE__") || "";
@@ -93,16 +67,16 @@ export default {
 
       // 添加分享出去唯一的下单ID
       if ([
-        "ADDED_SALE",
-        "ADDED_PURCHASE",
-        "ADDED_PRODUCE_PACKING",
+        "SALE_SHARE",
+        "SHARE_PURCHASE",
+        "SHARE_PRODUCE_PACKING",
         "SHARE_ORDER",
       ].includes(query.PAGE_TYPE)) {
         try {
           const Func = {
-            ADDED_SALE: getSaleShareIdApi,
-            ADDED_PRODUCE_PACKING: getSaleShareIdApi,
-            ADDED_PURCHASE: getPurchaseShareIdApi,
+            SALE_SHARE: getSaleShareIdApi,
+            SHARE_PRODUCE_PACKING: getSaleShareIdApi,
+            SHARE_PURCHASE: getPurchaseShareIdApi,
             SHARE_ORDER: shareOrderApi,
           }[query.PAGE_TYPE];
           const res = await Func?.(obj?.query?.queryList || {});
@@ -195,6 +169,8 @@ export default {
         uni.$__IS_LOGOUT_FLAG__ = true;
         logoutApi()
           .finally(() => {
+            const NoClear = uni.getStorageSync(NO_CLEAR_KEY);
+
             setTimeout(() => {
               const obj = _omit(params || {}, ["scene"]);
               const query = {
@@ -230,6 +206,8 @@ export default {
                 resolve();
               }, 10);
               // #endif
+
+              uni.setStorageSync(NO_CLEAR_KEY, NoClear);
             }, 50);
           });
       });
@@ -276,11 +254,9 @@ export default {
     // 处理查看图片
     lookImage(url) {
       if (url) {
-        if (url) {
-          uni.previewImage({
-            urls: [url],
-          });
-        }
+        uni.previewImage({
+          urls: [url],
+        });
       }
     },
 
@@ -296,7 +272,7 @@ export default {
 
       index = index > -1 ? index : this.nodeIndex;
 
-      if (data?.confirmable && isPayment) {
+      if (["FINISHED"].includes(data.status) && isPayment) {
         this.list.splice(index, 1);
       } else if (_isString(info) && this.tab === 1) {
         this.list.splice(index, 1);
@@ -359,6 +335,27 @@ export default {
         }
       });
     },
+
+    // 设置下单样式
+    setBillStyle() {
+      this.$store.dispatch("setBillStyleAsync", !this.sBill);
+    },
+    // 设置销售列表样式
+    setSaleStyle() {
+      this.$store.dispatch("setSaleStyleAsync", !this.sSale);
+    },
+    // 设置采购列表样式
+    setPurchaseStyle() {
+      this.$store.dispatch("setPurchaseStyleAsync", !this.sPurchase);
+    },
+    // 设置应收款样式
+    setOrStyle() {
+      this.$store.dispatch("setOrStyleAsync", !this.sOrStyle);
+    },
+    // 设置应付款样式
+    setApStyle() {
+      this.$store.dispatch("setApStyleAsync", !this.sApStyle);
+    },
   },
   components: {
     // #ifdef H5
@@ -387,11 +384,9 @@ export default {
     getImageUrl() {
       return getCacheFile;
     },
-
     isEqual() {
       return _isEqual;
     },
-
     // 判断空数据
     isEmpty() {
       return _isEmpty;
@@ -414,17 +409,17 @@ export default {
 
     // 用户信息
     GET_USER_INFO() {
-      return this.MIXINS_OBJ?.USER || {};
+      return this.$store.state.USER_INFO || {};
     },
 
     // 商铺信息
     GET_CONFIG_INFO() {
-      return this.MIXINS_OBJ?.SYS || {};
+      return this.$store.state.CONFIG_INFO || {};
     },
 
     // 用户权限
     GET_USER_ROLE() {
-      return _get(this.MIXINS_OBJ?.USER, "role") || [];
+      return _get(this.GET_USER_INFO, "role") || [];
     },
 
     // 订单状态
@@ -432,6 +427,8 @@ export default {
       return (type) => {
         return {
           CREATED: "待处理",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           FINISHED: "已完成",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
@@ -444,6 +441,8 @@ export default {
       return (type) => {
         return {
           CREATED: "待清帐",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           FINISHED: "已完成",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
@@ -471,6 +470,8 @@ export default {
       return (status) => {
         return {
           CREATED: "待生产",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           APPLY_MATERIAL: "生产中",
           FINISHED: "已完成",
           PAUSED: "已暂停",
@@ -492,6 +493,18 @@ export default {
           CHECK_IN: "盘点入库",
           CHECK_OUT: "盘点出库",
           CUSTOMIZED: "定制订单",
+        };
+        return _get(obj, type) || type;
+      };
+    },
+
+    // 生产类型
+    PRODUCE_TYPE_ENUMS() {
+      return (type) => {
+        if (!type) return "-";
+        const obj = {
+          customized: "定制生产",
+          internal: "内部生产",
         };
         return _get(obj, type) || type;
       };
@@ -580,7 +593,7 @@ export default {
 
     // 获取店铺名称
     GET_SHOP_NAME() {
-      return _get(this.GET_CONFIG_INFO, "remark") || "";
+      return this.GET_CONFIG_INFO && _get(this.GET_CONFIG_INFO || {}, "remark") || "";
     },
 
     // 通用 tab 列表
@@ -675,7 +688,38 @@ export default {
 
     // 天科装饰有限公司 定制功能
     isTkCustom() {
-      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg") || (_isEnv() && this.isDefault);
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg")/*  || (_isEnv() && this.isDefault) */;
+    },
+
+    // 右边胶囊的样式
+    menuButtonRectStyle() {
+      const m = this.MenuButtonRect || {};
+      return {
+        "--m-height": m.height + "px",
+        "--m-width": m.width + "px",
+        "--m-top": m.top + "px",
+      };
+    },
+
+    // 下单样式
+    sBill() {
+      return this.$store.getters.sBill;
+    },
+    // 获取销售列表样式
+    sSale() {
+      return this.$store.getters.sSaleStyle;
+    },
+    // 采购列表的新样式
+    sPurchase() {
+      return this.$store.getters.sPurchaseStyle;
+    },
+    // 应收款样式
+    sOrStyle() {
+      return this.$store.getters.sOrStyle;
+    },
+    // 应付款样式
+    sApStyle() {
+      return this.$store.getters.sApStyle;
     },
   },
 };

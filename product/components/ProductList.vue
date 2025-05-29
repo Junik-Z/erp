@@ -10,17 +10,18 @@ import {
 } from "@/api/erp/product";
 import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
-import PickerClass from "../components/PickerClass/PickerClass.vue";
+import PickerClass from "./PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { PageEnums } from "@/utils/config";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
+import GoodsMixins from "../../mixins/GoodsMixins";
 
 export default {
   name: "ProductList",
-  mixins: [mixins],
+  mixins: [mixins, GoodsMixins],
   components: {
     UniSearchBar,
     KoMovable,
@@ -439,6 +440,15 @@ export default {
         >
           <i class="iconfont" :class="[isHideStockPrice ? 'icon-xianshi' : 'icon-mimaxianshiyincang-']"></i>
         </button>
+
+        <!-- #ifdef MP -->
+        <button
+          class="ko-basic-button__card"
+          @click="setProductStyle"
+        >
+          <uni-icons color="#fff" :type="!getProductStyle ? 'list' : 'tune-filled'"></uni-icons>
+        </button>
+        <!-- #endif -->
       </view>
 
       <view class="ko-product__list">

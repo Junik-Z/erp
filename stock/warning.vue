@@ -174,6 +174,9 @@ export default {
 <template>
   <view class="ko-warning">
     <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+    <!-- #ifdef MP -->
     <view class="ko-warning__wrap">
       <InventoryList
         :list="list"

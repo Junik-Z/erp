@@ -2,6 +2,7 @@
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import { PageEnums } from "@/utils/config";
 import mixins from "@/mixins/mixins";
+import UvPopup from "@/uni_modules/uv-popup/components/uv-popup/uv-popup.vue";
 
 export default {
   name: "Billing",
@@ -17,16 +18,22 @@ export default {
     return {
       visible: true,
       swiperHeight: 210,
+
+      images: [],
+      tis: "",
     };
   },
   mounted() {
     // this.$refs.PRef.open();
   },
   components: {
+    UvPopup,
     BasicPopup,
   },
   methods: {
-    open() {
+    open(node) {
+      this.images = node?.images || [];
+      this.tis = node?.tis || "";
       this.$refs.PRef.open();
     },
 
@@ -50,17 +57,7 @@ export default {
     },
   },
 
-  computed: {
-    getCncAD() {
-      return [
-        "/files/down/static/cnc1.png",
-        "/files/down/static/cnc2.png",
-        "/files/down/static/cnc3.png",
-        "/files/down/static/cnc4.png",
-        "/files/down/static/cnc5.png",
-      ];
-    },
-  },
+  computed: {},
 };
 </script>
 
@@ -70,7 +67,6 @@ export default {
       mode="center"
       ref="PRef"
       :overlay-style="{background: 'rgba(0, 0, 0, .2)'}"
-      @change="onChange"
       :close-on-click-overlay="false"
       :safe-area-inset-bottom="false"
       :round="10"
@@ -88,24 +84,24 @@ export default {
         </view>
 
         <view class="ko-billing__content--wrap">
-
           <swiper class="ko-billing__swiper" autoplay interval="4000" :style="[{height: swiperHeight + 'px'}]">
-            <swiper-item v-for="item of getCncAD" :key="item">
+            <swiper-item v-for="item of images" :key="item">
               <view class="ko-billing__swiper--item">
                 <image
                   class="ko-billing__swiper--item--image"
                   :src="getImageUrl(item)"
                   mode="widthFix"
                   @load="onImageLoad"
+                  lazy-load
                 />
               </view>
             </swiper-item>
           </swiper>
 
 
-          <view class="ko-billing__footer">
+          <view class="ko-billing__footer" v-if="tis">
             <view class="ko-billing__footer--desc">
-              尊敬的用户，您尚未开通板材加工功能。如需使用，请联系商务进行开通，感谢您的支持！
+              {{ tis }}
             </view>
             <!-- #ifdef MP -->
             <!--<button style="margin-top: 20px;" class="ko-basic-button__card" @click="onJumpRenewal">自助开通</button>-->
@@ -189,16 +185,26 @@ export default {
   // #endif
 
   // #ifdef H5
+  &__content {
+    //height: 600px;
+  }
+
+  .ko-billing__footer--desc {
+    background: #fff;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+
   &__swiper {
     width: 1072.57px;
-    height: 600px;
+    height: 600px !important;
 
     &--item {
       width: 100%;
-      height: 100%;
+      height: 600px;
 
       &--image {
-        height: 100%;
+        height: 600px;
         width: 100%;
         border-radius: 10px;
       }

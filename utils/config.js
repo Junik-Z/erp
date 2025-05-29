@@ -23,9 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  // type = "trial";
-  // BASE_URL = "https://erp.kuaouyun.cn/api";
-  // BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
+  type = "trial";
   // #endif
 
   // #ifdef H5
@@ -53,7 +51,7 @@ export const CONFIG = {
   APP_ID: "wx525c19deacc41329",
   SystemVersion: type,
 
-  "T_VERSION": 4,
+  "T_VERSION": 5,
 
   ...(
     {
@@ -131,38 +129,100 @@ export const ROLE_LIST_ENUMS = {
  */
 export const PageEnums = {
   home: "/pages/home/home",
-  Index: "/pages/index/index",
 
   qrcode: "/erp/qrcode/qrcode",
+  login: "/pages/login/login",
+
+  // —————————— 销售管理 ——————————————————————
+  // 销售首页
+  saleLoading: "/sale/loading",
+
+  // 销售看板
+  saleView: "/sale/view",
+  // 销售
+  sale: "/sale/sale",
+  // 销售订单列表
+  saleOrderList: "/sale/order-list",
+  // 客户管理
+  saleClient: "/sale/client",
+  // 添加客户管理
+  saleNewClient: "/sale/new-client",
+  // 销售退货列表
+  saleRefundList: "/sale/refund",
+  // 我的销售订单
+  saleMyList: "/sale/my-order",
 
   // 新增修改销售订单
-  editSale: "/form/sale-order",
+  NewSale: "/form/sale-order",
   // 添加销售退货单
   saleRefund: "/form/sale-refund-order",
 
+  // 销售客户下单返回地址
+  saleClientAddedBack: "/sale/my-order",
+
+
+  // —————————— 采购管理 ——————————————————————
+  // 销售首页
+  purchaseLoading: "/purchase/loading",
+
+  // 采购看板
+  purchaseView: "/purchase/view",
+  // 采购
+  purchase: "/purchase/purchase",
+  // 采购新订单列表
+  purchaseOrder: "/purchase/order",
+  // 供应商管理
+  purchaseClient: "/purchase/supplier",
+  // 添加采购管理
+  purchaseNewClient: "/purchase/new-supplier",
+  // 采购退货列表
+  purchaseRefundList: "/purchase/refund",
+  // 我的采购订单
+  purchaseMyList: "/purchase/my-order",
+
+  // 采购供应商下单返回地址
+  purchaseClientAddedBack: "/purchase/supplier",
+
   // 新增修改采购订单
-  editPurchase: "/form/purchase-order",
+  NewPurchase: "/form/purchase-order",
   // 添加采购退货单
   refundPurchase: "/form/purchase-refund-order",
 
-  // 销售客户
-  saleClient: "/erp/sale/sale?TO_REF=CLRef",
-  // 采购供应商
-  purchaseClient: "/erp/purchase/purchase?TO_REF=CLRef",
-
-  // 销售客户下单返回地址
-  saleClientAddedBack: "/erp/sale/sale?TO_REF=MOLRef",
-  // 采购供应商下单返回地址
-  purchaseClientAddedBack: "/erp/purchase/purchase?TO_REF=MOLRef",
 
   // ———————————— 产品管理 ————————————————————
   // 添加产品
-  addedProduct: "/product/added",
-  // 添加产品
   product: "/product/product",
 
+  // 购物列表
+  shopping: "/product/shopping",
+
+  // 产品分类
+  productClassify: "/product/classify",
+  // 产品扩张字段
+  productField: "/product/field",
+  // 添加产品
+  addedProduct: "/product/added",
+  // 产品详情
+  productDetail: "/product/detail",
+  // 添加产品描述
+  productDesc: "/product/desc",
+
+
   // ———————————— 财务管理 ————————————————————
-  finance: "/finance/finance",
+  financeLoading: "/finance/loading",
+  // 应收款
+  financeReceivable: "/finance/receivable",
+  // 新应收款
+  financeOrOrder: "/finance/or-order",
+  // 应付款
+  financePay: "/finance/pay",
+  // 应付款
+  financeApPay: "/finance/ap-pay",
+  // 其它支出
+  financeExpenses: "/finance/expenses",
+  // 核对款项
+  financeVerification: "/finance/verification",
+
   // 添加付款单据
   financeTicket: "/finance/ticket",
   // 核对款项
@@ -207,9 +267,15 @@ export const PageEnums = {
   // 授权页面
   adminAuthorization: "/admin/merchants/authorization",
   // 服务续费
-  adminRenewal: "/admin/renewal/renewal",
-  // 系统设置
-  adminStore: "/admin/admin/store",
+  adminRenewal: "/admin/renewal",
+  // 店铺设置
+  adminSetShop: "/admin/set-sys",
+  // 管理微信用户
+  WeChat: "/admin/we-chat",
+  // 设置权限
+  SetRole: "/admin/set-role",
+  // 个人中心
+  User: "/admin/user",
 
   // ———————————— 消息管理 ————————————
   // 消息列表
@@ -217,13 +283,28 @@ export const PageEnums = {
 
   // ———————————— 物流管理 ————————————
   // 物流
-  logistics: "/logistics/logistics",
+  logisticsLoading: "/logistics/loading",
+  // 配送
+  logisticsDelivery: "/logistics/delivery",
   // 物流商
-  logisticsClient: "/logistics/logistics?TO_REF=RLRef",
-  // 物流上
-  logisticsClientList: "/logistics/client",
+  logisticsProvider: "/logistics/provider",
+  // 我的配送
+  logisticsMyDelivery: "/logistics/my-delivery",
+  // 新物流商
+  logisticsNewProvider: "/logistics/new-provider",
 
   // ———————————— 库存管理 ————————————
+  // 库存管理
+  stockLoading: "/stock/loading",
+
+  // 库存看板
+  stockView: "/stock/view",
+  // 入库审批
+  stockWarehouse: "/stock/warehouse",
+  // 出库审批
+  stockOut: "/stock/out",
+  // 核对库存
+  stockVerification: "/stock/verification",
   // 库存管理
   stock: "/stock/stock",
   // 核销库存
@@ -238,13 +319,27 @@ export const PageEnums = {
   produceNewStaff: "/staff/new-staff",
   // 生产流程
   factory: "/staff/factory",
-  // 员工的已完结工单列表
-  produceStaffCompleteProcess: "/staff/complete-process",
-  // 员工工艺工资
+  // 员工工资列表
+  staffWages: "/staff/wages",
+  // 员工工艺
   salary: "/staff/salary",
 
   // ——————————————— 智能客服 ————————————————
   smart: "/smart/smart",
+
+  // ——————————————— 订单状态 ————————————————
+  orderStatus: "/order/status",
+
+  // ——————————————— 店铺 ———————————————————
+  // 店铺配置
+  shopUp: "/shop/set-up",
+
+  // ——————————————— 用户绑定 ———————————————
+  clientBinding: "/client/binding",
+  // 绑定供应商
+  supplierBinding: "/client/supplier",
+  // 绑定员工
+  staffBinding: "/client/staff",
 };
 
 /**
@@ -254,7 +349,7 @@ export const MENU_LIST = [
   {
     label: "库存",
     icon: "icon-kucuntongjifenxi",
-    value: PageEnums.stock,
+    value: PageEnums.stockLoading,
     modelKey: "stock",
     role: ["ADMIN", "BUSINESS", "STOCK_READ", "STOCK_WRITE", "STOCK_TAKING"],
     // 是否可以被分配角色
@@ -265,7 +360,7 @@ export const MENU_LIST = [
   {
     label: "销售",
     icon: "icon-xiaoshoubi",
-    value: "/erp/sale/sale",
+    value: PageEnums.saleLoading,
     modelKey: "sale",
     role: ["ADMIN", "BUSINESS", "SALES_READ", "SALES_WRITE", "SALES_MEMBER"],
     isUpRole: true,
@@ -276,7 +371,7 @@ export const MENU_LIST = [
   {
     label: "采购",
     icon: "icon-icon_B_caigoujihuatibao",
-    value: "/erp/purchase/purchase",
+    value: PageEnums.purchaseLoading,
     modelKey: "purchase",
     role: ["ADMIN", "BUSINESS", "PURCHASE_READ", "PURCHASE_WRITE", "PURCHASE_MEMBER"],
     isUpRole: true,
@@ -296,7 +391,7 @@ export const MENU_LIST = [
   {
     label: "财务",
     icon: "icon-tubiao-05",
-    value: PageEnums.finance,
+    value: PageEnums.financeLoading,
     modelKey: "finance",
     role: ["ADMIN", "BUSINESS", "FINANCE_READ", "FINANCE_WRITE"],
     isUpRole: true,
@@ -312,7 +407,7 @@ export const MENU_LIST = [
   {
     label: "配送",
     icon: "icon-daishouhuo",
-    value: PageEnums.logistics,
+    value: PageEnums.logisticsLoading,
     checkField: "deliveryEnable",
     modelKey: "logistics",
     role: ["ADMIN", "BUSINESS", "DELIVERY_READ", "DELIVERY_WRITE", "DELIVERY_MEMBER"],
@@ -342,10 +437,17 @@ export const MENU_LIST = [
   {
     label: "员工管理",
     icon: "icon-guanxiaobaotubiao38",
-    value: "/admin/merchants/merchants",
+    value: PageEnums.SetRole,
     role: ["ADMIN", "BUSINESS"],
     isUpRole: false,
   },
+  /*  {
+     label: "用户管理",
+     icon: "icon-a-yonghuguanli11",
+     value: PageEnums.WeChat,
+     role: ["ADMIN", "BUSINESS"],
+     isUpRole: false,
+   }, */
   {
     label: "考勤",
     icon: "icon-kaoqindaka",
@@ -354,16 +456,16 @@ export const MENU_LIST = [
     isUpRole: false,
   },
   {
-    label: "托手管家",
-    icon: "icon-support",
-    value: PageEnums.smart,
-    role: ["ADMIN", "BUSINESS", "*"],
-    isUpRole: true,
+    label: "店铺",
+    icon: "icon-dianpu",
+    value: PageEnums.shopUp,
+    role: ["ADMIN", "BUSINESS"],
+    isUpRole: false,
   },
   {
     label: "个人中心",
     icon: "icon-gerenzhongxin",
-    value: "/admin/user/user",
+    value: PageEnums.User,
     role: ["*"],
     isUpRole: false,
   },
@@ -383,24 +485,24 @@ export const MENU_LIST = [
 export const HOME_PAGE_TYPE_ENUMS = {
   logout: "退出登录",
   reselect: "重新选择商户",
-  ADDED_SALE: "分享出去添加销售单",
-  ADDED_PURCHASE: "分享出去添加采购单",
+  SALE_SHARE: "分享出去添加销售单",
+  SHARE_PURCHASE: "分享出去添加采购单",
   ADDED_REFUND_PURCHASE: "分享出去添加采购退货单",
   ADDED_CLIENT_BY_SALE: "分享出去让客户添加信息及绑定微信",
   BINDING_CLIENT_BY_SALE: "分享出去让客户绑定微信",
   BINDING_CLIENT_BY_PURCHASE: "分享出去让供应商绑定微信",
   BINDING_CLIENT_BY_LOGISTICS: "分享出去绑定物流商维修",
   BINDING_PRODUCT: "分享出去批量绑定产品",
-  ADDED_PRODUCE_PACKING: "分享出去下单板材",
+  SHARE_PRODUCE_PACKING: "分享出去下单板材",
 };
 
 /**
  * @description 页面类型对呀的页面地址
  */
 export const PAGE_TYPE_CORRESPOND_PATH = {
-  ADDED_SALE: PageEnums.editSale,
+  SALE_SHARE: PageEnums.NewSale,
   BINDING_CLIENT_BY_SALE: "/client/binding/binding",
-  ADDED_PURCHASE: PageEnums.editPurchase,
+  SHARE_PURCHASE: PageEnums.NewPurchase,
   BINDING_CLIENT_BY_PURCHASE: "/client/binding/binding",
 };
 
@@ -434,6 +536,7 @@ export const PRICING_METHOD = {
   fixedPriceGroup: "固定价格组内平分",
   dailyRate: "按日工资",
   commission: "总单价提成",
+  priceCommission: "金额提成",
   none: "没有定价方式",
 };
 
@@ -474,3 +577,30 @@ export const PLATE_SPECIF_ENUMS = [
     value: "1220x2750x17",
   }, */
 ];
+
+export const WAGE_TYPE_ENUMS = {
+  ProductionSettlement: "生产结算",
+  ClearAnAccount: "工资/补贴/奖金发放",
+  SubsidyAndBonus: "补贴/奖金所得",
+  CancelSettlement: "取消结算",
+};
+
+/**
+ * @description 消息类型
+ */
+export const MSG_TYPE_ENUMS = {
+  NewUserNotice: "新用户提醒",
+  InternalStaffNoticeSender: "发送的消息",
+  InternalStaffNoticeReceiver: "消息提醒",
+};
+
+/**
+ * @description 微信用户标签
+ */
+export const WX_USER_TAG_ENUMS = {
+  newUser: "新用户",
+  customerTag: "客户",
+  supplierTag: "供应商",
+  staffTag: "员工",
+  logisticTag: "物流商",
+};

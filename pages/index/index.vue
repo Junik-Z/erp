@@ -1,21 +1,20 @@
 <script>
-import { _deepCopy, _get, _haveCommonElements, _isEmpty } from "@/utils";
+import { _deepCopy, _get, _haveCommonElements, _isEmpty, _isEqual, _isNumber, _reverse } from "@/utils";
 
 import mixins from "@/mixins/mixins";
 import { CONFIG, MENU_LIST, PageEnums } from "@/utils/config";
-import KoNotice from "@/components/Notice/Notice.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 
 import Dayjs from "@/utils/dayjs";
+import { getMessageCountApi, getMessageListApi } from "@/api/user";
 
 export default {
   components: {
     MerchantsHeader,
     UniCol,
     UniRow,
-    KoNotice,
   },
   mixins: [mixins],
   data() {
@@ -38,18 +37,30 @@ export default {
       isExpired: false,
 
       // 有效天数
-      expiredDays: 0,
+      expiredDays: null,
+
+      msgCount: 0,
+
+      isInit: true,
+
+      isFlag: false,
     };
   },
   onShow() {
     this.$nextTick(() => {
       this.validShopDate();
     });
+    this.isFlag && this.getMsgCount(false);
+    this.isFlag = true;
   },
   onLoad() {
     uni.$on("$__get_config_info_success__", this.validShopDate);
 
+    uni.$on("$__update_msg_count__", this.getMsgCount);
+
     uni.$__FIELD_LIST__ = [];
+
+    this.getMsgCount(true);
 
     // console.log("用户权限", this.GET_USER_ROLE);
 
@@ -62,6 +73,14 @@ export default {
         });
       }, 600);
     } */
+
+    const user = this.GET_USER_INFO;
+    // 用户没有设置昵称
+    if (_isEmpty(user.nickName)) {
+      uni.navigateTo({
+        url: PageEnums.User + `?noInfo=true`,
+      });
+    }
     // #endif
   },
   // #ifdef H5
@@ -90,7 +109,7 @@ export default {
     onJumpStore() {
       this.onMsg();
       uni.navigateTo({
-        url: PageEnums.adminStore,
+        url: PageEnums.adminSetShop,
       });
     },
 
@@ -187,6 +206,46 @@ export default {
         uni.$emit("$__ask_request_message__");
       }
     },
+
+    // 获取未读消息条数
+    getMsgCount(flag = false) {
+      if (!this.isPerm("MESSAGE_LIST")) return false;
+
+      getMessageCountApi()
+        .then(res => {
+          this.msgCount = res.data;
+          this.$store.dispatch("setNewMsgAsync", !!res.data);
+
+          if (this.msgCount > 0 && flag) {
+            setTimeout(() => {
+              this.getMsgList();
+            }, 1000);
+          }
+        });
+    },
+
+    // 获取未读的消息列表
+    getMsgList() {
+      getMessageListApi({pageSize: 30, pageNum: 0})
+        .then(async (res) => {
+          const list = (res.data || []).filter(item => _isEqual("InternalStaffNoticeReceiver", item.type) && !item.isRead);
+          const sList = _reverse(list);
+          console.log("通知消息的列表", sList);
+          for (let i = 0; i < sList.length; i++) {
+            const data = sList[i];
+            await this.tisMsg(data);
+          }
+        });
+    },
+
+    // 消息提示
+    tisMsg(data = {}) {
+      if (_isEmpty(data)) return false;
+      return new Promise(resolve => {
+        uni.$emit("$__show_tis_msg__", data);
+        setTimeout(resolve, 600);
+      });
+    },
   },
   computed: {
     // 获取按钮位置
@@ -202,23 +261,25 @@ export default {
       return _deepCopy(this.gridList)
         .flatMap(item => {
           const role = this.GET_USER_ROLE;
-          
-          // 判断是否有单独的字段校验
-          const checkField = this.isAdmin || !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
 
-          if ((_haveCommonElements(role, item.role) && checkField && !this.isExpired) || item.role.includes("*")) {
+          // 判断是否有单独的字段校验
+          const checkField = !item.checkField || _get(this.GET_CONFIG_INFO, item.checkField);
+
+          if (
+            (_haveCommonElements(role, item.role) && checkField && !this.isExpired)
+            || item.role.includes("*")
+            || this.isAdmin
+          ) {
             return [item];
           } else {
             return [];
           }
         });
     },
-
     // 显示过期描述
     showExpiredDesc() {
-      return this.isExpired || this.expiredDays <= 30;
+      return this.isExpired || (_isNumber(this.expiredDays) && this.expiredDays <= 30);
     },
-
     // 获取过期描述
     getExpiredDesc() {
       const day = this.expiredDays;
@@ -238,13 +299,16 @@ export default {
   },
   onUnload() {
     uni.$off("$__get_config_info_success__", this.validShopDate);
+    uni.$off("$__update_msg_count__", this.getMsgCount);
   },
 };
 </script>
 
 <template>
   <view class="ko-home" :style="[getMenuButtonStyle]">
-    <KoNotice is-custom />
+    <!-- #ifdef MP -->
+    <Notice is-custom />
+    <!-- #endif -->
 
     <MerchantsHeader ref="MHRef" :disabled="disabled" />
 
@@ -253,58 +317,53 @@ export default {
         <i class="iconfont icon-shezhi"></i>
       </button>
 
-      <button
-        class="ko-home__store--notification"
-        @click="onJumpMessage"
-        v-if="isPerm('MESSAGE_LIST')"
-      >
-        <view style="position: relative;">
-          <uni-icons
-            type="notification-filled"
-            size="28"
-          />
+      <view class="ko-home__msg" v-if="isPerm('MESSAGE_LIST')">
+        <button class="ko-home__msg--btn" @click="onJumpMessage">
+          <uni-icons type="notification-filled" size="28" />
+        </button>
 
-          <text v-if="false" class="ko-home__store--notification--badge"></text>
-        </view>
-      </button>
+        <text @click="onJumpMessage" v-if="msgCount" class="ko-home__msg--badge">{{ msgCount }}</text>
+      </view>
     </view>
 
-    <!-- #ifdef MP -->
-    <UniRow
-      @click.stop="() => {}"
-      :gutter="20"
-    >
-      <UniCol
-        v-for="(item, index) of getMenuList"
-        :key="item.value"
-        :index="index"
-        :span="8"
+    <view class="ko-home__center">
+      <!-- #ifdef MP -->
+      <UniRow
+        @click.stop="() => {}"
+        :gutter="20"
       >
-        <!-- #endif -->
+        <UniCol
+          v-for="(item, index) of getMenuList"
+          :key="item.value"
+          :index="index"
+          :span="8"
+        >
+          <!-- #endif -->
 
-        <!-- #ifdef H5 -->
-        <div class="ko-home__wrap">
-          <div class="ko-home__content">
-            <button
-              v-for="(item) of getMenuList"
-              :key="item.value"
-              class="ko-home__item--button"
-            >
-              <!-- #endif -->
-              <view class="ko-home__item" @click="onChange(item)">
-                <i :class="['iconfont', item.icon]"></i>
-                <text>{{ item.label }}</text>
-              </view>
-              <!-- #ifdef H5 -->
-            </button>
+          <!-- #ifdef H5 -->
+          <div class="ko-home__wrap">
+            <div class="ko-home__content">
+              <button
+                v-for="(item) of getMenuList"
+                :key="item.value"
+                class="ko-home__item--button"
+              >
+                <!-- #endif -->
+                <view class="ko-home__item" @click="onChange(item)">
+                  <i :class="['iconfont', item.icon]"></i>
+                  <text>{{ item.label }}</text>
+                </view>
+                <!-- #ifdef H5 -->
+              </button>
+            </div>
           </div>
-        </div>
-        <!-- #endif -->
+          <!-- #endif -->
 
-        <!-- #ifdef MP -->
-      </UniCol>
-    </UniRow>
-    <!-- #endif -->
+          <!-- #ifdef MP -->
+        </UniCol>
+      </UniRow>
+      <!-- #endif -->
+    </view>
 
     <view class="ko-home__not-role" v-if="!getMenuList.length">
       您还没有任何权限，请联系管理员给您授权！
@@ -341,24 +400,35 @@ export default {
     display: flex;
     align-items: center;
     font-size: 26px;
+  }
 
-    &--notification {
+  &__msg {
+    position: relative;
+    margin-left: 14px;
+
+    &--btn {
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
 
-      &--badge {
-        position: absolute;
-        z-index: 99;
-        top: 20px;
-        right: 0;
+    &--badge {
+      position: absolute;
+      z-index: 99;
+      top: -8px;
+      left: 14px;
 
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #e43d33;
-      }
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e43d33;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
     }
   }
 
@@ -373,10 +443,6 @@ export default {
     .icon-shezhi {
       height: var(--ko-menu-height, 32px);
       font-size: 26px;
-    }
-
-    &--notification {
-      margin-left: 10px;
     }
   }
 
@@ -401,11 +467,13 @@ export default {
       font-size: 30px;
       color: #fff;
     }
+  }
 
-    &--notification {
-      margin-right: 20px;
-      order: 1;
+  &__msg {
+    margin-left: 0;
+    margin-right: 20px;
 
+    &--btn {
       .uni-icons.uniui-notification-filled {
         color: #fff !important;
         font-size: 32px !important;
@@ -419,7 +487,10 @@ export default {
 // #ifdef MP
 .ko-home {
   height: 100vh;
-  padding: 120px 20px;
+  padding: 110px 20px 40px;
+  //display: flex;
+  //flex-direction: column;
+  overflow-y: auto;
 
   &__item {
     height: 100%;
@@ -450,6 +521,12 @@ export default {
       height: 30px;
     }
   }
+
+  //&__center {
+  //  flex: 1;
+  //  overflow-x: hidden;
+  //  overflow-y: auto;
+  //}
 
   &__button {
     position: fixed;
@@ -499,6 +576,14 @@ export default {
   padding-top: 100px;
   padding-bottom: 200px;
   position: relative;
+  overflow-y: auto;
+
+
+  &__store {
+    button {
+      line-height: 1.4;
+    }
+  }
 
   &__header {
     &--title {
@@ -534,6 +619,12 @@ export default {
     justify-content: center;
     max-width: 1366px;
     margin: 0 auto;
+  }
+
+  &__center {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
   }
 
   &__content {
@@ -608,7 +699,6 @@ export default {
       margin-bottom: 20px;
     }
   }
-
 }
 
 // #endif

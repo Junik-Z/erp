@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import KoTable from "@/erp/components/KoTable/KoTable.vue";
-// #endif
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -18,9 +15,6 @@ import mixins from "@/mixins/mixins";
 export default {
   name: "classify",
   components: {
-    // #ifdef H5
-    KoTable,
-    // #endif
     LoadMore,
     UniForms,
     BasicPopup,
@@ -92,7 +86,6 @@ export default {
       this.loading = true;
       getCategoryListApi()
         .then(res => {
-          console.log(res.data);
           this.list = res.data;
         })
         .finally(() => {
@@ -166,6 +159,10 @@ export default {
 
 <template>
   <view class="ko-classify">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <!-- #ifdef MP -->
     <BasicCard :spacing="10" v-for="item of list" :key="item.id">
       <view class="ko-classify__info">

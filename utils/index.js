@@ -649,6 +649,10 @@ export function _reverse(array) {
   return array;
 }
 
+export function _isHttpOrHttps(url) {
+  return /^https?:\/\//i.test(url);
+}
+
 /**
  * @description 获取定制表格的cell样式
  */
@@ -772,7 +776,6 @@ export function loadCss(url, callback) {
 
   document.head.appendChild(link);
 }
-
 // #endif
 
 // 判断是不是相片

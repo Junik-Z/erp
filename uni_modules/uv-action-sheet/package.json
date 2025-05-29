@@ -38,6 +38,8 @@
     "dependencies": [
 			"uv-ui-tools",
 			"uv-popup",
+			"uv-icon",
+			"uv-line",
 			"uv-loading-icon",
 			"uv-gap"
 		],

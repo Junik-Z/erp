@@ -514,3 +514,18 @@ export function removePaidOrderApi(data) {
     data,
   });
 }
+
+// —————————————— 财务地址列表 —————————————————
+/**
+ * @description 客户财务地址列表
+ */
+export function financeCustomerAddressListApi(data) {
+  return request({url: "/customer/financeCustomerAddressList", method: "get", data});
+}
+
+/**
+ * @description 供应商财务地址列表
+ */
+export function financeSupplierAddressListApi(data) {
+  return request({url: "/supplier/financeSupplierAddressList", method: "get", data});
+}

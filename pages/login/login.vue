@@ -4,7 +4,6 @@ import UniCard from "@/uni_modules/uni-card/components/uni-card/uni-card.vue";
 import { CONFIG } from "@/utils/config";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 import { getScanQrCodeApi } from "@/api/user";
-import { _isDev } from "@/utils";
 import dayjs from "@/utils/dayjs";
 
 export default {
@@ -94,7 +93,7 @@ export default {
       // 表示登录成功
       ESVm.addEventListener("AccessToken", (res) => {
         const scene = res.data;
-        _isDev() && uni.setStorageSync("AccessToken", scene);
+        uni.setStorageSync("AccessToken", scene);
       }, false);
 
       // 获取到的二维码图片
@@ -116,7 +115,6 @@ export default {
 <template>
   <!-- #ifdef H5 -->
   <div class="ko-login">
-    <!-- #ifdef H5 -->
     <div class="ko-login__wrap">
       <image
         class="ko-login__logo"
@@ -134,13 +132,10 @@ export default {
           :class="{'is-timeout': isTimeout}"
         >
           <image :src="qrimage" mode="widthFix" />
-          <!-- #ifdef H5 -->
           <view class="ko-login__qrcode--loading" v-if="loading">
             <UvLoadingIcon :size="40" />
           </view>
-          <!-- #endif -->
         </view>
-
         <template #actions v-if="isTimeout">
           <button
             class="ko-basic-button"
@@ -152,7 +147,6 @@ export default {
         </template>
       </UniCard>
     </div>
-    <!-- #endif -->
   </div>
   <!-- #endif -->
 </template>
@@ -172,6 +166,10 @@ export default {
 
     .ko-basic-button {
       margin-bottom: 20px;
+    }
+
+    ::v-deep .uni-card__header {
+      padding-top: 30px;
     }
   }
 

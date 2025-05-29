@@ -373,6 +373,7 @@ export default {
             :src="getImageUrl(qrCode)"
             mode="aspectFill"
             show-menu-by-longpress
+            lazy-load
           />
         </view>
 

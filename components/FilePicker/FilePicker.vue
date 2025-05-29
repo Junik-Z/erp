@@ -1,6 +1,6 @@
 <script>
-import UniFilePicker from "@/uni_modules/uni-file-picker/components/uni-file-picker/uni-file-picker.vue";
-import { _isEmpty, _merge, getFileExtension, isImageType } from "@/utils";
+import UniFilePicker from "./uni-file-picker/uni-file-picker.vue";
+import { _isEmpty, _isEqual, _merge, getFileExtension, isImageType } from "@/utils";
 import getCacheFile from "@/utils/fileCache";
 import { uploadBase64Api } from "@/api/user";
 import { requestUploadFileApi } from "@/request";
@@ -39,6 +39,9 @@ export default {
     disabled: Boolean,
     readonly: Boolean,
     showUpdateList: Boolean,
+
+    // 是否使用外部上传
+    isExternalUpload: Boolean,
   },
   data: () => ({
     imageValue: [],
@@ -49,7 +52,7 @@ export default {
         width: 1,
         style: "dashed",
         radius: "6px",
-        color: '#8f939c'
+        color: "#8f939c",
       },
     },
   }),
@@ -81,7 +84,6 @@ export default {
 
     // 获取上传状态
     select(e) {
-      console.log("选中的文件", e);
       const tempFiles = e.tempFiles;
 
       const image = [];
@@ -246,7 +248,7 @@ export default {
             if (that.limit === 1) {
               that.$emit("input", value[0]);
             } else {
-              that.$emit("input", value);
+              that.$emit("input", [...this.value, ...value]);
             }
 
             this.$emit("files", data);
@@ -260,12 +262,20 @@ export default {
       if (this.limit === 1) {
         this.$emit("input", "");
       } else {
-        // this.$emit("remove", item);
+        const name = item.tempFile?.name;
+        const val = this.value.filter(v => !_isEqual(v, name));
+        this.$emit("input", val);
       }
     },
 
     // 上传文件
     onCropFile(list) {
+
+      if (this.isExternalUpload) {
+        this.$emit("upload", list);
+        return false;
+      }
+
       uni.showLoading({
         title: "上传中...",
         mask: true,
@@ -320,7 +330,7 @@ export default {
             if (this.limit === 1) {
               this.$emit("input", value[0]);
             } else {
-              this.$emit("input", value);
+              this.$emit("input", [...this.value, ...value]);
             }
 
             this.$emit("files", data);
@@ -329,6 +339,10 @@ export default {
         .finally(() => {
           uni.hideLoading();
         });
+    },
+
+    clearFiles(index) {
+      this.$refs.FPRef.clearFiles(index);
     },
   },
   computed: {
@@ -342,6 +356,7 @@ export default {
 <template>
   <view class="ko-file-picker">
     <UniFilePicker
+      ref="FPRef"
       v-model="imageValue"
       :mode="mode"
       @select="select"
@@ -367,7 +382,7 @@ export default {
 <style scoped lang="scss">
 .ko-file-picker {
   min-width: 50px;
-  min-height: 50px;
+  min-height: 30px;
 
   ::v-deep .uni-file-picker {
     height: calc(100% - 0.5px);

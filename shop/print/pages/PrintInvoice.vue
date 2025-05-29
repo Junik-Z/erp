@@ -7,7 +7,7 @@ import PrintFooter from "../components/PrintFooter.vue";
 import PrintTable from "../components/PrintTable.vue";
 import mixins from "@/mixins/mixins";
 import { cmToPx } from "@/shop/print/utils";
-import { _deepCopy, _get, _isEqual, _sum } from "@/utils";
+import { _deepCopy, _flattenDeep, _get, _groupBy, _isEqual, _keys, _sum } from "@/utils";
 
 // 纸张大小
 const PaperHeight = cmToPx(14);
@@ -86,6 +86,11 @@ export default {
   data() {
     return {
       groupList: [],
+
+      classGroup: [],
+
+      // 根据分类排序
+      isClassSort: false,
     };
   },
   methods: {
@@ -114,7 +119,7 @@ export default {
       let count = 0;
 
       // 数据列表
-      const data = (this.data || []);
+      const data = (this.getFilterList || []);
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
@@ -154,7 +159,6 @@ export default {
 
       // 是否有统计
       if (rect.summary) balance += 1;
-
 
       // 当要补空格大于0并且小于 统计加其它费用时则直接补格子
       if (fill > 0 && fill < balance) {
@@ -200,8 +204,30 @@ export default {
         },
       });
     },
+
+    // 获取分类数据
+    getClassGroup() {
+      const List = _deepCopy(this.data);
+      const group = _groupBy(List, (v) => v.classId);
+      this.classGroup = _keys(group).map(id => {
+        const list = group[id] || [];
+        const item = list[0] || {};
+        return {
+          isPrint: true,
+          label: item?.className || "未分类产品",
+          classId: item.classId,
+          list,
+        };
+      });
+    },
   },
   watch: {
+    data: {
+      handler() {
+        this.getClassGroup();
+      },
+      deep: true,
+    },
     watchSize: {
       handler() {
         if (!this.isA4) {
@@ -253,7 +279,30 @@ export default {
       ];
     },
     watchSize() {
-      return [...this.filterColumnList, ...this.getFees];
+      return [...this.filterColumnList, ...this.getFees, ...this.getFilterList];
+    },
+
+    // 获取根据分类去去除数据
+    filterItemList() {
+      const classGroup = _deepCopy(this.classGroup).flatMap(item => {
+        if (item.isPrint) {
+          return [item.classId];
+        } else {
+          return [];
+        }
+      });
+
+      return _deepCopy(this.data)?.filter(item => classGroup.includes(item.classId)) || [];
+    },
+
+    filterData() {
+      return _flattenDeep(_deepCopy(this.classGroup)?.filter(item => item.isPrint)?.map(v => v.list) || [])
+        ?.map((v, index) => ({...v, __index__: index + 1}));
+    },
+
+    // 获取排序后的数据列表
+    getFilterList() {
+      return this.isClassSort ? this.filterData : this.filterItemList;
     },
   },
 };
@@ -264,27 +313,51 @@ export default {
   <!-- #ifdef H5 -->
   <div class="ko-n-print" :style="[rootStyle]">
     <div class="ko-n-print__picker ko-basic-box-shadow">
-      <div class="ko-n-print__check">
-        <label>打印字段：</label>
-        <div>
-          <el-checkbox
-            :disabled="item.disabled"
-            :label="item.label"
-            v-for="(item, index) of columns"
-            :key="'column' + index"
-            v-model="item.isPrint"
-            v-if="!(isA4 && item.notA4)"
-          />
-          <el-checkbox
-            :disabled="item.disabled"
-            :label="item.label"
-            v-for="(item, index) of feesList"
-            :key="'fees' + index"
-            v-model="item.isPrint"
-            v-if="!(isA4 && item.notA4)"
-          />
+      <div style="flex: 1;">
+        <div class="ko-n-print__check">
+          <label>打印字段：</label>
+          <div>
+            <el-checkbox
+              :disabled="item.disabled"
+              :label="item.label"
+              v-for="(item, index) of columns"
+              :key="'column' + index"
+              v-model="item.isPrint"
+              v-if="!(isA4 && item.notA4)"
+            />
+            <el-checkbox
+              :disabled="item.disabled"
+              :label="item.label"
+              v-for="(item, index) of feesList"
+              :key="'fees' + index"
+              v-model="item.isPrint"
+              v-if="!(isA4 && item.notA4)"
+            />
+          </div>
+        </div>
+        <div class="ko-n-print__check" style="margin-top: 10px; margin-bottom: 10px;">
+          <label>
+            打印分类：
+
+            <el-checkbox
+              v-if="classGroup.length > 1"
+              style="margin-left: 10px;"
+              v-model="isClassSort"
+              label="根据类型排序"
+            />
+          </label>
+          <div>
+            <el-checkbox
+              :disabled="item.disabled"
+              :label="item.label"
+              v-for="(item, index) of classGroup"
+              :key="'column' + index"
+              v-model="item.isPrint"
+            />
+          </div>
         </div>
       </div>
+
       <div>
         <el-button type="primary" size="mini" @click="onPrint">打印</el-button>
       </div>
@@ -296,7 +369,7 @@ export default {
           ref="PTableRef"
           is-summary
           :columns="filterColumnList"
-          :data="data || []"
+          :data="getFilterList || []"
           :summary="isA4 ? [] : getSummary"
           :is-fees="!!getFees.length"
           :fees-list="getFees"
@@ -358,7 +431,7 @@ export default {
 // #ifdef H5
 
 .ko-n-print {
-  padding-top: 120px;
+  padding-top: 150px;
   padding-bottom: 80px;
   background: #fff;
   min-height: calc(100vh - 65px);
@@ -375,7 +448,7 @@ export default {
     width: 1166px;
     left: 50%;
     transform: translateX(-50%);
-    height: 100px;
+    height: 130px;
     display: flex;
     align-items: center;
     justify-content: space-between;

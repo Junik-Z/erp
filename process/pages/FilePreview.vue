@@ -1,7 +1,6 @@
 <script>
 // #ifdef H5
 import VPdfVm from "./libs/js-preview-lib/pdf.umd";
-import ExcelVm from "./libs/js-preview-lib/excel.umd";
 import VWordVm from "./libs/js-preview-lib/docx.umd";
 import "./libs/js-preview-lib/excel.css";
 import "./libs/js-preview-lib/docx.css";
@@ -24,6 +23,7 @@ export default {
   data() {
     return {
       visible: false,
+      dom: null,
     };
   },
   components: {
@@ -79,11 +79,59 @@ export default {
             const PdfVm = VPdfVm.init(this.$refs.RRef);
             PdfVm.preview(getFileUrl(id));
           } else if (isWordType(extname)) {
-            const VWVm = VWordVm.init(this.$refs.RRef);
-            VWVm.preview(getFileUrl(id));
+
+            if (["DOC"].includes(extname.toUpperCase())) {
+              const DOM = document.createElement("iframe");
+              DOM.style.height = "calc(100% + 154px)";
+              DOM.style.width = "100%";
+              DOM.style.marginTop = "-154px";
+
+              let url = getFileUrl(id);
+              if (!(/^https?:\/\//.test(url))) {
+                url = `https://erp.kuaouyun.cn${url}`;
+              }
+
+              DOM.src = `https://view.officeapps.live.com/op/view.aspx?src=${url}&&embed=true`;
+              this.dom = DOM;
+              this.$refs.RRef.appendChild(DOM);
+            } else {
+              const VWVm = VWordVm.init(this.$refs.RRef);
+              VWVm.preview(getFileUrl(id));
+            }
+
           } else if (isExcelType(extname)) {
-            const EVM = ExcelVm.init(this.$refs.RRef);
-            EVM.preview(getFileUrl(id));
+            const DOM = document.createElement("iframe");
+            DOM.style.height = "calc(100% + 154px)";
+            DOM.style.width = "100%";
+            DOM.style.marginTop = "-154px";
+
+            let url = getFileUrl(id);
+            if (!(/^https?:\/\//.test(url))) {
+              url = `https://erp.kuaouyun.cn${url}`;
+            }
+
+            DOM.src = `https://view.officeapps.live.com/op/view.aspx?src=${url}&&embed=true`;
+            this.dom = DOM;
+            this.$refs.RRef.appendChild(DOM);
+
+            /* if (["XLS"].includes(extname.toUpperCase())) {
+              const DOM = document.createElement("iframe");
+              DOM.style.height = "calc(100% + 154px)";
+              DOM.style.width = "100%";
+              DOM.style.marginTop = "-154px";
+
+              let url = getFileUrl(id);
+              if (!(/^https?:\/\//.test(url))) {
+                url = `https://erp.kuaouyun.cn${url}`;
+              }
+
+              DOM.src = `https://view.officeapps.live.com/op/view.aspx?src=${url}&&embed=true`;
+              this.dom = DOM;
+              this.$refs.RRef.appendChild(DOM);
+            } else {
+              const EVM = ExcelVm.init(this.$refs.RRef);
+              EVM.preview(getFileUrl(id));
+            } */
           } else if (isCDAType(id)) {
             uni.showModal({
               title: "温馨提示",
@@ -96,6 +144,8 @@ export default {
     },
 
     onClose() {
+      if (this.dom) this.$refs.RRef?.removeChild(this.dom);
+
       this.$refs.PRef.close();
       this.$emit("close");
     },

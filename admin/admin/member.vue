@@ -13,6 +13,7 @@ import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import KoList from "@/components/List/List.vue";
+import { setMaintenanceApi } from "@/api/user";
 
 export default {
   name: "member",
@@ -91,9 +92,16 @@ export default {
         },
         {
           label: "是否为商户",
-          prop: "role",
+          prop: "selected",
           render: (h, {row}) => {
             return h("div", [row.selected ? "是" : "否"]);
+          },
+        },
+        {
+          label: "维护人员",
+          prop: "isMaintainer",
+          render: (h, {row}) => {
+            return h("div", [row.isMaintainer ? "是" : "否"]);
           },
         },
         {
@@ -111,6 +119,7 @@ export default {
     this.getList();
   },
   methods: {
+    setMaintenanceApi,
     RequestNextPage() {
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
@@ -158,6 +167,24 @@ export default {
 
     onSubmit() {
     },
+
+    // 设置维护人员
+    setMaintenance(item) {
+      this.$set(item, "__main_loading__", true);
+      setMaintenanceApi({
+        userId: item.userId,
+        businessName: this.option.businessName,
+        // isMaintainer: true,
+      })
+        .then(() => {
+          uni.showToast({title: "设置成功"});
+          this.getList(true);
+        })
+        .finally(() => {
+          this.$set(item, "__main_loading__", false);
+        });
+
+    },
   },
   computed: {
     isInBusiness() {
@@ -184,6 +211,11 @@ export default {
             <i
               v-if="item.selected"
               class="iconfont icon-shanghuguanli"
+            />
+
+            <i
+              v-if="item.isMaintainer"
+              class="iconfont icon-shengchan"
             />
 
             <view class="ko-member__item">
@@ -217,6 +249,15 @@ export default {
               <view style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;">
                 <button
                   class="ko-basic-button__card"
+                  @click.stop="setMaintenance(item)"
+                  :loading="item.__main_loading__"
+                  :disabled="item.__main_loading__"
+                >
+                  设置维护人员
+                </button>
+
+                <button
+                  class="ko-basic-button__card"
                   @click.stop="setUserRole(item)"
                   :loading="item.__loading__"
                   :disabled="item.__loading__"
@@ -245,6 +286,15 @@ export default {
       >
         <template #operate="{item}">
           <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="setMaintenance(item)"
+              :loading="item.__main_loading__"
+              :disabled="item.__main_loading__"
+            >
+              设置维护人员
+            </button>
+
             <button
               class="ko-basic-button__card"
               @click.stop="setUserRole(item)"
@@ -314,13 +364,19 @@ export default {
   padding-bottom: 50px;
   // #endif
 
-  .iconfont.icon-shanghuguanli {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 9;
-    color: #f3a73f;
-    font-size: 18px;
+  .iconfont {
+    &.icon-shanghuguanli, &.icon-shengchan {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 9;
+      color: #f3a73f;
+      font-size: 18px;
+    }
+
+    &.icon-shengchan {
+      right: 26px;
+    }
   }
 
   &__item {

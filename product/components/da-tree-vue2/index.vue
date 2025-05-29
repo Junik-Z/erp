@@ -1,98 +1,105 @@
 <template>
   <view class="da-tree" :style="{'--theme-color': themeColor}">
     <scroll-view class="da-tree-scroll" :scroll-y="true" :scroll-x="false">
-      <view
-        class="da-tree-item"
-        :class="{'is-show': item.show}"
-        :style="{paddingLeft: item.level * indent + 'rpx'}"
-        v-for="item in datalist"
-        :key="item.key">
+      <view :style="[{paddingBottom: `${paddingBottom || 0}px`, paddingTop: `${paddingTop || 0}px`}]">
         <view
-          v-if="item.showArrow"
-          class="da-tree-item__icon"
-          @click="handleExpandedChange(item)"
+          class="da-tree-item"
+          :class="{'is-show': item.show, 'tree-active-key glass': activeKey === item.key, 'da-tree-item__tabs': tTabItem, 'hide-arrow': hideArrow}"
+          :style="{paddingLeft: item.level * indent + 'rpx'}"
+          v-for="item in datalist"
+          :key="item.key"
         >
-          <view :class="['da-tree-item__icon--arr','is-loading']" v-if="loadLoading && item.loading"></view>
-          <view :class="['da-tree-item__icon--arr','is-expand', {'is-right':!item.expand}]" v-else></view>
-        </view>
-        <view v-else class="da-tree-item__icon"></view>
-        <view
-          class="da-tree-item__checkbox"
-          :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
-          v-if="showCheckbox"
-          @click="handleCheckChange(item)"
-        >
+          <block v-if="!hideArrow">
+            <view
+              v-if="item.showArrow"
+              class="da-tree-item__icon"
+              @click="handleExpandedChange(item)"
+            >
+              <view :class="['da-tree-item__icon--arr','is-loading']" v-if="loadLoading && item.loading"></view>
+              <view :class="['da-tree-item__icon--arr','is-expand', {'is-right':!item.expand}]" v-else></view>
+            </view>
+            <view v-else class="da-tree-item__icon"></view>
+          </block>
+
           <view
-            class="da-tree-item__checkbox--icon da-tree-checkbox-checked"
-            v-if="item.checkedStatus === isCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-checkbox-indeterminate"
-            v-else-if="item.checkedStatus === halfCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-checkbox-outline"
-            v-else
-          />
-        </view>
-        <view
-          class="da-tree-item__checkbox"
-          :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
-          v-if="!showCheckbox && showRadioIcon"
-          @click="handleRadioChange(item)"
-        >
-          <view
-            class="da-tree-item__checkbox--icon da-tree-radio-checked"
-            v-if="item.checkedStatus === isCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-radio-indeterminate"
-            v-else-if="item.checkedStatus === halfCheckedStatus"
-          />
-          <view
-            class="da-tree-item__checkbox--icon da-tree-radio-outline"
-            v-else
-          />
-        </view>
-        <view
-          class="da-tree-item__label"
-          :class="'da-tree-item__label--'+item.checkedStatus"
-          @click="handleLabelClick(item)"
-        >
-          <view style="flex: 1;">
-            {{ item.label }}
-            <text class="da-tree-item__label--append" v-if="item.append">{{ item.append }}</text>
+            class="da-tree-item__checkbox"
+            :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
+            v-if="showCheckbox"
+            @click="handleCheckChange(item)"
+          >
+            <view
+              class="da-tree-item__checkbox--icon da-tree-checkbox-checked"
+              v-if="item.checkedStatus === isCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-checkbox-indeterminate"
+              v-else-if="item.checkedStatus === halfCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-checkbox-outline"
+              v-else
+            />
           </view>
-          <view class="ko-classify__button">
-            <!-- #ifdef H5 -->
-            <slot name="node" :node="item.originItem" :item="item"></slot>
-            <!-- #endif -->
+          <view
+            class="da-tree-item__checkbox"
+            :class="[`da-tree-item__checkbox--${checkboxPlacement}`,{'is--disabled': item.disabled}]"
+            v-if="!showCheckbox && showRadioIcon"
+            @click="handleRadioChange(item)"
+          >
+            <view
+              class="da-tree-item__checkbox--icon da-tree-radio-checked"
+              v-if="item.checkedStatus === isCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-radio-indeterminate"
+              v-else-if="item.checkedStatus === halfCheckedStatus"
+            />
+            <view
+              class="da-tree-item__checkbox--icon da-tree-radio-outline"
+              v-else
+            />
+          </view>
 
-            <!-- #ifdef MP -->
-            <slot v-if="$slots['operate-node']" name="operate-node" :node="item.originItem"></slot>
+          <view
+            class="da-tree-item__label"
+            :class="'da-tree-item__label--'+item.checkedStatus"
+            @click="handleLabelClick(item)"
+          >
+            <view style="flex: 1;">
+              {{ item.label }}
+              <text class="da-tree-item__label--append" v-if="item.append">{{ item.append }}</text>
+            </view>
+            <view class="ko-classify__button">
+              <!-- #ifdef H5 -->
+              <slot name="node" :node="item.originItem" :item="item"></slot>
+              <!-- #endif -->
 
-            <template v-if="isOperate">
-              <button
-                class="ko-basic-button__card action"
-                @click.stop="onActionClick(item)"
-              >
-                更多
-              </button>
+              <!-- #ifdef MP -->
+              <slot v-if="$slots['operate-node']" name="operate-node" :node="item.originItem"></slot>
 
-              <button v-if="hideChildren(item) && false" @click.stop="onAdded(item)">添加子级</button>
-              <button v-if="false" @click.stop="onEdit(item)">编辑</button>
-              <button v-if="false" @click.stop="onRemove(item)">删除</button>
-            </template>
-            <!-- #endif -->
+              <template v-if="isOperate">
+                <button
+                  class="ko-basic-button__card action"
+                  @click.stop="onActionClick(item)"
+                >
+                  更多
+                </button>
+
+                <button v-if="hideChildren(item) && false" @click.stop="onAdded(item)">添加子级</button>
+                <button v-if="false" @click.stop="onEdit(item)">编辑</button>
+                <button v-if="false" @click.stop="onRemove(item)">删除</button>
+              </template>
+              <!-- #endif -->
+            </view>
           </view>
         </view>
-      </view>
 
-      <view
-        v-if="!dataRef.length"
-        style="text-align: center; padding: 20px; font-size: 12px; color: #c7c9ce;"
-      >
-        没有节点数据
+        <view
+          v-if="!dataRef.length"
+          style="text-align: center; padding: 20px; font-size: 12px; color: #c7c9ce;"
+        >
+          没有节点数据
+        </view>
       </view>
     </scroll-view>
   </view>
@@ -123,6 +130,15 @@ export default {
       default: 10,
     },
     isOperate: Boolean,
+
+    activeKey: [String, Number],
+
+    paddingBottom: Number,
+    paddingTop: Number,
+
+    hideArrow: Boolean,
+
+    tTabItem: Boolean,
   },
   data() {
     return {
@@ -245,7 +261,7 @@ export default {
             parent.children.push(newItem);
             if (newItem.parentKeys?.length) {
               newItem.parentKeys.forEach(k => {
-                this.datamap[k].childrenKeys = [...this.datamap[k].childrenKeys, newItem.key];
+                this.datamap[k].childrenKeys = [...this.datamap[k].childrenKeys, (newItem || {})?.key];
               });
             }
           }
@@ -440,7 +456,7 @@ export default {
       // 单选
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
-        if (item.key === checkedKeyList) {
+        if (item?.key === checkedKeyList) {
           // console.log('item.key === checkedKeyList', item.key, checkedKeyList)
           this.checkTheRadio(item, checked);
           break;
@@ -454,7 +470,7 @@ export default {
      * @param checked
      */
     checkTheChecked(item, checked = true) {
-      const {childrenKeys, parentKeys, disabled = false} = item;
+      const {childrenKeys, parentKeys, disabled = false} = item || {};
       if (!this.checkedDisabled && disabled) return;
 
       // 当前
@@ -533,7 +549,7 @@ export default {
       // 收起
       if (expand === false) {
         for (let i = 0; i < list.length; i++) {
-          const item = list[i];
+          const item = list[i] || {};
           if (expandedKeyList?.includes(item.key)) {
             item.expand = false;
             if (item.childrenKeys?.length) {
@@ -548,7 +564,7 @@ export default {
       }
       // 展开
       for (let i = 0; i < list.length; i++) {
-        const item = list[i];
+        const item = list[i] || {};
         // 处理展开
         if (expandedKeyList?.includes(item.key)) {
           // 父子
@@ -1043,7 +1059,33 @@ export default {
     line-height: 1;
     visibility: hidden;
     opacity: 0;
-    transition: opacity 0.2s linear, background .3s;
+    transition: opacity 0.2s linear, background .3s, box-shadow .3s;
+
+    // 产品左侧
+    &.da-tree-item__tabs {
+
+      &.hide-arrow {
+        .da-tree-item__label {
+          text-align: center;
+        }
+      }
+
+      .da-tree-item__label {
+        min-height: 0;
+        padding: 14px 2px;
+      }
+
+      &.is-show {
+        height: auto;
+        visibility: visible;
+        padding: 0;
+        opacity: 1;
+      }
+    }
+
+    &.tree-active-key {
+      color: rgba(239, 68, 68, 1);
+    }
 
     /* #ifdef H5 */
     &:hover {
@@ -1187,7 +1229,8 @@ export default {
       display: flex;
       align-items: center;
       overflow: hidden;
-      height: 32px;
+      min-height: 32px;
+      line-height: 1.2;
 
       &--2 {
         color: var(--theme-color, #007aff);

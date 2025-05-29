@@ -9,6 +9,7 @@ import {
   getWaitConfirmListApi,
   getWorkingListApi,
   recoverCraftApi,
+  rollbackSettleApi,
 } from "@/api/erp/produce";
 import { _deepCopy, _get, _groupBy, _isEmpty, _isEqual, _isNotUnNil, _keys, CustomToast } from "@/utils";
 import mixins from "@/mixins/mixins";
@@ -22,6 +23,9 @@ import CraftCard from "./components/CraftCard.vue";
 import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
+import reLogin from "@/mixins/re-login";
+import SendList from "@/components/SendMsg.vue";
+import FilePicker from "@/components/FilePicker/FilePicker.vue";
 
 const PageMenu = [
   {
@@ -44,6 +48,7 @@ const PageMenu = [
 export default {
   name: "Factory",
   components: {
+    SendList,
     PickerCalendars,
     CraftCard,
     PickerSheet,
@@ -51,6 +56,7 @@ export default {
     KoList,
     UniRow,
     UniCol,
+    FilePicker,
   },
   data() {
     const _this = this;
@@ -103,13 +109,15 @@ export default {
       PAGE_MENU: _deepCopy(PageMenu),
     };
   },
-  mixins: [mixins],
+  mixins: [mixins, reLogin],
   onLoad() {
     this.getList(true);
   },
+  // #ifdef MP
   onReachBottom() {
     this.onRequestNextPage();
   },
+  // #endif
   methods: {
     _isEqual,
     // 请求下一页数据
@@ -128,10 +136,6 @@ export default {
         this.noMore = false;
       }
 
-      // #ifdef H5
-      const top = _deepCopy(this.$refs?.WrapRef?.scrollTop);
-      // #endif
-
       this.loading = true;
       const Func = [getWorkingListApi, getWaitConfirmListApi, getSettledListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
@@ -146,12 +150,6 @@ export default {
         })
         .finally(() => {
           this.loading = false;
-
-          // #ifdef H5
-          this.$nextTick(() => {
-            this.$refs.WrapRef.scrollTop = top;
-          });
-          // #endif
         });
     },
 
@@ -164,6 +162,7 @@ export default {
       this.noRefresh = false;
       this.queryList = _deepCopy(this.$options.data().queryList);
       this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
       this.getList(true);
     },
 
@@ -182,7 +181,7 @@ export default {
     onEditor(item, index) {
       this.nodeIndex = index;
       const node = _deepCopy(item);
-      node.price = _isEqual("commission", node.pricingMethod) ? node.price / 10000 : this.toYuan(node.price);
+      node.price = ["commission", "priceCommission"].includes(node.pricingMethod) ? node.price / 10000 : this.toYuan(node.price);
       node._placeholder_label_ = (node.staffs || [])?.map(v => v.name)?.join("、");
 
       this.form = node;
@@ -208,7 +207,7 @@ export default {
           return false;
         }
 
-        if (_isEqual("commission", params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
+        if (["commission", "priceCommission"].includes(params.pricingMethod) && !(params.price > 0 || params.price < 99)) {
           this.pLoading = false;
           uni.showToast({
             title: `总单价提成不能小于0%、大于99%`,
@@ -220,7 +219,7 @@ export default {
         if (!valid) {
           this.pLoading = true;
 
-          params.price = _isEqual("commission", params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
+          params.price = ["commission", "priceCommission"].includes(params.pricingMethod) ? (params.price || 0) * 10000 : _isNotUnNil(params.price) ? this.toFen(params.price) : null;
 
           craftUpdateApi(params)
             .then(() => {
@@ -229,6 +228,7 @@ export default {
               });
               this.$set(this.list, this.nodeIndex, params);
               this.visible = false;
+
               this.onUpdateGroupList();
             })
             .finally(() => {
@@ -296,7 +296,7 @@ export default {
         return false;
       }
 
-      const quantity = +this.settlementQuantity;
+      let quantity = +this.settlementQuantity;
 
       if (!["fixedPrice", "fixedPriceGroup"].includes(this.node.pricingMethod)) {
         if (isNaN(quantity)) {
@@ -315,6 +315,9 @@ export default {
           return false;
         }
       }
+
+      // 金额提成
+      if (["priceCommission"].includes(this.node.pricingMethod)) quantity = this.toFen(quantity);
 
       this.pLoading = true;
 
@@ -366,6 +369,28 @@ export default {
       }
     },
 
+    // 回退结算
+    onCraftRollback(item, index, key) {
+      uni.showModal({
+        title: "温馨提示",
+        content: `请核对是否真的需要回退该工序的结算？`,
+        confirmText: "确认回退",
+        success: (res) => {
+          if (res.confirm) {
+            rollbackSettleApi({id: item.id})
+              .then(() => {
+                CustomToast({title: "操作成功"});
+                this.groupList[key].splice(index, 1);
+              });
+          }
+        },
+      });
+    },
+
+    // 发送消息
+    onSendMsg(ids, label) {
+      this.$refs.SMRef.open(ids, label);
+    },
   },
   computed: {
     actionList() {
@@ -404,20 +429,28 @@ export default {
     // 获取单元格的分配
     getGridTemplateColumnsStyle() {
       return {
-        "--ko-basic-table-grid-col": "auto ".repeat([5, 7, 7][this.GET_PAGE_MENU_FUNC]).trim(),
+        "--ko-basic-table-grid-col": "auto ".repeat([5, 7, 8][this.GET_PAGE_MENU_FUNC]).trim(),
       };
     },
 
     // 价格描述
     getPriceLabel() {
-      return {commission: "提成比例"}?.[this.form.pricingMethod] || "价格";
+      return {commission: "提成比例", priceCommission: "提成比例"}?.[this.form.pricingMethod] || "价格";
     },
 
 
     // 获取计价方式价格
     getPricingMethodPrice() {
       return row => {
-        return _isEqual(row.pricingMethod, "commission") ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+        return ["commission", "priceCommission"].includes(row.pricingMethod) ? `${(row.price || 0) / 10000}%` : this.toYuan(row.price);
+      };
+    },
+
+
+    // 获取数量或者 priceCommission 金额提成的金额
+    getQuantity() {
+      return row => {
+        return ["priceCommission"].includes(row.pricingMethod) ? this.toYuan(row.quantity) : row.quantity;
       };
     },
 
@@ -428,7 +461,7 @@ export default {
 
     // 获取订单地址
     getOrderAddress() {
-      return child => _get(child, `0.orderAddress`) || "-";
+      return child => _get(child, `0.orderAddress`) || "";
     },
 
     // #ifdef H5
@@ -448,11 +481,13 @@ export default {
         {
           label: "图片",
           prop: "images",
+          width: 60,
           render(h, {row}) {
             return h(
               UvAvatar,
               {
                 props: {
+                  shape: "square",
                   src: _this.getImageUrl(row.images),
                 },
               });
@@ -476,6 +511,9 @@ export default {
           {
             label: "数量",
             prop: "quantity",
+            render: (h, {row}) => {
+              return h("span", [this.getQuantity(row)]);
+            },
           },
           {
             label: "结算",
@@ -492,7 +530,7 @@ export default {
         {
           label: "员工",
           prop: "staffList",
-          render(h, {row}) {
+          render: (h, {row}) => {
             return h("div", {
                 style: {
                   flex: 1,
@@ -502,7 +540,7 @@ export default {
                   "justify-content": "center",
                 },
               },
-              _this.getStaffListLogo(row)
+              this.getStaffListLogo(row)
                 .map(item => h(
                   "div",
                   {
@@ -512,6 +550,12 @@ export default {
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
+                    },
+                    on: {
+                      click: (event) => {
+                        event.stopPropagation();
+                        this.onSendMsg([item.id], item.name);
+                      },
                     },
                   },
                   [
@@ -523,6 +567,7 @@ export default {
                           randomBgColor: true,
                           size: 38,
                           text: item.name,
+                          notView: true,
                         },
                       }),
                     h("span", {
@@ -559,6 +604,10 @@ export default {
 
 <template>
   <view class="ko-factory">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <TopMenus :tabs="TabList" :path="PageEnums.factory" />
 
     <HistoryBar
@@ -590,6 +639,19 @@ export default {
               mode="range"
               @confirm="onCalendarConfirm"
               ref="PCRef"
+            />
+          </UniCol>
+          <UniCol :span="24">
+            <PickerUser
+              style="width: 100%;"
+              placeholder="请选择员工"
+              is-input
+              title="选择员工"
+              v-model="queryList.staffId"
+              type="staff"
+              is-confirm
+              ref="UserRef"
+              no-safe-bottom
             />
           </UniCol>
           <UniCol :span="24">
@@ -628,7 +690,7 @@ export default {
                       <uni-icons type="person" size="12" />
                       {{ getCustomerName(child) }}
                     </view>
-                    <view style="margin-left: 20px;">
+                    <view style="margin-left: 20px;" v-if="getOrderAddress(child)">
                       <uni-icons type="location" size="12" />
                       {{ getOrderAddress(child) }}
                     </view>
@@ -651,7 +713,7 @@ export default {
                 </block>
 
                 <view class="ko-basic-table--th">员工</view>
-                <view class="ko-basic-table--th" v-if="GET_PAGE_MENU_FUNC <= 1">操作</view>
+                <view class="ko-basic-table--th" v-if="[0, 1, 2].includes(GET_PAGE_MENU_FUNC)">操作</view>
 
                 <block v-for="(item, index) of child" :key="item.id">
                   <view class="ko-basic-table--cell">
@@ -665,7 +727,7 @@ export default {
                   </view>
 
                   <block v-if="GET_PAGE_MENU_FUNC > 0">
-                    <view class="ko-basic-table--cell">{{ item.quantity }}</view>
+                    <view class="ko-basic-table--cell">{{ getQuantity(item) }}</view>
                     <view class="ko-basic-table--cell">{{ toYuan(item.finalAmount) }}</view>
                   </block>
 
@@ -674,25 +736,25 @@ export default {
                   </block>
 
                   <view class="ko-basic-table--cell">
-                    <view
-                      style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;"
-                    >
+                    <view style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
                       <view
                         style="padding: 2px; display: flex; flex-direction: column; justify-content: center;align-items: center;"
                         v-for="staff of getStaffListLogo(item)"
                         :key="staff.id"
+                        @click.stop="onSendMsg([staff.id], staff.name)"
                       >
                         <uv-avatar
                           :src="getImageUrl(staff.logo)"
                           random-bg-color
                           size="18"
                           :text="staff.name"
+                          not-view
                         />
                         <text style="font-size: 10px; color: #8f939c;padding-top: 2px;">{{ staff.name }}</text>
                       </view>
                     </view>
                   </view>
-                  <view class="ko-basic-table--cell" v-if="GET_PAGE_MENU_FUNC <= 1">
+                  <view class="ko-basic-table--cell" v-if="[0, 1, 2].includes(GET_PAGE_MENU_FUNC)">
                     <view
                       style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap;"
                     >
@@ -743,6 +805,14 @@ export default {
                       >
                         确认
                       </button>
+
+                      <button
+                        class="ko-basic-button__card"
+                        @click.stop="onCraftRollback(item, index, key)"
+                        v-if="[2].includes(GET_PAGE_MENU_FUNC) && (isPerm('CRAFT_ROLLBACK_SETTLE') || isBusiness)"
+                      >
+                        回退结算
+                      </button>
                     </view>
                   </view>
                 </block>
@@ -755,15 +825,14 @@ export default {
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view
+    <KoList
       class="ko-factory__table-wrap"
-      v-infinite-scroll="onRequestNextPage"
-      infinite-scroll-immediate
-      :infinite-scroll-delay="200"
-      :infinite-scroll-disabled="noMore"
-      :infinite-scroll-distance="200"
-      :key="tableKey"
-      ref="WrapRef"
+      :no-more="noMore"
+      hide-tips
+      @load-next="onRequestNextPage"
+      @lower="onRequestNextPage"
+      :data="list"
+      :loading="loading"
     >
       <block v-for="(child, key) of groupList" :key="key">
         <uni-section :title="key" type="line">
@@ -775,7 +844,7 @@ export default {
                   <uni-icons type="person" size="20" />
                   {{ getCustomerName(child) }}
                 </span>
-                <span style="margin-left: 20px;">
+                <span style="margin-left: 20px;" v-if="getOrderAddress(child)">
                   <uni-icons type="location" size="20" />
                   {{ getOrderAddress(child) }}
                 </span>
@@ -848,7 +917,7 @@ export default {
       <view v-if="noMore && list.length" style="text-align: center; padding: 20px; color: #c7c9ce;">
         没有更多数据了
       </view>
-    </view>
+    </KoList>
     <!-- #endif -->
 
     <!-- #ifdef MP -->
@@ -945,25 +1014,33 @@ export default {
 
     <BasicPopup :visible.sync="settlementVisible" title="结算">
       <view class="ko-factory__popup">
-
         <view
           style="padding: 10px; font-size: 12px;color: #8f939c;"
         >
           计价方式：{{ getPricingMethod(node.pricingMethod) }}
 
-          <text class="ko-basic-money" style="margin-left: 5px;" v-if="node.pricingMethod !== 'commission'">
+          <text
+            class="ko-basic-money" style="margin-left: 5px;"
+            v-if="!['commission', 'priceCommission'].includes(node.pricingMethod)"
+          >
             {{ toYuan(node.price) }}元
           </text>
-          <text class="ko-basic-money" style="margin-left: 6px;" v-else>{{ node.price / 10000 }}%</text>
+          <text
+            class="ko-basic-money"
+            style="margin-left: 6px;"
+            v-else
+          >
+            {{ node.price / 10000 }}%
+          </text>
         </view>
 
         <uni-forms label-align="right" v-if="!['commission'].includes(node.pricingMethod)">
           <uni-forms-item
-            label="数量"
+            :label="['priceCommission'].includes(node.pricingMethod) ? '金额' : '数量'"
             name="name"
             required
           >
-            <uni-easyinput type="digit" v-model="settlementQuantity" placeholder="请输入数量" />
+            <uni-easyinput type="digit" v-model="settlementQuantity" placeholder="请输入" />
           </uni-forms-item>
         </uni-forms>
       </view>
@@ -980,6 +1057,8 @@ export default {
         </view>
       </template>
     </BasicPopup>
+
+    <SendList ref="SMRef" />
   </view>
 </template>
 
@@ -1018,7 +1097,12 @@ export default {
   &__table-wrap {
     height: calc(100vh - 164px);
     padding: 10px;
-    overflow-y: auto;
+    //overflow-y: auto;
+  }
+
+  ::v-deep .uv-popup__content.bottom {
+    max-width: 1024px;
+    margin: 0 auto;
   }
 
   // #endif

@@ -655,6 +655,12 @@ export const SALE_PERM_TREE = [
         id: "902",
       },
       {
+        label: "发送消息",
+        type: 2,
+        perm: "SEND_INTERNAL_MESSAGE",
+        id: "1030",
+      },
+      {
         label: "创建并绑定客户",
         type: 2,
         perm: "CREATE_BIND_CUSTOMER",
@@ -1062,6 +1068,12 @@ export const PURCHASE_PERM_TREE = [
         id: "902",
       },
       {
+        label: "发送消息",
+        type: 2,
+        perm: "SEND_INTERNAL_MESSAGE",
+        id: "1030",
+      },
+      {
         label: "创建并绑定供应商",
         type: 2,
         perm: "CREATE_BIND_SUPPLIER",
@@ -1181,12 +1193,6 @@ export const PRODUCE_PERM_TREE = [
         perm: "STAFF_GET_NOT_BIND_INFO",
         id: "427",
       },
-      /* {
-        label: "刷新员工",
-        type: 2,
-        perm: "STAFF_REFRESH",
-        id: "428",
-      }, */
       {
         label: "绑定员工",
         type: 2,
@@ -1199,6 +1205,13 @@ export const PRODUCE_PERM_TREE = [
         type: 2,
         perm: "ATTENDANCE_ALL_RECORDS",
         id: "510",
+      },
+
+      {
+        label: "工资列表",
+        type: 3,
+        perm: "STAFF_SALARY_LIST",
+        id: "1000",
       },
     ],
   },
@@ -1274,6 +1287,12 @@ export const PRODUCE_PERM_TREE = [
         perm: "PRODUCE_UPDATE_CRAFT_PROCESS",
         id: "413",
       },
+      {
+        label: "修改生产物料",
+        type: 2,
+        perm: "PRODUCE_UPDATE_MATERIAL",
+        id: "1031",
+      },
     ],
   },
   {
@@ -1335,6 +1354,12 @@ export const PRODUCE_PERM_TREE = [
         type: 2,
         perm: "CRAFT_CANCEL_SETTLE",
         id: "918",
+      },
+      {
+        label: "回退结算",
+        type: 2,
+        perm: "CRAFT_ROLLBACK_SETTLE",
+        id: "020",
       },
     ],
   },
@@ -1436,6 +1461,21 @@ export const PRODUCE_PERM_TREE = [
         type: 2,
         perm: "QUICK_PRODUCE_DELETE",
         id: "441",
+      },
+    ],
+  },
+
+  {
+    label: "其它功能",
+    type: 1,
+    perm: ["SEND_INTERNAL_MESSAGE"],
+    id: "1030434438",
+    children: [
+      {
+        label: "发送消息",
+        type: 2,
+        perm: "SEND_INTERNAL_MESSAGE",
+        id: "1030",
       },
     ],
   },
@@ -1696,6 +1736,39 @@ export const FINANCE_PERM_TREE = [
         type: 2,
         perm: "SUPPLIER_REFRESH",
         id: "639",
+      },
+
+
+      {
+        label: "刷新员工金额",
+        type: 2,
+        perm: "STAFF_REFRESH",
+        id: "428",
+      },
+      {
+        label: "员工工资",
+        type: 3,
+        perm: "STAFF_SALARY_LIST",
+        id: "1004",
+      },
+
+      {
+        label: "添加补贴",
+        type: 2,
+        perm: "STAFF_ADD_SUBSIDY",
+        id: "1001",
+      },
+      {
+        label: "删除补贴",
+        type: 2,
+        perm: "STAFF_DELETE_SUBSIDY",
+        id: "1002",
+      },
+      {
+        label: "修改补贴",
+        type: 2,
+        perm: "STAFF_EDIT_SUBSIDY",
+        id: "1003",
       },
     ],
   },
