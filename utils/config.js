@@ -463,6 +463,13 @@ export const MENU_LIST = [
     isUpRole: false,
   },
   {
+    label: "托手管家",
+    icon: "icon-support",
+    value: PageEnums.smart,
+    role: ["ADMIN", "BUSINESS", "*"],
+    isUpRole: true,
+  },
+  {
     label: "个人中心",
     icon: "icon-gerenzhongxin",
     value: PageEnums.User,

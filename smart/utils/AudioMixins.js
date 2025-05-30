@@ -245,6 +245,8 @@ export default {
       this.askLoading = false;
 
       if (_isEqual(res.askEnum, "ChatMessage")) {
+
+
         if (this.aTId) {
           const lastAiIndex = this.msgList.findIndex(item => _isEqual(item.__id__, this.aTId));
           const node = this.msgList[lastAiIndex];
@@ -419,5 +421,4 @@ export default {
     uni.$emit("$__init_web_socket__");
     uni.$on("$__web_socket_message__", this.askWebSocketMsg);
   },
-
 };
