@@ -257,7 +257,7 @@ export default {
 
     <UniSection title="定制" type="line" v-if="!isEmpty(node.customizedMaterials)">
       <view class="ko-details__item" >
-        <CustomFiles readonly :value="GET_FUNC(node, 'customizedMaterials.0.customTable')" />
+        <CustomFiles :node="node" readonly :value="GET_FUNC(node, 'customizedMaterials.0.customTable')" />
       </view>
     </UniSection>
 

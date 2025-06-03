@@ -39,6 +39,7 @@ export default {
     },
     readonly: Boolean,
     money: Number,
+    node: Object,
   },
   watch: {
     value: {
@@ -167,12 +168,36 @@ export default {
       // #endif
 
       // #ifdef H5
-      const link = document.createElement("a");
+
+      fetch(getFileUrl(item.id))
+        .then(response => response.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+
+          const name = item.name?.indexOf(".") > -1;
+          a.download = item.name + (name ? "" : `.${item.extname}`); // 自定义文件名
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl); // 释放内存
+        })
+        .catch(error => console.error('下载失败', error));
+
+
+      /* const link = document.createElement("a");
       link.style.display = "none";
       link.href = getFileUrl(item.id);
       const name = item.name?.indexOf(".") > -1;
 
-      link.download = item.name + (name ? "" : `.${item.extname}`);
+      console.log(name, item, item.name + (name ? "" : `.${item.extname}`));
+
+      const node = _deepCopy(this.node);
+
+      console.log(node);
+
+      link.download = `${node || ""}${item.name + (name ? "" : `.${item.extname}`)}`;
 
       document.body.appendChild(link);
 
@@ -181,7 +206,7 @@ export default {
       setTimeout(() => {
         // 立即移除元素（可能不兼容所有浏览器）
         document.body.removeChild(link);
-      }, 10);
+      }, 10); */
       // #endif
     },
   },
