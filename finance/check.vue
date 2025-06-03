@@ -567,6 +567,7 @@ export default {
         return false;
       }
 
+      this.queryList.orderAddress = dz.address || '';
       this.aId = dz.id;
       this.getList(true);
     },
@@ -1056,15 +1057,16 @@ export default {
                 </view>
                 <view class="ko-address__name--item" style="margin-top: 8px;">
                   <view class="ko-address__name--total">
-                    <view class="ko-address__name--num">
-                      待处理: {{ dz.pendingQuantity }}
+                    <view class="ko-address__name--num CREATED">
+                      待清帐: {{ dz.pendingQuantity }}
                     </view>
-                    <view class="ko-address__name--num">
-                      待付款: {{ dz.pendingPaymentQuantity }}
+                    <view class="ko-address__name--num WAIT_PAY">
+                      待确认: {{ dz.pendingPaymentQuantity }}
                     </view>
                     <view class="ko-address__name--num">
                       ¥{{ toYuan(dz.amount) }}
                     </view>
+
                   </view>
                 </view>
               </view>

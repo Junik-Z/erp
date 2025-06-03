@@ -683,7 +683,7 @@ export default {
 
                         <view class="ko-address__name--total">
                           <view class="ko-address__name--num CREATED">
-                            待清帐: {{ dz.pendingQuantity }}
+                            待付款: {{ dz.pendingQuantity }}
                           </view>
                           <view class="ko-address__name--num WAIT_PAY">
                             待确认: {{ dz.pendingPaymentQuantity }}
@@ -952,7 +952,7 @@ export default {
                   <view class="ko-address__name--item" style="margin-top: 8px;">
                     <view class="ko-address__name--total">
                       <view class="ko-address__name--num CREATED">
-                        待清帐: {{ dz.pendingQuantity }}
+                        待付款: {{ dz.pendingQuantity }}
                       </view>
                       <view class="ko-address__name--num WAIT_PAY">
                         待确认: {{ dz.pendingPaymentQuantity }}
