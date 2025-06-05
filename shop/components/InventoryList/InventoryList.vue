@@ -42,9 +42,9 @@ export default {
   },
   computed: {
     groupList() {
-      const list = _groupBy(_deepCopy(this.list) || [], (item) => item.className);
+      const list = _groupBy(_deepCopy(this.list) || [], (item) => item.className || '');
       return _keys(list).map(key => ({
-        key,
+        key: key || "",
         children: list[key],
       }));
     },

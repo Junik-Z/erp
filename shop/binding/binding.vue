@@ -129,7 +129,7 @@ export default {
         shareId: decodeURIComponent(this.option.PRODUCT_SHARE_ID),
         pageSize: 1000,
       }).then(res => {
-        console.log(res.data);
+        // console.log(res.data);
         this.FieldList = res.data;
         this.getFieldList();
       });
