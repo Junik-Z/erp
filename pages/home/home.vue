@@ -22,6 +22,11 @@ export default {
       params.scene = decodeURIComponent(params.scene).split("&")[0];
       // uni.setStorageSync("__APP_SCENE__", this.option?.scene);
       await this.onLogout(params, false, true);
+
+      uni.showModal({
+        title: "温馨提示",
+        content: params.scene,
+      });
     }
     console.log("home.vue", option, this.option);
 

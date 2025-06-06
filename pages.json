@@ -232,6 +232,13 @@
           "style": {
             "navigationBarTitleText": "店铺配置"
           }
+        },
+        {
+          "path": "hypermarket",
+          "style": {
+            "navigationBarTitleText": "大卖场",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },

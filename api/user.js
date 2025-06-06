@@ -371,3 +371,11 @@ export function applySupplierCodeApi(data) {
     data,
   });
 }
+
+// ——————————————————— 商户 ————————————————————
+/**
+ * @deprecated 获取我的商户
+ */
+export function myBusinessApi(data) {
+  return request({url: "/main/myBusiness", method: "get", data});
+}

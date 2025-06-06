@@ -9,25 +9,20 @@ import MerchantsHeader from "@/components/MerchantsHeader/MerchantsHeader.vue";
 
 import Dayjs from "@/utils/dayjs";
 import { getMessageCountApi, getMessageListApi } from "@/api/user";
+import MSwitch from "./MSwitch.vue";
 
 export default {
   components: {
     MerchantsHeader,
     UniCol,
     UniRow,
+    MSwitch,
   },
   mixins: [mixins],
   data() {
-    let disabled = false;
-
-    // #ifdef H5
-    disabled = true;
-    // #endif
-
     return {
       // 过滤掉不显示在首页的数据
       gridList: _deepCopy(MENU_LIST).filter(item => !item.noShowInHome),
-      disabled,
 
       // #ifdef MP
       menuButton: uni.getMenuButtonBoundingClientRect(),
@@ -246,6 +241,13 @@ export default {
         setTimeout(resolve, 600);
       });
     },
+
+    // 前往卖场
+    toHypermarket() {
+      uni.navigateTo({
+        url: PageEnums.hypermarket,
+      });
+    },
   },
   computed: {
     // 获取按钮位置
@@ -310,8 +312,6 @@ export default {
     <Notice is-custom />
     <!-- #endif -->
 
-    <MerchantsHeader ref="MHRef" :disabled="disabled" />
-
     <view class="ko-home__store">
       <button class="ko-home__store--shezhi" @click="onJumpStore" v-if="isBusiness || isAdmin">
         <i class="iconfont icon-shezhi"></i>
@@ -324,7 +324,15 @@ export default {
 
         <text @click="onJumpMessage" v-if="msgCount" class="ko-home__msg--badge">{{ msgCount }}</text>
       </view>
+
+      <!-- #ifdef MP -->
+      <MSwitch />
+
+      <button class="ko-home__hypermarket" @click.stop="toHypermarket">前往卖场</button>
+      <!-- #endif -->
     </view>
+
+    <MerchantsHeader ref="MHRef" disabled />
 
     <view class="ko-home__center">
       <!-- #ifdef MP -->
@@ -561,6 +569,13 @@ export default {
       height: 120px;
       margin-bottom: 20px;
     }
+  }
+
+  &__hypermarket {
+    font-size: 12px;
+    margin-left: 14px;
+    padding: 2px 4px;
+    border-radius: 20px;
   }
 }
 

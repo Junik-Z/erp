@@ -23,7 +23,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // #endif
 
   // #ifdef H5
@@ -340,6 +340,9 @@ export const PageEnums = {
   supplierBinding: "/client/supplier",
   // 绑定员工
   staffBinding: "/client/staff",
+
+  // ———————————————— 大卖场 ————————————————
+  hypermarket: "/shop/hypermarket",
 };
 
 /**

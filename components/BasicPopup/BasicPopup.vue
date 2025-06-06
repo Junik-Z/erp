@@ -77,12 +77,13 @@ export default {
     :z-index="zIndex"
   >
     <slot name="header" />
+
     <view
       class="ko-basic-popup"
       :style="[maxHeight ? {'max-height': maxHeight} : {}]"
       :class="[type, {
         close: close,
-         'show-title': !!title,
+         'show-title': !!title || $slots.title,
           'no-safe-bottom': noSafeBottom,
            'show-footer': $slots.footer && !noFooter,
            'hide-footer': !($slots.footer && !noFooter),
@@ -98,6 +99,10 @@ export default {
       </button>
 
       <view class="ko-basic-popup__header" v-if="!!title">{{ title }}</view>
+
+      <view class="ko-basic-popup__header" v-else-if="$slots.title">
+        <slot name="title" />
+      </view>
 
       <view class="ko-basic-popup__wrap">
         <slot></slot>
