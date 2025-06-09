@@ -101,4 +101,11 @@ export default {
   width: 100%;
   padding: 20px;
 }
+
+// #ifdef H5
+.ko-sale-setting {
+  width: 1024px;
+  margin: 0 auto;
+}
+// #endif
 </style>

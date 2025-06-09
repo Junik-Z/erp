@@ -62,6 +62,8 @@ export default {
   }
 
   // #ifdef H5
+  height: calc(100vh - 54px);
+
   &__tabs {
     width: 400px;
     margin: 0 auto;

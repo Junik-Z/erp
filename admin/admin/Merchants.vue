@@ -6,7 +6,7 @@ import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/u
 import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import Basic from "@/mixins/mixins";
+import mixins from "@/mixins/mixins";
 import FilePicker from "@/components/FilePicker/FilePicker.vue";
 import { _deepCopy, _get, _isEmpty } from "@/utils";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
@@ -18,8 +18,8 @@ import { businessClassifyApi } from "@/api/user";
 import KoPicker from "@/components/KoPicker.vue";
 
 export default {
-  name: "Admin",
-  mixins: [Basic],
+  name: "Merchants",
+  mixins: [mixins],
   components: {
     KoList,
     KoMovable,
@@ -41,7 +41,7 @@ export default {
       list: [],
 
       queryList: {
-        pageSize: 30,
+        pageSize: 20,
         pageNum: 0,
       },
       noMore: false,
@@ -317,6 +317,12 @@ export default {
       >
         <template #operate="{item}">
           <view style="display: flex; align-items: center; justify-content: center;">
+            <button
+              class="ko-basic-button__card"
+              @click.stop="onTrigger(item)"
+            >
+              编辑
+            </button>
             <button
               class="ko-basic-button__card"
               @click.stop="generateCode(item)"

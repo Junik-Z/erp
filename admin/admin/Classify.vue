@@ -17,7 +17,7 @@ export default {
       list: [],
 
       queryList: {
-        pageSize: 30,
+        pageSize: 20,
         pageNum: 0,
       },
       noMore: false,
@@ -303,10 +303,6 @@ export default {
   height: 100%;
   // #endif
 
-  // #ifdef H5
-  height: calc(100vh - 56px);
-  // #endif
-
   &__item {
     &--info {
       display: flex;
@@ -337,6 +333,8 @@ export default {
   }
 
   // #ifdef H5
+  height: calc(100vh - 54px);
+
   &__popup {
     width: 600px;
   }
