@@ -615,6 +615,21 @@ button::after {
   }
 }
 
+// #ifdef MP
+// 去掉scroll-view组件横向滚动条：
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  color: transparent;
+  display: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+// #endif
+
 // #ifdef H5
 
 // 供应商列表
@@ -780,7 +795,6 @@ button::after {
 }
 
 // #endif
-
 
 // ———————————————————————— WEB ——————————————————————————
 // #ifdef H5

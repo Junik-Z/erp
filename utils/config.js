@@ -340,6 +340,9 @@ export const PageEnums = {
   supplierBinding: "/client/supplier",
   // 绑定员工
   staffBinding: "/client/staff",
+
+  // ———————————————— 大卖场 ————————————————
+  hypermarket: "/shop/hypermarket",
 };
 
 /**

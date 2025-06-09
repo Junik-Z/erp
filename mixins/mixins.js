@@ -356,6 +356,17 @@ export default {
     setApStyle() {
       this.$store.dispatch("setApStyleAsync", !this.sApStyle);
     },
+
+    // 返回上一级
+    onBlack() {
+      uni.navigateBack({
+        fail() {
+          uni.reLaunch({
+            url: PageEnums.home,
+          });
+        },
+      });
+    },
   },
   components: {
     // #ifdef H5

@@ -9,15 +9,16 @@
 			:class="[`uv-notify--${tmpConfig.type}`]"
 			:style="[backgroundColor, $uv.addStyle(customStyle)]"
 		>
+			<uv-status-bar v-if="tmpConfig.safeAreaInsetTop"></uv-status-bar>
 			<view class="uv-notify__warpper">
 				<slot name="icon">
-					<uni-icons
+					<uv-icon
 						v-if="['success', 'warning', 'error'].includes(tmpConfig.type)"
-						:type="tmpConfig.icon"
+						:name="tmpConfig.icon"
 						:color="tmpConfig.color"
 						:size="1.3 * tmpConfig.fontSize"
 						:customStyle="{marginRight: '4px'}"
-					></uni-icons>
+					></uv-icon>
 				</slot>
 				<text
 					class="uv-notify__warpper__text"
@@ -138,7 +139,7 @@
 				// 不将结果合并到this.config变量，避免多次调用uv-toast，前后的配置造成混乱
 				this.tmpConfig = this.$uv.deepMerge(this.config, options)
 				// 任何定时器初始化之前，都要执行清除操作，否则可能会造成混乱
-				// this.clearTimer()
+				this.clearTimer()
 				this.open = true
 				if (this.tmpConfig.duration > 0) {
 					this.timer = setTimeout(() => {

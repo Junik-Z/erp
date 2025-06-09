@@ -37,7 +37,8 @@
 	"uni_modules": {
 		"dependencies": [
 			"uv-ui-tools",
-			"uv-icon"
+			"uv-icon",
+			"uv-text"
 		],
 		"encrypt": [],
 		"platforms": {
