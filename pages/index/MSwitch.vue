@@ -23,6 +23,7 @@ export default {
     };
   },
   mounted() {
+    console.log("MSwitch");
     setTimeout(() => {
       this.getList(true);
     }, 600);

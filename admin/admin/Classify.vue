@@ -265,10 +265,10 @@ export default {
     <BasicPopup :visible.sync="visible" :title="`${isEdit ? '编辑' : '新增'}商户分类`">
       <view class="ko-classify__popup">
         <uv-form :model="form" :rules="rules" :label-width="60" ref="FRef">
-          <uv-form-item label="ICON：">
+          <uv-form-item label="Icon：">
             <FilePicker
               v-model="form.classifyIcon"
-              :image-styles="{border: {radius: '6px'}, width: 64, height: 64}"
+              :image-styles="{border: {radius: '6px'}, width: 84, height: 84}"
             />
           </uv-form-item>
           <uv-form-item label="名称：" required>
