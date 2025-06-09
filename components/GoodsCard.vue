@@ -35,6 +35,12 @@ export default {
 
     // 图片大小
     imageSize: Number,
+
+    // 卖场模式
+    isSupply: Boolean,
+
+    // 超出2行显示省略号
+    ellipsis2lines: Boolean,
   },
   components: {UniIcons, KNumberInput},
   methods: {
@@ -81,7 +87,7 @@ export default {
 
     // 是否可以编辑数量
     isEditQuantity() {
-      return this.isShopping || this.isGoods;
+      return (this.isShopping || this.isGoods) && !this.isSupply;
     },
   },
 };
@@ -117,7 +123,11 @@ export default {
 
     <view class="ko-goods-card__wrap">
       <view class="ko-goods-card__info" @click.stop="onClick">
-        <view class="ko-goods-card__name">{{ node.name }}</view>
+        <view
+          class="ko-goods-card__name"
+          :class="{'ellipsis-2-lines': ellipsis2lines}"
+        >{{ node.name }}
+        </view>
         <!-- 扩展字段 -->
         <view class="ko-goods-card__filed" v-if="isShowFiled(node)">
           <view
@@ -307,6 +317,16 @@ export default {
     font-size: 16px;
     font-weight: bold;
     color: #333;
+
+    &.ellipsis-2-lines {
+      overflow: hidden; /* 隐藏溢出内容 */
+      text-overflow: ellipsis; /* 溢出时显示省略号 */
+      display: -webkit-box; /* 启用弹性盒子模型（WebKit内核） */
+      -webkit-box-orient: vertical; /* 文本垂直排列 */
+      -webkit-line-clamp: 2; /* 限制显示2行 */
+      line-height: 1.2; /* 建议设置行高 */
+      height: 2.4em; /* 最大高度 = 行高 × 行数（1.5 × 2） */
+    }
   }
 
   &__operate {

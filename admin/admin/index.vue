@@ -1,455 +1,70 @@
 <script>
-import { addedBusinessesApi, getBusinessesListApi, getBusinessesQRCodeApi, updateBusinessNameApi } from "@/api/admin";
-import BasicCard from "@/components/BasicCard/BasicCard.vue";
-import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import UniEasyinput from "@/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue";
-import UniFormsItem from "@/uni_modules/uni-forms/components/uni-forms-item/uni-forms-item.vue";
-import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
-import Basic from "@/mixins/mixins";
-import FilePicker from "@/components/FilePicker/FilePicker.vue";
-import { _deepCopy, _get, _isEmpty } from "@/utils";
-import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
-import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import KoMovable from "@/components/Movable/index.vue";
-import KoList from "@/components/List/List.vue";
+import Merchants from "./Merchants.vue";
+import UniSegmentedControl
+  from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
+import mixins from "@/mixins/mixins";
+import Classify from "./Classify.vue";
+import SaleSetting from "./SaleSetting.vue";
 
 export default {
   name: "Admin",
-  mixins: [Basic],
   components: {
-    KoList,
-    KoMovable,
-    UniCol,
-    UniRow,
-    UvAvatar,
-    FilePicker,
-    UniForms,
-    BasicPopup,
-    UniFormsItem,
-    UniEasyinput,
-    LoadMore,
-    BasicCard,
+    Merchants,
+    UniSegmentedControl,
+    Classify,
+    SaleSetting,
   },
+  mixins: [mixins],
   data() {
     return {
-      loading: false,
-      list: [],
-
-      queryList: {
-        pageSize: 30,
-        pageNum: 0,
-      },
-      noMore: false,
-
-      visible: false,
-      rules: {
-        name: {
-          rules: [
-            {
-              required: true,
-              errorMessage: "请输入商户名称",
-            },
-            {
-              required: true,
-              format: "string",
-              validateFunction(r, v, d, c) {
-                const regex = /^[a-z]{5,20}$/;
-                if (!regex.test(v)) {
-                  return c("商户名称必须是全小英文字母，不得少于5个字符、大于20个字符");
-                }
-                return true;
-              },
-            },
-          ],
-          validateTrigger: "submit",
-        },
-      },
-      form: {
-        name: "",
-        logo: "",
-        remark: "",
-      },
-
-      sLoading: false,
-
-      showCode: false,
-
-      qrCode: "",
-
-      // #ifdef H5
-      columns: [
-        {
-          label: "序号",
-          type: "index",
-          width: 55,
-        },
-        {
-          label: "商户Logo",
-          prop: "logo",
-          render: (h, {row}) => {
-            return h(
-              "div",
-              {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-              [h(UvAvatar, {
-                props: {
-                  src: this.getImageUrl(_get(row, "logo")),
-                  size: 38,
-                  text: _get(row, "name"),
-                  shape: "square",
-                },
-              })],
-            );
-          },
-        },
-        {
-          label: "商户名称",
-          prop: "name",
-        },
-        {
-          label: "备注",
-          prop: "remark",
-        },
-        {
-          label: "操作",
-          slot: "operate",
-        },
-      ],
-      // #endif
-
-      tableKey: +new Date(),
-
-      isEdit: false,
+      current: 0,
     };
   },
   onShow() {
   },
   onLoad() {
-    this.getList();
-    // #ifdef MP
-    this.$refs.FormRef.setRules(this.rules);
-    // #endif
   },
-  methods: {
-    RequestNextPage() {
-      if (this.noMore) return false;
-      this.queryList.pageNum += 1;
-      this.getList();
-    },
-    getList(reset) {
-      if (reset) {
-        this.queryList.pageNum = 0;
-        this.list = [];
-        this.tableKey = +new Date();
-      }
-      this.loading = true;
-      getBusinessesListApi(this.queryList)
-        .then((res) => {
-          this.list = this.onMergeArrays(this.list, res.data);
-          this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
-        })
-        .catch(() => {
-          this.noMore = true;
-        })
-        .finally(() => {
-          this.loading = false;
-        });
-    },
-
-    onTrigger(item) {
-      this.visible = true;
-      this.isEdit = false;
-      this.form = _deepCopy(this.$options.data().form);
-
-      // #ifdef MP
-      this.$refs.FormRef.clearValidate();
-      // #endif
-
-      if (item) {
-        this.form = _deepCopy(item);
-        this.isEdit = true;
-      }
-    },
-
-    onSubmit() {
-      this.$refs.FormRef.validate((valid) => {
-        if (!valid) {
-          let params = _deepCopy(this.form);
-
-          const Func = this.isEdit ? updateBusinessNameApi : addedBusinessesApi;
-
-          if (this.isEdit) {
-            // params = _pick(params, ["logo", "remark", "id"]);
-          }
-
-          this.sLoading = true;
-
-          Func({...params})
-            .then(() => {
-              uni.showToast({
-                title: this.isEdit ? "修改成功" : "开户成功",
-              });
-              this.getList(true);
-              this.visible = false;
-            })
-            .finally(() => {
-              this.sLoading = false;
-            });
-        } else {
-          uni.showToast({
-            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
-            icon: "none",
-          });
-        }
-      });
-    },
-
-    generateCode(item) {
-      this.$set(item, "__qrcode_loading__", true);
-      this.qrCode = "";
-      getBusinessesQRCodeApi({businessName: item.name})
-        .then(res => {
-          this.showCode = true;
-          this.qrCode = res.data;
-        })
-        .finally(() => {
-          this.$set(item, "__qrcode_loading__", false);
-        });
-    },
-
-    onJump(item) {
-      uni.navigateTo({url: `/admin/admin/member?id=${item.id}&businessName=${item.name}`});
-    },
-  },
+  methods: {},
 };
 </script>
 
 <template>
   <view class="ko-admin">
-    <!-- #ifdef MP -->
-    <view>
-      <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 5px 10px;" v-for="item of list" :key="item.id">
-          <BasicCard>
-            <view class="ko-admin__item">
-              <view class="ko-admin__item--info">
-                <UvAvatar
-                  class="ko-admin__item--info--image ko-basic-box-shadow"
-                  :src="getImageUrl(item.logo)"
-                  :text="item.name"
-                  :size="72"
-                  random-bg-color
-                />
-
-                <view style="padding-left: 16px; flex: 1;" @click="onJump(item)">
-                  <UniRow :gutter="10">
-                    <UniCol :span="24">
-                      <view class="ko-admin__item--info--name">
-                        <label class="ko-basic-label">名称：</label>
-                        <text>{{ item.name || "-" }}</text>
-                      </view>
-                    </UniCol>
-                    <UniCol :span="24">
-                      <view>
-                        <label class="ko-basic-label">备注：</label>
-                        {{ item.remark || "-" }}
-                      </view>
-                    </UniCol>
-                  </UniRow>
-                </view>
-              </view>
-
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-              >
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onTrigger(item)"
-                >
-                  编辑
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="generateCode(item)"
-                  :loading="item.__qrcode_loading__"
-                  :disabled="item.__qrcode_loading__"
-                >
-                  查看商户码
-                </button>
-              </view>
-            </view>
-          </BasicCard>
-        </view>
-      </KoList>
+    <view class="ko-admin__tabs">
+      <UniSegmentedControl
+        :values="['商户管理', '商户分类', '卖场配置']"
+        :current.sync="current"
+      />
     </view>
-    <!-- #endif -->
 
-    <!-- #ifdef H5 -->
-    <view style="padding: 10px; height: 100%; overflow: hidden;">
-      <KoTable
-        :key="tableKey"
-        :loading="loading"
-        :columns="columns"
-        :data="list"
-        empty-text="暂无数据"
-        stripe
-        @row-click="onJump"
-        @next-load="RequestNextPage"
-        :no-more="noMore || loading"
-      >
-        <template #operate="{item}">
-          <view style="display: flex; align-items: center; justify-content: center;">
-            <button
-              class="ko-basic-button__card"
-              @click.stop="generateCode(item)"
-              :loading="item.__qrcode_loading__"
-              :disabled="item.__qrcode_loading__"
-            >
-              查看商户码
-            </button>
-          </view>
-        </template>
-      </KoTable>
+    <view class="ko-admin__wrap">
+      <Merchants v-if="isEqual(0, current)" />
+      <Classify v-if="isEqual(1, current)" />
+      <SaleSetting v-if="isEqual(2, current)" />
     </view>
-    <!-- #endif -->
-
-    <KoMovable
-      @click="onTrigger('')"
-    />
-
-    <BasicPopup :visible.sync="visible">
-      <view class="ko-admin__popup">
-        <UniForms
-          label-width="100px"
-          ref="FormRef"
-          :rules="rules"
-          :model="form"
-        >
-          <UniFormsItem name="logo" label="Logo：">
-            <view style="width: 100%; display: flex; justify-content: center; align-items: center;">
-              <FilePicker
-                v-model="form.logo"
-                :image-styles="{border: {radius: '6px'}, width: 180, height: 180}"
-              />
-            </view>
-          </UniFormsItem>
-          <UniFormsItem label="商户名称：" name="name" required>
-            <UniEasyinput
-              style="width: 100%;"
-              placeholder="请输入"
-              v-model.trim="form.name"
-              :disabled="isEdit"
-            />
-          </UniFormsItem>
-          <view style="height: 8px;"></view>
-          <UniFormsItem label="备注：" name="remark">
-            <UniEasyinput
-              style="width: 100%;"
-              placeholder="请输入"
-              v-model="form.remark"
-            />
-          </UniFormsItem>
-
-        </UniForms>
-
-        <button
-          class="ko-basic-button"
-          style="margin: 0 40px 10px;"
-          @click="onSubmit"
-          :loading="sLoading"
-          :disabled="sLoading"
-        >
-          {{ isEdit ? "提交" : "确定开户" }}
-        </button>
-      </view>
-    </BasicPopup>
-
-    <BasicPopup :visible.sync="showCode">
-      <view class="ko-admin__popup">
-        <view class="ko-admin__popup--qrcode" v-if="qrCode">
-          <image
-            class="ko-admin__popup--qrcode--image"
-            :src="getImageUrl(qrCode)"
-            mode="aspectFill"
-            show-menu-by-longpress
-            lazy-load
-          />
-        </view>
-
-        <button
-          class="ko-basic-button"
-          style="margin: 0 40px 10px;"
-          @click="showCode = false"
-          v-if="false"
-        >
-          关闭
-        </button>
-      </view>
-    </BasicPopup>
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-admin {
-  // #ifdef MP
-  padding-bottom: 80px;
-  // #endif
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 
-  // #ifdef H5
-  height: calc(100vh - 56px);
-  // #endif
-
-  &__item {
-    &--info {
-      display: flex;
-      align-items: center;
-
-      &--image {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-      }
-
-      &--name {
-        text {
-          font-size: 18px;
-        }
-      }
-    }
+  &__wrap {
+    flex: 1;
+    overflow: hidden;
   }
 
-  &__popup {
-    // #ifdef MP
-    width: 98vw;
-    // #endif
-    padding: 16px;
-    background: #fff;
-    border-radius: 8px;
-
-    &--qrcode {
-      // #ifdef MP
-      width: calc(98vw - 16px * 2);
-      height: calc(98vw - 16px * 2);
-      // #endif
-      margin-bottom: 10px;
-
-      &--image {
-        height: 100%;
-        width: 100%;
-      }
-    }
+  &__tabs {
+    padding: 10px;
   }
 
   // #ifdef H5
-  &__popup {
-    width: 600px;
-
-    &--qrcode {
-      width: calc(600px - 16px * 2);
-      height: calc(600px - 16px * 2);
-    }
-
+  &__tabs {
+    width: 400px;
+    margin: 0 auto;
   }
 
   // #endif

@@ -61,6 +61,15 @@ export default {
 
     setTimeout(() => {
       this.showVTList = true;
+
+      if (option.p_name) {
+        setTimeout(() => {
+          this.$refs.VTRef.queryList.name = decodeURIComponent(option.p_name);
+          this.$refs.VTRef.showSearch = true;
+          this.$refs.VTRef.getList(true);
+        }, 80);
+      }
+
     }, 200);
 
     if (!this.isSale && !this.isPreview && !this.isShare) {

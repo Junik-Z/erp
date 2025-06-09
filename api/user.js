@@ -379,3 +379,48 @@ export function applySupplierCodeApi(data) {
 export function myBusinessApi(data) {
   return request({url: "/main/myBusiness", method: "get", data});
 }
+
+/**
+ * @deprecated 添加/修改商家分类
+ */
+export function addBusinessClassifyApi(data) {
+  return request({url: "/manage/addBusinessClassify", method: "post", data});
+}
+
+/**
+ * @deprecated 删除商家分类
+ */
+export function deleteBusinessClassifyApi(data) {
+  return request({url: "/manage/deleteBusinessClassify", method: "post", data});
+}
+
+/**
+ * @deprecated 商家分类
+ */
+export function businessClassifyApi(data) {
+  return request({url: "/manage/businessClassify", method: "get", data});
+}
+
+
+// ———————————————————— 卖场 ——————————————————————
+/**
+ * @deprecated 卖场列表
+ */
+export function supplyListApi(data) {
+  return request({url: "/supply/list", method: "get", data});
+}
+
+/**
+ * @deprecated 获取卖场设置
+ */
+export function getSettingApi(data) {
+  return request({url: "/supply/getSetting", method: "get", data});
+}
+
+
+/**
+ * @deprecated 卖场设置
+ */
+export function saleSettingApi(data) {
+  return request({url: "/manage/saleSetting", method: "post", data});
+}

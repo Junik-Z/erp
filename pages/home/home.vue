@@ -14,19 +14,18 @@ export default {
     };
   },
   async onLoad(option) {
+    uni.$__FORM_QRCODE__ = false;
+
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
     uni.$__FIELD_LIST__ = [];
 
     if (this.option?.scene) {
       const params = this.option;
       params.scene = decodeURIComponent(params.scene).split("&")[0];
+      uni.$__FORM_QRCODE__ = true;
+      
       // uni.setStorageSync("__APP_SCENE__", this.option?.scene);
       await this.onLogout(params, false, true);
-
-      uni.showModal({
-        title: "温馨提示",
-        content: params.scene,
-      });
     }
     console.log("home.vue", option, this.option);
 

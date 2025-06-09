@@ -38,7 +38,7 @@ export default {
       myBusinessApi(this.queryList)
         .then(res => {
           const data = res.data || [];
-          this.isShow = data.length === 1 && !_isEqual(_get(data, "0.name"), cInfo.name);
+          this.isShow = (_isEqual(data.length, 1) && !_isEqual(_get(data, "0.name"), cInfo.name)) || data.length > 1;
           console.log("我的商铺", data, cInfo);
 
           this.list = this.onMergeArrays(this.list, data);
