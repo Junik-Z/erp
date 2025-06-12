@@ -21,7 +21,8 @@ export default {
       },
       visible: false,
 
-      showName: "",
+      sRemark: "",
+      sName: "",
     };
   },
   mounted() {
@@ -45,7 +46,10 @@ export default {
           console.log("我的商铺", data, cInfo);
 
           this.list = this.onMergeArrays(this.list, data);
-          this.showName = _get(this.list, "0.remark");
+
+          this.sRemark = _get(this.list, "0.remark");
+          this.sName = _get(this.list, "0.name");
+
           this.noMore = _isEmpty(data) || data.length < this.queryList.pageSize;
         });
     },
@@ -59,7 +63,7 @@ export default {
 
     // 切换商户
     onSwitch(item) {
-      if (_isEqual(this.GET_CONFIG_INFO.name, item.name)) return false;
+      if (_isEqual(this.sName, item.name)) return false;
 
       this.onLogout(
         {
@@ -93,8 +97,8 @@ export default {
         :custom-style="{marginRigth: '4px'}"
         v-if="false"
       />
-      
-      {{ showName }}
+
+      {{ sRemark }}
     </button>
 
     <BasicPopup :visible.sync="visible" type="bottom" title="商户">
