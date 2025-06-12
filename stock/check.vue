@@ -332,7 +332,7 @@ export default {
         empty-text="暂无数据"
         stripe
 
-        @next-load="RequestNextPage"
+        @load-next="RequestNextPage"
         :no-more="noMore || loading"
       />
     </view>

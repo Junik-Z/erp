@@ -6,25 +6,38 @@ export default {
     return {
       Q_ID: null,
       login_loading: false,
+
+      sLogin: false,
     };
   },
   onLoad(option) {
     const [scene, __q_id__] = decodeURIComponent(option.scene || "")?.split("&") || [];
     this.Q_ID = __q_id__;
 
+    const isSwitchLogin = _isEqual(option.__switch_login__, "true");
+
     // 当参数上有带商户标识的时候触发重新登录
     if (scene && !_isEqual(scene, "undefined")) {
       this.login_loading = true;
-
-      this.onLogInAgain({scene: scene}, true)
-        .then(() => {
-          const info = uni.getStorageSync("__USER_INFO__");
-          console.log("触发重新登录了", scene, __q_id__, info);
-          this.RE_REQUEST();
-        })
-        .finally(() => {
-          this.login_loading = false;
-        });
+      if (isSwitchLogin) {
+        this.onSwitchLogin({scene: scene})
+          .then(() => {
+            this.RE_REQUEST();
+          })
+          .finally(() => {
+            this.login_loading = false;
+          });
+      } else {
+        this.onLogInAgain({scene: scene}, true)
+          .then(() => {
+            const info = uni.getStorageSync("__USER_INFO__");
+            console.log("触发重新登录了", scene, __q_id__, info);
+            this.RE_REQUEST();
+          })
+          .finally(() => {
+            this.login_loading = false;
+          });
+      }
     } else {
       this.RE_REQUEST();
     }

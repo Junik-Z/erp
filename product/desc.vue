@@ -57,7 +57,6 @@ export default {
       readOnly: false, //是否只读
       photoUrl: CONFIG.BASE_URL, //服务器图片域名或者ip
       api: "/files/base64", //上传图片接口地址
-      txt: "",
       name: "file",
       html: "",
       takeOverName: null,

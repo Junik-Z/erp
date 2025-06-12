@@ -1084,7 +1084,7 @@ export default {
           stripe
           @row-click="onJumpDet($event, getPageType)"
           :no-more="noMore || loading"
-          @next-load="RequestNextPage"
+          @load-next="RequestNextPage"
           :expand-row-keys="list.map(v => v.id)"
           row-key="id"
         >

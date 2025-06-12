@@ -10,6 +10,7 @@ import { PageEnums } from "@/utils/config";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
 import UniIcons from "@/uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
 import SendMsg from "@/components/SendMsg.vue";
+import { getPaySettingApi } from "@/api/admin";
 
 export default {
   name: "CartList",
@@ -19,6 +20,13 @@ export default {
     isShare: Boolean,
     // 销售
     isSale: Boolean,
+
+    // 是否显示返回
+    isShowBack: Boolean,
+    // 来自供应链
+    formHypermarket: Boolean,
+    // 来自供应链的商户
+    fScene: String,
   },
   data() {
     return {
@@ -43,6 +51,9 @@ export default {
       isAgain: false,
 
       iVisible: false,
+
+      // 支付枚举
+      paySetting: "",
     };
   },
   components: {SendMsg, UniIcons, BasicPopup, OrderInfo, GoodsCard, UniSection},
@@ -87,6 +98,7 @@ export default {
       this.setOrderForm({totalAmount: this.toYuan(this.sTotalPrice || 0)});
     },
 
+    // 提交订单
     onSubmit() {
       if (!this.visible && !this.iVisible) {
         this.iVisible = false;
@@ -100,74 +112,90 @@ export default {
 
         setTimeout(() => {
           this.$refs.FormRef.form = _deepCopy(this.form);
-
           if (!this.isSale) this.$refs.FormRef.getBindInfo();
+
+          // 来自供应链页面
+          if (this.formHypermarket) {
+            this.onLogInAgain({scene: this.fScene}, true)
+              .then(res => {
+                this.getPayStatus();
+              });
+          }
         }, 100);
         return false;
       }
 
-      this.$refs.FormRef.validate().then(async (valid) => {
-        if (!valid) {
-          const params = _deepCopy(this.form);
-          params.purchaserId = params.purchaserId || this.GET_USER_INFO?.userId;
-          params.details = this.goodsList;
+      this.$refs.FormRef.validate()
+        .then(async (valid) => {
+          if (!valid) {
+            const params = _deepCopy(this.form);
+            params.purchaserId = params.purchaserId || this.GET_USER_INFO?.userId;
+            params.details = this.goodsList;
 
-          await this.isTxFillPrices();
-          params.totalAmount = this.toFen(params.totalAmount);
+            await this.isTxFillPrices();
+            params.totalAmount = this.toFen(params.totalAmount);
 
-          this.loading = true;
+            this.loading = true;
 
-          const Func = this.isAgain ? reOrderSaleApi : (this.isEdit ? updateSaleApi : addedSaleApi);
+            const Func = this.isAgain ? reOrderSaleApi : (this.isEdit ? updateSaleApi : addedSaleApi);
 
-          Func(params)
-            .then((res) => {
-              this.resetGoods();
-              this.visible = false;
+            Func(params)
+              .then((res) => {
+                this.resetGoods();
+                this.visible = false;
 
-              CustomToast({
-                title: `${this.isEdit ? "修改" : "新增"}成功`,
-                success: async () => {
-                  if (this.isSale && this.isPerm("SEND_INTERNAL_MESSAGE")) {
-                    await this.$refs.SMRef.open();
-                  }
+                CustomToast({
+                  title: `${this.isEdit ? "修改" : "新增"}成功`,
+                  success: async () => {
 
-                  if (this.isShare) {
-                    uni.$emit("$__get_all_info__");
-                    uni.redirectTo({
-                      url: PageEnums.saleClientAddedBack,
-                      fail() {
-                        uni.navigateBack();
-                      },
-                    });
-                  } else {
-                    uni.navigateBack({
-                      fail() {
-                        uni.redirectTo({
-                          url: PageEnums.saleClientAddedBack,
-                          fail() {
-                            uni.redirectTo({url: PageEnums.home});
-                          },
-                        });
-                      },
-                    });
-                  }
-                },
+                    if (!this.isShowBack) {
+                      this.visible = false;
+                      this.iVisible = false;
+                      return false;
+                    }
+
+                    if (this.isSale && this.isPerm("SEND_INTERNAL_MESSAGE")) {
+                      await this.$refs.SMRef.open();
+                    }
+
+                    if (this.isShare) {
+                      uni.$emit("$__get_all_info__");
+                      uni.redirectTo({
+                        url: PageEnums.saleClientAddedBack,
+                        fail() {
+                          uni.navigateBack();
+                        },
+                      });
+                    } else {
+                      uni.navigateBack({
+                        fail() {
+                          uni.redirectTo({
+                            url: PageEnums.saleClientAddedBack,
+                            fail() {
+                              uni.redirectTo({url: PageEnums.home});
+                            },
+                          });
+                        },
+                      });
+                    }
+                  },
+                });
+
+                uni.setStorageSync("TENP_ORDER_INFO", res.data);
+              })
+              .finally(() => {
+                this.loading = false;
               });
-
-              uni.setStorageSync("TENP_ORDER_INFO", res.data);
-            })
-            .finally(() => {
-              this.loading = false;
+          } else {
+            uni.showToast({
+              title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
+              icon: "none",
             });
-        } else {
-          uni.showToast({
-            title: _get(valid, "0.errorMessage") || "请检查表单项是否正确",
-            icon: "none",
-          });
-        }
-      });
+          }
+        });
     },
 
+    // 获取绑定的客户列表
     getBindInfo() {
       this.$refs.FormRef.getBindInfo();
     },
@@ -188,6 +216,22 @@ export default {
     // 更新其它费用
     updateFees() {
       this.$refs.FormRef.updateFees();
+    },
+
+    // 验证手机号码
+    getrealtimephonenumber(event) {
+      console.log(event.detail);
+      this.form.code = event.detail.code;
+      
+      this.onSubmit();
+    },
+
+    // 获取店铺支付状态
+    getPayStatus() {
+      getPaySettingApi()
+        .then(res => {
+          this.paySetting = res.data;
+        });
     },
   },
   mounted() {
@@ -222,11 +266,41 @@ export default {
         <button
           class="ko-basic-button__card"
           @click.stop="onSubmit"
-          :loading="loading"
           :disabled="loading || !goodsList.length"
+          v-if="!visible && !iVisible"
         >
-          {{ !visible && !iVisible ? "购物车" : (iVisible ? "立即下单" : "去结算") }}
+          购物车
         </button>
+
+        <button
+          class="ko-basic-button__card"
+          @click.stop="onSubmit"
+          :disabled="loading || !goodsList.length"
+          v-else-if="!iVisible"
+        >
+          去结算
+        </button>
+
+        <block v-else>
+          <button
+            class="ko-basic-button__card"
+            @click.stop="onSubmit"
+            :loading="loading"
+            :disabled="loading || !goodsList.length"
+            v-if="isEqual(paySetting, 'NONE') || !paySetting"
+          >
+            立即下单
+          </button>
+
+          <button
+            class="ko-basic-button__card"
+            v-else-if="isEqual(paySetting, 'PHONE')"
+            open-type="getRealtimePhoneNumber"
+            @getrealtimephonenumber="getrealtimephonenumber"
+          >
+            立即下单
+          </button>
+        </block>
       </view>
     </view>
 

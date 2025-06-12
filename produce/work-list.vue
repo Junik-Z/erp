@@ -763,7 +763,7 @@ export default {
         stripe
         @row-click="onJumpDetails($event, 'produce')"
 
-        @next-load="onRequestNextPage"
+        @load-next="onRequestNextPage"
         :no-more="noMore || loading"
       >
         <template #operate="{item, index}">

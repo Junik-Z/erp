@@ -512,7 +512,7 @@ export default {
         empty-text="暂无数据"
         stripe
         @row-click="onJumpDetails($event, 'purchaseReturn')"
-        @next-load="RequestNextPage"
+        @load-next="RequestNextPage"
         :no-more="noMore || loading"
       >
         <template #operate="{item, index}">

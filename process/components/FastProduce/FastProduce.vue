@@ -190,7 +190,7 @@ export default {
         empty-text="暂无数据"
         stripe
         @row-click="onRowClick"
-        @next-load="onRequestNextPage"
+        @load-next="onRequestNextPage"
         :no-more="noMore || loading"
 
         :no-refresh="noRefresh"

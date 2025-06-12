@@ -1012,7 +1012,7 @@ export default {
             style="width: 100%"
             stripe
             @row-click="onRowClick"
-            @next-load="onNextOrderList"
+            @load-next="onNextOrderList"
             class="ko-order-table__list"
           >
             <template #operate="{item, index}">

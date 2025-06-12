@@ -8,6 +8,7 @@ import { PageEnums } from "@/utils/config";
 import GoodsMixins from "../mixins/GoodsMixins";
 import reLogin from "@/mixins/re-login";
 import PickerStandard from "../components/PickerStandard.vue";
+import { getShopInfoApi } from "@/api/user";
 
 export default {
   name: "shopping",
@@ -31,6 +32,17 @@ export default {
 
       // 显示产品列表
       showVTList: false,
+
+      // 页面地址
+      isShowBack: false,
+
+      // 来自供应链
+      formHypermarket: false,
+      // 来自供应链的商户
+      fScene: "",
+
+      // 商户信息
+      bInfo: {},
     };
   },
   onLoad(option) {
@@ -59,9 +71,16 @@ export default {
       this.handlerShare();
     }
 
+    // 从供应链来的
+    this.formHypermarket = _isEqual(option.__switch_login__, "true");
+
+    if (this.formHypermarket) {
+      this.fScene = option.scene;
+      this.getBusinessInfo();
+    }
+
     setTimeout(() => {
       this.showVTList = true;
-
       if (option.p_name) {
         setTimeout(() => {
           this.$refs.VTRef.queryList.name = decodeURIComponent(option.p_name);
@@ -69,10 +88,9 @@ export default {
           this.$refs.VTRef.getList(true);
         }, 80);
       }
-
     }, 200);
 
-    if (!this.isSale && !this.isPreview && !this.isShare) {
+    if (!this.isSale && !this.isPreview && !this.isShare && !this.formHypermarket) {
       setTimeout(() => {
         this.$refs.CLRef.getBindInfo();
       }, 200);
@@ -88,11 +106,23 @@ export default {
       }, 300);
     }
 
-    // this.setOrderInfoByKey("isShare", this.isShare);
-    // this.setOrderInfoByKey("isEdit", this.isEdit);
+
+    // #ifdef MP
+    try {
+      const pages = getCurrentPages() || [];
+      this.isShowBack = pages.length > 1;
+    } catch (e) {
+      console.error(e);
+    }
+    // #endif
+
+    // #ifdef H5
+    this.isShowBack = true;
+    // #endif
   },
   mixins: [mixins, GoodsMixins, reLogin],
   methods: {
+    // 处理分享下单
     async handlerShare() {
       await this.onLogInAgain(this.option)
         .finally(() => {
@@ -124,7 +154,9 @@ export default {
     },
 
     getList() {
-      this.$refs.VTRef && this.$refs.VTRef.reset();
+      setTimeout(() => {
+        this.$refs.VTRef && this.$refs.VTRef.onReset();
+      }, 80);
     },
 
     // 获取订单详情
@@ -184,6 +216,14 @@ export default {
         },
       });
     },
+
+    // 获取商户信息
+    getBusinessInfo() {
+      getShopInfoApi({tenantId: this.fScene})
+        .then(res => {
+          this.bInfo = res.data;
+        });
+    },
   },
   mounted() {
     this.$nextTick(() => {
@@ -192,10 +232,10 @@ export default {
   },
   computed: {
     sys() {
-      return this.GET_CONFIG_INFO || {};
+      return this.formHypermarket ? this.bInfo : (this.GET_CONFIG_INFO || {});
     },
     shopName() {
-      return (this.GET_SHOP_NAME || "").substring(0, 2);
+      return (this.sys.remark || "").substring(0, 2);
     },
   },
   onUnload() {
@@ -213,7 +253,7 @@ export default {
     <Notice />
     <!-- #endif -->
 
-    <button class="ko-top-black" @click="onBlack">
+    <button class="ko-top-black" @click="onBlack" v-if="isShowBack">
       <uni-icons size="24" color="#000" type="left" />
     </button>
 
@@ -228,11 +268,14 @@ export default {
             interval="3000"
           >
             <swiper-item class="ko-shopping__swiper--item">
-              <image
+              <uv-image
                 class="ko-shopping__swiper--image"
-                :src="getImageUrl(sys.merchantBgImg || 'https://erp.kuaouyun.cn/api/files/down/static/store_pg.png')"
+                :src="sys.merchantBgImg ? getImageUrl(sys.merchantBgImg) : 'https://erp.kuaouyun.cn/api/files/down/static/store_pg.png'"
                 mode="widthFix"
                 lazy-load
+                width="100%"
+                :icon-size="42"
+                bg-color="#fff"
               />
             </swiper-item>
           </swiper>
@@ -243,30 +286,31 @@ export default {
           >
             <view class="ko-shopping__info">
               <view class="ko-shopping__info--image" :class="{'no-logo': !sys.logo}">
-                <image
+                <uv-image
                   v-if="sys.logo"
-                  class="image"
+                  width="100%"
+                  height="100%"
                   :src="getImageUrl(sys.logo)"
                   mode="aspectFill"
                   lazy-load
+                  radius="10px"
                 />
                 <text v-else class="ko-shopping__info--name">
                   {{ shopName }}
                 </text>
               </view>
               <view style="padding-left: 10px;">
-                <view class="ko-shopping__info--name">{{ GET_SHOP_NAME }}</view>
+                <view class="ko-shopping__info--name">{{ sys.remark || "" }}</view>
                 <view style="display: flex; align-items: center; font-size: 12px; color: #000;">
                   <view
-                    @click.stop="onCopyText(sys.merchantPhone)"
                     style="display: flex; align-items: center; margin-right: 10px"
                     v-if="sys.merchantPhone"
+                    @click.stop="onPhoneCell(sys.merchantPhone)"
                   >
                     <uni-icons size="14" color="#000" type="phone-filled" />
                     <text>{{ sys.merchantPhone }}</text>
                   </view>
                   <view
-                    @click.stop="onCopyText(sys.merchantAddress)"
                     style="display: flex; align-items: center"
                     v-if="sys.merchantAddress"
                   >
@@ -293,11 +337,20 @@ export default {
           :show-switch="isSale && !isEdit"
           :is-show-search.sync="isShowSearch"
           :share-id="shareId"
+          :form-hypermarket="formHypermarket"
+          :f-scene="fScene"
         />
       </view>
     </view>
 
-    <CartList ref="CLRef" :is-share="isShare" :is-sale="isSale" />
+    <CartList
+      ref="CLRef"
+      :is-share="isShare"
+      :is-sale="isSale"
+      :is-show-back="isShowBack"
+      :form-hypermarket="formHypermarket"
+      :f-scene="fScene"
+    />
 
     <!-- 选择规则 -->
     <PickerStandard ref="PSRef" />

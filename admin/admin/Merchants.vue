@@ -245,7 +245,7 @@ export default {
         :loading="loading"
         :no-more="noMore"
         :no-data="!list.length"
-        @next-load="RequestNextPage"
+        @load-next="RequestNextPage"
         @lower="RequestNextPage"
       >
         <view style="padding: 5px 10px;" v-for="item of list" :key="item.id">
@@ -312,7 +312,7 @@ export default {
         empty-text="暂无数据"
         stripe
         @row-click="onJump"
-        @next-load="RequestNextPage"
+        @load-next="RequestNextPage"
         :no-more="noMore || loading"
       >
         <template #operate="{item}">

@@ -19,6 +19,7 @@ export default {
     uni.setStorageSync("TO_DETAILS", false);
 
     const {query: _query} = option || {};
+
     console.log("App.vue", _query, option, option.path);
 
     let query = _deepCopy(_query);
@@ -64,8 +65,15 @@ export default {
 
     // #endif
   },
-  onShow() {
-    console.log("App Show");
+  onShow(option) {
+    console.log("App Show", option);
+
+    // 点击下拉菜单时触发
+    if (_isEqual(option.scene, 1089)) {
+      setTimeout(() => {
+        uni.reLaunch({url: PageEnums.home + `?scene=${option.query.scene || ""}`});
+      }, 60);
+    }
 
     // #ifdef MP-WEIXIN
     /* if (wx?.setVisualEffectOnCapture) {
@@ -76,7 +84,6 @@ export default {
       });
     } */
     // #endif
-
 
     // #ifdef H5
     uni.$__HIDE_TIME_VM__ && clearTimeout(uni.$__HIDE_TIME_VM__);

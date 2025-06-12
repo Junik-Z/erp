@@ -279,7 +279,7 @@ export default {
         :data="list"
         empty-text="暂无数据"
         stripe
-        @next-load="onRequestNextPage"
+        @load-next="onRequestNextPage"
         :no-more="noMore || loading"
       >
         <template #operate="{item}">

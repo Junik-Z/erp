@@ -28,6 +28,9 @@ export default {
     noRefresh: Boolean,
     // 滚动到指定id位置
     scrollIntoView: [String, null],
+
+    // 隐藏loading动画
+    hideLoading: Boolean,
   },
   watch: {
     data: {
@@ -126,7 +129,7 @@ export default {
     <view class="ko-list__wrap" :class="{'safe': safeAreaInsetBottom}">
       <slot />
 
-      <view class="ko-list__loading" v-if="loading">
+      <view class="ko-list__loading" v-if="loading && !hideLoading">
         <UvLoadingIcon size="40" />
       </view>
 

@@ -42,6 +42,53 @@ export function goLogin(tenantId = "") {
 }
 
 /**
+ * @description 处理微信切换登录
+ */
+export function switchLogin(tenantId = "") {
+  return new Promise((resolve, reject) => {
+    if (uni.__LOGIN_LOADING__) {
+      reject("__stop__");
+      return false;
+    }
+
+    // 不需要调切换接口
+    if (uni) {
+      // uni.setStorageSync("__APP_SCENE__", tenantId);
+      // uni.$emit("$__login_success__");
+      resolve({data: tenantId});
+      return false;
+    }
+
+    uni.login({
+      success: resp => {
+        uni.__LOGIN_LOADING__ = true;
+        const {code} = resp;
+        switchLoginApi({code, tenantId})
+          .then((res) => {
+            uni.setStorageSync("__APP_SCENE__", res.data);
+
+            uni.$emit("$__get_all_info__");
+            resolve(res);
+          })
+          .catch(reject)
+          .finally(() => {
+            setTimeout(() => {
+              uni.__LOGIN_LOADING__ = false;
+            }, 10);
+          });
+      },
+    });
+  });
+}
+
+/**
+ * @deprecated 切换登录
+ */
+export function switchLoginApi(data) {
+  return request({url: "/index/switch/login", method: "POST", data});
+}
+
+/**
  * @description 获取图片链接地址
  */
 export function getImgUrl(url) {
@@ -63,14 +110,12 @@ export function uploadFileApi() {
   return `${CONFIG.BASE_URL}/files/upload`;
 }
 
-
 /**
  * @description 上传物料
  */
 export function readMaterialListFileApi() {
   return `${CONFIG.BASE_URL}/produce/readMaterialListFile`;
 }
-
 
 /**
  * @description 获取我的信息
@@ -417,10 +462,58 @@ export function getSettingApi(data) {
   return request({url: "/supply/getSetting", method: "get", data});
 }
 
-
 /**
  * @deprecated 卖场设置
  */
 export function saleSettingApi(data) {
   return request({url: "/manage/saleSetting", method: "post", data});
+}
+
+/**
+ * @deprecated 获取卖场活动商品
+ */
+export function getActivityApi(data) {
+  return request({url: "/supply/getActivity", method: "get", data});
+}
+
+/**
+ * @deprecated 获取卖场推荐商品
+ */
+export function getRecommendApi(data) {
+  return request({url: "/supply/getRecommend", method: "get", data});
+}
+
+/**
+ * @deprecated 获取卖场商品分类
+ */
+export function getSupplyProductClassApi(data) {
+  return request({url: "/supply/product/class", method: "get", data});
+}
+
+/**
+ * @deprecated 获取卖场商品扩张字段
+ */
+export function getSupplyProductFieldApi(data) {
+  return request({url: "/supply/product/field", method: "get", data});
+}
+
+/**
+ * @deprecated 获取卖场商品列表
+ */
+export function getSupplyProductListApi(data) {
+  return request({url: "/supply/product/list", method: "get", data});
+}
+
+/**
+ * @deprecated 获取卖场广告列表
+ */
+export function getSupplyADListApi(data) {
+  return request({url: "/supply/ad/list", method: "get", data});
+}
+
+/**
+ * @deprecated 获取商户信息
+ */
+export function getShopInfoApi(data) {
+  return request({url: "/supply/shop/index", method: "get", data});
 }

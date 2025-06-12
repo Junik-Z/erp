@@ -510,7 +510,7 @@ export default {
           empty-text="暂无数据"
           stripe
           @row-click="onJumpInfo"
-          @next-load="onLower"
+          @load-next="onLower"
           :no-more="noMore || loading"
         >
           <template #operate="{item, index}">

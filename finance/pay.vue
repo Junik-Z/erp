@@ -536,7 +536,7 @@ export default {
             stripe
             @row-click="onJumpDetails($event, 'payable')"
 
-            @next-load="RequestNextPage"
+            @load-next="RequestNextPage"
             :no-more="noMore"
             no-refresh
           >

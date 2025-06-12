@@ -495,7 +495,7 @@ export default {
               :data="list"
               empty-text="暂无数据"
               stripe
-              @next-load="onLower"
+              @load-next="onLower"
               :no-more="noMore || loading"
             >
               <template #operate="{item, index}">
