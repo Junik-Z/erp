@@ -45,7 +45,7 @@ export default {
             style="min-height: 64px;"
             v-for="(url, j) of getItemImages(item)"
             :key="j"
-            @click.stop
+            @click.stop="() => {}"
           >
             <uv-image
               :radius="j == 0 ? '6px 6px 0 0' : '0px'"

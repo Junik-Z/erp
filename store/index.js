@@ -33,6 +33,11 @@ export default new Vuex.Store({
     // 应付款新样式
     AP_STYLE: noClear.apStyle || false,
 
+    // 重定向前往的页面地址
+    S_PATH: noClear.sPath,
+
+    SHOW_OPTION: {},
+
     orderInfo: {
       isEdit: false,
       isShare: false,
@@ -74,6 +79,16 @@ export default new Vuex.Store({
     // 应付款样式
     sApStyle(state) {
       return state.AP_STYLE;
+    },
+
+    // 重定向的路由地址
+    sPath(state) {
+      return state.S_PATH;
+    },
+
+    // 获取应用显示时的参数
+    getShowOption(state) {
+      return state.SHOW_OPTION;
     },
   },
   mutations: {
@@ -137,6 +152,18 @@ export default new Vuex.Store({
     setNewMsg(state, payload) {
       state.newMsg = payload;
     },
+
+    // 存储重定向地址
+    setSPath(state, payload) {
+      const obj = uni.getStorageSync(NO_CLEAR_KEY) || {};
+      state.S_PATH = payload;
+      uni.setStorageSync(NO_CLEAR_KEY, {...obj, sPath: payload});
+    },
+
+    // 设置应用显示参数
+    setShowOption(state, payload) {
+      state.SHOW_OPTION = payload;
+    },
   },
   actions: {
     setGoodsObjAsync({commit}, payload) {
@@ -177,6 +204,14 @@ export default new Vuex.Store({
     },
     setApStyleAsync({commit}, payload) {
       commit("setApStyle", payload);
+    },
+
+    setSPathAsync({commit}, payload) {
+      commit("setSPath", payload);
+    },
+
+    setShowOptionAsync({commit}, payload) {
+      commit("setShowOption", payload);
     },
   },
 });

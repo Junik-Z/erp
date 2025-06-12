@@ -156,7 +156,7 @@ export default {
 
     // 处理重新登录
     onLogout(params = {}, path, noJump = false) {
-      let url = "/pages/home/home";
+      let url = this.$store.getters.sPath || PageEnums.home;
       // #ifdef H5
       url = "/pages/login/login";
       // #endif
@@ -263,6 +263,9 @@ export default {
     // 处理查看图片
     lookImage(url) {
       if (url) {
+        // 标记为图片预览中
+        uni.$__LOOK_IMAGE_ING_FLAG__ = true;
+
         uni.previewImage({
           urls: [url],
         });
@@ -374,6 +377,16 @@ export default {
             url: PageEnums.home,
           });
         },
+      });
+    },
+
+    // 前往管理端
+    onGoHome() {
+      this.$store.dispatch("setSPathAsync", "");
+      this.$store.dispatch("setShowOptionAsync", {});
+
+      uni.reLaunch({
+        url: PageEnums.home,
       });
     },
 

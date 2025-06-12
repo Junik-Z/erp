@@ -2,6 +2,7 @@
 import ZeroLoading from "@/uni_modules/zero-loading/components/zero-loading/zero-loading.vue";
 import { _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
+import { PageEnums } from "@/utils/config";
 
 export default {
   name: "Home",
@@ -23,7 +24,6 @@ export default {
       const params = this.option;
       params.scene = decodeURIComponent(params.scene).split("&")[0];
       uni.$__FORM_QRCODE__ = true;
-      
       // uni.setStorageSync("__APP_SCENE__", this.option?.scene);
       await this.onLogout(params, false, true);
     }
@@ -41,7 +41,6 @@ export default {
     // 系统已经准备好了
     beReady() {
       console.log("系统已经准好了");
-
       this.VM_TIME && clearTimeout(this.VM_TIME);
 
       // #ifdef MP | H5
@@ -49,8 +48,10 @@ export default {
       // #endif
 
       this.VM_TIME = setTimeout(() => {
+        console.log(this.sPath);
+
         uni.reLaunch({
-          url: "/pages/index/index",
+          url: (_isEqual(this.sPath, PageEnums.home) || !this.sPath) ? PageEnums.Index : this.sPath,
           /* success: () => {
             setTimeout(() => {
               uni.setStorageSync("__APP_QUERY__", {});
@@ -77,6 +78,11 @@ export default {
     handleH5Func() {
       uni.$emit("$__get_all_info__");
       uni.$on("$__get_info_success__", this.beReady);
+    },
+  },
+  computed: {
+    sPath() {
+      return this.$store.getters.sPath;
     },
   },
 };

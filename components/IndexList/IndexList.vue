@@ -543,7 +543,7 @@ export default {
                             mode="aspectFill"
                             :text="item.label || GET_SHOP_NAME"
                             random-bg-color
-                            @click.stop
+                            @click.stop="() => {}"
                           />
                         </view>
                         <view style="flex: 1;">

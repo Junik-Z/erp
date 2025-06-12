@@ -45,6 +45,9 @@ export default {
 
       // 激活的推荐 tab
       aRecommend: "1",
+
+      // 需要显示前往管理端
+      isToAdmin: false,
     };
   },
   async onLoad() {
@@ -65,6 +68,12 @@ export default {
     // #ifdef H5
     this.isShowBack = true;
     // #endif
+  },
+  onShow() {
+    const sOpt = this.$store.getters.getShowOption;
+    this.isToAdmin = _isEqual(sOpt.scene, 1089) && this.$store.getters.sPath;
+
+    console.log("获取到的首页数据", this.isToAdmin, sOpt);
   },
   methods: {
     // 获取列表数据
@@ -215,8 +224,15 @@ export default {
 
 <template>
   <view class="ko-hypermarket" :style="[menuButtonRectStyle]">
-    <button class="ko-top-black" @click="onBlack" v-if="isShowBack">
+    <button class="ko-top-black" @click="onBlack" v-if="isShowBack && !isToAdmin">
       <uni-icons size="24" color="#000" type="left" />
+    </button>
+
+    <button class="ko-top-black" @click="onGoHome" v-if="isToAdmin">
+      <view style="display: flex; align-items: center; font-size: 13px">
+        <uv-icon name="home" :size="24" color="#000" style="margin-right: 4px;" />
+        <text style="padding-top: 2px;">前往管理端</text>
+      </view>
     </button>
 
     <view class="ko-hypermarket__header">
@@ -227,15 +243,22 @@ export default {
           bg-color="transparent"
           color="#000"
           duration="3000"
-          v-if="text.length"
+          v-if="text.length && !isToAdmin"
         />
       </view>
-      <image
-        v-if="FImage"
-        mode="widthFix"
+      <view
         class="ko-hypermarket__header--image"
-        :src="getImageUrl(FImage)"
-      />
+        v-if="FImage"
+      >
+        <uv-image
+          mode="widthFix"
+          width="100%"
+          height="100%"
+          lazy-load
+          :icon-size="42"
+          :src="getImageUrl(FImage)"
+        />
+      </view>
     </view>
 
     <view class="ko-hypermarket__search">
@@ -244,6 +267,8 @@ export default {
         placeholder="请输入"
         shape="square"
         bg-color="transparent"
+        color="#000"
+        placeholder-color="#333"
         :action-style="{color: '#000'}"
         v-model="queryList.name"
         @search="getPList(true)"
@@ -309,19 +334,6 @@ export default {
 </template>
 
 <style scoped lang="scss">
-.ko-top-black {
-  position: fixed;
-  top: var(--m-top);
-  height: var(--m-height);
-  left: 10px;
-  z-index: 999;
-  padding: 0;
-  width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
 .ko-hypermarket {
   height: 100vh;
   display: flex;
@@ -357,7 +369,7 @@ export default {
   &__search {
     margin: -44px 16px;
     border: 1px solid #000;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.4);
     border-radius: 10px;
     padding-right: 8px;
     z-index: 12;

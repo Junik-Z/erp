@@ -43,6 +43,9 @@ export default {
 
       // 商户信息
       bInfo: {},
+
+      // 是否显示返回管理端
+      isToAdmin: false
     };
   },
   onLoad(option) {
@@ -119,6 +122,12 @@ export default {
     // #ifdef H5
     this.isShowBack = true;
     // #endif
+  },
+  onShow() {
+    const sOpt = this.$store.getters.getShowOption;
+    this.isToAdmin = _isEqual(sOpt.scene, 1089) && this.$store.getters.sPath && !this.formHypermarket;
+
+    console.log("获取到的首页数据", this.isToAdmin, sOpt);
   },
   mixins: [mixins, GoodsMixins, reLogin],
   methods: {
@@ -253,8 +262,15 @@ export default {
     <Notice />
     <!-- #endif -->
 
-    <button class="ko-top-black" @click="onBlack" v-if="isShowBack">
+    <button class="ko-top-black" @click="onBlack" v-if="isShowBack && !isToAdmin">
       <uni-icons size="24" color="#000" type="left" />
+    </button>
+
+    <button class="ko-top-black" @click="onGoHome" v-if="isToAdmin">
+      <view style="display: flex; align-items: center; font-size: 13px">
+        <uv-icon name="home" :size="24" color="#000" style="margin-right: 4px;" />
+        <text style="padding-top: 2px;">前往管理端</text>
+      </view>
     </button>
 
     <view class="ko-shopping__content" :class="{'no-height': isSale && !isPreview }">
@@ -358,19 +374,6 @@ export default {
 </template>
 
 <style scoped lang="scss">
-.ko-top-black {
-  position: fixed;
-  top: var(--m-top);
-  height: var(--m-height);
-  left: 10px;
-  z-index: 999;
-  padding: 0;
-  width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
 .ko-shopping {
   --merchants-logo-size: 70px;
   --swiper-height: 198px;

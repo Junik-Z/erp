@@ -16,6 +16,9 @@ DEFAULT_PAGE_SIZE = 20;
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
 // #endif
 
+BASE_URL = "https://erp.kuaouyun.cn/api";
+BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
+
 let type = "develop";
 
 if (_isDev()) {
@@ -23,7 +26,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // #endif
 
   // #ifdef H5
@@ -129,6 +132,7 @@ export const ROLE_LIST_ENUMS = {
  */
 export const PageEnums = {
   home: "/pages/home/home",
+  Index: "/pages/index/index",
 
   qrcode: "/erp/qrcode/qrcode",
   login: "/pages/login/login",

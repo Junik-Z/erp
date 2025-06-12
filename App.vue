@@ -68,12 +68,28 @@ export default {
   onShow(option) {
     console.log("App Show", option);
 
-    // 点击下拉菜单时触发
-    if (_isEqual(option.scene, 1089)) {
+    // 存储数据
+    this.$store.dispatch("setShowOptionAsync", option);
+
+    // 扫码进入应用
+    if (
+      [1047, 1048].includes(option.scene)
+      && [PageEnums.hypermarket, PageEnums.shopping].includes(`/${option.path}`)
+    ) {
+      this.$store.dispatch("setSPathAsync", `/${option.path}`);
+      console.log("存储数据", this.$store.getters.sPath);
+    }
+
+    /* // 点击下拉菜单时触发
+    if (_isEqual(option.scene, 1089) && !uni.$__LOOK_IMAGE_ING_FLAG__) {
       setTimeout(() => {
         uni.reLaunch({url: PageEnums.home + `?scene=${option.query.scene || ""}`});
-      }, 60);
+      }, 100);
     }
+
+    setTimeout(() => {
+      uni.$__LOOK_IMAGE_ING_FLAG__ = false;
+    }, 10) */
 
     // #ifdef MP-WEIXIN
     /* if (wx?.setVisualEffectOnCapture) {

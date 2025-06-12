@@ -20,6 +20,8 @@ export default {
         pageSize: 20,
       },
       visible: false,
+
+      showName: "",
     };
   },
   mounted() {
@@ -43,6 +45,7 @@ export default {
           console.log("我的商铺", data, cInfo);
 
           this.list = this.onMergeArrays(this.list, data);
+          this.showName = _get(this.list, "0.remark");
           this.noMore = _isEmpty(data) || data.length < this.queryList.pageSize;
         });
     },
@@ -90,8 +93,8 @@ export default {
         :custom-style="{marginRigth: '4px'}"
         v-if="false"
       />
-
-      {{ GET_CONFIG_INFO.remark }}
+      
+      {{ showName }}
     </button>
 
     <BasicPopup :visible.sync="visible" type="bottom" title="商户">
