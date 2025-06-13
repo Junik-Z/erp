@@ -3,6 +3,7 @@ import mixins from "@/mixins/mixins";
 import { CONFIG } from "@/utils/config";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import BusinessAdvertising from "@/components/BusinessAdvertising/BusinessAdvertising.vue";
+import { _isDev } from "@/utils";
 
 export default {
   name: "MerchantsHeader",
@@ -19,7 +20,7 @@ export default {
   },
   methods: {
     onOpen() {
-      if (this.disabled) return false;
+      if (this.disabled && !_isDev()) return false;
 
       this.visible = true;
     },

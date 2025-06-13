@@ -10,6 +10,8 @@ import DaTreeVue2 from "./da-tree-vue2/index.vue";
 import GoodsMixins from "../../mixins/GoodsMixins";
 import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
 import UvLoadingIcon from "../../uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
+import KoList from "@/components/List/List.vue";
+import { getSupplyProductClassApi, getSupplyProductFieldApi, getSupplyProductListApi } from "@/api/user";
 
 export default {
   name: "VTabs",
@@ -21,7 +23,7 @@ export default {
       queryList: {
         classId: "",
         pageNum: 0,
-        pageSize: 10,
+        pageSize: 5,
         name: "",
       },
       CurrentItemId: null,
@@ -39,9 +41,9 @@ export default {
     };
   },
   created() {
-    this.reset();
+    this.onReset();
   },
-  components: {UvLoadingIcon, UniIcons, GoodsCard, DaTreeVue2, UniSearchBar},
+  components: {KoList, UvLoadingIcon, UniIcons, GoodsCard, DaTreeVue2, UniSearchBar},
   props: {
     // 购物模式
     isShopping: Boolean,
@@ -56,34 +58,48 @@ export default {
 
     // 更新显示搜索状态
     isShowSearch: Boolean,
+    // 分享ID
     shareId: String,
+
+    // 来自供应链
+    formHypermarket: Boolean,
+    // 来自供应链的商户
+    fScene: String,
   },
   methods: {
-    async reset() {
+    async onReset() {
       await this.getClassifyList();
       await this.getFieldList();
+      await this.reset();
     },
     // 获取分类列表
     getClassifyList() {
+      const Func = this.formHypermarket ? getSupplyProductClassApi : getProductClassApi;
+
       // 加载分类
-      return getProductClassApi({
+      return Func({
         pageNum: 0,
         pageSize: 1000,
         ...(this.shareId ? {shareId: this.shareId || "", shareType: "sale"} : {}),
-
+        ...(this.fScene ? {tenantId: this.fScene || ""} : {}),
       })
         .then(res => {
           const data = res.data;
           this.classList = data;
           !data && (this.queryList.classId = _get(data, "0.id"));
           this.hideArrow = data.every(v => _isEmpty(v.children));
-          this.getList();
+          this.getList(true);
         });
     },
 
     // 获取扩张字段
     getFieldList() {
-      return getProductFieldApi({pageSize: 100, pageNum: 0})
+      const Func = this.formHypermarket ? getSupplyProductFieldApi : getProductFieldApi;
+      return Func({
+        pageSize: 100,
+        pageNum: 0,
+        ...(this.fScene ? {tenantId: this.fScene || ""} : {}),
+      })
         .then(res => {
           this.fieldList = res.data;
         });
@@ -97,9 +113,13 @@ export default {
       }
 
       this.loading = true;
-      getProductListApi({
+
+      const Func = this.formHypermarket ? getSupplyProductListApi : getProductListApi;
+
+      Func({
         ...this.queryList,
         ...(this.shareId ? {shareId: this.shareId || "", shareType: "sale"} : {}),
+        ...(this.fScene ? {tenantId: this.fScene || ""} : {}),
       })
         .then(res => {
           const data = res.data || [];
@@ -174,6 +194,7 @@ export default {
 
     // 滚动到底部
     onLower() {
+      console.log("底部");
       if (this.noMore) return false;
       this.queryList.pageNum += 1;
       this.getList(false);
@@ -267,34 +288,44 @@ export default {
            </view>-->
         </view>
       </scroll-view>
-      <scroll-view scroll-y="true" class="ko-v-tabs__right" @scrolltolower="onLower">
-        <view class="ko-v-tabs__right--content">
-          <view
-            class="ko-v-tabs__goods"
-            v-for="(item, index) in list"
-            :key="index"
-          >
-            <GoodsCard
-              :show-purchase-price="showPurchasePrice"
-              :field="fieldList"
-              :node="item"
-              @operate="onOperate(item, index)"
-              @click="onClick(item)"
-              :is-shopping="isShopping"
-            />
-          </view>
+      <view class="ko-v-tabs__right">
+        <KoList
+          :data="list"
+          :loading="loading"
+          :no-more="noMore"
+          :no-data="!list.length"
+          @load-next="onLower"
+          @lower="onLower"
+          hide-tips
+        >
+          <view class="ko-v-tabs__right--content">
+            <view
+              class="ko-v-tabs__goods"
+              v-for="(item, index) in list"
+              :key="index"
+            >
+              <GoodsCard
+                :show-purchase-price="showPurchasePrice"
+                :field="fieldList"
+                :node="item"
+                @operate="onOperate(item, index)"
+                @click="onClick(item)"
+                :is-shopping="isShopping"
+              />
+            </view>
 
-          <view v-if="noMore && !loading && list.length" class="ko-no-more" style="margin: 20px 0;">
-            该分类没有更多数据了
-          </view>
+            <view v-if="noMore && !loading && list.length" class="ko-no-more" style="margin: 20px 0;">
+              该分类没有更多数据了
+            </view>
 
-          <view v-if="noMore && !loading && !list.length" class="ko-no-more" style="margin: 20px 0;">
-            该分类暂无数据
-          </view>
+            <view v-if="noMore && !loading && !list.length" class="ko-no-more" style="margin: 20px 0;">
+              该分类暂无数据
+            </view>
 
-          <uv-loading-icon v-if="loading" />
-        </view>
-      </scroll-view>
+            <uv-loading-icon v-if="loading" />
+          </view>
+        </KoList>
+      </view>
     </view>
   </view>
 </template>

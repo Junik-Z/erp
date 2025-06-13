@@ -1002,7 +1002,7 @@ export default {
             empty-text="暂无数据"
             stripe
             @row-click="onJumpDetails($event, 'payable')"
-            @next-load="onNextOrderList"
+            @load-next="onNextOrderList"
             class="ko-order-table__list"
           >
 

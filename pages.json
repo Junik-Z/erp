@@ -239,6 +239,12 @@
             "navigationBarTitleText": "大卖场",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "recommend",
+          "style": {
+            "navigationBarTitleText": "设置推荐商品"
+          }
         }
       ]
     },

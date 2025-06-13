@@ -615,6 +615,24 @@ button::after {
   }
 }
 
+// 顶部按钮
+.ko-top-black {
+  position: fixed;
+  top: var(--m-top);
+  height: var(--m-height);
+  left: 10px;
+  z-index: 999;
+  padding: 0;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
 // #ifdef MP
 // 去掉scroll-view组件横向滚动条：
 ::-webkit-scrollbar {

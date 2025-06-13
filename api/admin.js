@@ -239,3 +239,43 @@ export function queryOrderApi(data) {
 export function generateQRCodeApi(data) {
   return request({url: "/main/generateQRCode", method: "get", data});
 }
+
+// -—————————————————————— 获取供应链二维码 ——————————————
+export function generateSupplyQRCodeApi(data) {
+  return request({url: "/supply/generateQRCode", method: "get", data});
+}
+
+/**
+ * @deprecated 获取支付设置
+ */
+export function getPaySettingApi(data) {
+  return request({url: "/supply/getPaySetting", method: "get", data});
+}
+
+/**
+ * @deprecated 获取推荐商品设置
+ */
+export function getRecommendSettingApi(data) {
+  return request({url: "/supply/getRecommendSetting", method: "get", data});
+}
+
+/**
+ * @deprecated 获取活动商品设置
+ */
+export function getActivitySettingApi(data) {
+  return request({url: "/supply/getActivitySetting", method: "get", data});
+}
+
+/**
+ * @deprecated 设置推荐商品设置
+ */
+export function setRecommendApi(data) {
+  return request({url: "/supply/setRecommend", method: "post", data});
+}
+
+/**
+ * @deprecated 设置活动商品设置
+ */
+export function setActivityApi(data) {
+  return request({url: "/supply/setActivity", method: "post", data});
+}

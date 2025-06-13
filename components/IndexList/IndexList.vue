@@ -528,7 +528,7 @@ export default {
                   class="ko-index-list__item"
                   v-for="(item, index) in data"
                   :key="index"
-                  :class="{'is-send-msg': isSendMsg}"
+                  :class="{'is-send-msg': isSendMsg, blacklist: isWeChat && getWeTag(item).includes('blacklist')}"
                 >
                   <BasicCard no-shadow :spacing="0" style="width: 100%;" @click.stop="onClick(item)">
                     <view class="ko-user">
@@ -543,7 +543,7 @@ export default {
                             mode="aspectFill"
                             :text="item.label || GET_SHOP_NAME"
                             random-bg-color
-                            @click.stop
+                            @click.stop="() => {}"
                           />
                         </view>
                         <view style="flex: 1;">
@@ -621,24 +621,39 @@ export default {
                            </text>-->
                         </view>
                       </view>
-                      <view class="ko-user__buttons" v-if="buttonPerm ? isPerm(buttonPerm) : true">
-                        <button
-                          class="ko-basic-button__user"
-                          v-for="(button, dx) of events"
-                          @click.stop="onEventItem(button, item, index, dx)"
-                          :key="dx"
-                          v-if="getShowEventButton(button, item, index, dx)"
-                        >
-                          {{ button.label }}
-                        </button>
-                        <button
-                          class="ko-basic-button__user"
-                          @click.stop="onMoreClick(item, index)"
-                          v-if="showMoreButton"
-                        >
-                          更多
-                        </button>
-                        <slot v-if="$slots.default" :node="item" :index="index"></slot>
+
+                      <view
+                        style="display:flex; align-items: center;justify-content: flex-end; padding-right: 20px;"
+                        v-if="isWeChat || (buttonPerm ? isPerm(buttonPerm) : true)"
+                      >
+                        <view v-if="isWeChat" class="ko-user__buttons" style="margin-right: 8px;">
+                          <button
+                            class="ko-basic-button__user"
+                            @click.stop="$emit('blacklist', {item, index})"
+                          >
+                            {{ getWeTag(item).includes("blacklist") ? "移出黑名单" : "加入黑名单" }}
+                          </button>
+                        </view>
+
+                        <view class="ko-user__buttons" v-if="buttonPerm ? isPerm(buttonPerm) : true">
+                          <button
+                            class="ko-basic-button__user"
+                            v-for="(button, dx) of events"
+                            @click.stop="onEventItem(button, item, index, dx)"
+                            :key="dx"
+                            v-if="getShowEventButton(button, item, index, dx)"
+                          >
+                            {{ button.label }}
+                          </button>
+                          <button
+                            class="ko-basic-button__user"
+                            @click.stop="onMoreClick(item, index)"
+                            v-if="showMoreButton"
+                          >
+                            更多
+                          </button>
+                          <slot v-if="$slots.default" :node="item" :index="index"></slot>
+                        </view>
                       </view>
                     </view>
                   </BasicCard>
@@ -854,6 +869,10 @@ export default {
       }
     }
 
+    &.blacklist {
+      background: rgba(144, 147, 153, 0.3);
+    }
+
     /* #ifndef APP-NVUE */
     display: flex;
     /* #endif */
@@ -941,6 +960,12 @@ export default {
         border-color: #3F51B5;
         background: rgba(63, 81, 181, 0.1);
       }
+
+      &.blacklist {
+        color: #e43d33;
+        border-color: #e43d33;
+        background: rgba(228, 61, 51, 0.1);
+      }
     }
   }
 
@@ -997,7 +1022,6 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 20px;
     margin-top: 4rpx;
 
     .ko-basic-button__user {

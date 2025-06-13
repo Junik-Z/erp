@@ -16,7 +16,6 @@ export default {
     return {
       VM: null,
       image: "",
-
       error: false,
     };
   },
@@ -165,16 +164,21 @@ export default {
     computedList() {
       return [this.code, this.avatar];
     },
+
+    getLoagding() {
+      return !this.image && !this.error;
+    },
   },
 };
 </script>
 
 <template>
-  <view class="ko-qr-code-draw">
+  <view class="ko-qr-code-draw" :class="{loading: getLoagding}">
     <canvas
       v-show="!image || error"
       canvas-id="qr_code"
       style="width: 300px; height: 300px; position: absolute; z-index: 1;"
+      :style="{opacity: getLoagding ? 0: 1}"
     />
     <image
       v-show="image && !error"
@@ -182,8 +186,9 @@ export default {
       mode="aspectFill"
       show-menu-by-longpress="true"
       class="ko-qr-code-draw__image"
+      :style="{opacity: getLoagding ? 0: 1}"
     />
-    <view class="ko-qr-code-draw__loading" v-if="!image && !error">
+    <view class="ko-qr-code-draw__loading" v-if="getLoagding">
       <uv-loading-icon :size="60" />
     </view>
   </view>

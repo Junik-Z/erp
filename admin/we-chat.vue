@@ -1,5 +1,5 @@
 <script>
-import { _deepCopy, _isEmpty, _isEqual, CustomToast } from "@/utils";
+import { _deepCopy, _isEmpty, _isEqual, _omit, CustomToast } from "@/utils";
 import { getWxUsersApi, setUserTagApi } from "@/api/user";
 import TopMenus from "@/admin/components/TopMenus.vue";
 import mixins from "@/mixins/mixins";
@@ -15,7 +15,7 @@ export default {
   name: "we-chat",
   computed: {
     WX_USER_TAG_ENUMS() {
-      return WX_USER_TAG_ENUMS;
+      return _omit(_deepCopy(WX_USER_TAG_ENUMS), ["blacklist"]);
     },
   },
   components: {TopMenus},
@@ -132,6 +132,39 @@ export default {
           this.sLoading = false;
         });
     },
+
+    // 拉黑用户
+    onBlacklist({item}) {
+      let tags = _deepCopy((item.tags || "").split(",") || []);
+      // 已经在黑名单了
+      const isBlacklist = tags.includes("blacklist");
+
+      uni.showModal({
+        title: "温馨提示",
+        content: `您确定要将该用户${isBlacklist ? "移出" : "移入"}黑名单吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            if (isBlacklist) {
+              tags = tags.filter(v => !_isEqual(v, "blacklist"));
+            } else {
+              tags.push("blacklist");
+            }
+
+            const params = {userId: item.value, tags: tags.join(",")};
+            setUserTagApi(params)
+              .then(() => {
+                CustomToast({title: "操作成功", icon: "none"});
+                this.list = this.list.map(item => {
+                  if (_isEqual(item.userId, params.userId)) item.tags = params.tags;
+                  return item;
+                });
+              })
+              .finally(() => {
+              });
+          }
+        },
+      });
+    },
   },
 };
 </script>
@@ -161,6 +194,7 @@ export default {
           :events="[{label: '设置标签', func: 'setTag'}]"
           @click-event="onSetTag"
           is-we-chat
+          @blacklist="onBlacklist"
         />
       </view>
     </view>
@@ -169,7 +203,7 @@ export default {
       <view class="ko-we-chat__popup">
         <checkbox-group @change="onTagChange">
           <view class="ko-we-chat__popup--checkbox">
-            <label class="ko-we-chat__popup--item" v-for="(label, value) of WX_USER_TAG_ENUMS">
+            <label class="ko-we-chat__popup--item" v-for="(label, value) of WX_USER_TAG_ENUMS" :key="label">
               <checkbox
                 :value="value"
                 :checked="form.tags.includes(value)"

@@ -155,19 +155,6 @@ export default {
 </template>
 
 <style scoped lang="scss">
-.ko-top-black {
-  position: fixed;
-  top: var(--m-top);
-  height: var(--m-height);
-  left: 10px;
-  z-index: 999;
-  padding: 0;
-  width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
 .ko-detail {
   --primary-color: #3B82F6;
   --secondary-color: #60A5FA;

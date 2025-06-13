@@ -418,7 +418,7 @@ export default {
           stripe
           @row-click="onJumpInfo($event)"
 
-          @next-load="onLower"
+          @load-next="onLower"
           :no-more="noMore || loading"
 
           :no-refresh="noRefresh"

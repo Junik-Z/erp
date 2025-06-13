@@ -41,6 +41,9 @@ export default {
 
     // 超出2行显示省略号
     ellipsis2lines: Boolean,
+
+    // 调整阴影大小
+    minBoxShadow: Boolean,
   },
   components: {UniIcons, KNumberInput},
   methods: {
@@ -96,7 +99,7 @@ export default {
 <template>
   <view
     class="ko-goods-card glass"
-    :class="[type]"
+    :class="[type, {'min-box-shadow': minBoxShadow, 'is-supply': isSupply}]"
     :style="[imageSize ? {'--image-size': imageSize + 'px'} : {}]"
   >
     <view
@@ -175,17 +178,19 @@ export default {
             <text v-else>{{ toYuan(node.salePrice) }}</text>
           </view>
 
-          <view
-            v-if="isEditQuantity && !node.hasSub"
-            class="ko-goods-card__increase"
-            @click.stop
-          >
-            <KNumberInput :value="sCount" @input="onChangeCount" />
-          </view>
+          <block v-if="!isSupply">
+            <view
+              v-if="isEditQuantity && !node.hasSub"
+              class="ko-goods-card__increase"
+              @click.stop
+            >
+              <KNumberInput :value="sCount" @input="onChangeCount" />
+            </view>
 
-          <button v-else class="ko-goods-card__operate" @click.stop="onClickItem">
-            <uni-icons :type="isShopping && node.hasSub ? 'cart' : 'plusempty'" color="#fff" />
-          </button>
+            <button v-else class="ko-goods-card__operate" @click.stop="onClickItem">
+              <uni-icons :type="isShopping && node.hasSub ? 'cart' : 'plusempty'" color="#fff" />
+            </button>
+          </block>
         </view>
       </block>
     </view>
@@ -210,6 +215,11 @@ export default {
   //display: flex;
   //align-items: flex-start;
 
+  &.min-box-shadow {
+    box-shadow: 0 0 0 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid #e9e9eb;
+  }
+
   &.goods {
     display: flex;
     align-items: center;
@@ -223,6 +233,26 @@ export default {
 
     .ko-goods-card__wrap {
       flex: 1;
+    }
+  }
+
+  // 卖场模式
+  &.is-supply {
+    .ko-goods-card__name {
+      font-size: 14px;
+
+      &.ellipsis-2-lines {
+        line-height: 1.2; /* 建议设置行高 */
+        height: 2.3em; /* 最大高度 = 行高 × 行数（1.5 × 2） */
+      }
+    }
+
+    .ko-goods-card__footer {
+      margin-top: 2px;
+
+      .ko-basic-money {
+        font-size: 12px;
+      }
     }
   }
 

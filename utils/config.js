@@ -16,6 +16,9 @@ DEFAULT_PAGE_SIZE = 20;
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
 // #endif
 
+BASE_URL = "https://erp.kuaouyun.cn/api";
+BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
+
 let type = "develop";
 
 if (_isDev()) {
@@ -23,7 +26,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  type = "trial";
+  // type = "trial";
   // #endif
 
   // #ifdef H5
@@ -129,6 +132,7 @@ export const ROLE_LIST_ENUMS = {
  */
 export const PageEnums = {
   home: "/pages/home/home",
+  Index: "/pages/index/index",
 
   qrcode: "/erp/qrcode/qrcode",
   login: "/pages/login/login",
@@ -343,6 +347,8 @@ export const PageEnums = {
 
   // ———————————————— 大卖场 ————————————————
   hypermarket: "/shop/hypermarket",
+  // 设置推荐商品/设置活动商品
+  setRecommend: "/shop/recommend",
 };
 
 /**
@@ -562,30 +568,6 @@ export const PLATE_SPECIF_ENUMS = [
     name: "1220×2750",
     value: "1220×2750",
   },
-  /* {
-    name: "1220x2440x9",
-    value: "1220x2440x9",
-  },
-  {
-    name: "1220x2440x18",
-    value: "1220x2440x18",
-  },
-  {
-    name: "1220x2440x17",
-    value: "1220x2440x17",
-  },
-  {
-    name: "1220x2750x9",
-    value: "1220x2750x9",
-  },
-  {
-    name: "1220x2750x18",
-    value: "1220x2750x18",
-  },
-  {
-    name: "1220x2750x17",
-    value: "1220x2750x17",
-  }, */
 ];
 
 export const WAGE_TYPE_ENUMS = {
@@ -613,4 +595,5 @@ export const WX_USER_TAG_ENUMS = {
   supplierTag: "供应商",
   staffTag: "员工",
   logisticTag: "物流商",
+  blacklist: "黑名单",
 };

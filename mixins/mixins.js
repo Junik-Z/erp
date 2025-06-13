@@ -19,7 +19,7 @@ import {
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG, PageEnums } from "@/utils/config";
 import QS from "@/utils/qs.min";
-import { goLogin, logoutApi } from "@/api/user";
+import { goLogin, logoutApi, switchLogin } from "@/api/user";
 
 import { getSaleShareIdApi, shareOrderApi } from "@/api/erp/sale";
 import { getPurchaseShareIdApi } from "@/api/erp/purchase";
@@ -156,7 +156,7 @@ export default {
 
     // 处理重新登录
     onLogout(params = {}, path, noJump = false) {
-      let url = "/pages/home/home";
+      let url = this.$store.getters.sPath || PageEnums.home;
       // #ifdef H5
       url = "/pages/login/login";
       // #endif
@@ -173,12 +173,9 @@ export default {
 
             setTimeout(() => {
               const obj = _omit(params || {}, ["scene"]);
-              const query = {
-                PAGE_TYPE: "logout",
-                ...(obj || {}),
-              };
+              const query = {PAGE_TYPE: "logout", ...(obj || {})};
 
-              uni.clearStorageSync({});
+              uni.clearStorageSync();
 
               // #ifdef MP
               goLogin(params?.scene || "")
@@ -209,6 +206,18 @@ export default {
 
               uni.setStorageSync(NO_CLEAR_KEY, NoClear);
             }, 50);
+          });
+      });
+    },
+
+    // 切换登录
+    onSwitchLogin(params = {}) {
+      return new Promise((resolve, reject) => {
+        uni.$__IS_LOGOUT_FLAG__ = true;
+        switchLogin(params?.scene || "")
+          .then(resolve)
+          .finally(() => {
+            uni.$__IS_LOGOUT_FLAG__ = false;
           });
       });
     },
@@ -254,6 +263,9 @@ export default {
     // 处理查看图片
     lookImage(url) {
       if (url) {
+        // 标记为图片预览中
+        uni.$__LOOK_IMAGE_ING_FLAG__ = true;
+
         uni.previewImage({
           urls: [url],
         });
@@ -365,6 +377,23 @@ export default {
             url: PageEnums.home,
           });
         },
+      });
+    },
+
+    // 前往管理端
+    onGoHome() {
+      this.$store.dispatch("setSPathAsync", "");
+      this.$store.dispatch("setShowOptionAsync", {});
+
+      uni.reLaunch({
+        url: PageEnums.home,
+      });
+    },
+
+    // 拨打电话
+    onPhoneCell(text) {
+      uni.makePhoneCall({
+        phoneNumber: text,
       });
     },
   },

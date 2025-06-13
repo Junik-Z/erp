@@ -90,7 +90,7 @@ export default {
         uni._KO_TABLE_TIME_VM_ && clearTimeout(uni._KO_TABLE_TIME_VM_);
 
         uni._KO_TABLE_TIME_VM_ = setTimeout(() => {
-          this.$emit("next-load");
+          this.$emit("load-next");
         }, 100);
       }
     },

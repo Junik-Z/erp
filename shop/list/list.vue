@@ -728,7 +728,7 @@ export default {
             :columns="getTableColumns"
             :loading="loading"
             :data="list"
-            @next-load="onLower"
+            @load-next="onLower"
             :no-more="noMore || loading"
             @row-click="onSelect"
           />
