@@ -18,17 +18,17 @@ export default {
     <view class="icon-glow"></view>
 
     <button class="ko-mic__btn">
-      <uni-icons :size="iconSize" type="mic" color="#040F0A" />
+      <uni-icons :size="iconSize" type="mic" color="#fff" />
     </button>
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-mic {
-  border: 1px solid rgba(85, 214, 189, 0.8);
+  //border: 1px solid rgba(85, 214, 189, 0.8);
   padding: 4px;
   border-radius: 50%;
-  box-shadow: 0 4px 30px rgba(85, 214, 189, 0.4);
+  box-shadow: 0 4px 30px #7674CF;
 
   &__btn {
     line-height: 1.2;
@@ -38,7 +38,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(to top right, #0ECFE8 0%, #59DECB 20%, #6EDBAF 100%);
+    background: linear-gradient(to top right, #373CEE 0%, #5C83E8 20%, #BE84E6 80%, #CA6EEB 100%);
   }
 }
 
