@@ -390,6 +390,18 @@ export default {
       });
     },
 
+    // 前往地图
+    onGoMap(address) {
+      // #ifdef MP-WEIXIN
+      /* const obj = {name: address, location: {lat: "25.688443", lng: "114.751514"}};
+
+      uni.navigateToMiniProgram({
+        appId: "wx7643d5f831302ab0", // wx7643d5f831302ab0: 腾讯地图小程序
+        path: `pages/multiScheme/multiScheme?endLoc=${JSON.stringify(obj)}&qbMode=0`,
+      }); */
+      // #endif
+    },
+
     // 拨打电话
     onPhoneCell(text) {
       uni.makePhoneCall({
