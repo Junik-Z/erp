@@ -48,7 +48,7 @@ export default {
           this.list = this.onMergeArrays(this.list, data);
 
           this.sRemark = _get(this.list, "0.remark");
-          this.sName = _get(this.list, "0.name");
+          // this.sName = _get(this.list, "0.name");
 
           this.noMore = _isEmpty(data) || data.length < this.queryList.pageSize;
         });
@@ -63,7 +63,8 @@ export default {
 
     // 切换商户
     onSwitch(item) {
-      if (_isEqual(this.sName, item.name)) return false;
+      const cInfo = this.GET_CONFIG_INFO;
+      if (_isEqual(cInfo.name, item.name)) return false;
 
       this.onLogout(
         {
@@ -112,7 +113,12 @@ export default {
           @load-next="onLower"
         >
           <view style="padding: 16px;">
-            <BasicCard :spacing="10" v-for="item of list" :key="item.id" @click="onSwitch(item)">
+            <BasicCard
+              :spacing="10"
+              v-for="item of list"
+              :key="item.id"
+              @click="onSwitch(item)"
+            >
               <view style="font-size: 16px; display: flex; align-items: center; padding: 4px 0;">
                 <view style="display: flex; align-items: center; flex: 1;">
                   <uv-image

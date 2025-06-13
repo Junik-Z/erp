@@ -16,8 +16,8 @@ DEFAULT_PAGE_SIZE = 20;
 // BASE_WS_URL: "wss://erp.kuaouyun.cn/api/ws/app",
 // #endif
 
-BASE_URL = "https://erp.kuaouyun.cn/api";
-BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app";
+/* BASE_URL = "https://erp.kuaouyun.cn/api";
+BASE_WS_URL = "wss://erp.kuaouyun.cn/api/ws/app"; */
 
 let type = "develop";
 
@@ -26,7 +26,7 @@ if (_isDev()) {
   // type = "release";
 
   // #ifdef MP
-  // type = "trial";
+  type = "trial";
   // #endif
 
   // #ifdef H5
