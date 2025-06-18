@@ -121,6 +121,7 @@ export default {
                 <view
                   style="display: flex; align-items: center"
                   v-if="item.merchantAddress"
+                  @click.stop="onGoMap(item.merchantAddress)"
                 >
                   <uni-icons size="14" color="#000" type="location-filled" />
                   <text>{{ item.merchantAddress }}</text>

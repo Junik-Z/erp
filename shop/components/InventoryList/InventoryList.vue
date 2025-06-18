@@ -19,6 +19,9 @@ export default {
     fieldList: Array,
     isStock: Boolean,
     value: Array,
+
+    // 选中显示叉叉
+    fork: Boolean,
   },
 
   data() {
@@ -84,13 +87,13 @@ export default {
 
 <template>
   <view class="ko-inventory-list">
-    <view class="ko-inventory-list__header ko-basic-box-shadow">
-      <UniRow :gutter="10">
-        <UniCol v-for="item of columns" :key="item.key" :span="item.span">
-          <view class="ko-inventory-list__header--item">{{ item.label }}</view>
-        </UniCol>
-      </UniRow>
-    </view>
+    <!-- <view class="ko-inventory-list__header ko-basic-box-shadow">
+       <UniRow :gutter="10">
+         <UniCol v-for="item of columns" :key="item.key" :span="item.span">
+           <view class="ko-inventory-list__header&#45;&#45;item">{{ item.label }}</view>
+         </UniCol>
+       </UniRow>
+     </view>-->
 
     <view class="ko-inventory-list__content" :style="[getRootStyle]">
       <KoList
@@ -102,7 +105,7 @@ export default {
         <view class="ko-inventory-list__wrap">
           <view v-for="(item, key) of groupList" :key="key">
             <UniSection :title="item.key" type="line">
-              <BasicCard>
+              <BasicCard :padding-size="0">
                 <view class="ko-basic-table">
                   <view
                     class="ko-basic-table--th"
@@ -123,8 +126,19 @@ export default {
                       :class="[col.class || '', getCellClass(col, child)]"
                     >
                       <block v-if="col.isCheck">
-                        <view class="ko-inventory-list__cell--checked" @click.stop="onChecked(child)">
-                          <checkbox :checked="isSelection(child)" />
+                        <view
+                          class="ko-inventory-list__cell--checked"
+                          @click.stop="onChecked(child)"
+                          :class="{'is-fork': fork}"
+                        >
+                          <checkbox v-if="!fork" :checked="isSelection(child)" />
+
+                          <uni-icons
+                            color="#E43C33"
+                            v-if="isSelection(child) && fork"
+                            type="closeempty"
+                            size="20px"
+                          />
                         </view>
                       </block>
 
@@ -193,6 +207,18 @@ export default {
       align-items: center;
       justify-content: center;
       padding-left: 3px;
+
+      &.is-fork {
+        border: 1px solid #D1D1D1;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin: 0 6px;
+        padding: 0;
+      }
 
       &:before {
         content: " ";

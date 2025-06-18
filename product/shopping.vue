@@ -45,7 +45,7 @@ export default {
       bInfo: {},
 
       // 是否显示返回管理端
-      isToAdmin: false
+      isToAdmin: false,
     };
   },
   onLoad(option) {
@@ -230,7 +230,7 @@ export default {
     getBusinessInfo() {
       getShopInfoApi({tenantId: this.fScene})
         .then(res => {
-          this.bInfo = res.data;
+          this.bInfo = res.data || {};
         });
     },
   },
@@ -329,6 +329,7 @@ export default {
                   <view
                     style="display: flex; align-items: center"
                     v-if="sys.merchantAddress"
+                    @click.stop="onGoMap(sys.merchantAddress)"
                   >
                     <uni-icons size="14" color="#000" type="location-filled" />
                     <text>{{ sys.merchantAddress }}</text>
