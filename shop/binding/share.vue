@@ -19,12 +19,6 @@ export default {
 
       columnTable: [
         {
-          label: "",
-          key: "",
-          isCheck: true,
-          width: "40px",
-        },
-        {
           label: "名称",
           key: "name",
           isField: true,
@@ -38,6 +32,12 @@ export default {
           label: "销售",
           key: "salePrice",
           isPrice: true,
+        },
+        {
+          label: "",
+          key: "",
+          isCheck: true,
+          width: "40px",
         },
       ],
       FieldList: [],

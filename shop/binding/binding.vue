@@ -46,12 +46,6 @@ export default {
       FieldList: [],
       columnTable: [
         {
-          label: "",
-          key: "",
-          isCheck: true,
-          span: 2,
-        },
-        {
           label: "名称",
           key: "name",
           isField: true,
@@ -68,6 +62,12 @@ export default {
           key: "salePrice",
           isPrice: true,
           span: 5,
+        },
+        {
+          label: "",
+          key: "",
+          isCheck: true,
+          span: 2,
         },
       ],
       checked: [],
@@ -170,7 +170,6 @@ export default {
     },
 
     onSubmit() {
-
       if (this.isPerm("SHARE_RECEIVE_SHARE_PRODUCT")) {
         const extend = {};
         this.FieldList.forEach((item) => {
@@ -209,7 +208,6 @@ export default {
           content: "保存失败，您没有保存的权限，请联系管理员授权。",
         });
       }
-
     },
 
     onNext() {
@@ -327,6 +325,7 @@ export default {
           @check="onChecked"
           :value="checked"
           :loading="loading"
+          fork
         />
       </block>
 
@@ -341,6 +340,7 @@ export default {
           @check="onRepeatChecked"
           :value="repeat.checked"
           :loading="repeat.loading"
+          fork
         />
       </block>
 
