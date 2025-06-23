@@ -7,7 +7,10 @@ export default {
   components: {MicBtn},
   mixins: [mixins],
   data() {
-    return {};
+    return {
+      // 操作类型 0: 语音模式; 1: 输入模式; 2: 关闭
+      OType: 0,
+    };
   },
   methods: {},
   computed: {
@@ -33,7 +36,14 @@ export default {
     <view class="ko-ai-helper__bg" />
 
     <view class="ko-ai-helper__wrap">
-      <view class="ko-ai-helper__center"></view>
+      <view class="ko-ai-helper__center">
+        <image
+          class="ko-ai-helper__logo"
+          src="./static/images/202506181614.png"
+          alt=""
+          mode="widthFix"
+        />
+      </view>
 
       <view class="ko-ai-helper__footer">
         <view class="ko-ai-helper__operate">
@@ -69,8 +79,10 @@ export default {
 }
 
 .ko-ai-helper {
-  $gradient-bottom-right: linear-gradient(135deg, #B2CFDBff, #AAC9DCff, rgba(121, 165, 220, 0.9), #A3A5D8ff 86%, #B8ADDBff);
-  //$gradient-bottom: linear-gradient(180deg, #8ECCEDff, #B0D5F0ff, #D3D7EEff, #E6D5F1ff, #DFD3F6ff);
+  //$gradient-bottom-right: linear-gradient(135deg, #B2CFDBff, #AAC9DCff, rgba(121, 165, 220, 0.9), #A3A5D8ff 86%, #B8ADDBff);
+  //$gradient-bottom-right: linear-gradient(180deg, #8ECCEDff, #B0D5F0ff, #D3D7EEff, #E6D5F1ff, #DFD3F6ff);
+
+  $gradient-bottom-right: linear-gradient(180deg, #A4D3E5, #96CDE5, #9AC8E6, #A0C2E5, #ACBDE9, #A7B2E6);
 
   background: $gradient-bottom-right;
   //background-blend-mode: multiply; /* 混合模式 */
@@ -81,24 +93,40 @@ export default {
 
   &__bg {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border-radius: 30px;
 
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(216, 237, 248, 0.9);
+    box-shadow: inset 5px 5px 10px rgba(255, 255, 255, 0.6),
+    inset -5px -5px 10px rgba(255, 255, 255, 0.6),
+    5px 5px 10px rgba(255, 255, 255, 0.6),
+    -5px -5px 10px rgba(255, 255, 255, 0.6);
   }
 
   &__wrap {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    position: relative;
+    z-index: 3;
   }
 
   &__center {
     flex: 1;
+    padding: 20px;
+  }
+
+  &__logo {
+    width: 240px;
+    position: absolute;
+    left: -10px;
+    bottom: 100px;
   }
 
   &__footer {

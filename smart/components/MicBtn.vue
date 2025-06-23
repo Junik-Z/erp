@@ -15,7 +15,10 @@ export default {
 
 <template>
   <view class="ko-mic">
-    <view class="icon-glow"></view>
+    <view class="ko-mic__spinner-wrap">
+      <view class="ko-mic__spinner" />
+    </view>
+
 
     <button class="ko-mic__btn">
       <uni-icons :size="iconSize" type="mic" color="#fff" />
@@ -25,37 +28,67 @@ export default {
 
 <style scoped lang="scss">
 .ko-mic {
-  //border: 1px solid rgba(85, 214, 189, 0.8);
-  padding: 4px;
-  border-radius: 50%;
-  box-shadow: 0 4px 30px #7674CF;
+  --margin-size: 5px;
 
-  &__btn {
-    line-height: 1.2;
+  width: var(--mic-size);
+  height: var(--mic-size);
+  position: relative;
+
+  &__spinner-wrap {
+    background-image: linear-gradient(#5C83E8 35%, #BE84E6);
     width: var(--mic-size);
     height: var(--mic-size);
+    animation: spinning21 2.7s linear infinite;
+    text-align: center;
+    border-radius: 50px;
+    filter: blur(1px);
+    box-shadow: 0px -5px 20px 0px rgb(186, 66, 255), 0px 5px 20px 0px rgb(0, 225, 255);
+  }
+
+  &__spinner {
+    background-color: rgb(36, 36, 36);
+    width: var(--mic-size);
+    height: var(--mic-size);
+    border-radius: 50px;
+    filter: blur(10px);
+  }
+
+  &__btn {
+    position: absolute;
+    top: var(--margin-size);
+    right: var(--margin-size);
+    bottom: var(--margin-size);
+    left: var(--margin-size);
     border-radius: 50%;
+    background: linear-gradient(to top right, #373CEE 0%, #5C83E8 20%, #BE84E6 80%, #CA6EEB 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(to top right, #373CEE 0%, #5C83E8 20%, #BE84E6 80%, #CA6EEB 100%);
+
+    /*background-blend-mode: multiply; !* 混合模式 *!
+    background-size: 400% 400%;
+    animation: WaveHelper 4s ease-in-out infinite;*/
   }
 }
 
-.icon-glow {
-  background-color: rgba(100, 170, 255, 0.25);
-  filter: blur(20px);
-  animation: pulse 3s infinite alternate ease-in-out;
+@keyframes spinning21 {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.2;
+
+// 背景动画
+@keyframes WaveHelper {
+  0% {
+    background-position: 80% 20%;
   }
   50% {
-    transform: scale(1.2);
-    opacity: 0.4;
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 20% 80%;
   }
 }
+
 </style>
