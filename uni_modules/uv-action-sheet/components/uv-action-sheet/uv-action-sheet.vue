@@ -7,7 +7,7 @@
     :close-on-click-overlay="closeOnClickOverlay"
     @change="popupChange"
   >
-    <view class="uv-action-sheet">
+    <view class="uv-action-sheet" :class="{'is-goods': isGoods}">
       <view
         class="uv-action-sheet__header"
         v-if="title"
@@ -34,6 +34,7 @@
           <view v-for="(item, index) in actions" :key="index">
             <!-- #ifdef MP -->
             <button
+              v-if="!item.openType"
               class="uv-reset-button"
               :open-type="item.openType"
               :data-params="item.dataParams"
@@ -81,16 +82,46 @@
               </view>
               <!-- #ifdef MP -->
             </button>
+
+            <button
+              v-else
+              :key="index"
+              class="uv-reset-button"
+              :open-type="item.openType"
+              :data-params="item.params"
+              @tap="selectHandler(index)"
+            >
+              <view
+                class="uv-action-sheet__item-wrap__item"
+                :hover-class="!item.disabled && !item.loading ? 'uv-action-sheet--hover' : ''"
+                :hover-stay-time="150"
+              >
+                <template v-if="!item.loading">
+                  <text
+                    class="uv-action-sheet__item-wrap__item__name"
+                    :style="[itemStyle(index)]"
+                  >{{ item.name }}
+                  </text>
+                  <text
+                    v-if="item.subname"
+                    class="uv-action-sheet__item-wrap__item__subname"
+                  >{{ item.subname }}
+                  </text>
+                </template>
+                <uv-loading-icon
+                  v-else
+                  custom-class="van-action-sheet__loading"
+                  size="18"
+                  mode="circle"
+                />
+              </view>
+            </button>
             <!-- #endif -->
+
             <view class="ko-basic-border__bottom" v-if="index !== actions.length - 1"></view>
           </view>
         </view>
       </slot>
-      <uv-gap
-        bgColor="#eaeaec"
-        height="6"
-        v-if="cancelText"
-      ></uv-gap>
       <view hover-class="uv-action-sheet--hover">
         <text
           @touchmove.stop.prevent
@@ -98,7 +129,8 @@
           v-if="cancelText"
           class="uv-action-sheet__cancel-text"
           @tap="cancel"
-        >{{ cancelText }}
+        >
+          {{ cancelText }}
         </text>
       </view>
     </view>
@@ -147,6 +179,9 @@ export default {
   name: "uv-action-sheet",
   mixins: [openType, button, mpMixin, mixin, props],
   emits: ["close", "select"],
+  props: {
+    isGoods: Boolean,
+  },
   computed: {
     // 操作项目的样式
     itemStyle() {
@@ -269,6 +304,7 @@ $uv-action-sheet-cancel-text-hover-background-color: rgb(242, 243, 245) !default
   }
 
   &__cancel-text {
+    border-top: 4px solid #EAEAEC;
     font-size: $uv-action-sheet-cancel-text-font-size;
     color: $uv-action-sheet-cancel-text-color;
     text-align: center;
@@ -277,6 +313,10 @@ $uv-action-sheet-cancel-text-hover-background-color: rgb(242, 243, 245) !default
 
   &--hover {
     background-color: $uv-action-sheet-cancel-text-hover-background-color;
+  }
+
+  &.is-goods {
+    padding-bottom: 80px;
   }
 }
 </style>

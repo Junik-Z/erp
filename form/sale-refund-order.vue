@@ -6,7 +6,7 @@ import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniForms from "@/uni_modules/uni-forms/components/uni-forms/uni-forms.vue";
 import UniDataSelect from "./components/uni-data-select/components/uni-data-select/uni-data-select.vue";
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
-import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import {
   addedSaleReturnApi,
   getBindInfoApi,
@@ -19,11 +19,13 @@ import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import mixins from "@/mixins/mixins";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import FeesList from "@/components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
+import PickerAddress from "@/components/PickerAddress.vue";
 
 export default {
   name: "SaleRefundOrder",
   components: {
+    PickerAddress,
     FeesList,
     PickerUser,
     UniSegmentedControl,
@@ -66,6 +68,11 @@ export default {
 
       isAgain: false,
       isNormal: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
     };
   },
   created() {
@@ -98,21 +105,33 @@ export default {
 
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
-          this.isAgain = ["FINISHED"].includes(params.status) && !this.orderId;
+          this.isAgain = ["WAIT_PAY"].includes(params.status) && !this.orderId;
           this.form = params;
           console.log(res);
         });
     },
 
     onSubmit() {
-      this.$refs.FormRef.validate(valid => {
+      this.$refs.FormRef.validate(async (valid) => {
         if (!valid) {
           const params = _deepCopy(this.form);
+
+          await this.isTxFillPrices();
+
           console.log(params);
           params.totalAmount = yuanToPoints(params.totalAmount);
 
           if (this.orderId) {
             params.saleOrderId = this.orderId;
+          }
+
+          if (this.current === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.current === 1) {
+            params.supplierId = "";
           }
 
           this.loading = true;
@@ -144,20 +163,28 @@ export default {
 
     // 获取绑定的客户列表
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
 
-          if (this.bindList.length) {
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
+
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.current = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.current = 1;
+            }
           }
         });
     },
@@ -169,15 +196,25 @@ export default {
     },
 
     onTabItem() {
-      if (this.current === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
+      /*  if (this.current === 0) {
+         this.form.otherSupplier = "";
+         this.form.otherSupplierPhone = "";
+       }
 
-      if (this.current === 1) {
-        this.form.supplierId = "";
-      }
+       if (this.current === 1) {
+         this.form.supplierId = "";
+       } */
+    },
 
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
+    },
+  },
+  computed: {
+    noCustomerPerm() {
+      return this.isPerm("CUSTOMER_LIST");
     },
   },
 };
@@ -185,6 +222,9 @@ export default {
 
 <template>
   <view class="ko-refund ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniForms
       :model="form"
       label-width="120px"
@@ -193,7 +233,7 @@ export default {
     >
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="margin: 0 30px 20px;" v-if="!isClient">
+          <view style="margin: 0 30px 20px;" v-if="!isClient && noCustomerPerm">
             <UniSegmentedControl
               :current.sync="current"
               :values="tabs"
@@ -202,29 +242,7 @@ export default {
             />
           </view>
 
-          <UniFormsItem label="客户：" v-if="false" name="supplierId">
-            <PickerUser
-              style="width: 100%;"
-              is-input
-              title="选择客户"
-              v-model="form.supplierId"
-              type="client"
-              :disabled="!!orderId"
-              ref="UserRef"
-              :is-long-list="isClient"
-              :options="bindList"
-              @input="onSupplierId"
-              v-if="isClient ? bindList.length : true"
-            />
-            <UniEasyinput
-              v-else
-              v-model="form.otherSupplier"
-              style="width: 100%;"
-              placeholder="请输入"
-            />
-          </UniFormsItem>
-
-          <template v-if="isClient ? bindList.length : current === 0">
+          <template v-if="(isClient ? bindList.length : current === 0) && noCustomerPerm">
             <UniFormsItem label="客户：" name="supplierId">
               <PickerUser
                 style="width: 100%;"
@@ -234,14 +252,17 @@ export default {
                 :disabled="!!orderId"
                 type="client"
                 ref="UserRef"
-                :is-long-list="isClient"
+                :is-long-list="isClient || !!bindList.length"
                 :options="bindList"
                 @input="onSupplierId"
+
+                :placeholder-label="GET_FUNC(form, 'customer.name')"
+                @lower="onLower"
               />
             </UniFormsItem>
           </template>
 
-          <template v-else>
+          <template v-if="!(isClient ? bindList.length : current === 0) || !noCustomerPerm">
             <UniFormsItem :label="`${isClient ? '姓名' : '姓名'}：`" name="otherSupplier">
               <UniEasyinput
                 v-model="form.otherSupplier"
@@ -259,11 +280,18 @@ export default {
             <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
           </UniFormsItem>
           <UniFormsItem label="地址：" name="orderAddress">
-            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+            <view style="display: flex; align-items: center; width: 100%">
+              <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+              <PickerAddress
+                v-if="form.supplierId && isPerm('CUSTOMER_ADDRESS_LIST')"
+                :supplierId="form.supplierId"
+                v-model="form.orderAddress"
+                type="sale"
+              />
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
-
 
       <UniSection title="退货产品明细" type="line">
         <view style="padding: 10px;">
@@ -276,6 +304,13 @@ export default {
                 type="sale"
                 :is-client="isClient"
                 is-actual
+
+                is-show-recent
+                :supplier-id="form.supplierId"
+                :order-address="form.orderAddress"
+
+                :is-fill="isTkCustom && isPerm('FILL_CUSTOMER_PRICE')"
+                :fill-info.sync="TK_FILL_INFO"
               />
             </view>
           </UniFormsItem>

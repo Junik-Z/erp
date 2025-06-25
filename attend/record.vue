@@ -142,6 +142,9 @@ export default {
 
 <template>
   <view class="ko-record">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <view style="padding: 10px;">
       <PickerDate
         mode="year-month"
@@ -220,7 +223,7 @@ export default {
         empty-text="暂无数据"
         stripe
 
-        @next-load="onRequestNextPage"
+        @load-next="onRequestNextPage"
         :no-more="noMore || loading"
       />
     </view>-->

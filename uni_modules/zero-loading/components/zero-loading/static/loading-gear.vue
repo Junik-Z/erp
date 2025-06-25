@@ -2,19 +2,19 @@
   <view class="animations">
     <view class="box">
       <view class="gear1">
-        <view class="inner inner1"> </view>
-        <view class="inner inner2"> </view>
-        <view class="inner inner3"> </view>
+        <view class="inner inner1"></view>
+        <view class="inner inner2"></view>
+        <view class="inner inner3"></view>
       </view>
       <view class="gear2">
-        <view class="inner inner1"> </view>
-        <view class="inner inner2"> </view>
-        <view class="inner inner3"> </view>
+        <view class="inner inner1"></view>
+        <view class="inner inner2"></view>
+        <view class="inner inner3"></view>
       </view>
       <view class="gear3">
-        <view class="inner inner1"> </view>
-        <view class="inner inner2"> </view>
-        <view class="inner inner3"> </view>
+        <view class="inner inner1"></view>
+        <view class="inner inner2"></view>
+        <view class="inner inner3"></view>
       </view>
     </view>
   </view>
@@ -32,6 +32,12 @@ export default {
 <style lang="scss" scoped>
 $size: 80rpx;
 $bgc: red;
+
+.animations {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .box {
   width: 200rpx;
@@ -89,6 +95,7 @@ $bgc: red;
   left: 110rpx;
   animation: rotateR 5s infinite linear;
 }
+
 .gear3 {
   @include gear(50rpx, #f0ad4e);
   position: absolute;
@@ -106,6 +113,7 @@ $bgc: red;
     transform: rotate(360deg);
   }
 }
+
 @keyframes rotateR {
   from {
     transform: rotate(0deg);

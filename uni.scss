@@ -1,37 +1,35 @@
 @import '@/uni_modules/uni-scss/variables.scss';
-@import "@/static/iconfont/index.scss";
 
 // #ifdef H5
-@import "@/uni_modules/element-ui/element.min.css";
-
-body {
-  font-size: 14px;
-}
-
 $base-font-size: 136.6; // var(--ko-html-size);
+$--ko-print-font-size: 11pt;
 
-@function px2rem ($px, $base: $base-font-size) {
-  @return ($px / $base) * 1rem
+
+// 打印模块的样式
+@mixin print-style() {
+  font-family: "华文楷体", "KaiTi", sans-serif;
+  font-size: calc(var(--ko-paper-min-height, 16px) - 2px);
 }
 
-* {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
+// 打印模块标题的样式
+@mixin print-header-style() {
+  font-family: "Microsoft YaHei", Arial, sans-serif;
+  font-weight: bold;
+  font-size: 18pt;
 }
 
-.ko-basic-tabs-list {
+// 天科打印模块的样式
+@mixin tk-print-style() {
+  font-family: "华文楷体", "KaiTi", sans-serif;
+  font-size: 13px;
+  min-height: 14px;
+  line-height: 14px;
 }
 
 // #endif
 
 $ko-basic-border: 0.5px solid #dcdcdc;
 $ko-primary-color: #2979ff;
-
-page, view, text, video, image, button, rich-text, progress, scroll-view {
-  box-sizing: border-box;
-}
-
 
 // 超出换行
 @mixin basic-text-ellipsis($line: 2, $lineHeight: 1.3em) {
@@ -43,277 +41,3 @@ page, view, text, video, image, button, rich-text, progress, scroll-view {
   max-height: calc($lineHeight * $line);
   line-height: $lineHeight;
 }
-
-button {
-  border: none;
-  outline: none;
-  background-color: initial;
-  box-shadow: none;
-  margin-left: initial;
-  margin-right: initial;
-  padding-left: initial;
-  padding-right: initial;
-  border-width: 0;
-  padding-block: 0;
-}
-
-button::after {
-  border: none;
-  display: none;
-}
-
-.ko-basic-border__bottom {
-  border-bottom: 0.5px solid #c7c9ce;
-}
-
-// 通用主按钮
-.ko-basic-button {
-  border-radius: 55px;
-  background: $ko-primary-color;
-  color: #fff;
-  padding: 0 15px;
-
-  // #ifdef H5
-  border: 0.1px solid transparent;
-
-  &[disabled="disabled"] {
-    opacity: 0.6;
-  }
-
-  // #endif
-}
-
-.ko-basic-button__card {
-  border-radius: 55px;
-  background: $ko-primary-color;
-  color: #fff;
-  font-size: 12px;
-  padding: 8px 12px;
-  line-height: 1.2;
-  white-space: nowrap;
-
-  // #ifdef H5
-  border: 0.1px solid transparent;
-
-  &[disabled="disabled"] {
-    opacity: 0.6;
-  }
-
-  // #endif
-
-  & + .ko-basic-button__card {
-    margin-left: 6px;
-  }
-}
-
-.ko-basic-button__user {
-  border-radius: 55px;
-  background: $ko-primary-color;
-  color: #fff;
-  font-size: 11px;
-  padding: 6px 10px;
-  line-height: 1.2;
-
-  // #ifdef H5
-  border: 0.1px solid transparent;
-
-  &[disabled="disabled"] {
-    opacity: 0.6;
-  }
-
-  // #endif
-
-  & + .ko-basic-button__user {
-    margin-left: 6px;
-  }
-}
-
-.ko-basic-box-shadow {
-  box-shadow: $uni-shadow-base;
-
-  // 0 1px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2)
-  &__top {
-    box-shadow: 0 -8px 8px 1px rgba($color: #a5a5a5, $alpha: 0.2);
-  }
-}
-
-.ko-basic-label {
-  color: $uni-info;
-
-  &__images-wrap {
-    display: flex;
-    align-items: center;
-  }
-}
-
-.ko-basic-money {
-  color: #e43d33;
-  font-weight: bold;
-}
-
-.ko-basic-footer {
-  height: 80px;
-  padding: 10px 10px 26px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 9;
-  background: #FFF;
-  box-shadow: $uni-shadow-base;
-}
-
-.ko-basic-count {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  box-shadow: $uni-shadow-base;
-  padding: 6px 0;
-
-  &__wrap {
-    padding: 4px;
-  }
-
-  &__label {
-    padding: 6px 0 0;
-    // #ifdef MP
-    font-size: 12px;
-    // #endif
-  }
-
-  &__info {
-    padding: 6px 0;
-    // #ifdef MP
-    font-size: 14px;
-    // #endif
-
-    &--unit {
-      margin-left: 2px;
-    }
-  }
-}
-
-.ko-link {
-  color: #4177f6;
-}
-
-.ko-basic-table {
-  $border-color: #e9e9eb;
-  display: grid;
-  grid-template-columns: var(--ko-basic-table-grid-col);
-  white-space: break-spaces;
-  box-sizing: border-box;
-  border-left: 1px solid $border-color;
-  border-top: 1px solid $border-color;
-
-  &--th {
-    text-align: center;
-    border-bottom: 1px solid $border-color;
-    padding: 6px 2px;
-    font-size: 12px;
-    font-weight: bold;
-    border-right: 1px solid $border-color;
-  }
-
-  &--cell {
-    text-align: center;
-    border-bottom: 1px solid $border-color;
-    padding: 6px 2px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid $border-color;
-
-    .ko-basic-button__card {
-      padding: 4px 8px;
-      font-size: 12px;
-      margin: 2px;
-    }
-  }
-}
-
-
-// #ifdef H5
-$--ko-print-font-size: 11pt;
-
-.uni-section-content .uni-forms-item {
-  //max-width: 800px;
-}
-
-.ko-basic-button {
-  max-width: 260px;
-}
-
-.ko-basic-popup {
-  max-width: 900px;
-
-  .uni-forms-item__content {
-    width: 300px;
-  }
-
-  .ko-basic-popup__wrap {
-  }
-
-  .ko-basic-button {
-    margin: 0 auto !important;
-  }
-}
-
-.ko-basic-page-background {
-  background: -webkit-radial-gradient(50% 35%, farthest-corner, #034f8e, #034987, #02366d, #002353);
-  background: radial-gradient(50% 35%, farthest-corner, #034f8e, #034987, #02366d, #002353);
-  color: #fff;
-}
-
-.ko-basic-count {
-  &__label {
-    font-size: px2rem(18);
-    padding: px2rem(20) 0 0;
-  }
-
-  &__info {
-    padding: px2rem(20) 0;
-  }
-
-  /deep/ .uv-count-num {
-    span {
-      font-size: px2rem(30)
-    }
-  }
-}
-
-.uni-section__content-title.distraction {
-  font-size: 18px !important;
-  font-weight: bold;
-}
-
-.ko-basic-added-form {
-  width: 1024px;
-  margin: 0 auto;
-}
-
-// 打印模块的样式
-@mixin print-style() {
-  font-family: "华文楷体", "KaiTi", sans-serif;
-  //font-family: "Microsoft YaHei", Arial, sans-serif;
-  //font-weight: 500;
-  font-size: 11pt;
-}
-
-// 打印模块标题的样式
-@mixin print-header-style() {
-  //font-family: "华文楷体", "KaiTi", sans-serif;
-  font-family: "Microsoft YaHei", Arial, sans-serif;
-  font-weight: bold;
-  font-size: 18pt;
-}
-
-.ko-basic__content {
-  width: 1024px;
-  margin: 0 auto;
-}
-
-// #endif

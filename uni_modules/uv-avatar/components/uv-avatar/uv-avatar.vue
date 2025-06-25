@@ -39,7 +39,7 @@
       <text
         v-if="!(src) && getText"
         :style="{fontSize: fontSize,color: color}"
-        style="display: flex; align-items: center; justify-content: center"
+        style="display: flex; align-items: center; justify-content: center;"
       >
         {{ getText }}
       </text>

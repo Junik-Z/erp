@@ -4,7 +4,7 @@ import { PageEnums } from "@/utils/config";
 import { _isEmpty, _isEqual } from "@/utils";
 import InventoryList from "@/shop/components/InventoryList/InventoryList.vue";
 import mixins from "@/mixins/mixins";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import PickerClass from "../components/PickerClass/PickerClass.vue";
 
 export default {
   name: "share",
@@ -19,28 +19,25 @@ export default {
 
       columnTable: [
         {
-          label: "",
-          key: "",
-          isCheck: true,
-          span: 2,
-        },
-        {
           label: "名称",
           key: "name",
           isField: true,
-          span: 12,
         },
         {
           label: "采购",
           key: "purchasePrice",
           isPrice: true,
-          span: 5,
         },
         {
           label: "销售",
           key: "salePrice",
           isPrice: true,
-          span: 5,
+        },
+        {
+          label: "",
+          key: "",
+          isCheck: true,
+          width: "40px",
         },
       ],
       FieldList: [],
@@ -158,7 +155,6 @@ export default {
         :loading="loading"
       />
     </view>
-
     <view class="ko-share__checked ko-basic-box-shadow">
       <button class="ko-basic-button__card" @click="onUnshare">
         全选

@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { Tree } from "@/uni_modules/element-ui/element.min";
-// #endif
 import {
   deleteProductApi,
   getDetailApi,
@@ -13,17 +10,18 @@ import {
 } from "@/api/erp/product";
 import { _deepCopy, _isEmpty, _isEqual } from "@/utils";
 import mixins from "@/mixins/mixins";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import PickerClass from "./PickerClass/PickerClass.vue";
 import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sheet/uv-action-sheet.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import KoMovable from "@/components/Movable/index.vue";
 import { PageEnums } from "@/utils/config";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
+import GoodsMixins from "../../mixins/GoodsMixins";
 
 export default {
   name: "ProductList",
-  mixins: [mixins],
+  mixins: [mixins, GoodsMixins],
   components: {
     UniSearchBar,
     KoMovable,
@@ -31,18 +29,16 @@ export default {
     IndexList,
     UvActionSheet,
     PickerClass,
-    // #ifdef H5
-    Tree,
-    // #endif
   },
   data() {
     return {
-      content: [
+      MOVABLE_LIST: [
         // #ifdef MP
         {
           text: "分享",
           iconfont: "icon-icon-test",
           path: PageEnums.shareProduct,
+          perm: "SHARE_PRODUCT",
           /* openType: "share",
           params: {
             title: `邀请您绑定产品！`,
@@ -57,6 +53,7 @@ export default {
           text: "新增",
           iconfont: "icon-tianjia",
           path: PageEnums.addedProduct,
+          perm: "PRODUCT_ADD",
         },
       ],
 
@@ -149,7 +146,7 @@ export default {
       });
     },
 
-    onRemove(row) {
+    onRemove(row, index) {
       uni.showModal({
         title: "温馨提示",
         content: `您确定要删除 ${row.name} 产品吗？`,
@@ -160,7 +157,7 @@ export default {
               .then(() => {
                 uni.showToast({title: "删除成功"});
                 // this.getList(true);
-                this.list.splice(this.nodeIndex, 1);
+                this.list.splice(index || this.nodeIndex, 1);
               });
           }
         },
@@ -209,6 +206,7 @@ export default {
     onActionClick(item, index) {
       this.node = item;
       this.nodeIndex = index;
+
       this.$refs.UASRef.open();
     },
 
@@ -306,28 +304,31 @@ export default {
   computed: {
     getActionsList() {
       return () => {
-        if (!this.isPerm("Product_Write")) return [];
         const {saleOff, purchaseOff} = this.node || {};
 
         return [
           {
             name: saleOff ? "上架销售" : "下架销售",
             func: "upDownSale",
+            perm: "PRODUCT_UPDOWN_SALE",
           },
           {
             name: purchaseOff ? "上架采购" : "下架采购",
             func: "upDownPurchase",
+            perm: "PRODUCT_UPDOWN_PURCHASE",
           },
           {
             name: "编辑",
             func: "onFabClick",
+            perm: "PRODUCT_EDIT",
           },
           {
             name: "删除",
             color: "#e43d33",
             func: "onRemove",
+            perm: "PRODUCT_DELETE",
           },
-        ];
+        ].filter(item => this.isPerm(item.perm));
       };
     },
 
@@ -439,6 +440,15 @@ export default {
         >
           <i class="iconfont" :class="[isHideStockPrice ? 'icon-xianshi' : 'icon-mimaxianshiyincang-']"></i>
         </button>
+
+        <!-- #ifdef MP -->
+        <button
+          class="ko-basic-button__card"
+          @click="setProductStyle"
+        >
+          <uni-icons color="#fff" :type="!getProductStyle ? 'list' : 'tune-filled'"></uni-icons>
+        </button>
+        <!-- #endif -->
       </view>
 
       <view class="ko-product__list">
@@ -464,7 +474,7 @@ export default {
         <!-- #ifdef H5 -->
         <div class="ko-product__list--center" style="height: 100%;">
           <div style="height: 100%; overflow-y: auto;">
-            <Tree
+            <el-tree
               node-key="id"
               ref="TreeRef"
               :data="classList"
@@ -485,32 +495,36 @@ export default {
               :data="list"
               empty-text="暂无数据"
               stripe
-              @next-load="onLower"
+              @load-next="onLower"
               :no-more="noMore || loading"
             >
-              <template #operate="{item, index}" v-if="isPerm('Product_Write')">
+              <template #operate="{item, index}">
                 <view style="display: flex; align-items: center; justify-content: center;">
                   <button
                     class="ko-basic-button__card"
                     @click.stop="upDownSale(item, index)"
+                    v-if="isPerm('PRODUCT_UPDOWN_SALE')"
                   >
                     {{ item.saleOff ? "上架销售" : "下架销售" }}
                   </button>
                   <button
                     class="ko-basic-button__card"
                     @click.stop="upDownPurchase(item, index)"
+                    v-if="isPerm('PRODUCT_UPDOWN_PURCHASE')"
                   >
                     {{ item.purchaseOff ? "上架采购" : "下架采购" }}
                   </button>
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onFabClick(item, index)"
+                    v-if="isPerm('PRODUCT_EDIT')"
                   >
                     编辑
                   </button>
                   <button
                     class="ko-basic-button__card"
                     @click.stop="onRemove(item, index)"
+                    v-if="isPerm('PRODUCT_DELETE')"
                   >
                     删除
                   </button>
@@ -535,8 +549,9 @@ export default {
     </view>
 
     <KoMovable
-      v-if="isPerm('Product_Write') && !isChecked"
-      :content="content"
+      :content="GET_MOVABLE_LIST"
+      v-if="isShowMovable && !isChecked"
+
       @click="onTrigger"
     />
 
@@ -559,7 +574,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 0 10px 15px;
+    padding: 0 10px;
     // #ifdef H5
     width: 1000px;
     margin: 0 auto;
@@ -603,7 +618,7 @@ export default {
       display: flex;
       padding: 10px;
 
-      /deep/ .el-tree {
+      ::v-deep .el-tree {
         width: 260px;
         margin-right: 20px;
         border: 1px solid #EBEEF5;

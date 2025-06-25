@@ -1,11 +1,9 @@
 <script>
 import mixins from "@/mixins/mixins";
-import { Col, Row } from "@/uni_modules/element-ui/element.min";
 
 export default {
   name: "PrintHeader",
   mixins: [mixins],
-  components: {Row, Col},
   props: {
     title: String,
     node: {
@@ -30,28 +28,28 @@ export default {
 <template>
   <div class="ko-print-header">
     <h2>{{ title }}</h2>
-    <Row class="ko-print-header__info" :gutter="10">
-      <Col :span="9" class="ko-print-header__info--item">
+    <el-row class="ko-print-header__info" :gutter="10">
+      <el-col :span="9" class="ko-print-header__info--item">
         <label>订单编号：</label>
         <span>{{ node.orderCode }}</span>
-      </Col>
-      <Col :span="8" class="ko-print-header__info--item no1">
+      </el-col>
+      <el-col :span="8" class="ko-print-header__info--item no1">
         <label>订单日期：</label>
-        <span>{{ node.createTime }}</span>
-      </Col>
-      <Col :span="7" class="ko-print-header__info--item">
+        <span>{{ node.updateTime }}</span>
+      </el-col>
+      <el-col :span="7" class="ko-print-header__info--item">
         <label>客户名称：</label>
         <span>{{ GET_FUNC(node || {}, "customer.name") }}</span>
-      </Col>
-      <Col :span="9" class="ko-print-header__info--item">
+      </el-col>
+      <el-col :span="9" class="ko-print-header__info--item">
         <label>联系电话：</label>
         <span>{{ node.orderPhone }}</span>
-      </Col>
-      <Col :span="15" class="ko-print-header__info--item">
+      </el-col>
+      <el-col :span="15" class="ko-print-header__info--item">
         <label>配送地址：</label>
         <span>{{ node.orderAddress }}</span>
-      </Col>
-    </Row>
+      </el-col>
+    </el-row>
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 <script>
-import { getRect } from "@/utils";
+import { _get, getRect } from "@/utils";
 
 export default {
   name: "KoMovable",
@@ -81,6 +81,16 @@ export default {
         "--ko-movable-count": this.content.length,
       };
     },
+
+    // 只有分享功能
+    isOnlyShare() {
+      return this.content?.length === 1 && !!_get(this.content || [], "0.openType");
+    },
+
+    // 获取分享按钮信息
+    getShareInfo() {
+      return this.isOnlyShare ? _get(this.content || [], "0") : {};
+    },
   },
 };
 </script>
@@ -109,6 +119,7 @@ export default {
               @click="_onItemClick(index, item, $event)"
               :open-type="item.openType"
               :data-params="item.params"
+              :disabled="item.disabled"
             >
               <image
                 v-if="item.iconPath"
@@ -124,7 +135,24 @@ export default {
           </view>
         </view>
 
-        <button class="ko-movable__button" :class="{'active': isShow}" @click="onClick">
+        <button
+          class="ko-movable__button"
+          :class="{'active': isShow}"
+          :open-type="getShareInfo.openType"
+          :data-params="getShareInfo.params"
+          v-if="isOnlyShare"
+        >
+          <slot>
+            <i class="iconfont icon-tianjia"></i>
+          </slot>
+        </button>
+
+        <button
+          class="ko-movable__button"
+          :class="{'active': isShow}"
+          @click="onClick"
+          v-else
+        >
           <slot>
             <i class="iconfont icon-tianjia"></i>
           </slot>
@@ -206,10 +234,10 @@ $uni-shadow-base: 0 1px 5px 2px rgba($color: #000000, $alpha: 0.3) !default;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-
       border-radius: 0;
       height: 60px;
       padding: 2px 10px;
+      color: #333;
 
       &--image {
         width: 25px;
@@ -227,7 +255,6 @@ $uni-shadow-base: 0 1px 5px 2px rgba($color: #000000, $alpha: 0.3) !default;
 
       &--text {
         font-size: 12px;
-        color: #333;
       }
     }
   }

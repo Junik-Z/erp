@@ -111,6 +111,17 @@ export function removeProduceApi(data) {
 }
 
 /**
+ * @description 修改物料
+ */
+export function updateMaterialApi(data) {
+  return request({
+    url: "/produce/updateMaterial",
+    method: "post",
+    data,
+  });
+}
+
+/**
  * @description 申请生产物料
  */
 export function applyMaterialProduceApi(data) {
@@ -421,6 +432,17 @@ export function getOrderCodeDetailApi(data) {
 }
 
 /**
+ * @description 获取我的生产工单
+ */
+export function getMyWaitingApi(data) {
+  return request({
+    url: "/craft/myWaiting",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取生产工单详情
  */
 export function getProduceOrderCodeDetailApi(data) {
@@ -464,6 +486,17 @@ export function updateSaleProduceApi(data) {
   });
 }
 
+/**
+ * @description 销售重新下单
+ */
+export function reOrderSaleProduceApi(data) {
+  return request({
+    url: "/sale/produce/reOrder",
+    method: "post",
+    data,
+  });
+}
+
 // ———————————————————— 修改生产中的工单 —————————————————————— */
 
 /**
@@ -494,6 +527,17 @@ export function completeCraftApi(data) {
 export function recoverCraftApi(data) {
   return request({
     url: "/craft/recover",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 回退结算
+ */
+export function rollbackSettleApi(data) {
+  return request({
+    url: "/craft/rollbackSettle",
     method: "post",
     data,
   });
@@ -560,4 +604,45 @@ export function removeNCProgramsApi(data) {
       data,
     },
   );
+}
+
+
+// —————————————————— 获取员工工资列表 ——————————————————————
+export function getSalaryListApi(data) {
+  return request({url: "/staff/salary-list", method: "get", data});
+}
+
+/**
+ * @description 获取订单二维码
+ */
+export function getSaleOrderCodeApi(data) {
+  return request({url: "/sale/order-code", method: "get", data});
+}
+
+/**
+ * @description 添加员工补贴
+ */
+export function addSubsidyApi(data) {
+  return request({url: "/staff/add-subsidy", method: "post", data});
+}
+
+/**
+ * @description 修改员工补贴
+ */
+export function editSubsidyApi(data) {
+  return request({url: "/staff/edit-subsidy", method: "post", data});
+}
+
+/**
+ * @description 删除员工补贴
+ */
+export function removeSubsidyApi(data) {
+  return request({url: "/staff/delete-subsidy", method: "post", data});
+}
+
+/**
+ * @description 添加订单结算
+ */
+export function addSettlementApi(data) {
+  return request({url: "/staff/add-settlement", method: "post", data});
 }

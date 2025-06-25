@@ -108,6 +108,7 @@ export default {
                       :size="64"
                       random-bg-color
                       :text="item.remark || GET_SHOP_NAME"
+                      not-view
                     />
                   </view>
                 </UniCol>
@@ -142,5 +143,21 @@ export default {
   // #endif
   height: 50vh;
   overflow: hidden;
+
+  &__go-stores {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  &__title {
+    padding-left: 16px;
+  }
+
+  &__go-stores {
+    width: 120px;
+    height: 24px;
+    font-size: 14px;
+  }
 }
 </style>

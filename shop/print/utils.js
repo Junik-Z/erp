@@ -1,4 +1,6 @@
 // #ifdef H5
+import { _round } from "@/utils";
+
 export function getDPI() {
   if (window.screen.deviceXDPI !== undefined) {
     return window.screen.deviceXDPI;
@@ -12,6 +14,15 @@ export function getDPI() {
   }
 }
 
+/**
+ * @description 获取一毫米占几个像素点
+ */
+export function getMillimeterManyPixel(mm) {
+  const dpi = getDPI();
+  const to = mm * dpi / 25.4;
+  return _round(to, 4);
+}
+
 export function pxToCm(px, dpi = getDPI()) {
   return (px * 2.54) / dpi;
 }
@@ -22,7 +33,7 @@ export function cmToPx(cm, dpi = getDPI()) {
 
 
 export function pointToPx(point) {
-  return `${point * (getDPI() / 72)}px`
+  return `${point * (getDPI() / 72)}px`;
 }
 
 // #endif

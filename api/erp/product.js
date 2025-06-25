@@ -41,7 +41,7 @@ export function getDetailApi(data) {
     url: "/product/detail",
     method: "get",
     data,
-  }, true);
+  });
 }
 
 /**
@@ -302,4 +302,11 @@ export function refreshStaffApi(data) {
  */
 export function getStaffInfoApi(data) {
   return request({url: "/staff/detail", method: "get", data});
+}
+
+/**
+ * @description 获取员工列表
+ */
+export function getStaffUserListApi(data) {
+  return request({url: "/staff/user-list", method: "get", data});
 }

@@ -2,11 +2,10 @@
 import mixins from "@/mixins/mixins";
 import QiunDataCharts from "@/produce/components/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
-import UvCountTo from "@/uni_modules/uv-count-to/components/uv-count-to/uv-count-to.vue";
+import UvCountTo from "./components/uv-count-to/uv-count-to.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
 import { TabList } from "./define";
-import UniGrid from "@/uni_modules/uni-grid/components/uni-grid/uni-grid.vue";
 import { _flattenDeep, _get, _groupBy, _keys } from "@/utils";
 import TopMenus from "./components/TopMenus.vue";
 import { getProduceStatisticsApi } from "@/api/erp/produce";
@@ -20,7 +19,6 @@ export default {
     UvCountTo,
     UniRow,
     QiunDataCharts,
-    UniGrid,
     TopMenus,
   },
   mixins: [mixins],
@@ -82,9 +80,9 @@ export default {
   onLoad() {
     this.getList();
   },
- /*  onShow() {
-    this.getList();
-  }, */
+  /*  onShow() {
+     this.getList();
+   }, */
   methods: {
     getList() {
       this.loading = true;
@@ -137,7 +135,16 @@ export default {
 
 
           (data.warningTrend || [])?.forEach(item => {
-            obj1.categories.push(item.name);
+            const N = (item.name || "");
+
+            let name = N.substring(0, 15) || "";
+
+            if (N.length > name.length) {
+              name = `${name}...`;
+            }
+
+            obj1.categories.push(name);
+            // obj1.categories.push(item.name);
             obj1.series[0].data.push(_get(item, "amounts.0") || 0);
             obj1.series[1].data.push(_get(item, "amounts.1") || 0);
           });
@@ -155,7 +162,7 @@ export default {
     // 跳转到库存预警页面
     onJumpWarning() {
       uni.navigateTo({
-        url: "/erp/stock/warning",
+        url: PageEnums.stockWarning
       });
     },
 
@@ -214,6 +221,9 @@ export default {
 
 <template>
   <view class="ko-purchase">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <TopMenus :tabs="TabList" :path="PageEnums.produce" />
 
     <view class="ko-view-version">
@@ -261,6 +271,8 @@ export default {
 
 <style scoped lang="scss">
 .ko-purchase {
+  padding-top: 10px;
+
   width: 100%;
   padding-bottom: 80px;
 

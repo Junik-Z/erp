@@ -257,9 +257,24 @@ export default {
 
 <template>
   <view class="ko-attend">
-    <view class="ko-attend__set" v-if="isPerm('Produce_Write')">
-      <button class="ko-basic-button__card" @click="onJumpStaff">员工管理</button>
-      <button class="ko-basic-button__card" @click="onJumpRecord">记录</button>
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+    <view class="ko-attend__set" v-if="isPerm('PRODUCE_WRITE') || isBusiness">
+      <button
+        class="ko-basic-button__card"
+        @click="onJumpStaff"
+        v-if="isPerm('STAFF_LIST')"
+      >
+        员工管理
+      </button>
+      <button
+        class="ko-basic-button__card"
+        @click="onJumpRecord"
+        v-if="isPerm('ATTENDANCE_ALL_RECORDS')"
+      >
+        记录
+      </button>
       <button v-if="isAdmin || isBusiness" class="ko-basic-button__card" @click="onSetCheckIn">设置</button>
       <button class="ko-basic-button__card" @click="onJumpCheckIn">二维码</button>
     </view>
@@ -346,7 +361,7 @@ export default {
         </uni-forms>
       </view>
       <template #footer>
-        <view style="display: flex; align-items: center; justify-content: center; padding-bottom: 20px;">
+        <view style="display: flex; align-items: center; justify-content: center;">
           <button
             @click="onSubmit"
             style="width: 130px;"

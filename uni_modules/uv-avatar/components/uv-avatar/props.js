@@ -39,7 +39,7 @@ export default {
 		// 文字大小
 		fontSize: {
 			type: [String, Number],
-			default: 18
+			default: 16
 		},
 		// 显示的图标
 		icon: {

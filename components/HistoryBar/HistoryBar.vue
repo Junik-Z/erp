@@ -20,6 +20,7 @@ export default {
     },
     labelKey: String,
     isShowSearch: Boolean,
+    maxInputWrapHeight: Number,
   },
   data() {
     return {
@@ -56,6 +57,7 @@ export default {
       getRect(".ko-history__input--wrap", this)
         .then(res => {
           this.inputWrapHeight = res.height;
+          this.$emit("update:maxInputWrapHeight", this.inputWrapHeight - this.wrapHeight);
         });
 
       this.show = flag;
@@ -68,6 +70,7 @@ export default {
         getRect(".ko-history__wrap", this)
           .then(res => {
             this.wrapHeight = res.height;
+
           });
       });
     }
@@ -81,17 +84,20 @@ export default {
       <view class="ko-history__tabs ko-basic-box-shadow">
         <UniSegmentedControl
           :current.sync="content"
-          :values="values.length ? values : [text, `已完成${text}`]"
+          :values="values"
           @clickItem="onClick"
           style-type="text"
           :label-key="labelKey"
         />
       </view>
 
+      <slot name="extra"/>
+
       <view v-if="isShowSearch" class="ko-history__search">
         <button class="ko-basic-button__card" @click.stop="onShowSearch(!show)">
-          <view style="display: flex; align-items: center;">
-            <text style="padding-right: 5px;">搜索</text>
+          <view style="display: flex; align-items: center; padding-right: 6px;">
+            <!--<text>搜索</text>-->
+            <uni-icons color="#fff" style="margin-right: 5px;" type="search" />
             <i class="iconfont icon-jiantou"></i>
           </view>
         </button>
@@ -111,6 +117,7 @@ export default {
   margin-bottom: 10px;
 
   // #ifdef H5
+  width: 1024px;
   max-width: 1024px;
   margin: 0 auto 10px;
   // #endif
@@ -122,13 +129,13 @@ export default {
 
   &__tabs {
     flex: 1;
-    padding: 2px 20px;
+    padding: 2px 10px;
     text-align: center;
     position: relative;
     font-size: 18px;
     font-weight: bold;
     border-radius: 20px;
-    margin: 0 20px;
+    margin: 0 10px;
   }
 
   &__search {
@@ -150,6 +157,7 @@ export default {
 
     &--wrap {
       padding: 16px 20px 10px;
+      box-sizing: border-box;
     }
   }
 
