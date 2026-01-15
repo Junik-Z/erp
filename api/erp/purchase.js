@@ -133,6 +133,17 @@ export function getPurchaseListApi(data) {
 }
 
 /**
+ * @description 获取采购新订单
+ */
+export function getPurchaseList2Api(data) {
+  return request({
+    url: "/purchase/list2",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取采购订单待付款列表
  */
 export function getPurchaseWaitPaymentListApi(data) {
@@ -517,6 +528,141 @@ export function getPurchaseRecentPriceApi(data) {
   return request({
     url: "/purchase/recentPrice",
     method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 供应商用户列表
+ */
+export function getSupplierUserListApi(data) {
+  return request({
+    url: "/supplier/user-list",
+    method: "get",
+    data,
+  });
+}
+
+// —————————————— 付款相关 ——————————————————
+/**
+ * @description 获取已经付款的列表
+ */
+export function getPurchaseReturnedOrderApi(data) {
+  return request({
+    url: "/purchase/returned-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSPurchaseReturnedOrderApi(data) {
+  return request({
+    url: "/purchase/add-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 修改已经付款
+ */
+export function editPurchaseReturnedOrderApi(data) {
+  return request({
+    url: "/purchase/edit-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+// —————————————— 采购退货付款相关 ——————————————————
+/**
+ * @description 获取已经付款的列表
+ */
+export function getPurchaseReturnedPaidOrderApi(data) {
+  return request({
+    url: "/purchase/return/paid-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSPurchaseReturnedPaidOrderApi(data) {
+  return request({
+    url: "/purchase/return/add-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 修改已经付款
+ */
+export function editPurchaseReturnedPaidOrderApi(data) {
+  return request({
+    url: "/purchase/return/edit-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+
+// ———————————————————— 快捷出入库 ————————————————————
+/**
+ * @description 快捷出库
+ */
+export function quickOutApi(data) {
+  return request({
+    url: "/purchase/return/quick-out",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 快捷入库
+ */
+export function quickInApi(data) {
+  return request({
+    url: "/purchase/quick-in",
+    method: "post",
+    data,
+  });
+}
+
+
+// ———————————————————— 供应商地址 ————————————————————
+export function getSupplierAddressListApi(data) {
+  return request({
+    url: "/supplier/supplierAddressList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除供应商地址
+ */
+export function removeSupplierAddressApi(data) {
+  return request({
+    url: "/supplier/deleteAddress",
+    method: "get",
+    data,
+  });
+}
+
+
+// ————————————————————— 回填上次采购价格 —————————————————————
+export function fillSupplierPriceApi(data) {
+  return request({
+    url: "/purchase/fillSupplierPrice",
+    method: "post",
     data,
   });
 }

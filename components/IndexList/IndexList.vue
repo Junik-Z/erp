@@ -1,5 +1,5 @@
 <script>
-import { _isEmpty, getRect } from "@/utils";
+import { _deepCopy, _get, _isEmpty, getRect } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UvLoadingIcon from "@/uni_modules/uv-loading-icon/components/uv-loading-icon/uv-loading-icon.vue";
 
@@ -10,6 +10,7 @@ import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 
 import UniSkeletons from "@/uni_modules/uv-skeletons/components/uv-skeletons/uv-skeletons.vue";
+import { WX_USER_TAG_ENUMS } from "@/utils/config";
 
 // 索引列表
 const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -17,7 +18,10 @@ const IndexMenus = () => "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 export default {
   name: "IndexList",
   components: {
-    UniRow, UniCol, BasicCard, UvAvatar,
+    UniRow,
+    UniCol,
+    BasicCard,
+    UvAvatar,
     UvLoadingIcon,
     ProductCard,
     UniSkeletons,
@@ -98,6 +102,26 @@ export default {
 
     // 生产工单
     isWork: Boolean,
+
+    // 不需要索引列表
+    notIndex: Boolean,
+    // 显示更多按钮
+    showMoreButton: Boolean,
+
+    // 显示按钮的方法
+    showEventButtonFunc: Function,
+
+    // 显示绑定的用户列表
+    showBindUserList: Boolean,
+
+    // 显示库存
+    showQuantity: Boolean,
+
+    // 发送页面选人列表
+    isSendMsg: Boolean,
+
+    // 微信用户标签设置
+    isWeChat: Boolean,
   },
   watch: {
     data: {
@@ -163,7 +187,6 @@ export default {
         this.itemHeight = this.winHeight / this.IndexMenus?.length;
       });
     },
-
 
     touchStart(e) {
       this.touchmove = true;
@@ -267,8 +290,26 @@ export default {
     onActionClick(...arg) {
       this.$emit("action-click", ...arg);
     },
+
+    onEventItem(button, item, index, dx) {
+      this.$emit("click-item", button, item, index, dx);
+
+      this.$emit("click-event", {button, item, $index: index, buttonIndex: dx});
+    },
+
+    onMoreClick(item, index) {
+      this.$emit("click-more", item, index);
+    },
+
+    onHasSub(...arg) {
+
+      this.$emit("has-sub", ...arg);
+    },
   },
   computed: {
+    WX_USER_TAG_ENUMS() {
+      return WX_USER_TAG_ENUMS;
+    },
     IndexMenus,
 
     isSelection() {
@@ -348,6 +389,31 @@ export default {
         },
       ];
     },
+
+    getShowEventButton() {
+      return (button, item, index, dx) => {
+        return this.showEventButtonFunc ?
+          this.showEventButtonFunc({
+            button,
+            item,
+            index,
+            dx,
+          }) : true;
+      };
+    },
+
+    // 获取绑定的用户头像列表
+    getBindUserList() {
+      return (item) => {
+        const list = _deepCopy(_get(item, "users")) || [];
+        return list?.slice?.(0, 3) || [];
+      };
+    },
+
+    // 标签
+    getWeTag() {
+      return item => item.tags?.split?.(",") || [];
+    },
   },
 };
 </script>
@@ -375,7 +441,7 @@ export default {
               <block v-if="isSelected">
                 <view
                   class="ko-index-list__item"
-                  v-for="(item) in data"
+                  v-for="(item, index) in data"
                   :key="item.id"
                 >
                   <view v-if="isChecked" class="ko-index-list__item--checked" @click.stop="onClick(item)">
@@ -394,6 +460,8 @@ export default {
                     :is-judge="isJudge"
                     :is-work="isWork"
                     :is-hide-quantity="isChecked"
+                    :show-quantity="showQuantity"
+                    @has-sub="onHasSub(item, index)"
                   />
                 </view>
               </block>
@@ -415,9 +483,9 @@ export default {
                     :node="item"
                     is-list
                     :span="24"
-                    perm="Product_Write"
                     custom-style="height: 100%;"
                     style="height: 100%;"
+                    :show-quantity="showQuantity"
                   >
                     <template #footer>
                       <view class="ko-product__item--footer">
@@ -460,69 +528,132 @@ export default {
                   class="ko-index-list__item"
                   v-for="(item, index) in data"
                   :key="index"
+                  :class="{'is-send-msg': isSendMsg, blacklist: isWeChat && getWeTag(item).includes('blacklist')}"
                 >
                   <BasicCard no-shadow :spacing="0" style="width: 100%;" @click.stop="onClick(item)">
                     <view class="ko-user">
-                      <view class="ko-user__wrap">
-                        <view style="margin-right: 10px;" v-if="isChecked">
+                      <view class="ko-user__wrap" style="position: relative">
+                        <view style="margin-right: 6px;" v-if="isChecked">
                           <checkbox :checked="isSelection(item)" :disabled="getDisabled(item)" />
                         </view>
-                        <UvAvatar
-                          :size="64"
-                          :src="getImageUrl(item.avatar || item.logo)"
-                          mode="aspectFill"
-                          :text="item.label || GET_SHOP_NAME"
-                          random-bg-color
-                          @click.stop
-                        />
-                        <view style="padding-left: 10px; flex: 1; position: relative">
+                        <view style="margin-right: 6px">
+                          <UvAvatar
+                            :size="isSendMsg ? 32 : 54"
+                            :src="getImageUrl(item.avatar || item.logo)"
+                            mode="aspectFill"
+                            :text="item.label || GET_SHOP_NAME"
+                            random-bg-color
+                            @click.stop="() => {}"
+                          />
+                        </view>
+                        <view style="flex: 1;">
+                          <!-- 显示用户名称 -->
+                          <view class="ko-user__name">{{ item.label || "临时客户" }}</view>
+
+                          <view v-if="item.amount && !isSendMsg">
+                            <label v-if="isReceiptList" class="ko-basic-label">
+                              {{ item.amount > 0 ? "待结账" : "多付" }}：
+                            </label>
+                            <label v-else-if="isStaff" class="ko-basic-label">
+                              工资：
+                            </label>
+                            <label v-else class="ko-basic-label">
+                              {{ item.amount > 0 ? "多付" : isSupplier ? "应付" : "欠款" }}：
+                            </label>
+                            <text class="ko-basic-money" style="font-weight: 500;">
+                              {{ absYuan(item.amount) }}元
+                            </text>
+                          </view>
+                        </view>
+
+                        <!-- 绑定的用户 -->
+                        <view
+                          v-if="(isStaff) && !isEmpty(GET_FUNC(item, 'users')) && !isSendMsg"
+                          class="ko-index-list__bind-user"
+                        >
                           <view
-                            v-if="isStaff && !isEmpty(GET_FUNC(item, 'users'))"
-                            style="position: absolute; top: 6px; right: 20px;"
-                          >
+                            style="display: flex; align-items: center;justify-content: center; flex-direction: column;">
                             <uv-avatar
                               :src="getImageUrl(GET_FUNC(item, 'users.0.avatar'))"
                               :text="GET_FUNC(item, 'users.0.nickName')"
                               random-bg-color
-                              :size="32"
+                              :size="22"
                             />
                             <view style="font-size: 10px;color: #999; text-align: center;">
-                              {{ GET_FUNC(item, "users.0.nickName") }}
+                              {{ GET_FUNC(item, "users.0.nickName") || "-" }}
                             </view>
                           </view>
+                        </view>
 
-                          <UniRow :gutter="10">
-                            <UniCol :span="24">
-                              <view class="ko-user__name">{{ item.label || "-" }}</view>
-                            </UniCol>
-                            <UniCol :span="24" v-if="item.amount">
-                              <label v-if="isReceiptList" class="ko-basic-label" style="font-size: 14px;">
-                                {{ item.amount > 0 ? "待结账" : "多付" }}：
-                              </label>
-                              <label v-else-if="isStaff" class="ko-basic-label" style="font-size: 14px;">
-                                工资：
-                              </label>
-                              <label v-else class="ko-basic-label" style="font-size: 14px;">
-                                {{ item.amount > 0 ? "多付" : isSupplier ? "应付" : "欠款" }}：
-                              </label>
-                              <text class="ko-basic-money" style="font-weight: 500; font-size: 14px">
-                                {{ absYuan(item.amount) }}元
-                              </text>
-                            </UniCol>
-                          </UniRow>
-                          <i v-if="false" class="iconfont icon-shanghuguanli"></i>
+                        <!-- 绑定的用户列表 -->
+                        <block v-if="showBindUserList && !isEmpty(GET_FUNC(item, 'users'))">
+                          <view class="ko-index-list__bind-user">
+                            <view
+                              v-for="user of getBindUserList(item)"
+                              :key="user.userId"
+                              style="display: flex; justify-content: center; flex-direction: column; align-items: center; padding: 0 4px;"
+                            >
+                              <uv-avatar
+                                :src="getImageUrl(GET_FUNC(user, 'avatar'))"
+                                :text="GET_FUNC(user, 'nickName')"
+                                random-bg-color
+                                :size="22"
+                              />
+                              <view style="font-size: 10px;color: #999; text-align: center;">
+                                {{ GET_FUNC(user, "nickName") || "-" }}
+                              </view>
+                            </view>
+                          </view>
+                        </block>
+
+                        <!-- 显示标签 -->
+                        <view class="ko-index-list__we-chat">
+                          <text
+                            class="ko-index-list__we-chat--item"
+                            v-for="c of getWeTag(item)"
+                            :key="c"
+                            :class="c"
+                          >
+                            {{ WX_USER_TAG_ENUMS[c] }}
+                          </text>
+                          <!-- <text class="newUser ko-index-list__we-chat&#45;&#45;item">
+                             新用户
+                           </text>-->
                         </view>
                       </view>
-                      <view class="ko-user__buttons" v-if="buttonPerm ? isPerm(buttonPerm) : true">
-                        <button
-                          class="ko-basic-button__user"
-                          v-for="(button, dx) of events"
-                          @click.stop="$emit('click-item', button, item, index)"
-                          :key="dx"
-                        >
-                          {{ button.label }}
-                        </button>
-                        <slot v-if="$slots.default" :node="item" :index="index"></slot>
+
+                      <view
+                        style="display:flex; align-items: center;justify-content: flex-end; padding-right: 20px;"
+                        v-if="isWeChat || (buttonPerm ? isPerm(buttonPerm) : true)"
+                      >
+                        <view v-if="isWeChat" class="ko-user__buttons" style="margin-right: 8px;">
+                          <button
+                            class="ko-basic-button__user"
+                            @click.stop="$emit('blacklist', {item, index})"
+                          >
+                            {{ getWeTag(item).includes("blacklist") ? "移出黑名单" : "加入黑名单" }}
+                          </button>
+                        </view>
+
+                        <view class="ko-user__buttons" v-if="buttonPerm ? isPerm(buttonPerm) : true">
+                          <button
+                            class="ko-basic-button__user"
+                            v-for="(button, dx) of events"
+                            @click.stop="onEventItem(button, item, index, dx)"
+                            :key="dx"
+                            v-if="getShowEventButton(button, item, index, dx)"
+                          >
+                            {{ button.label }}
+                          </button>
+                          <button
+                            class="ko-basic-button__user"
+                            @click.stop="onMoreClick(item, index)"
+                            v-if="showMoreButton"
+                          >
+                            更多
+                          </button>
+                          <slot v-if="$slots.default" :node="item" :index="index"></slot>
+                        </view>
                       </view>
                     </view>
                   </BasicCard>
@@ -547,34 +678,36 @@ export default {
         </view>
       </scroll-view>
 
-      <view class="ko-index-list__menu">
-        <view
-          class="ko-index-list__menu--wrap"
-          @touchstart="touchStart"
-          @touchmove.stop.prevent="touchMove"
-          @touchend="touchEnd"
-          @mousedown.stop="mousedown"
-          @mousemove.stop.prevent="mousemove"
-          @mouseleave.stop="mouseleave"
-        >
+      <block v-if="!notIndex">
+        <view class="ko-index-list__menu">
           <view
-            v-for="(key, index) in IndexMenus"
-            :key="index"
-            class="ko-index-list__menu--item"
-            :class="{'is-active': touchmoveIndex === index}"
+            class="ko-index-list__menu--wrap"
+            @touchstart="touchStart"
+            @touchmove.stop.prevent="touchMove"
+            @touchend="touchEnd"
+            @mousedown.stop="mousedown"
+            @mousemove.stop.prevent="mousemove"
+            @mouseleave.stop="mouseleave"
           >
-            <text
-              class="ko-index-list__menu--text"
+            <view
+              v-for="(key, index) in IndexMenus"
+              :key="index"
+              class="ko-index-list__menu--item"
               :class="{'is-active': touchmoveIndex === index}"
             >
-              {{ key }}
-            </text>
+              <text
+                class="ko-index-list__menu--text"
+                :class="{'is-active': touchmoveIndex === index}"
+              >
+                {{ key }}
+              </text>
+            </view>
           </view>
         </view>
-      </view>
-      <view v-if="touchmove" class="ko-index-list__alert--wrapper">
-        <text class="ko-index-list__alert">{{ IndexMenus[touchmoveIndex] }}</text>
-      </view>
+        <view v-if="touchmove" class="ko-index-list__alert--wrapper">
+          <text class="ko-index-list__alert">{{ IndexMenus[touchmoveIndex] }}</text>
+        </view>
+      </block>
     </view>
   </view>
 </template>
@@ -724,6 +857,22 @@ export default {
     padding: 0 10px 0 10px;
     font-size: 16px;
 
+    &.is-send-msg {
+      padding: 0;
+
+      .ko-user__name {
+        font-size: 13px;
+      }
+
+      .ko-basic-label, .ko-basic-money {
+        font-size: 12px;
+      }
+    }
+
+    &.blacklist {
+      background: rgba(144, 147, 153, 0.3);
+    }
+
     /* #ifndef APP-NVUE */
     display: flex;
     /* #endif */
@@ -752,6 +901,82 @@ export default {
         right: 0;
       }
     }
+
+    .ko-user__name {
+      font-size: 16px;
+    }
+
+    .ko-basic-label, .ko-basic-money {
+      font-size: 12px;
+    }
+  }
+
+  // 用户标签
+  &__we-chat {
+    position: absolute;
+    top: -6px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--item {
+      font-size: 8px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      border: 1rpx solid #000;
+      margin: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.newUser {
+        color: rgb(255, 165, 0);
+        border-color: rgb(255, 165, 0);
+        background: rgba(255, 165, 0, 0.1);
+      }
+
+      &.customerTag {
+        color: #4CAF50;
+        border-color: #4CAF50;
+        background: rgba(76, 175, 80, 0.1);
+      }
+
+      &.supplierTag {
+        color: #2196F3;
+        border-color: #2196F3;
+        background: rgba(33, 150, 243, 0.1);
+      }
+
+      &.staffTag {
+        color: #9C27B0;
+        border-color: #9C27B0;
+        background: rgba(156, 39, 176, 0.1);
+      }
+
+      &.logisticTag {
+        color: #3F51B5;
+        border-color: #3F51B5;
+        background: rgba(63, 81, 181, 0.1);
+      }
+
+      &.blacklist {
+        color: #e43d33;
+        border-color: #e43d33;
+        background: rgba(228, 61, 51, 0.1);
+      }
+    }
+  }
+
+  // 绑定的用户
+  &__bind-user {
+    position: absolute;
+    top: 14px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -797,7 +1022,11 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 20px;
+    margin-top: 4rpx;
+
+    .ko-basic-button__user {
+      line-height: 1.2;
+    }
   }
 
   &__name {

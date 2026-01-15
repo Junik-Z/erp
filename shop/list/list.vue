@@ -1,7 +1,4 @@
 <script>
-// #ifdef H5
-import { Checkbox, InputNumber, Tree } from "@/uni_modules/element-ui/element.min";
-// #endif
 import { getProductClassApi, getProductFieldApi, getProductListApi } from "@/api/erp/product";
 import UniSearchBar from "@/uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue";
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
@@ -10,11 +7,13 @@ import UniNumberBox from "@/uni_modules/uni-number-box/components/uni-number-box
 import UniBadge from "@/shop/components/uni-badge/components/uni-badge/uni-badge.vue";
 import { _deepCopy, _get, _isEmpty, _isEnv, _isEqual, _isObject, _sum, CustomToast } from "@/utils";
 import BasicPopup from "@/components/BasicPopup/BasicPopup.vue";
-import PickerClass from "@/components/PickerClass/PickerClass.vue";
+import PickerClass from "../components/PickerClass/PickerClass.vue";
 import ProductCard from "@/components/ProductCard/ProductCard.vue";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
 import IndexList from "@/components/IndexList/IndexList.vue";
 import { checkInOutOrderApi, getCheckListApi } from "@/api/erp/stock";
+import PickerStandard from "../../components/PickerStandard.vue";
+import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
 
 export default {
   name: "list",
@@ -22,6 +21,8 @@ export default {
     this.isJudge = _isEqual(option.judge, "true");
 
     this.getFieldList();
+
+    this.getList(true);
 
     if (_isEnv()) {
       // this.setShopList({isSelect: true});
@@ -107,17 +108,21 @@ export default {
       noMore: false,
       sLoading: false,
 
-      tableKey: +new Date().getTime(),
-
       // 选择模式
       isSelect: false,
       // 是否多选
       multiple: false,
 
       checked: [],
+
+      // 是否显示现有库存
+      showQuantity: false,
+      // 分享ID
+      shareId: null,
     };
   },
   components: {
+    PickerStandard,
     IndexList,
     ProductCard,
     PickerClass,
@@ -126,15 +131,13 @@ export default {
     UniNumberBox,
     BasicCard,
     UniSearchBar,
-    // #ifdef H5
-    Tree,
-    // #endif
   },
   methods: {
     // 外部传入的商品列表
     setShopList(data = {}) {
       const list = _deepCopy(data?.list || []);
       this.type = data?.type;
+      this.shareId = data?.shareId;
 
       this.isClient = data?.isClient;
       this.isWork = data?.isWork;
@@ -143,6 +146,7 @@ export default {
 
       this.isSelect = data?.isSelect;
       this.multiple = data?.multiple;
+      this.showQuantity = data?.showQuantity;
 
       this.EXList = list;
       list.forEach(item => {
@@ -165,11 +169,9 @@ export default {
 
     // 获取商品列表
     getList(reset = false) {
-
       if (reset) {
         this.list = [];
         this.queryList.pageNum = 0;
-        this.tableKey = +new Date().getTime();
       }
 
       this.loading = true;
@@ -181,7 +183,11 @@ export default {
       const Func = this.isJudge ? getCheckListApi : getProductListApi;
 
       // 盘点的不需要区分上下架
-      Func({...this.queryList, ...(this.isJudge ? {} : params)})
+      Func({
+        ...this.queryList,
+        ...(this.isJudge ? {} : params),
+        ...(this.shareId ? {shareId: this.shareId || "", shareType: this.type} : {}),
+      })
         .then(res => {
           const list = res.data
             .map(item => {
@@ -194,6 +200,9 @@ export default {
               }
               return obj;
             });
+          // .filter(item => {
+          //   return !item.hasSub;
+          // });
 
           this.list = this.onMergeArrays(this.list, list, "productId");
           this.noMore = _isEmpty(res.data) || res.data.length < this.queryList.pageSize;
@@ -252,8 +261,9 @@ export default {
 
     // 点击选好了
     onSubmit() {
-
       const list = _deepCopy(Object.values(this.selected));
+
+      console.log("选好了", list);
 
       if (this.isJudge) {
         const details = (list || []).filter(item => !!this.list.find(v => _isEqual(v.productId, item.productId) && !_isEqual(v.quantity, item.productQuantity)));
@@ -384,6 +394,21 @@ export default {
       });
     },
     // #endif
+
+    // 点击选择子产品
+    onHasSub(node, index) {
+      this.$refs.PSRef.open(node, index);
+    },
+
+    // 确认选中的子产品
+    onConfirm(node) {
+      console.log(node);
+
+      for (const key in node) {
+        const item = node[key];
+        this.$set(this.selected, key, item);
+      }
+    },
   },
   computed: {
     // 获取已选的件数
@@ -455,7 +480,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: this.getImageUrl(_get(row, "images")),
-                  size: 64,
+                  size: 42,
                   text: _get(row, "images"),
                   shape: "square",
                 },
@@ -474,13 +499,67 @@ export default {
 
       const after = [
         {
+          label: this.isJudge ? "盘点数量" : "数量",
+          prop: "productQuantity",
+          fixed: "right",
+          width: 220,
+          render: (h, {row, index}) => {
+
+            if (row.hasSub) {
+              return h("ElButton", {
+                props: {
+                  size: "mini",
+                },
+                on: {
+                  click: (event) => {
+                    event.stopPropagation();
+                    this.onHasSub(row, index);
+                  },
+                },
+              }, [
+                h(
+                  UniIcons,
+                  {props: {type: "cart"}},
+                ),
+              ]);
+            }
+
+            return h(
+              "el-Input-number",
+              {
+                class: "ko-basic-money",
+                style: {cursor: "pointer", width: "100%"},
+                props: {
+                  value: this.getSelectNumber(row),
+                  min: 0,
+                },
+                on: {
+                  change: (val) => {
+                    this.onItemNumberChange(row, val);
+                  },
+                },
+              },
+            );
+          },
+        },
+        {
           label: "单价",
           prop: "price",
           fixed: "right",
           width: 220,
           render: (h, {row}) => {
+
             const item = _get(this.selected, `${row.productId}`) || {};
             const price = item?.price || _get(row, this.getMoneyKey);
+
+            if (row.hasSub) {
+              return h(
+                "label",
+                {class: "ko-basic-money"},
+                [this.toYuan(price)],
+              );
+            }
+
 
             if (this.isClient || this.isWork) {
               return h(
@@ -490,7 +569,7 @@ export default {
               );
             } else {
               return h(
-                InputNumber,
+                "el-Input-number",
                 {
                   class: "ko-basic-money",
                   style: {cursor: "pointer", width: "100%"},
@@ -509,34 +588,17 @@ export default {
           },
         },
         {
-          label: this.isJudge ? "盘点数量" : "数量",
-          prop: "productQuantity",
+          label: "现有库存",
+          prop: "quantity",
+          width: 100,
           fixed: "right",
-          width: 220,
-          render: (h, {row}) => {
-            return h(
-              InputNumber,
-              {
-                class: "ko-basic-money",
-                style: {cursor: "pointer", width: "100%"},
-                props: {
-                  value: this.getSelectNumber(row),
-                  min: 0,
-                },
-                on: {
-                  change: (val) => {
-                    this.onItemNumberChange(row, val);
-                  },
-                },
-              },
-            );
-          },
         },
       ]?.filter(item => {
-        // 盘点不需要显示价格
-        if (this.isJudge) return !_isEqual(item.prop, "price");
+        if (_isEqual(item.prop, "price")) return !this.isJudge && !this.hidePrices;
 
-        return !(this.hidePrices && _isEqual(item.prop, this.getMoneyKey));
+        if (_isEqual(item.prop, "quantity")) return !this.isJudge && !this.isClient;
+
+        return true;
       });
 
       const judge = [];
@@ -563,7 +625,7 @@ export default {
               render: (h, {row}) => {
                 return h("span", {class: "ko-table-checked__warp"}, [
                   h(
-                    Checkbox,
+                    "el-checkbox",
                     {
                       class: `ko-table-checked ${!this.multiple ? "ko-table-checked__single" : ""}`,
                       props: {
@@ -605,7 +667,13 @@ export default {
         </view>
         <!-- #ifdef MP -->
         <view class="ko-shop-list__class">
-          <PickerClass watch-type :type="type" v-model="queryList.classId" @change="getList(true)" />
+          <PickerClass
+            watch-type
+            :type="type"
+            v-model="queryList.classId"
+            @change="getList(true)"
+            :shareId="shareId"
+          />
         </view>
         <!-- #endif -->
       </view>
@@ -627,7 +695,7 @@ export default {
         :is-judge="isJudge"
         v20241216
         :is-work="isWork"
-
+        :show-quantity="!isJudge && !isClient || showQuantity"
 
         @lower="onLower"
         :no-more="noMore"
@@ -636,27 +704,14 @@ export default {
         :value="getIndexCheckedIds"
         :is-checked="isSelect"
         @click="onSelect"
-      >
-        <!-- <template #cell="{node, selected, hidePrices, extra}">
-           <view class="ko-shop-list__card">
-             <ProductCard
-               :node="node"
-               is-editor
-               is-list
-               :selected="selected"
-               @number-change="onItemNumberChange"
-               :hide-prices="hidePrices"
-               :type="extra.type"
-             />
-           </view>
-         </template>-->
-      </IndexList>
+        @has-sub="onHasSub"
+      />
       <!-- #endif -->
 
       <!-- #ifdef H5 -->
       <div class="ko-shop-list__center" style="flex: 1; height: 100%;">
         <div style="height: 100%; overflow-y: auto">
-          <Tree
+          <el-tree
             node-key="id"
             ref="TreeRef"
             :data="classList"
@@ -670,11 +725,10 @@ export default {
         </div>
         <div style="height: 100%; overflow: hidden; flex: 1;">
           <KoTable
-            :key="tableKey"
             :columns="getTableColumns"
             :loading="loading"
             :data="list"
-            @next-load="onLower"
+            @load-next="onLower"
             :no-more="noMore || loading"
             @row-click="onSelect"
           />
@@ -750,6 +804,8 @@ export default {
     </BasicPopup>-->
     <!-- #endif -->
 
+    <!-- 选择规则 -->
+    <PickerStandard ref="PSRef" @confirm="onConfirm" :type="type" no-shopping-cart />
   </view>
 </template>
 
@@ -909,7 +965,7 @@ export default {
     display: flex;
     overflow: hidden;
 
-    /deep/ .el-tree {
+    ::v-deep .el-tree {
       width: 260px;
       margin-right: 20px;
       border: 1px solid #EBEEF5;
@@ -962,7 +1018,7 @@ export default {
 }
 
 // #ifdef H5
-/deep/ .ko-table-checked {
+::v-deep .ko-table-checked {
   font-size: 20px;
 
   &__warp {
@@ -996,5 +1052,6 @@ export default {
     }
   }
 }
+
 // #endif
 </style>

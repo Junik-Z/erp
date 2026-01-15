@@ -1,6 +1,5 @@
 <script>
 import { _get, _isEmpty, _set } from "@/utils";
-import { Col, Row } from "@/uni_modules/element-ui/element.min";
 import mixins from "@/mixins/mixins";
 
 export default {
@@ -26,7 +25,6 @@ export default {
         return this.render(h, params);
       },
     },
-    Col, Row,
   },
   mixins: [mixins],
   props: {
@@ -94,11 +92,11 @@ export default {
       </th>
     </tr>
     <tr data-type="thead">
-      <th v-for="(column, index) of columns" :key="index">
-        <div class="ko-print-table__cell">
+      <td v-for="(column, index) of columns" :key="index">
+        <div style="font-weight: bold;" class="ko-print-table__cell">
           {{ column.label }}
         </div>
-      </th>
+      </td>
     </tr>
     </thead>
 
@@ -114,7 +112,7 @@ export default {
       </td>
     </tr>
 
-    <tr v-if="isSummary && !_isEmpty(summary)" data-type="tfoot">
+    <tr v-if="isSummary && !_isEmpty(summary)" data-type="summary">
       <td :colspan="(columns || []).length">
         <div class="ko-print-table__tfoot">
           <div
@@ -126,21 +124,11 @@ export default {
           >
             <div class="ko-print-table__cell">
               {{ item.label }}
-              {{ index % 2 === 0 ? ":" : ""}}
+              {{ index % 2 === 0 ? ":" : "" }}
             </div>
           </div>
         </div>
       </td>
-      <!--<td
-        :style="item.style || {}"
-        :colspan="item.colspan || 1"
-        v-for="(item, index) of summary"
-        :key="'summary' + index"
-      >
-        <div class="ko-print-table__cell">
-          {{ item.label }}
-        </div>
-      </td>-->
     </tr>
 
     <tr v-if="isFees" data-type="fees" class="ko-foot__tr">
@@ -173,16 +161,15 @@ export default {
   </table>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .ko-print-table {
   width: 100%;
   border-collapse: collapse;
-  @include print-style();
   border-left: 1px solid #000;
   border-top: 1px solid #000;
 
   &__cell {
-    min-height: 22px;
+    min-height: calc(var(--ko-paper-min-height, 16px));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -190,11 +177,12 @@ export default {
 
     &.not-data {
       color: #c7c9ce;
-      //color: #000;
     }
   }
 
   &__tfoot {
+    line-height: var(--ko-paper-min-height, 16px);
+    min-height: var(--ko-paper-min-height, 16px);
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -214,18 +202,19 @@ export default {
       @include print-style();
       border-bottom: 1px solid #000;
       border-right: 1px solid #000;
+      line-height: var(--ko-paper-min-height, 16px);
     }
 
     td {
-      min-height: 23px;
+      min-height: var(--ko-paper-min-height, 16px);
     }
   }
 
   .ko-foot {
-    min-height: 23px;
+    min-height: var(--ko-paper-min-height, 16px);
     display: flex;
     align-items: center;
-    padding: 8px 10px 0;
+    padding: 0 10px;
     justify-content: space-between;
 
     &__tr {

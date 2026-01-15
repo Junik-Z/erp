@@ -5,12 +5,12 @@ import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
 import { _deepCopy, _get, _isEmpty, getRect } from "@/utils";
-import { getProductFieldApi } from "@/api/erp/product";
+import UniIcons from "../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue";
 
 export default {
   // 产品卡片
   name: "ProductCard",
-  components: {UniCol, UniRow, UniNumberBox, BasicCard},
+  components: {UniIcons, UniCol, UniRow, UniNumberBox, BasicCard},
   mixins: [mixins],
   props: {
     className: String,
@@ -62,6 +62,9 @@ export default {
     isWork: Boolean,
     // 隐藏数量
     isHideQuantity: Boolean,
+
+    // 显示库存
+    showQuantity: Boolean,
   },
   data() {
     return {
@@ -77,11 +80,11 @@ export default {
     },
 
     getExtendList() {
-      getProductFieldApi({pageSize: 1000000, pageNum: 0})
-        .then(res => {
-          this.FieldList = res.data;
-          uni.$__FIELD_LIST__ = res.data;
-        });
+      /*  getProductFieldApi({pageSize: 1000, pageNum: 0})
+         .then(res => {
+           this.FieldList = res.data;
+           uni.$__FIELD_LIST__ = res.data;
+         }); */
     },
     onChangePrice(node, event) {
       this.$emit("change-price", node, event);
@@ -103,13 +106,14 @@ export default {
         });
       }
     },
+
+    // 选择子产品
+    onHasSub() {
+      this.$emit("has-sub", this.node);
+    },
   },
   mounted() {
     _isEmpty(uni.$__FIELD_LIST__) && this.getExtendList();
-
-    /*  setTimeout(() => {
-       this.getVmRect();
-     }, 10); */
   },
   computed: {
     // 获取已经选的产品列表
@@ -136,6 +140,11 @@ export default {
         return _get(this.selected, `${item.id}.productQuantity`) || 0;
       };
     },
+
+    // 是否显示库存
+    isShowQuantity() {
+      return node => this.showQuantity && "quantity" in node;
+    },
   },
 };
 </script>
@@ -158,7 +167,7 @@ export default {
 
         <UniCol :span="24">
           <view class="ko-product-card__item--name">
-            <text>{{ node.name || "-" }}</text>
+            <text @click.stop="onCopyText(node.name)">{{ node.name || "-" }}</text>
           </view>
         </UniCol>
 
@@ -229,7 +238,7 @@ export default {
 
           <template v-else>
             <template v-if="readonly">
-              <UniCol :span="12" v-if="!hidePrices && node.price">
+              <UniCol :span="12" v-if="!hidePrices && node.price && !isWork">
                 <view class="ko-product-card__item">
                   <label class="ko-basic-label">单价：</label>
                   <text class="ko-basic-money"> {{ toYuan(node.price) }}元</text>
@@ -264,7 +273,6 @@ export default {
                   <label class="ko-basic-label">单价：</label>
                   <text class="ko-basic-money" v-if="!isEditPrice"> {{ toYuan(node.price) }}元</text>
                   <view class="ko-basic-money" style="flex: 1; display: flex;align-items: center;" v-else>
-
                     <UniNumberBox
                       :max="9999999999999999"
                       :value="toYuan(node.price)"
@@ -315,7 +323,6 @@ export default {
           <UniCol :span="24">
             <view class="ko-product-card__item" style="display: block;">
               <label class="ko-basic-label">库存：</label>
-
               <view style="padding-top: 8px;">
                 <UniNumberBox
                   :max="9999999"
@@ -330,6 +337,7 @@ export default {
           </UniCol>
         </template>
 
+        <!-- 选择产品时的产品卡片显示 -->
         <template v-else-if="isEditor">
           <UniCol :span="24" v-for="field of FieldList" :key="field.id">
             <view class="ko-product-card__item">
@@ -337,7 +345,7 @@ export default {
               <text>{{ GET_FUNC(node, `extend.${field.fieldCode}`) || "-" }}</text>
             </view>
           </UniCol>
-          <UniCol :span="24" v-if="!hidePrices">
+          <UniCol :span="24" v-if="!hidePrices && !isWork">
             <label class="ko-basic-label">单价：</label>
             <text class="ko-basic-money"> {{ toYuan(getPrice(node)) }}元</text>
           </UniCol>
@@ -345,6 +353,12 @@ export default {
             <label class="ko-basic-label">单价：</label>
             <text class="ko-basic-money"> {{ toYuan(getPrice(node)) }}元</text>
           </UniCol>
+
+          <UniCol :span="24" v-if="isShowQuantity(node)">
+            <label class="ko-basic-label">库存：</label>
+            <text> {{ node.quantity || 0 }}</text>
+          </UniCol>
+
           <UniCol :span="24" v-if="!isHideQuantity">
             <UniNumberBox
               :max="9999999"
@@ -352,7 +366,13 @@ export default {
               :value="getSelectNumber(node)"
               type="digit"
               @change="onItemNumberChange(node, $event)"
+              v-if="!node.hasSub"
             />
+            <view v-else style="display: flex; align-items: center; justify-content: flex-end;">
+              <button class="ko-product-card__open-btn" @click="onHasSub">
+                <UniIcons type="cart" />
+              </button>
+            </view>
           </UniCol>
         </template>
 
@@ -398,7 +418,7 @@ export default {
                 <text>采</text>
               </view>
 
-              <slot v-if="isPerm(perm)" name="footer" :item="node"></slot>
+              <slot v-if="!!$slots.footer" name="footer" :item="node"></slot>
             </view>
           </UniCol>
         </template>
@@ -452,6 +472,20 @@ export default {
 
   .cai {
     margin-right: 16px;
+  }
+
+  &__open-btn {
+    width: 32px;
+    height: 32px;
+    line-height: 20px;
+    margin-bottom: 2px;
+    font-size: 26px;
+    font-weight: 300;
+    color: #333;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

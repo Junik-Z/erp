@@ -154,7 +154,7 @@ export default {
               [h(UvAvatar, {
                 props: {
                   src: _this.getImageUrl(_get(row, "images")),
-                  size: 64,
+                  size: 38,
                   text: _get(row, "name") || _this.GET_SHOP_NAME,
                   shape: "square",
                 },
@@ -171,14 +171,6 @@ export default {
           prop: `extend.${item.fieldCode}`,
         }))),
         {
-          label: "单价(元)",
-          prop: "price",
-          width: 80,
-          render: (h, {row}) => {
-            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.price)}`);
-          },
-        },
-        {
           label: "数量",
           prop: "productQuantity",
           width: 80,
@@ -186,6 +178,20 @@ export default {
             return h("div", {class: "ko-basic-money"}, row.productQuantity);
           },
         },
+        {
+          label: "单价(元)",
+          prop: "price",
+          width: 80,
+          render: (h, {row}) => {
+            return h("div", {class: "ko-basic-money"}, ` ${_this.toYuan(row.price)}`);
+          },
+        },
+        ...(this.isTkCustom ? [
+          {
+            label: "备注",
+            prop: "remark",
+          },
+        ] : []),
       ].filter(item => !(flag && _isEqual(item.prop, "price")));
     },
     // #endif
@@ -199,7 +205,12 @@ export default {
       <view class="ko-details__item">
         <view class="ko-details__cell">
           <label class="ko-basic-label">编号：</label>
-          <text class="ko-details__cell--text">{{ node.orderCode }}</text>
+          <text
+            class="ko-details__cell--text ko-pointer"
+            @click="onCopyText(node.orderCode)"
+          >
+            {{ node.orderCode }}
+          </text>
         </view>
         <view class="ko-details__cell" v-if="node.orderType">
           <label class="ko-basic-label">类型：</label>
@@ -211,13 +222,23 @@ export default {
           <text class="ko-details__cell--text" v-else>{{ ORDER_STATUS_ENUMS(node.status) }}</text>
         </view>
         <view class="ko-details__cell">
-          <label class="ko-basic-label">下单时间：</label>
-          <text class="ko-details__cell--text">{{ node.createTime || "-" }}</text>
+          <label class="ko-basic-label">下单日期：</label>
+          <text
+            class="ko-details__cell--text ko-pointer"
+            @click="onCopyText(node.createTime)"
+          >
+            {{ node.updateTime || "-" }}
+          </text>
         </view>
 
         <view class="ko-details__cell" v-if="isProduce">
           <label class="ko-basic-label">计划完工日期：</label>
-          <text class="ko-details__cell--text">{{ node.planFinishDate || "-" }}</text>
+          <text
+            class="ko-details__cell--text ko-pointer"
+            @click="onCopyText(node.planFinishDate)"
+          >
+            {{ node.planFinishDate || "-" }}
+          </text>
         </view>
       </view>
     </UniSection>
@@ -233,25 +254,44 @@ export default {
           <UniCol :span="24">
             <view class="ko-details__cell">
               <label class="ko-basic-label">物流商：</label>
-              <text class="ko-details__cell--text">{{ GET_FUNC(node, "logistics.name") || "-" }}</text>
+              <text
+                class="ko-details__cell--text ko-pointer"
+                @click="onCopyText(GET_FUNC(node, 'logistics.name'))"
+              >
+                {{ GET_FUNC(node, "logistics.name") || "-" }}
+              </text>
             </view>
           </UniCol>
           <UniCol :span="24">
             <view class="ko-details__cell">
               <label class="ko-basic-label">物流单号：</label>
-              <text class="ko-details__cell--text">{{ node.logisticsNo || "-" }}</text>
+              <text
+                class="ko-details__cell--text ko-pointer"
+                @click="onCopyText(node.logisticsNo)"
+              >{{ node.logisticsNo || "-" }}
+              </text>
             </view>
           </UniCol>
           <UniCol :span="24">
             <view class="ko-details__cell">
               <label class="ko-basic-label">电话：</label>
-              <text class="ko-details__cell--text">{{ node.orderPhone || "-" }}</text>
+              <text
+                class="ko-details__cell--text ko-pointer"
+                @click="onCopyText(node.orderPhone)"
+              >
+                {{ node.orderPhone || "-" }}
+              </text>
             </view>
           </UniCol>
           <UniCol :span="24">
             <view class="ko-details__cell">
               <label class="ko-basic-label">地址：</label>
-              <text class="ko-details__cell--text">{{ node.orderAddress || "-" }}</text>
+              <text
+                class="ko-details__cell--text ko-pointer"
+                @click="onCopyText(node.orderAddress)"
+              >
+                {{ node.orderAddress || "-" }}
+              </text>
             </view>
           </UniCol>
         </UniRow>
@@ -283,7 +323,6 @@ export default {
             />
           </view>
           <!-- #endif -->
-
           <view v-if="false" class="ko-details__cell" style="margin-top: 20px;">
             <label class="ko-basic-label">共计：</label>
             <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalRawMaterialAmount) }}元</text>
@@ -359,12 +398,23 @@ export default {
           <block v-if="!isLogistics">
             <view class="ko-details__cell" style="margin-top: 20px;" v-if="getTotal">
               <label class="ko-basic-label">金额：</label>
-              <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(getTotal) }}元</text>
+              <text
+                class="ko-details__cell--text ko-basic-money"
+                @click.stop="onCopyText(toYuan(getTotal))"
+              >
+                {{ toYuan(getTotal) }}元
+              </text>
             </view>
 
             <view class="ko-details__cell" style="margin-top: 10px;">
               <label class="ko-basic-label">{{ getTotalAmountText }}：</label>
-              <text class="ko-details__cell--text ko-basic-money"> {{ toYuan(node.totalAmount) }}元</text>
+              <text
+                class="ko-details__cell--text ko-basic-money"
+
+                @click.stop="onCopyText(toYuan(node.totalAmount))"
+              >
+                {{ toYuan(node.totalAmount) }}元
+              </text>
             </view>
           </block>
         </view>
@@ -388,55 +438,99 @@ export default {
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">名称：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.name") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.name'))"
+                >
+                  {{ GET_FUNC(node, "customer.name") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">地址：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.address") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.address'))"
+                >
+                  {{ GET_FUNC(node, "customer.address") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">发票抬头：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.invoiceTitle") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.invoiceTitle'))"
+                >
+                  {{ GET_FUNC(node, "customer.invoiceTitle") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">纳税人识别号：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.taxNumber") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.taxNumber'))"
+                >
+                  {{ GET_FUNC(node, "customer.taxNumber") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">开票类型：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.invoiceType") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.invoiceType'))"
+                >
+                  {{ GET_FUNC(node, "customer.invoiceType") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">税率：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.taxRate") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                >
+                  {{ GET_FUNC(node, "customer.taxRate") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">开户银行：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.bank") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.bank'))"
+                >
+                  {{ GET_FUNC(node, "customer.bank") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">银行账号：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.bankAccount") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.bankAccount'))"
+                >
+                  {{ GET_FUNC(node, "customer.bankAccount") || "-" }}
+                </text>
               </view>
             </UniCol>
             <UniCol :span="24">
               <view class="ko-details__cell">
                 <label class="ko-basic-label">备注：</label>
-                <text class="ko-details__cell--text">{{ GET_FUNC(node, "customer.remark") || "-" }}</text>
+                <text
+                  class="ko-details__cell--text"
+                  @click="onCopyText(GET_FUNC(node, 'customer.bankAccount'))"
+                >
+                  {{ GET_FUNC(node, "customer.remark") || "-" }}
+                </text>
               </view>
             </UniCol>
           </UniRow>

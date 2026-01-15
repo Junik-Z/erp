@@ -7,6 +7,11 @@ export default {
   name: "loading",
   components: {TopMenus},
   mixins: [mixins],
+  data() {
+    return {
+      noRole: false,
+    };
+  },
   computed: {
     TabList() {
       return TabList;
@@ -16,7 +21,7 @@ export default {
     onJumpPath(path) {
       setTimeout(() => {
         uni.redirectTo({url: path});
-      }, 100);
+      }, 400);
     },
   },
 };
@@ -29,9 +34,12 @@ export default {
       :tabs="TabList"
       :path="PageEnums.produce"
       @jump-path="onJumpPath"
+      :no-role.sync="noRole"
     />
 
-    <view style="height: 30vh; display: flex; align-items: center; justify-content: center;">
+    <view class="ko-not-perm" v-if="noRole" />
+
+    <view v-else style="height: 30vh; display: flex; align-items: center; justify-content: center;">
       <uv-loading-icon size="40" />
     </view>
   </view>

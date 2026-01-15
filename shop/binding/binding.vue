@@ -23,9 +23,6 @@ export default {
   onLoad(option) {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
-    console.log(option);
-
-
     this.getProductExt();
     this.getList();
   },
@@ -36,7 +33,7 @@ export default {
       },
       immediate: true,
       deep: true,
-    }
+    },
   },
   data() {
     return {
@@ -48,12 +45,6 @@ export default {
       noMore: false,
       FieldList: [],
       columnTable: [
-        {
-          label: "",
-          key: "",
-          isCheck: true,
-          span: 2,
-        },
         {
           label: "名称",
           key: "name",
@@ -71,6 +62,12 @@ export default {
           key: "salePrice",
           isPrice: true,
           span: 5,
+        },
+        {
+          label: "",
+          key: "",
+          isCheck: true,
+          span: 2,
         },
       ],
       checked: [],
@@ -152,7 +149,6 @@ export default {
         shareId: decodeURIComponent(this.option.PRODUCT_SHARE_ID),
       })
         .then(res => {
-          console.log(res);
           this.repeat.list = this.onMergeArrays(this.repeat.list, res.data);
           this.repeat.noMore = _isEmpty(res.data) || res.data.length < this.repeat.queryList.pageSize;
         })
@@ -174,37 +170,44 @@ export default {
     },
 
     onSubmit() {
-      const extend = {};
-      this.FieldList.forEach((item) => {
-        if (_isEmpty(item._right_)) {
-          extend[item.fieldCode] = item.fieldName;
-        } else {
-          extend[_get(item, "_right_.fieldCode")] = item.fieldCode;
-        }
-      });
-
-      const params = {
-        productList: this.repeat?.checked?.map((productId) => ({productId})) || [],
-        tenantId: decodeURIComponent(this.option.form_scene),
-        shareId: decodeURIComponent(this.option.PRODUCT_SHARE_ID),
-        extend,
-      };
-
-      this.sLoading = true;
-      receiveShareProductApi(params)
-        .then(() => {
-          CustomToast({
-            title: "操作成功",
-            success: () => {
-              uni.reLaunch({
-                url: PageEnums.home,
-              });
-            },
-          });
-        })
-        .finally(() => {
-          this.sLoading = false;
+      if (this.isPerm("SHARE_RECEIVE_SHARE_PRODUCT")) {
+        const extend = {};
+        this.FieldList.forEach((item) => {
+          if (_isEmpty(item._right_)) {
+            extend[item.fieldCode] = item.fieldName;
+          } else {
+            extend[_get(item, "_right_.fieldCode")] = item.fieldCode;
+          }
         });
+
+        const params = {
+          productList: this.repeat?.checked?.map((productId) => ({productId})) || [],
+          tenantId: decodeURIComponent(this.option.form_scene),
+          shareId: decodeURIComponent(this.option.PRODUCT_SHARE_ID),
+          extend,
+        };
+
+        this.sLoading = true;
+        receiveShareProductApi(params)
+          .then(() => {
+            CustomToast({
+              title: "操作成功",
+              success: () => {
+                uni.reLaunch({
+                  url: PageEnums.home,
+                });
+              },
+            });
+          })
+          .finally(() => {
+            this.sLoading = false;
+          });
+      } else {
+        uni.showModal({
+          title: "温馨提示",
+          content: "保存失败，您没有保存的权限，请联系管理员授权。",
+        });
+      }
     },
 
     onNext() {
@@ -322,6 +325,7 @@ export default {
           @check="onChecked"
           :value="checked"
           :loading="loading"
+          fork
         />
       </block>
 
@@ -336,6 +340,7 @@ export default {
           @check="onRepeatChecked"
           :value="repeat.checked"
           :loading="repeat.loading"
+          fork
         />
       </block>
 

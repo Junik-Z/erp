@@ -1,4 +1,5 @@
 import dayjs from "./dayjs";
+import LodashSet from "./lodash/set";
 
 export const weekHan = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -237,25 +238,7 @@ export function _get(obj, path, defaultValue = undefined) {
   return result;
 }
 
-export function _set(obj, path, value, customizer) {
-  if (obj == null) return obj;
-  if (typeof path === "string") path = path.split(".");
-  let current = obj;
-  for (let i = 0; i < path.length - 1; i++) {
-    const key = path[i];
-    if (current[key] == null) {
-      current[key] = Array.isArray(path[i + 1]) ? [] : {};
-    }
-    current = current[key];
-  }
-  const lastKey = path[path.length - 1];
-  if (customizer) {
-    customizer(current, lastKey, value);
-  } else {
-    current[lastKey] = value;
-  }
-  return obj;
-}
+export const _set = LodashSet;
 
 export function _chunk(array, size) {
   if (size < 1) {
@@ -498,6 +481,9 @@ export function _haveCommonElements(arr1, arr2) {
 
 // 是否是开发者工具
 export function _isEnv() {
+  // #ifdef H5
+  return _isEqual(process.env.NODE_ENV, "development");
+  // #endif
   return _isEqual(uni.getDeviceInfo()?.platform, "devtools");
 }
 
@@ -663,6 +649,10 @@ export function _reverse(array) {
   return array;
 }
 
+export function _isHttpOrHttps(url) {
+  return /^https?:\/\//i.test(url);
+}
+
 /**
  * @description 获取定制表格的cell样式
  */
@@ -743,4 +733,77 @@ export function xlsxCellStyle(node, rIndex, cIndex, config, isChild = false) {
   }
 
   return style;
+}
+
+// #ifdef H5
+// 动态添加 js
+export function loadScript(url, callback) {
+  const script = document.createElement("script");
+  script.type = "text/javascript";
+  script.className = "__script__";
+  script.src = url;
+
+  script.onload = () => {
+    console.log("Script loaded successfully");
+    if (callback) {
+      callback();
+    }
+  };
+
+  script.onerror = () => {
+    console.error("Script failed to load");
+  };
+
+  document.head.appendChild(script);
+}
+
+// 动态添加 css
+export function loadCss(url, callback) {
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = url;
+  link.className = "__script__";
+
+  link.onload = () => {
+    if (callback) {
+      callback();
+    }
+  };
+
+  link.onerror = () => {
+    console.error("Script failed to load");
+  };
+
+  document.head.appendChild(link);
+}
+// #endif
+
+// 判断是不是相片
+export function isImageType(suffix) {
+  if (!suffix) return false;
+  return ["JPEG", "JPG", "PNG", "GIF", "BMP", "SVG", "HEIf", "HEIC", "RAW", "WEBP"].includes(suffix.toUpperCase());
+}
+
+// 判断是不是PDF
+export function isPdfType(suffix) {
+  if (!suffix) return false;
+  return ["PDF"].includes(suffix.toUpperCase());
+}
+
+// 判断是不是Word
+export function isWordType(suffix) {
+  if (!suffix) return false;
+  return ["DOCX", "DOC", "DOT", "DOTX"].includes(suffix.toUpperCase());
+}
+
+// 判断是不是 XLS
+export function isExcelType(suffix) {
+  if (!suffix) return false;
+  return ["XLS", "XLSX"].includes(suffix.toUpperCase());
+}
+
+// 判断是不是 CDA 文件
+export function isCDAType(suffix) {
+  if (!suffix) return false;
+  return ["DWG", "DXF", "DWT", "BAK"].includes(suffix.toUpperCase());
 }

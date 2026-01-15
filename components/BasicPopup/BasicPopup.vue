@@ -1,5 +1,5 @@
 <script>
-import UvPopup from "@/uni_modules/uv-popup/components/uv-popup/uv-popup.vue";
+import UvPopup from "./../../uni_modules/uv-popup/components/uv-popup/uv-popup.vue";
 
 export default {
   name: "BasicPopup",
@@ -16,6 +16,23 @@ export default {
     },
     title: String,
     maxHeight: String,
+
+    noFooterPadding: Boolean,
+    noFooter: Boolean,
+    noSafeBottom: Boolean,
+
+    // 层级
+    zIndex: {
+      type: [String, Number],
+      // #ifdef H5
+      default: 997,
+      // #endif
+      // #ifndef H5
+      default: 10075,
+      // #endif
+    },
+
+    noPaddingTop: Boolean,
   },
   data() {
     return {};
@@ -35,6 +52,7 @@ export default {
   methods: {
     onChange(event) {
       this.$emit("update:visible", event.show);
+
       if (!event.show) {
         this.$emit("close", false);
       }
@@ -56,11 +74,21 @@ export default {
     :round="10"
     bg-color="transparent"
     :adjustPosition="false"
+    :z-index="zIndex"
   >
+    <slot name="header" />
+
     <view
       class="ko-basic-popup"
       :style="[maxHeight ? {'max-height': maxHeight} : {}]"
-      :class="[type, {close: close, 'show-title': !!title}]"
+      :class="[type, {
+        close: close,
+         'show-title': !!title || $slots.title,
+          'no-safe-bottom': noSafeBottom,
+           'show-footer': $slots.footer && !noFooter,
+           'hide-footer': !($slots.footer && !noFooter),
+           'no-padding-top': noPaddingTop
+      }]"
     >
       <button
         v-if="close"
@@ -72,11 +100,19 @@ export default {
 
       <view class="ko-basic-popup__header" v-if="!!title">{{ title }}</view>
 
+      <view class="ko-basic-popup__header" v-else-if="$slots.title">
+        <slot name="title" />
+      </view>
+
       <view class="ko-basic-popup__wrap">
         <slot></slot>
       </view>
 
-      <view class="ko-basic-popup__footer" v-if="$slots.footer">
+      <view
+        class="ko-basic-popup__footer"
+        :class="{'no-padding': noFooterPadding}"
+        v-if="$slots.footer && !noFooter"
+      >
         <slot name="footer"></slot>
       </view>
     </view>
@@ -94,7 +130,7 @@ export default {
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  max-height: calc(var(--ko-popup-max-height), 98vh);
+  max-height: calc(var(--ko-popup-max-height, 98vh));
 
   // #ifdef H5
   margin: 0 auto;
@@ -109,7 +145,21 @@ export default {
   }
 
   &.bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+    &.show-footer .ko-basic-popup__footer {
+      padding-bottom: 30px;
+    }
+
+    &.hide-footer {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+    }
+  }
+
+  &.no-safe-bottom.hide-footer {
+    padding-bottom: 0;
+  }
+
+  &.no-padding-top {
+    padding-top: 0;
   }
 
   &__header {
@@ -131,7 +181,10 @@ export default {
   &__close {
     position: absolute;
     right: 10px;
-    top: -8px;
+    top: 8px;
+    width: 36px;
+
+    line-height: 1.4;
 
     .iconfont {
       font-size: 26px;
@@ -139,8 +192,15 @@ export default {
   }
 
   &__footer {
-    // #ifdef H5
+    box-shadow: $uni-shadow-base;
+    padding-top: 16px;
     padding-bottom: 20px;
+
+    // #ifdef H5
+    &.no-padding {
+      padding-bottom: 0;
+    }
+
     // #endif
   }
 }

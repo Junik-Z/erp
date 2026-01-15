@@ -7,8 +7,17 @@
 	</view>
 	<!-- #endif -->
 	<!-- #ifdef APP-NVUE -->
-	<list :bounce="false" :scrollable="true" show-scrollbar :render-reverse="renderReverse" @scroll="scroll" class="uni-list" :class="{ 'uni-list--border': border }" :enableBackToTop="enableBackToTop"
-		loadmoreoffset="15">
+	<list
+    :bounce="false"
+    :scrollable="true"
+    show-scrollbar
+    :render-reverse="renderReverse"
+    @scroll="scroll"
+    class="uni-list"
+    :class="{ 'uni-list--border': border }"
+    :enableBackToTop="enableBackToTop"
+		loadmoreoffset="15"
+  >
 		<slot />
 	</list>
 	<!-- #endif -->

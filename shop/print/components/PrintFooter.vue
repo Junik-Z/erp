@@ -1,9 +1,18 @@
 <script>
+import mixins from "@/mixins/mixins";
+
 export default {
   name: "PrintFooter",
+  mixins: [mixins],
   props: {
     outName: String,
     info: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+    node: {
       type: Object,
       default() {
         return {};
@@ -20,6 +29,10 @@ export default {
         <label>出库人：</label>
         <span>{{ outName || "" }}</span>
       </div>
+      <!--<div class="out-of-stock__item" v-if="node.debt && node.debt < 0">
+        <label>累计欠款：</label>
+        <span>{{ Math.abs(toYuan(node.debt || 0)) }}</span>
+      </div>-->
       <div class="out-of-stock__item">
         <label>客户确认：</label>
         <span></span>
@@ -33,9 +46,6 @@ export default {
       <div class="company__bank">
         <p>{{ info.ticketTailContent }}</p>
       </div>
-
-      <div class="company__account" v-if="false">户名: 袁路平</div>
-      <div class="company__ad" v-if="false">耀通有您更精彩！</div>
     </div>
   </div>
 </template>
@@ -50,8 +60,8 @@ export default {
   .out-of-stock {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 6px 10% 8px;
+    justify-content: space-around;
+    padding: 6px 20px 8px;
 
     &__item {
       display: flex;
@@ -60,14 +70,13 @@ export default {
       @include print-style();
 
       label {
-        width: 100px;
         text-align: right;
         white-space: nowrap;
       }
 
       span {
         display: inline-block;
-        width: 10em;
+        width: 8em;
         border-bottom: 0.5px solid #000;
         text-align: center;
         white-space: nowrap;
@@ -77,7 +86,6 @@ export default {
 
   .illustrate {
     margin-top: 2px;
-    //color: #8f939c;
     text-align: center;
     @include print-style();
 
@@ -96,15 +104,6 @@ export default {
 
     &__bank {
       text-align: center;
-      @include print-style();
-    }
-
-    &__account {
-      @include print-style();
-    }
-
-    &__ad {
-      letter-spacing: 10px;
       @include print-style();
     }
   }

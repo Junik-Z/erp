@@ -2,7 +2,7 @@
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import KoList from "@/components/List/List.vue";
 import UniSection from "@/uni_modules/uni-section/components/uni-section/uni-section.vue";
-import { _get, _groupBy } from "@/utils";
+import { _deepCopy, _get, _groupBy, _keys } from "@/utils";
 import mixins from "@/mixins/mixins";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
 import UniCol from "@/uni_modules/uni-row/components/uni-col/uni-col.vue";
@@ -19,6 +19,9 @@ export default {
     fieldList: Array,
     isStock: Boolean,
     value: Array,
+
+    // 选中显示叉叉
+    fork: Boolean,
   },
 
   data() {
@@ -42,7 +45,11 @@ export default {
   },
   computed: {
     groupList() {
-      return _groupBy(this.list || [], (item) => item.className);
+      const list = _groupBy(_deepCopy(this.list) || [], (item) => item.className);
+      return _keys(list).map(key => ({
+        key,
+        children: list[key],
+      }));
     },
 
     getFieldListText() {
@@ -67,21 +74,28 @@ export default {
         return checked.indexOf(node.id) > -1;
       };
     },
+
+    // 获取样式
+    getRootStyle() {
+      return {
+        "--ko-basic-table-grid-col": (this.columns || [])?.map((col) => col.width || "auto").join(" "),
+      };
+    },
   },
 };
 </script>
 
 <template>
   <view class="ko-inventory-list">
-    <view class="ko-inventory-list__header ko-basic-box-shadow">
-      <UniRow :gutter="10">
-        <UniCol v-for="item of columns" :key="item.key" :span="item.span">
-          <view class="ko-inventory-list__header--item">{{ item.label }}</view>
-        </UniCol>
-      </UniRow>
-    </view>
+    <!-- <view class="ko-inventory-list__header ko-basic-box-shadow">
+       <UniRow :gutter="10">
+         <UniCol v-for="item of columns" :key="item.key" :span="item.span">
+           <view class="ko-inventory-list__header&#45;&#45;item">{{ item.label }}</view>
+         </UniCol>
+       </UniRow>
+     </view>-->
 
-    <view class="ko-inventory-list__content">
+    <view class="ko-inventory-list__content" :style="[getRootStyle]">
       <KoList
         :loading="loading"
         :no-more="noMore"
@@ -90,38 +104,60 @@ export default {
       >
         <view class="ko-inventory-list__wrap">
           <view v-for="(item, key) of groupList" :key="key">
-            <UniSection :title="key" type="line">
-              <BasicCard>
-                <view
-                  class="ko-inventory-list__item"
-                  v-for="child of item"
-                  :key="child.id"
-                  @click.stop="onViewImage(child)"
-                >
-                  <UniRow :gutter="6">
-                    <UniCol style="height: 100%;" v-for="col of columns" :key="col.key" :span="col.span">
+            <UniSection :title="item.key" type="line">
+              <BasicCard :padding-size="0">
+                <view class="ko-basic-table">
+                  <view
+                    class="ko-basic-table--th"
+                    v-for="col of columns"
+                    :key="col.key"
+                  >
+                    {{ col.label }}
+                  </view>
+
+                  <block
+                    v-for="child of item.children"
+                    :key="child.id"
+                  >
+                    <view
+                      v-for="col of columns"
+                      :key="col.key"
+                      class="ko-basic-table--cell"
+                      :class="[col.class || '', getCellClass(col, child)]"
+                    >
+                      <block v-if="col.isCheck">
+                        <view
+                          class="ko-inventory-list__cell--checked"
+                          @click.stop="onChecked(child)"
+                          :class="{'is-fork': fork}"
+                        >
+                          <checkbox v-if="!fork" :checked="isSelection(child)" />
+
+                          <uni-icons
+                            color="#E43C33"
+                            v-if="isSelection(child) && fork"
+                            type="closeempty"
+                            size="20px"
+                          />
+                        </view>
+                      </block>
+
                       <view
+                        v-else
                         class="ko-inventory-list__cell"
-                        :class="[col.class || '', getCellClass(col, child)]"
+                        @click.stop="onViewImage(child, col)"
                       >
-                        <block v-if="col.isCheck">
-                          <view class="ko-inventory-list__cell--checked" @click.stop="onChecked(child)">
-                            <checkbox :checked="isSelection(child)" />
-                          </view>
-                        </block>
-                        <block v-else>
-                          <view v-if="col.isPrice">{{ toYuan(GET_FUNC(child, col.key)) }}</view>
-                          <view v-else>{{ GET_FUNC(child, col.key) }}</view>
-                          <view
-                            style="width: 100%; font-size: 10px; color: #8f939c; padding: 2px 4px 0"
-                            v-if="fieldList && fieldList.length && col.isField"
-                          >
-                            {{ getFieldListText(child) }}
-                          </view>
-                        </block>
+                        <view v-if="col.isPrice">{{ toYuan(GET_FUNC(child, col.key)) }}</view>
+                        <view v-else>{{ GET_FUNC(child, col.key) }}</view>
+                        <view
+                          style="width: 100%; font-size: 10px; color: #8f939c; padding: 2px 4px 0"
+                          v-if="fieldList && fieldList.length && col.isField"
+                        >
+                          {{ getFieldListText(child) }}
+                        </view>
                       </view>
-                    </UniCol>
-                  </UniRow>
+                    </view>
+                  </block>
                 </view>
               </BasicCard>
             </UniSection>
@@ -157,14 +193,6 @@ export default {
     overflow: hidden;
   }
 
-  &__item {
-    font-size: 12px;
-
-    &:nth-child(odd) {
-      background: rgba(248, 248, 248, 0.99);
-    }
-  }
-
   &__cell {
     text-align: center;
     display: flex;
@@ -175,6 +203,22 @@ export default {
 
     &--checked {
       position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 3px;
+
+      &.is-fork {
+        border: 1px solid #D1D1D1;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin: 0 6px;
+        padding: 0;
+      }
 
       &:before {
         content: " ";
@@ -186,10 +230,6 @@ export default {
         z-index: 99;
       }
     }
-  }
-
-  /deep/ .uni-col {
-    height: 100% !important;
   }
 }
 </style>

@@ -14,12 +14,15 @@ export default {
   props: {
     tabs: Array,
     path: String,
+    noRole: Boolean
   },
   methods: {
     // 跳转到指定页面 来自 tabs 的跳转
     onJumpByTabs({currentIndex}) {
-      const node = this.tabs[currentIndex];
+      const node = this.getTabsList[currentIndex];
+
       this.$emit("click-tab", node);
+
       if (node.path) {
         uni.redirectTo({url: node.path});
       }
@@ -30,7 +33,7 @@ export default {
       return this.tabs?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
-          if (_haveCommonElements(role, item.roles) || this.isBusiness || this.isAdmin) {
+          if (_haveCommonElements(role, item.roles) || this.isAdmin) {
             return [item];
           } else {
             return [];
@@ -47,10 +50,14 @@ export default {
   mounted() {
     setTimeout(() => {
       this.$nextTick(() => {
-        const path = _get(this.getTabsList, "0.path") || this.PageEnums.produce;
-        this.$emit("jump-path", path);
+        if (this.getTabsList.length) {
+          const path = _get(this.getTabsList, "0.path") || this.PageEnums.produce;
+          this.$emit("jump-path", path);
+        }
+
+        this.$emit('update:no-role', !this.getTabsList.length)
       });
-    }, 10)
+    }, 10);
   },
 };
 </script>
@@ -69,7 +76,8 @@ export default {
 
 <style scoped lang="scss">
 .ko-tabs {
-  padding: 10px;
+  padding: 0 10px 10px;
+
   // #ifdef H5
   width: 500px;
   // #endif

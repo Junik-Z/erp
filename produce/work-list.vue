@@ -2,7 +2,6 @@
 // #ifdef H5
 import CNC from "./components/CNC.vue";
 import PrintLabels from "@/produce/components/PrintLabels.vue";
-
 // #endif
 import BasicCard from "@/components/BasicCard/BasicCard.vue";
 import UniRow from "@/uni_modules/uni-row/components/uni-row/uni-row.vue";
@@ -25,15 +24,38 @@ import UvActionSheet from "@/uni_modules/uv-action-sheet/components/uv-action-sh
 import KoMovable from "@/components/Movable/index.vue";
 import { CONFIG, PageEnums } from "@/utils/config";
 import KoList from "@/components/List/List.vue";
-import TopMenus from "@/produce/components/TopMenus.vue";
-import { TabList } from "@/produce/define";
+import TopMenus from "./components/TopMenus.vue";
+import { TabList } from "./define";
 import UvAvatar from "@/uni_modules/uv-avatar/components/uv-avatar/uv-avatar.vue";
-import FastPopup from "./components/FastProduce/FastPopup.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
+import MaterialPopup from "./components/MaterialPopup.vue";
+import PickerCalendars from "./components/uv-calendars/PickerCalendars.vue";
+import Settlement from "./components/Settlement.vue";
+import reLogin from "@/mixins/re-login";
+import GenerateCode from "./components/GenerateCode.vue";
+
+const PageMenu = [
+  {
+    label: "待生产",
+    perm: "PRODUCE_PENDING",
+    func: 0,
+  },
+  {
+    label: "生产中",
+    perm: "PRODUCE_LIST",
+    func: 1,
+  },
+  {
+    label: "已完成",
+    perm: "PRODUCE_HISTORY",
+    func: 2,
+  },
+];
 
 export default {
   name: "WorkList",
   components: {
-    FastPopup,
+    PickerCalendars,
     TopMenus,
     KoList,
     KoMovable,
@@ -42,6 +64,12 @@ export default {
     UniCol,
     UniRow,
     BasicCard,
+    OrderCard,
+    MaterialPopup,
+
+    Settlement,
+    GenerateCode,
+
     // #ifdef H5
     CNC,
     PrintLabels,
@@ -51,6 +79,45 @@ export default {
     const _this = this;
     return {
       TabList,
+      MOVABLE_LIST: [
+        // #ifdef MP
+        /*  {
+           text: "板材",
+           iconfont: "icon-icon-test",
+           path: "share",
+           openType: "share",
+           params: {
+             title: `邀请您来下单啦！`,
+             path: PageEnums.produceWork,
+             query: {
+               PAGE_TYPE: "SHARE_PRODUCE_PACKING",
+               ADDED_TYPE: "packing",
+             },
+           },
+           perm: "SALE_SHARE",
+         }, */
+        // #endif
+        {
+          text: "开单",
+          iconfont: "icon-tianjia",
+          path: PageEnums.produceWork + "?ADDED_TYPE=common",
+          perm: "PRODUCE_ADD",
+        },
+        {
+          text: "板材",
+          iconfont: "icon-ziyuanicon",
+          path: PageEnums.produceWork + "?ADDED_TYPE=packing",
+          perm: "CNC_ADD_CUSTOMIZED_BOARD",
+        },
+        // #ifdef H5
+        {
+          text: "定制",
+          iconfont: "icon-dingzhishengchan",
+          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx",
+          perm: "PRODUCE_ADD",
+        },
+        // #endif
+      ],
 
       list: [],
       loading: false,
@@ -62,35 +129,14 @@ export default {
 
       node: {},
 
-      MovableList: [
-        /* {
-          text: "快捷",
-          iconfont: "icon-shiliangzhinengduixiang6",
-          type: "fast",
-        }, */
-        {
-          text: "常规",
-          iconfont: "icon-tianjia",
-          path: PageEnums.produceWork + "?ADDED_TYPE=common",
-        },
-        {
-          text: "板材",
-          iconfont: "icon-ziyuanicon",
-          path: PageEnums.produceWork + "?ADDED_TYPE=packing",
-        },
-        // #ifdef H5
-        {
-          text: "定制",
-          iconfont: "icon-dingzhishengchan",
-          path: PageEnums.produceWork + "?ADDED_TYPE=xlsx",
-        },
-        // #endif
-      ],
 
       tableKey: +new Date(),
 
-      values: ["待生产", "生产中", "已完成"],
-      tab: 0,
+      PAGE_MENU: _deepCopy(PageMenu),
+
+      // PAGE_MENU_INDEX: 2,
+
+      noRefresh: false,
 
       // #ifdef H5
       columns: [
@@ -102,6 +148,10 @@ export default {
         {
           label: "编号",
           prop: "orderCode",
+        },
+        {
+          label: "日期",
+          prop: "updateTime",
         },
         {
           label: "状态",
@@ -118,6 +168,41 @@ export default {
           },
         },
         {
+          label: "生产类型",
+          prop: "produceType",
+          render(h, {row}) {
+            return h("span", [_this.PRODUCE_TYPE_ENUMS(row.produceType)]);
+          },
+        },
+        {
+          label: "客户",
+          prop: "customer",
+          children: [
+            {
+              label: "Logo",
+              prop: "customer.logo",
+              width: 80,
+              render: (h, {row}) => {
+                return h(
+                  "div",
+                  {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
+                  [h(UvAvatar, {
+                    props: {
+                      src: _this.getImageUrl(_get(row, "customer.logo")),
+                      size: 42,
+                      text: _get(row, "customer.name") || _this.GET_SHOP_NAME,
+                    },
+                  })],
+                );
+              },
+            },
+            {
+              label: "名称",
+              prop: "customer.name",
+            },
+          ],
+        },
+        {
           label: "提单用户",
           prop: "user",
           children: [
@@ -129,7 +214,7 @@ export default {
                 return h(
                   "div",
                   {style: {display: "flex", justifyContent: "center", alignItems: "center"}},
-                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 64}})],
+                  [h(UvAvatar, {props: {src: _this.getImageUrl(_get(row, "user.avatar")), size: 42}})],
                 );
               },
             },
@@ -164,7 +249,7 @@ export default {
       // #endif
     };
   },
-  mixins: [mixins],
+  mixins: [mixins, reLogin],
   onLoad() {
   },
   onShow() {
@@ -202,7 +287,7 @@ export default {
       }
 
       this.loading = true;
-      const Func = [getProduceInListApi, getProduceListApi, getProduceHistoryListApi][this.tab];
+      const Func = [getProduceInListApi, getProduceListApi, getProduceHistoryListApi][this.GET_PAGE_MENU_FUNC];
       Func(this.queryList)
         .then(res => {
           this.list = this.onMergeArrays(this.list, res.data);
@@ -228,6 +313,8 @@ export default {
         if (isTechnology) {
           query += `&isTechnology=true`;
         }
+
+        if (_isEqual(row.produceType, "customized")) query += "&bySale=true";
       }
       uni.navigateTo({
         url: PageEnums.produceWork + query,
@@ -347,16 +434,12 @@ export default {
     },
     // 处理调用底部弹出的按钮
     onSelect(item) {
-      this[item.func](_deepCopy(this.node), this.nodeIndex);
+      this[item.func](_deepCopy(this.node), this.nodeIndex, ...(item.params || []));
     },
 
     // 处理新增
     onAddedJump({item}) {
       this.noRefresh = true;
-      if (_isEqual(item.type, "fast")) {
-        this.$refs.FPRef.open("quick");
-        return false;
-      }
       uni.navigateTo({
         url: item.path,
       });
@@ -378,18 +461,44 @@ export default {
         });
     },
 
-    // 快捷生产
-    onApplyFast(item) {
-      this.$refs.FPRef.close();
-
-      uni.navigateTo({
-        url: PageEnums.produceWork + `?fastId=${item.id}`,
-      });
-    },
-
     // 修改工艺
     onTechnology(item, index) {
       this.onJump(item, index, true);
+    },
+
+    // 处理添加材料
+    onAddedMaterial(item, index, isEdit) {
+      this.noRefresh = true;
+      this.$refs.MPRef.open(item, isEdit);
+    },
+
+    onResetList() {
+      this.queryList = _deepCopy(this.$options.data().queryList);
+      this.$refs.SearchRef.onShowSearch(false);
+      this.$refs.PCRef && this.$refs.PCRef.clearable();
+      this.getList(true);
+    },
+
+    // 确定开始结束时间了
+    onCalendarConfirm(event) {
+      if (event) {
+        const r = event.range || {};
+        this.queryList.startTime = r.before ? r.before + " 00:00:00" : "";
+        this.queryList.endTime = r.after ? r.after + " 23:59:59" : "";
+      } else {
+        this.queryList.startTime = "";
+        this.queryList.endTime = "";
+      }
+    },
+
+    // 处理结算
+    onSettlement(item, index) {
+      this.$refs.SRef.open(item, index);
+    },
+
+    // 生成订单二维码
+    onGenerateCode(item) {
+      this.$refs.GCRef.open(item.orderCode);
     },
 
     // #ifdef H5
@@ -406,7 +515,7 @@ export default {
   computed: {
     // #ifdef H5
     getColumns() {
-      return this.columns.filter(item => this.tab == 2 ? !_isEqual(item.label, "操作") : true);
+      return this.columns;
     },
     // #endif
 
@@ -414,137 +523,238 @@ export default {
       const node = this.node;
       return [
         {
+          name: "生成订单二维码",
+          func: "onGenerateCode",
+        },
+        {
+          name: "添加物料",
+          func: "onAddedMaterial",
+          status: ["CREATED"],
+          perm: "PRODUCE_UPDATE",
+        },
+        {
+          name: "修改物料",
+          func: "onAddedMaterial",
+          status: ["APPLY_MATERIAL", "FINISHED", "PAUSED"],
+          perm: "PRODUCE_UPDATE_MATERIAL",
+          params: [true],
+        },
+        {
+          name: "修改工艺",
+          func: "onTechnology",
+          status: ["APPLY_MATERIAL", "PAUSED"],
+          perm: "PRODUCE_UPDATE_CRAFT_PROCESS",
+        },
+        {
           name: "取消工单",
           func: "onCancel",
           status: ["CREATED"],
+          perm: "PRODUCE_CANCEL",
         },
         {
           name: "编辑",
           func: "onJump",
-          status: ["CREATED", "CANCELLED"],
+          status: ["CREATED"],
+          perm: "PRODUCE_UPDATE",
         },
         {
           name: "删除",
           color: "#e43d33",
           func: "onRemove",
           status: ["CANCELLED", "CREATED"],
+          perm: "PRODUCE_DELETE",
         },
       ]
-        .filter(li => li.status.includes(node.status));
+        .filter(item => {
+          if (_isEqual(item.func, "onGenerateCode")) return true;
+
+          const isPerm = this.isPerm(item?.perm);
+          /*  if (_isEqual(item.func, "onJump") && _isEqual(node.produceType, "customized")) {
+             return this.isPerm("PURCHASE_CUSTOMIZED_UPDATE");
+           } */
+          return item?.status?.includes(node.status) && isPerm;
+        });
     },
+  },
+
+  // 分享相关
+  onShareAppMessage(res) {
+    const obj = res.target.dataset.params;
+    return new Promise(async (resolve) => {
+      const query = await this._GET_SHARE_APP_PARAMS_(obj);
+      if (query.title) query.title = `${this.GET_SHOP_NAME || ""} ${query.title}`;
+      resolve(query);
+    });
   },
 };
 </script>
 
 <template>
-  <view class="ko-client">
+  <view class="ko-work-list">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
+
     <TopMenus :tabs="TabList" :path="PageEnums.produceWorkList" />
 
-    <HistoryBar v-model="tab" :values="values" @change="getList(true)" />
+    <HistoryBar
+      v-model="PAGE_MENU_INDEX"
+      :values="GET_PAGE_MENU"
+      label-key="label"
+
+      @change="getList(true)"
+      is-show-search
+      ref="SearchRef"
+    >
+      <view class="ko-basic-search">
+        <UniRow :gutter="10">
+          <UniCol :span="24">
+            <uni-easyinput v-model.trim="queryList.orderCode" placeholder="请输入编号" />
+          </UniCol>
+          <UniCol :span="24">
+            <uni-easyinput v-model.trim="queryList['customer.name']" placeholder="请输入客户名称" />
+          </UniCol>
+          <UniCol :span="24" v-if="false">
+            <uni-easyinput v-model.trim="queryList['user.nickName']" placeholder="请输入下单用户名称" />
+          </UniCol>
+          <UniCol :span="24">
+            <uni-easyinput v-model.trim="queryList.orderAddress" placeholder="请输入地址" />
+          </UniCol>
+          <UniCol :span="24">
+            <PickerCalendars
+              placeholder="请选择开始结束时间"
+              mode="range"
+              @confirm="onCalendarConfirm"
+              ref="PCRef"
+            />
+          </UniCol>
+          <UniCol :span="24">
+            <PickerUser
+              style="width: 100%;"
+              placeholder="请选择员工"
+              is-input
+              title="选择员工"
+              v-model="queryList.staffId"
+              type="staff"
+              is-confirm
+              ref="UserRef"
+              no-safe-bottom
+            />
+          </UniCol>
+          <UniCol :span="24">
+            <view style="display: flex;align-items: center;justify-content: space-around; padding-top: 10px;">
+              <button
+                style="width: 35%;"
+                class="ko-basic-button__card"
+                @click.stop="onResetList(true)"
+              >
+                重置
+              </button>
+              <button
+                style="width: 35%;"
+                class="ko-basic-button__card"
+                @click.stop="getList(true)"
+              >
+                搜索
+              </button>
+            </view>
+          </UniCol>
+        </UniRow>
+      </view>
+    </HistoryBar>
 
     <!-- #ifdef MP -->
     <view>
       <KoList :loading="loading" :no-more="noMore" :no-data="!list.length">
-        <view style="padding: 5px 10px" v-for="(item, index) of list" :key="item.id">
-          <BasicCard @click="onJumpDetails(item, 'produce')">
-            <view class="ko-client__info">
-              <UniRow gutter="10">
-                <UniCol :span="24">
-                  <label class="ko-basic-label">编号：</label>
-                  <text>{{ item.orderCode }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">状态：</label>
-                  <text>{{ PRODUCE_STATUS_ENUMS(item.status) }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">总价：</label>
-                  <text class="ko-basic-money">{{ toYuan(item.totalAmount) }}元</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <view style="display: flex; align-items: center">
-                    <label class="ko-basic-label">提单用户：</label>
-                    <uv-avatar
-                      :src="getImageUrl(GET_FUNC(item,'user.avatar'))"
-                      :size="38"
-                      :text="GET_FUNC(item, 'user.nickName') || ''"
-                      random-bg-color
-                    />
-                    <text style="margin-left: 10px;">{{ GET_FUNC(item, "user.nickName") || "" }}</text>
-                  </view>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">地址：</label>
-                  <text>{{ item.orderAddress || "-" }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">电话：</label>
-                  <text>{{ item.orderPhone || "-" }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">计划完成时间：</label>
-                  <text>{{ item.planFinishDate }}</text>
-                </UniCol>
-                <UniCol :span="24">
-                  <label class="ko-basic-label">备注：</label>
-                  <text>{{ item.remark || "-" }}</text>
-                </UniCol>
-              </UniRow>
-              <view
-                style="display: flex; align-items: center; justify-content: flex-end; padding-top: 8px;"
-                v-if="isPerm('Produce_Write')"
-              >
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['CREATED'].includes(item.status)"
-                  @click.stop="onDischarging(item, index)"
-                  :loading="item.__discharging_loading__"
-                  :disabled="item.__discharging_loading__"
-                >
-                  进入生产
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
-                  @click.stop="onPause(item, index)"
-                  :loading="item.__pause_loading__"
-                  :disabled="item.__pause_loading__"
-                >
-                  {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
-                  @click.stop="onTechnology(item, index)"
-                >
-                  修改工艺
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  v-if="['APPLY_MATERIAL'].includes(item.status)"
-                  @click.stop="onFinish(item, index)"
-                  :loading="item.__finish_loading__"
-                  :disabled="item.__finish_loading__"
-                >
-                  完成生产
-                </button>
-                <button
-                  class="ko-basic-button__card"
-                  @click.stop="onActionClick(item, index)"
-                  v-if='["CREATED", "CANCELLED"].includes(item.status)'
-                >
-                  更多
-                </button>
-              </view>
-            </view>
-          </BasicCard>
+        <view style="padding: 10px;">
+          <block v-for="(item, index) of list" :key="item.id">
+            <OrderCard
+              :item="item"
+              :spacing="10"
+              @click="onJumpDetails(item, 'produce')"
+              is-new
+              show-order-phone
+              is-work
+              show-product-type
+            >
+              <template #operate>
+                <view class="ko-work-list__footer">
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_UPDATE') && false"
+                    @click.stop="onAddedMaterial(item, index)"
+                  >
+                    添加物料
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['APPLY_MATERIAL', 'FINISHED', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_MATERIAL') && false"
+                    @click.stop="onAddedMaterial(item, index, true)"
+                  >
+                    修改物料
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
+                    @click.stop="onDischarging(item, index)"
+                    :loading="item.__discharging_loading__"
+                    :disabled="item.__discharging_loading__"
+                  >
+                    进入生产
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_PAUSE')"
+                    @click.stop="onPause(item, index)"
+                    :loading="item.__pause_loading__"
+                    :disabled="item.__pause_loading__"
+                  >
+                    {{ item.status === "PAUSED" ? "恢复" : "暂停" }}
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="false && ['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
+                    @click.stop="onTechnology(item, index)"
+                  >
+                    修改工艺
+                  </button>
+                  <button
+                    class="ko-basic-button__card"
+                    v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('PRODUCE_FINISH')"
+                    @click.stop="onFinish(item, index)"
+                    :loading="item.__finish_loading__"
+                    :disabled="item.__finish_loading__"
+                  >
+                    完成
+                  </button>
+
+                  <!-- 结算 -->
+                  <!-- <button
+                     class="ko-basic-button__card"
+                     v-if="['FINISHED'].includes(item.status) && isPerm('CRAFT_APPLY_SETTLE')"
+                     @click.stop="onSettlement(item, index)"
+                   >
+                     结算
+                   </button>-->
+
+                  <!-- 更多按钮 -->
+                  <button
+                    class="ko-basic-button__card"
+                    @click.stop="onActionClick(item, index)"
+                  >
+                    更多
+                  </button>
+                </view>
+              </template>
+            </OrderCard>
+          </block>
         </view>
       </KoList>
     </view>
     <!-- #endif -->
 
     <!-- #ifdef H5 -->
-    <view class="ko-client__table">
+    <view class="ko-work-list__table">
       <KoTable
         :loading="loading"
         :columns="getColumns"
@@ -553,15 +763,29 @@ export default {
         stripe
         @row-click="onJumpDetails($event, 'produce')"
 
-        @next-load="onRequestNextPage"
+        @load-next="onRequestNextPage"
         :no-more="noMore || loading"
       >
         <template #operate="{item, index}">
           <view style="display: flex; align-items: center; justify-content: center;">
-            <block v-if="isPerm('Produce_Write')">
+            <block>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED'].includes(item.status)"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_UPDATE')"
+                @click.stop="onAddedMaterial(item, index)"
+              >
+                添加物料
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['APPLY_MATERIAL', 'FINISHED', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_MATERIAL')"
+                @click.stop="onAddedMaterial(item, index, true)"
+              >
+                修改物料
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_APPLY_MATERIAL')"
                 @click.stop="onDischarging(item, index)"
                 :loading="item.__discharging_loading__"
                 :disabled="item.__discharging_loading__"
@@ -570,25 +794,32 @@ export default {
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status)"
+                v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_PAUSE')"
                 @click.stop="onPause(item, index)"
                 :loading="item.__pause_loading__"
                 :disabled="item.__pause_loading__"
               >
-                {{ item.status === "PAUSED" ? "恢复生产" : "暂停生产" }}
+                {{ item.status === "PAUSED" ? "恢复" : "暂停" }}
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['APPLY_MATERIAL'].includes(item.status)"
+                v-if="['APPLY_MATERIAL'].includes(item.status) && isPerm('PRODUCE_FINISH')"
                 @click.stop="onFinish(item, index)"
                 :loading="item.__finish_loading__"
                 :disabled="item.__finish_loading__"
               >
-                完成生产
+                完成
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED'].includes(item.status)"
+                v-if="['APPLY_MATERIAL', 'PAUSED'].includes(item.status) && isPerm('PRODUCE_UPDATE_CRAFT_PROCESS')"
+                @click.stop="onTechnology(item, index)"
+              >
+                修改工艺
+              </button>
+              <button
+                class="ko-basic-button__card"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_CANCEL')"
                 @click.stop="onCancel(item, index)"
                 :loading="item.__cancel_loading__"
                 :disabled="item.__cancel_loading__"
@@ -597,14 +828,14 @@ export default {
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                v-if="['CREATED'].includes(item.status) && isPerm('PRODUCE_UPDATE')"
                 @click.stop="onJump(item, index)"
               >
                 编辑
               </button>
               <button
                 class="ko-basic-button__card"
-                v-if="['CREATED', 'CANCELLED'].includes(item.status)"
+                v-if="['CREATED', 'CANCELLED'].includes(item.status) && isPerm('PRODUCE_DELETE')"
                 @click.stop="onRemove(item, index)"
                 :loading="item.__r_loading__"
                 :disabled="item.__r_loading__"
@@ -612,15 +843,13 @@ export default {
                 删除
               </button>
             </block>
-            <!-- #ifdef H5 -->
             <button
               class="ko-basic-button__card"
-              v-if="['APPLY_MATERIAL'].includes(item.status) && (isPerm('Produce_Read') || isPerm('Produce_Write'))"
+              v-if="['APPLY_MATERIAL'].includes(item.status) && (isPerm('CNC_NC_PROGRAMS') || isPerm('CNC_PROPERTIES'))"
               @click.stop="onCncClick(item, index)"
             >
               CNC
             </button>
-            <!-- #endif -->
           </view>
         </template>
       </KoTable>
@@ -630,13 +859,16 @@ export default {
 
     <PrintLabels ref="PLRef" />
     <!-- #endif -->
+
+    <MaterialPopup ref="MPRef" @close="noRefresh = false" />
+
     <KoMovable
-      :content="MovableList"
-      v-if="isPerm('Produce_Write')"
+      :content="GET_MOVABLE_LIST"
+      v-if="isShowMovable"
       @click="onAddedJump"
     />
-
-    <FastPopup v-if="false" ref="FPRef" @apply-fast="onApplyFast" />
+    <Settlement ref="SRef" />
+    <GenerateCode ref="GCRef" />
 
     <!-- #ifdef MP -->
     <UvActionSheet
@@ -652,7 +884,9 @@ export default {
 </template>
 
 <style scoped lang="scss">
-.ko-client {
+.ko-work-list {
+  padding-top: 10px;
+
   width: 100%;
 
   :deep(.uni-list-item__container ) {
@@ -680,6 +914,18 @@ export default {
       text {
         flex: 1;
       }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin: -2px;
+
+    .ko-basic-button__card {
+      margin: 2px;
     }
   }
 

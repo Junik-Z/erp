@@ -12,6 +12,17 @@ export function getCustomerListApi(data) {
 }
 
 /**
+ * @description 获取客户列表
+ */
+export function getCustomerUserListApi(data) {
+  return request({
+    url: "/customer/user-list",
+    method: "get",
+    data,
+  });
+}
+
+/**
  * @description 获取临时客户列表
  */
 export function getTempCustomerListApi(data) {
@@ -128,6 +139,17 @@ export function getStatisticsApi(data) {
 export function getSaleListApi(data) {
   return request({
     url: "/sale/list",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取销售订单2
+ */
+export function getSaleList2Api(data) {
+  return request({
+    url: "/sale/list2",
     method: "get",
     data,
   });
@@ -464,3 +486,175 @@ export function getRecentPriceApi(data) {
     data,
   });
 }
+
+
+// —————————————— 付款相关 ——————————————————
+/**
+ * @description 获取已经付款的列表
+ */
+export function getSalePaidOrderApi(data) {
+  return request({
+    url: "/sale/paid-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSalePaidOrderApi(data) {
+  return request({
+    url: "/sale/add-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+
+/**
+ * @description 修改已经付款
+ */
+export function editSalePaidOrderApi(data) {
+  return request({
+    url: "/sale/edit-paid-order",
+    method: "post",
+    data,
+  });
+}
+
+// ———————————————————— 退货付款 ————————————————————
+
+/**
+ * @description 获取已经付款的列表
+ */
+export function getSaleReturnedOrderApi(data) {
+  return request({
+    url: "/sale/return/returned-order",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 添加已经付款
+ */
+export function addedSaleReturnedOrderApi(data) {
+  return request({
+    url: "/sale/return/add-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 修改已经付款
+ */
+export function editSaleReturnedOrderApi(data) {
+  return request({
+    url: "/sale/return/edit-returned-order",
+    method: "post",
+    data,
+  });
+}
+
+
+// ———————————————————— 快捷出入库 ————————————————————
+/**
+ * @description 快捷出库
+ */
+export function quickOutApi(data) {
+  return request({
+    url: "/sale/quick-out",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 快捷入库
+ */
+export function quickInApi(data) {
+  return request({
+    url: "/sale/return/quick-in",
+    method: "post",
+    data,
+  });
+}
+
+
+// ————————————————————— 客户地址 —————————————————————
+export function getCustomerAddressListApi(data) {
+  return request({
+    url: "/customer/customerAddressList",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 删除客户地址
+ */
+export function removeCustomerAddressApi(data) {
+  return request({
+    url: "/customer/deleteAddress",
+    method: "post",
+    data,
+  });
+}
+
+
+// ————————————————————— 回填上次销售价格 —————————————————————
+export function fillCustomerPriceApi(data) {
+  return request({
+    url: "/sale/fillCustomerPrice",
+    method: "post",
+    data,
+  });
+}
+
+
+// ————————————————————— 分享订单 —————————————————————
+export function shareOrderApi(data) {
+  return request({
+    url: "/share/shareOrder",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取分享订单的数据
+ */
+export function getShareOrderApi(data) {
+  return request({
+    url: "/share/getShareOrder",
+    method: "get",
+    data,
+  });
+}
+
+
+// ————————————————————— 订单状态 —————————————————————
+/**
+ * @description 获取订单状态
+ */
+export function getOrderStatusApi(data) {
+  return request({
+    url: "/sale/order-status",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取定制订单详情
+ */
+export function getProduceInfoApi(data) {
+  return request({
+    url: "/sale/produce/detail",
+    method: "get",
+    data,
+  });
+}
+

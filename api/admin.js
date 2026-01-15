@@ -131,3 +131,151 @@ export function getPrintListApi(data) {
     data,
   });
 }
+
+/**
+ * @description 移除某个用户的角色
+ */
+export function removeRoleApi(data) {
+  return request({
+    url: "/user/delete-role",
+    method: "post",
+    data,
+  });
+}
+
+// ———————————————————— 权限设置 ————————————————————————
+
+/**
+ * @description 设置权限
+ */
+export function setRoleApi(data) {
+  return request({
+    url: "/user/add-role",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 获取用户角色
+ */
+export function getRoleApi(data) {
+  return request({
+    url: "/user/get-roles",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取用户对应的角色
+ */
+export function getRolePermApi(data) {
+  return request({
+    url: "/user/get-role-permission",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取用户详细的权限
+ */
+export function getRolePermListApi(data) {
+  return request({
+    url: "/user/get-permission",
+    method: "get",
+    data,
+  });
+}
+
+/**
+ * @description 获取对应权限的用户列表
+ */
+export function getRolePermUsersApi(data) {
+  return request({
+    url: "/user/get-permission-users",
+    method: "get",
+    data,
+  });
+}
+
+
+// ————————————————————— 支付接口 ————————————————————
+/**
+ * @description 支付回调通知处理
+ */
+export function orderNotifyApi(data) {
+  return request({
+    url: "/order/notify/order",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 统一下单服务
+ */
+export function createOrderApi(data) {
+  return request({
+    url: "/order/createOrder",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * @description 查询订单
+ */
+export function queryOrderApi(data) {
+  return request({
+    url: "/order/queryOrder",
+    method: "get",
+    data,
+  });
+}
+
+// -—————————————————————— 网店二维码 ——————————————
+export function generateQRCodeApi(data) {
+  return request({url: "/main/generateQRCode", method: "get", data});
+}
+
+// -—————————————————————— 获取供应链二维码 ——————————————
+export function generateSupplyQRCodeApi(data) {
+  return request({url: "/supply/generateQRCode", method: "get", data});
+}
+
+/**
+ * @deprecated 获取支付设置
+ */
+export function getPaySettingApi(data) {
+  return request({url: "/supply/getPaySetting", method: "get", data});
+}
+
+/**
+ * @deprecated 获取推荐商品设置
+ */
+export function getRecommendSettingApi(data) {
+  return request({url: "/supply/getRecommendSetting", method: "get", data});
+}
+
+/**
+ * @deprecated 获取活动商品设置
+ */
+export function getActivitySettingApi(data) {
+  return request({url: "/supply/getActivitySetting", method: "get", data});
+}
+
+/**
+ * @deprecated 设置推荐商品设置
+ */
+export function setRecommendApi(data) {
+  return request({url: "/supply/setRecommend", method: "post", data});
+}
+
+/**
+ * @deprecated 设置活动商品设置
+ */
+export function setActivityApi(data) {
+  return request({url: "/supply/setActivity", method: "post", data});
+}

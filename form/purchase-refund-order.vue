@@ -14,16 +14,18 @@ import {
   reOrderPurchaseReturnApi,
   updatePurchaseReturnApi,
 } from "@/api/erp/purchase";
-import { _deepCopy, _get, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
+import { _deepCopy, _get, _isEmpty, _isEqual, CustomToast, transferYuan, yuanToPoints } from "@/utils";
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
 import mixins from "@/mixins/mixins";
-import FeesList from "@/components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
+import PickerAddress from "@/components/PickerAddress.vue";
 
 export default {
   name: "refund",
   components: {
+    PickerAddress,
     FeesList,
     PickerUser,
     UniSegmentedControl,
@@ -63,6 +65,11 @@ export default {
       isEdit: false,
       isAgain: false,
       isNormal: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
     };
   },
   mixins: [mixins],
@@ -86,15 +93,26 @@ export default {
   },
   methods: {
     onSubmit() {
-      this.$refs.FormRef.validate(valid => {
+      this.$refs.FormRef.validate(async (valid) => {
         if (!valid) {
           const params = _deepCopy(this.form);
-          console.log(params);
+
+          await this.isTxFillPrices();
+
           params.totalAmount = yuanToPoints(params.totalAmount);
           this.loading = true;
 
           if (this.orderId) {
             params.purchaseOrderId = this.orderId;
+          }
+
+          if (this.current === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.current === 1) {
+            params.supplierId = "";
           }
 
           const Func = this.isAgain ? reOrderPurchaseReturnApi : (this.isEdit ? updatePurchaseReturnApi : addedPurchaseReturnApi);
@@ -130,21 +148,20 @@ export default {
           params.totalAmount = transferYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
-          this.isAgain = ["FINISHED"].includes(params.status) && !this.orderId;
+          this.isAgain = ["WAIT_PAY"].includes(params.status) && !this.orderId;
 
           this.form = params;
         });
     },
 
     onTabItem() {
-      if (this.current === 0) {
+      /* if (this.current === 0) {
         this.form.otherSupplier = "";
         this.form.otherSupplierPhone = "";
       }
       if (this.current === 1) {
         this.form.supplierId = "";
-      }
-
+      } */
     },
 
     onSupplierId(val) {
@@ -155,25 +172,42 @@ export default {
 
 
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
 
-          if (this.bindList.length) {
-            this.current = 0;
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
-          } else {
-            this.current = 1;
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
+
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.current = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.current = 1;
+            }
           }
         });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
+    },
+
+  },
+  computed: {
+    noSupplierPerm() {
+      return this.isPerm("SUPPLIER_LIST");
     },
   },
 };
@@ -181,6 +215,9 @@ export default {
 
 <template>
   <view class="ko-refund ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniForms
       :model="form"
       label-width="120px"
@@ -201,6 +238,9 @@ export default {
               ref="UserRef"
               @input="onSupplierId"
               v-if="isClient ? bindList.length : true"
+
+              :placeholder-label="GET_FUNC(form, 'customer.name')"
+
             />
             <UniEasyinput
               v-else
@@ -210,8 +250,7 @@ export default {
             />
           </UniFormsItem>
 
-
-          <view style="margin: 0 30px 20px;" v-if="!isClient">
+          <view style="margin: 0 30px 20px;" v-if="!isClient && noSupplierPerm">
             <UniSegmentedControl
               :current.sync="current"
               :values="tabs"
@@ -220,7 +259,7 @@ export default {
             />
           </view>
 
-          <template v-if="isClient ? bindList.length : current === 0">
+          <template v-if="(isClient ? bindList.length : current === 0) && noSupplierPerm">
             <UniFormsItem label="供应商：" name="supplierId">
               <PickerUser
                 style="width: 100%;"
@@ -230,14 +269,17 @@ export default {
                 is-input
                 type="supplier"
                 ref="UserRef"
-                :is-long-list="isClient"
+                :is-long-list="isClient || !!bindList.length"
                 :options="bindList"
                 @input="onSupplierId"
+
+                :placeholder-label="GET_FUNC(form, 'customer.name')"
+                @lower="onLower"
               />
             </UniFormsItem>
           </template>
 
-          <template v-else>
+          <template v-if="!(isClient ? bindList.length : current === 0) || !noSupplierPerm">
             <UniFormsItem :label="`${isClient ? '姓名' : '名称'}：`" name="otherSupplier">
               <UniEasyinput
                 v-model="form.otherSupplier"
@@ -255,7 +297,15 @@ export default {
             <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
           </UniFormsItem>
           <UniFormsItem label="地址：" name="orderAddress">
-            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+            <view style="display: flex; align-items: center; width: 100%">
+              <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+              <PickerAddress
+                v-if="form.supplierId && isPerm('SUPPLIER_ADDRESS_LIST')"
+                :supplierId="form.supplierId"
+                v-model="form.orderAddress"
+                type="purchase"
+              />
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
@@ -274,6 +324,13 @@ export default {
                 type="purchase"
                 :is-client="isClient"
                 is-actual
+
+                is-show-recent
+                :supplier-id="form.supplierId"
+                :order-address="form.orderAddress"
+
+                :is-fill="isTkCustom && isPerm('FILL_SUPPLIER_PRICE')"
+                :fill-info.sync="TK_FILL_INFO"
               />
             </view>
           </UniFormsItem>

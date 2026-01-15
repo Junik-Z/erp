@@ -1,7 +1,5 @@
 // #ifdef H5
 import KoTable from "@/erp/components/KoTable/KoTable.vue";
-import { InfiniteScroll } from "@/uni_modules/element-ui/element.min";
-
 // #endif
 import {
   _deepCopy,
@@ -21,88 +19,81 @@ import {
 import getCacheFile from "@/utils/fileCache";
 import { CONFIG, PageEnums } from "@/utils/config";
 import QS from "@/utils/qs.min";
-import { goLogin, logoutApi } from "@/api/user";
+import { goLogin, logoutApi, switchLogin } from "@/api/user";
 
-import { getSaleShareIdApi } from "@/api/erp/sale";
+import { getSaleShareIdApi, shareOrderApi } from "@/api/erp/sale";
 import { getPurchaseShareIdApi } from "@/api/erp/purchase";
+import { NO_CLEAR_KEY } from "@/store";
 
-const User = uni.getStorageSync("__USER_INFO__");
-const Sys = uni.getStorageSync("__CONFIG_INFO__");
+// #ifdef MP
+const MenuButtonRect = uni.getMenuButtonBoundingClientRect();
+// #endif
 
 export default {
   data() {
     return {
-      MIXINS_OBJ: {
-        USER: User || {},
-        SYS: Sys || {},
-      },
       TABS_LIST: [],
       TAB: 0,
-
+      PAGE_MENU: [],
+      PAGE_MENU_INDEX: 0,
+      TK_FILL_INFO: {},
+      // #ifdef MP
+      MenuButtonRect,
+      // #endif
     };
   },
   onShow() {
     this.$nextTick(() => {
-      this._UP_INGO();
+      setTimeout(() => {
+        uni.setStorageSync("TO_DETAILS", false);
+      }, 300);
     });
   },
   created() {
-    this.$nextTick(() => {
-      this._UP_INGO();
-
-      uni.$on("$__get_info_success__", () => {
-        // this?.getList?.();
-        this._UP_INGO();
-      });
-
-      uni.$on("$__get_user_info_success__", () => {
-        this._UP_INGO();
-      });
-
-      uni.$on("$__get_config_info_success__", () => {
-        this._UP_INGO();
-      });
-    });
   },
-  // #ifdef H5
-  directives: {
-    InfiniteScroll,
-  },
-  // #endif
   mounted() {
   },
   methods: {
-    _UP_INGO(res) {
-      const UserInfo = uni.getStorageSync("__USER_INFO__") || _get(res, "0");
-      const SysInfo = uni.getStorageSync("__CONFIG_INFO__") || _get(res, "1");
-
-      this.$set(this.MIXINS_OBJ, "USER", UserInfo);
-      this.$set(this.MIXINS_OBJ, "SYS", SysInfo);
-    },
-
     // 获取通用的分享 query 参数
     async _GET_SHARE_APP_PARAMS_(obj, sceneName = "scene") {
       const scene = uni.getStorageSync("__APP_SCENE__") || "";
       // 添加默认的参数数据
       const query = {
-        ...(obj.query || {}),
+        ...(_omit(obj.query || {}, ["queryList"])),
         ...(scene ? {[sceneName]: scene} : {}),
         // 分享用户的ID
         SHARE_USER_ID: this.GET_USER_INFO?.userId,
       };
 
-      if (["ADDED_SALE", "ADDED_PURCHASE"].includes(query.PAGE_TYPE)) {
+      // 添加分享出去唯一的下单ID
+      if ([
+        "SALE_SHARE",
+        "SHARE_PURCHASE",
+        "SHARE_PRODUCE_PACKING",
+        "SHARE_ORDER",
+      ].includes(query.PAGE_TYPE)) {
         try {
-          const Func = {ADDED_SALE: getSaleShareIdApi, ADDED_PURCHASE: getPurchaseShareIdApi}[query.PAGE_TYPE];
-          const res = await Func?.();
+          const Func = {
+            SALE_SHARE: getSaleShareIdApi,
+            SHARE_PRODUCE_PACKING: getSaleShareIdApi,
+            SHARE_PURCHASE: getPurchaseShareIdApi,
+            SHARE_ORDER: shareOrderApi,
+          }[query.PAGE_TYPE];
+          const res = await Func?.(obj?.query?.queryList || {});
           query.SHARE_ID = res.data;
         } catch (e) {
         }
       }
 
       const path = `${obj.path}?${QS.stringify(query)}`;
-      const obQuery = {...obj, path, type: CONFIG.SHARE_TYPE};
-      return _omit(obQuery, ["query"]);
+      const obQuery = {
+        ...obj,
+        path,
+        type: CONFIG.SHARE_TYPE,
+        imageUrl: "https://erp.kuaouyun.cn/api/files/down/static/share.png",
+      };
+
+      return _omit(obQuery, ["query", "queryList"]);
     },
 
     // 获取参数
@@ -121,29 +112,23 @@ export default {
       });
 
       // 采购定制订单详情
-      if (_isEqual("CUSTOMIZED", node.orderType)) {
+      if (
+        _isEqual("CUSTOMIZED", node.orderType)
+        &&
+        (_isEqual("purchase", page_type) || /^G/.test(node.orderCode))
+      ) {
         uni.navigateTo({
-          url: PageEnums.produceDetails + `?${
-            QS.stringify({
-              page_type,
-              id: node.orderCode,
-              FORM: "PURCHASE",
-            })
-          }`,
+          url: PageEnums.produceDetails
+            + `?${QS.stringify({page_type, id: node.orderCode, FORM: "PURCHASE"})}`,
         });
         return false;
       }
 
       // 销售生产订单详情
-      if (_isEqual("PRODUCTION", node.orderType) && !_isEqual("produce", page_type)) {
+      if (["PRODUCTION", "CUSTOMIZED"].includes(node.orderType) && !_isEqual("produce", page_type)) {
         uni.navigateTo({
-          url: PageEnums.produceDetails + `?${
-            QS.stringify({
-              page_type,
-              id: node.orderCode,
-              FORM: "SALE",
-            })
-          }`,
+          url: PageEnums.produceDetails
+            + `?${QS.stringify({page_type, id: node.orderCode, FORM: "SALE"})}`,
         });
         // page_type=outbound&id=C2025012117412171451&FORM=SALE
         return false;
@@ -171,7 +156,7 @@ export default {
 
     // 处理重新登录
     onLogout(params = {}, path, noJump = false) {
-      let url = "/pages/home/home";
+      let url = this.$store.getters.sPath || PageEnums.home;
       // #ifdef H5
       url = "/pages/login/login";
       // #endif
@@ -184,14 +169,13 @@ export default {
         uni.$__IS_LOGOUT_FLAG__ = true;
         logoutApi()
           .finally(() => {
+            const NoClear = uni.getStorageSync(NO_CLEAR_KEY);
+
             setTimeout(() => {
               const obj = _omit(params || {}, ["scene"]);
-              const query = {
-                PAGE_TYPE: "logout",
-                ...(obj || {}),
-              };
+              const query = {PAGE_TYPE: "logout", ...(obj || {})};
 
-              uni.clearStorageSync({});
+              uni.clearStorageSync();
 
               // #ifdef MP
               goLogin(params?.scene || "")
@@ -219,7 +203,21 @@ export default {
                 resolve();
               }, 10);
               // #endif
+
+              uni.setStorageSync(NO_CLEAR_KEY, NoClear);
             }, 50);
+          });
+      });
+    },
+
+    // 切换登录
+    onSwitchLogin(params = {}) {
+      return new Promise((resolve, reject) => {
+        uni.$__IS_LOGOUT_FLAG__ = true;
+        switchLogin(params?.scene || "")
+          .then(resolve)
+          .finally(() => {
+            uni.$__IS_LOGOUT_FLAG__ = false;
           });
       });
     },
@@ -265,11 +263,12 @@ export default {
     // 处理查看图片
     lookImage(url) {
       if (url) {
-        if (url) {
-          uni.previewImage({
-            urls: [url],
-          });
-        }
+        // 标记为图片预览中
+        uni.$__LOOK_IMAGE_ING_FLAG__ = true;
+
+        uni.previewImage({
+          urls: [url],
+        });
       }
     },
 
@@ -285,7 +284,7 @@ export default {
 
       index = index > -1 ? index : this.nodeIndex;
 
-      if (data?.confirmable && isPayment) {
+      if (["FINISHED"].includes(data.status) && isPayment) {
         this.list.splice(index, 1);
       } else if (_isString(info) && this.tab === 1) {
         this.list.splice(index, 1);
@@ -298,6 +297,116 @@ export default {
           this.list.unshift(node);
         }
       }
+    },
+
+    // 处理拷贝文本
+    onCopyText(data) {
+      if (data) {
+        uni.setClipboardData({
+          data,
+          success() {
+            uni.showToast({
+              title: "复制成功",
+              icon: "none",
+            });
+          },
+          fail(err) {
+            console.error("复制失败：", err);
+          },
+        });
+      }
+    },
+
+    // 判断是否要提示回填的价格
+    isTxFillPrices() {
+      return new Promise((resolve, reject) => {
+        // 没有回填数据的时候不需要判断 或者 不是天科定制时
+        if (_isEmpty(this.TK_FILL_INFO) || !this.isTkCustom) {
+          resolve();
+          return false;
+        }
+
+        const isCheck = ["supplierId", "orderAddress"]
+          .every(key => _isEqual(
+            _get(this.form, key) || "",
+            _get(this.TK_FILL_INFO, key) || "",
+          ));
+
+        if (isCheck) {
+          return resolve();
+        } else {
+          uni.showModal({
+            title: "温馨提示",
+            content: "当前价格是上一位客户/供应商的成交价格，是否继续保存？",
+            confirmText: "继续保存",
+            success: (res) => {
+              if (res.confirm) resolve();
+              if (res.cancel) reject();
+            },
+          });
+        }
+      });
+    },
+
+    // 设置下单样式
+    setBillStyle() {
+      this.$store.dispatch("setBillStyleAsync", !this.sBill);
+    },
+    // 设置销售列表样式
+    setSaleStyle() {
+      this.$store.dispatch("setSaleStyleAsync", !this.sSale);
+    },
+    // 设置采购列表样式
+    setPurchaseStyle() {
+      this.$store.dispatch("setPurchaseStyleAsync", !this.sPurchase);
+    },
+    // 设置应收款样式
+    setOrStyle() {
+      this.$store.dispatch("setOrStyleAsync", !this.sOrStyle);
+    },
+    // 设置应付款样式
+    setApStyle() {
+      this.$store.dispatch("setApStyleAsync", !this.sApStyle);
+    },
+
+    // 返回上一级
+    onBlack() {
+      uni.navigateBack({
+        fail() {
+          uni.reLaunch({
+            url: PageEnums.home,
+          });
+        },
+      });
+    },
+
+    // 前往管理端
+    onGoHome() {
+      this.$store.dispatch("setSPathAsync", "");
+      this.$store.dispatch("setShowOptionAsync", {});
+
+      uni.reLaunch({
+        url: PageEnums.home,
+      });
+    },
+
+    // 前往地图
+    onGoMap(address) {
+      // #ifdef MP-WEIXIN
+      /* const obj = {name: address, location: {lat: "25.688443", lng: "114.751514"}};
+
+      uni.navigateToMiniProgram({
+        appId: "wx7643d5f831302ab0", // wx7643d5f831302ab0: 腾讯地图小程序
+        path: `pages/multiScheme/multiScheme?endLoc=${JSON.stringify(obj)}&qbMode=0`,
+      }); */
+      // #endif
+    },
+
+    // 拨打电话
+    onPhoneCell(text) {
+      uni.makePhoneCall({
+        phoneNumber: text,
+      });
     },
   },
   components: {
@@ -327,49 +436,42 @@ export default {
     getImageUrl() {
       return getCacheFile;
     },
-
     isEqual() {
       return _isEqual;
     },
-
     // 判断空数据
     isEmpty() {
       return _isEmpty;
     },
 
-    // 判断用户是否可以刷新用户款项
-    isRefreshPayment() {
-      return this.isPerm("Finance_Write");
-    },
-
     // 判断是否是超管
     isAdmin() {
-      return this.GET_USER_ROLE.includes("Admin");
+      return this.GET_USER_ROLE.includes("ADMIN");
     },
 
     // 判断是否是商铺管理员
     isBusiness() {
-      return this.GET_USER_ROLE.includes("Business");
+      return this.GET_USER_ROLE.includes("BUSINESS");
     },
 
     // 根据传入的参数判断是否有权限
     isPerm() {
-      return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin || this.isBusiness;
+      return (perm) => this.GET_USER_ROLE?.includes?.(perm) || this.isAdmin;
     },
 
     // 用户信息
     GET_USER_INFO() {
-      return this.MIXINS_OBJ?.USER || {};
+      return this.$store.state.USER_INFO || {};
     },
 
     // 商铺信息
     GET_CONFIG_INFO() {
-      return this.MIXINS_OBJ?.SYS || {};
+      return this.$store.state.CONFIG_INFO || {};
     },
 
     // 用户权限
     GET_USER_ROLE() {
-      return _get(this.MIXINS_OBJ?.USER, "role") || [];
+      return _get(this.GET_USER_INFO, "role") || [];
     },
 
     // 订单状态
@@ -377,6 +479,8 @@ export default {
       return (type) => {
         return {
           CREATED: "待处理",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           FINISHED: "已完成",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
@@ -389,6 +493,8 @@ export default {
       return (type) => {
         return {
           CREATED: "待清帐",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           FINISHED: "已完成",
           APPLY_MATERIAL: "申请物料",
           CANCELLED: "已取消",
@@ -416,6 +522,8 @@ export default {
       return (status) => {
         return {
           CREATED: "待生产",
+          WAIT_PAY: ("待付款"),
+          PAID: ("已付款"),
           APPLY_MATERIAL: "生产中",
           FINISHED: "已完成",
           PAUSED: "已暂停",
@@ -434,10 +542,23 @@ export default {
           SALE_RETURN: "销售退货订单",
           PURCHASE: "采购订单",
           PURCHASE_RETURN: "采购退货订单",
-          CHECK_IN: "库存盘点",
-          CUSTOMIZED: "采购定制",
+          CHECK_IN: "盘点入库",
+          CHECK_OUT: "盘点出库",
+          CUSTOMIZED: "定制订单",
         };
-        return _get(obj, type) || "-";
+        return _get(obj, type) || type;
+      };
+    },
+
+    // 生产类型
+    PRODUCE_TYPE_ENUMS() {
+      return (type) => {
+        if (!type) return "-";
+        const obj = {
+          customized: "定制生产",
+          internal: "内部生产",
+        };
+        return _get(obj, type) || type;
       };
     },
 
@@ -449,7 +570,7 @@ export default {
           UpstairsFee: "上楼费",
           HandlingFee: "搬运费",
           InstallationFee: "安装费",
-          LogisticsFee: "物流费",
+          LogisticsFee: this.isTkCustom ? "运费" : "物流费",
           ClearAnAccount: "已付费用",
         };
         return _get(obj, type) || "-";
@@ -464,7 +585,7 @@ export default {
         // 空x图表数据
         const notSeries = data.series?.every(item => _isEmpty(item.data));
 
-        let padding = [15, 15, 0, 5];
+        let padding = [15, 30, 10, 5];
 
         // #ifdef H5
         padding = [20, 20, 20, 20];
@@ -502,6 +623,16 @@ export default {
               width: 2,
               activeType: "hollow",
             },
+            bar: {
+              // type: "stack",
+              width: 20,
+              meterBorde: 1,
+              activeBgOpacity: 0.08,
+              linearType: "none",
+              barBorderCircle: true,
+              seriesGap: 0,
+              categoryGap: 2,
+            },
           },
         };
       };
@@ -514,7 +645,7 @@ export default {
 
     // 获取店铺名称
     GET_SHOP_NAME() {
-      return _get(this.GET_CONFIG_INFO, "remark") || "";
+      return this.GET_CONFIG_INFO && _get(this.GET_CONFIG_INFO || {}, "remark") || "";
     },
 
     // 通用 tab 列表
@@ -522,7 +653,7 @@ export default {
       return this.TABS_LIST?.flatMap(item => {
         if (item.roles) {
           const role = this.GET_USER_ROLE;
-          if (_haveCommonElements(role, item.roles) || this.isBusiness || this.isAdmin) {
+          if (_haveCommonElements(role, item.roles) || this.isAdmin) {
             return [item];
           } else {
             return [];
@@ -571,6 +702,76 @@ export default {
       return (type) => ({
         CREATED: "财务未确认",
       })[type];
+    },
+
+    // 获取页面内的导航列表
+    GET_PAGE_MENU() {
+      return this.PAGE_MENU?.flatMap(item => {
+        if (item.perm) {
+          if (this.isPerm(item.perm)) {
+            return [item];
+          } else {
+            return [];
+          }
+        }
+        return [item];
+      });
+    },
+
+    // 获取页面及的选中方法名
+    GET_PAGE_MENU_FUNC() {
+      return this.GET_PAGE_MENU?.[this.PAGE_MENU_INDEX || 0]?.func || 0;
+    },
+
+    // 获取右下角添加按钮列表数据
+    GET_MOVABLE_LIST() {
+      return this.MOVABLE_LIST?.filter(item => this.isPerm(item.perm));
+    },
+
+    // 是否显示添加按钮
+    isShowMovable() {
+      return this.GET_MOVABLE_LIST?.length;
+    },
+
+    // 默认企业
+    isDefault() {
+      return _isEqual(this.GET_CONFIG_INFO?.name, "default");
+    },
+
+    // 天科装饰有限公司 定制功能
+    isTkCustom() {
+      return _isEqual(this.GET_CONFIG_INFO?.name, "sxktxg")/*  || (_isEnv() && this.isDefault) */;
+    },
+
+    // 右边胶囊的样式
+    menuButtonRectStyle() {
+      const m = this.MenuButtonRect || {};
+      return {
+        "--m-height": m.height + "px",
+        "--m-width": m.width + "px",
+        "--m-top": m.top + "px",
+      };
+    },
+
+    // 下单样式
+    sBill() {
+      return this.$store.getters.sBill;
+    },
+    // 获取销售列表样式
+    sSale() {
+      return this.$store.getters.sSaleStyle;
+    },
+    // 采购列表的新样式
+    sPurchase() {
+      return this.$store.getters.sPurchaseStyle;
+    },
+    // 应收款样式
+    sOrStyle() {
+      return this.$store.getters.sOrStyle;
+    },
+    // 应付款样式
+    sApStyle() {
+      return this.$store.getters.sApStyle;
     },
   },
 };

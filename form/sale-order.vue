@@ -15,19 +15,22 @@ import {
 import UniSegmentedControl
   from "@/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue";
 import PickerUser from "@/components/PickerUser/PickerUser.vue";
-import OrderCard from "@/components/OrderCard/OrderCard.vue";
+import OrderCard from "./components/OrderCard/OrderCard.vue";
 import mixins from "@/mixins/mixins";
 import LoadMore from "@/components/LoadMore/LoadMore.vue";
-import FeesList from "@/components/FeesList/FeesList.vue";
+import FeesList from "./components/FeesList/FeesList.vue";
 
 import PickerProduct from "./components/PickerProduct/PickerProduct.vue";
 import { PageEnums } from "@/utils/config";
+import PickerAddress from "@/components/PickerAddress.vue";
+import SendMsg from "@/components/SendMsg.vue";
 
 const UserInfo = uni.getStorageSync("__USER_INFO__");
 
 export default {
   name: "SaleOrder",
   components: {
+    PickerAddress,
     OrderCard,
     LoadMore,
     FeesList,
@@ -38,6 +41,8 @@ export default {
     UniFormsItem,
     UniForms,
     UniSection,
+
+    SendMsg,
   },
   mixins: [mixins],
   data() {
@@ -80,6 +85,7 @@ export default {
       current: null,
       tabs: ["客户", "其它客户"],
 
+      // 客户下单
       isClient: false,
 
       // 客户绑定用户列表
@@ -88,27 +94,59 @@ export default {
       isAgain: false,
       // 正常跳转
       isNormal: false,
+      // 编辑模式
+      isEdit: false,
+
+      bQuery: {
+        pageNum: 0,
+        pageSize: 20,
+      },
+
+      shareId: null,
+
+      // 分享下单
+      isShare: false,
     };
   },
-  onLoad(option) {
-    // PAGE_TYPE=ADDED_SALE&scene=default&SHARE_USER_ID=ad41944d8cb44faea09da9d69fe67d26
+  async onLoad(option) {
     this.option = _isEmpty(option) ? uni.getStorageSync("__APP_QUERY__") : option;
 
     this.isEdit = !!option.id;
 
     this.isNormal = option.isNormal === "true";
 
+    // 快捷开单
+    this.isFast = _isEqual(option.isFast, "true");
+
+    if (this.isFast) {
+      this.form.supplierId = option.supplierId;
+      this.form.orderAddress = option.address || "";
+    }
+
     if (this.isEdit) this.getInfo();
 
     // 客户点击分享页面下单
-    this.isClient = _isEqual("ADDED_SALE", option.PAGE_TYPE);
+    this.isShare = _isEqual("SALE_SHARE", option.PAGE_TYPE);
 
-    if (this.isClient) {
+    this.isClient = _isEqual("MY_SALE", option.PAGE_TYPE);
+
+    if (this.isShare) {
+      this.shareId = decodeURIComponent(this.option.SHARE_ID)
+      this.current = 1;
+      await this.onLogInAgain(this.option)
+        .finally(() => {
+          setTimeout(() => {
+            this.form.otherSupplier = this.GET_USER_INFO.nickName;
+            this.getBindInfo();
+
+            this.$refs?.FLRes?.getList?.();
+          }, 10);
+        });
+
       if (this.option.SHARE_ID) {
-        getSaleCheckShareIdApi({id: decodeURIComponent(this.option.SHARE_ID)})
+        await getSaleCheckShareIdApi({id: this.shareId})
           .then(res => {
-            console.log(res);
-            this.form.id = decodeURIComponent(this.option.SHARE_ID);
+            this.form.id = this.shareId
             if (res.data) {
               uni.redirectTo({
                 url: PageEnums.saleClientAddedBack,
@@ -119,15 +157,6 @@ export default {
             }
           });
       }
-
-      this.current = 1;
-      this.onLogInAgain(this.option)
-        .finally(() => {
-          setTimeout(() => {
-            this.form.otherSupplier = this.GET_USER_INFO.nickName;
-            this.getBindInfo();
-          }, 10);
-        });
     } else {
       this.current = 0;
     }
@@ -146,17 +175,28 @@ export default {
           params.totalAmount = transferYuan(params.totalAmount);
           params.otherSupplier = this.GET_FUNC(params, "customer.name");
 
-          this.isAgain = ["FINISHED"].includes(params.status);
+          this.isAgain = ["WAIT_PAY"].includes(params.status);
           this.form = params;
         });
     },
     onSubmit() {
-      this.$refs.FormRef.validate(valid => {
+      this.$refs.FormRef.validate(async (valid) => {
         if (!valid) {
           const params = _deepCopy(this.form);
 
+          await this.isTxFillPrices();
+
           params.totalAmount = yuanToPoints(params.totalAmount);
           // params.details = this.$refs.PPRef.getDiscountedPrices();
+
+          if (this.current === 0) {
+            params.otherSupplier = "";
+            params.otherSupplierPhone = "";
+          }
+
+          if (this.current === 1) {
+            params.supplierId = "";
+          }
 
           this.loading = true;
 
@@ -166,8 +206,14 @@ export default {
             .then((res) => {
               CustomToast({
                 title: `${this.isEdit ? "修改" : "新增"}成功`,
-                success: () => {
+                success: async () => {
+                  if ((this.isEdit || this.isAgain) && this.isPerm("SEND_INTERNAL_MESSAGE")) {
+                    await this.$refs.SMRef.open();
+                  }
+
                   if (this.isClient && !this.isNormal) {
+                    uni.$emit("$__get_all_info__");
+
                     uni.redirectTo({
                       url: PageEnums.saleClientAddedBack,
                       fail() {
@@ -194,15 +240,14 @@ export default {
       });
     },
     onTabItem() {
-      if (this.current === 0) {
-        this.form.otherSupplier = "";
-        this.form.otherSupplierPhone = "";
-      }
-
-      if (this.current === 1) {
-        this.form.supplierId = "";
-      }
-
+      // if (this.current === 0) {
+      //   this.form.otherSupplier = "";
+      //   this.form.otherSupplierPhone = "";
+      // }
+      //
+      // if (this.current === 1) {
+      //   this.form.supplierId = "";
+      // }
     },
 
     onSupplierId(val) {
@@ -212,25 +257,56 @@ export default {
     },
 
     getBindInfo() {
-      getBindInfoApi({pageSize: 1000000, pageNum: 0})
+      getBindInfoApi(this.bQuery)
         .then(res => {
-          this.bindList = res.data?.map(item => ({
+          const data = res.data?.map(item => ({
             ...item,
             value: item.id,
             label: item.name,
             logo: item.logo,
           }));
 
-          if (this.bindList.length) {
-            this.current = 0;
-            const one = _get(res.data, "0") || {};
-            this.form.supplierId = one.id;
-            this.form.orderPhone = _get(one, "contacts.0.phone");
-            this.form.orderAddress = _get(one, "address");
-          } else {
-            this.current = 1;
+          this.bindList = this.onMergeArrays(this.bindList, data, "value");
+          this.noMore = _isEmpty(data) || data.length < this.bQuery.pageSize;
+
+          if (this.bQuery.pageNum === 0) {
+            if (this.bindList.length) {
+              this.current = 0;
+              const one = _get(res.data, "0") || {};
+              this.form.supplierId = one.id;
+              this.form.orderPhone = _get(one, "contacts.0.phone");
+              this.form.orderAddress = _get(one, "address");
+            } else {
+              this.current = 1;
+            }
           }
         });
+    },
+
+    onLower() {
+      if (this.noMore) return false;
+      this.bQuery.pageNum += 1;
+      this.getBindInfo();
+    },
+
+    // 切换下单样式
+    onBillStyle() {
+      this.setBillStyle();
+
+      this.$nextTick(() => {
+        const sBill = this.sBill;
+
+        if (sBill) {
+          uni.redirectTo({url: PageEnums.shopping + `?PAGE_TYPE=SALE&supplierId=${this.option.supplierId}&address=${this.option.address}`});
+        } else {
+          uni.redirectTo({url: PageEnums.NewSale + `?supplierId=${this.option.supplierId}&address=${this.option.address}`});
+        }
+      });
+    },
+  },
+  computed: {
+    noCustomerPerm() {
+      return this.isPerm("CUSTOMER_LIST");
     },
   },
 };
@@ -238,6 +314,9 @@ export default {
 
 <template>
   <view class="ko-order ko-basic-added-form">
+    <!-- #ifdef MP -->
+    <Notice />
+    <!-- #endif -->
     <UniForms
       :model="form"
       :rules="rules"
@@ -245,9 +324,20 @@ export default {
       label-align="right"
       ref="FormRef"
     >
+      <!-- #ifdef MP -->
+      <view class="ko-order__switch" v-if="!(isAgain || isEdit || isClient)">
+        <button
+          class="ko-basic-button__card"
+          @click="onBillStyle"
+        >
+          <uni-icons color="#fff" :type="!sBill ? 'list' : 'tune-filled'"></uni-icons>
+        </button>
+      </view>
+      <!-- #endif -->
+
       <UniSection title="基础信息" type="line">
         <view style="padding: 10px;">
-          <view style="margin: 0 30px 20px;" v-if="!isClient">
+          <view style="margin: 0 30px 20px;" v-if="!isClient && noCustomerPerm">
             <UniSegmentedControl
               :current.sync="current"
               :values="tabs"
@@ -256,7 +346,7 @@ export default {
             />
           </view>
 
-          <template v-if="current === 0">
+          <template v-if="current === 0 && noCustomerPerm">
             <UniFormsItem label="客户：" name="supplierId">
               <PickerUser
                 style="width: 100%;"
@@ -265,14 +355,18 @@ export default {
                 v-model="form.supplierId"
                 type="client"
                 ref="UserRef"
-                :is-long-list="isClient"
+
+                :placeholder-label="GET_FUNC(form, 'customer.name')"
+
+                :is-long-list="isClient || !!bindList.length"
                 :options="bindList"
                 @input="onSupplierId"
+                @lower="onLower"
               />
             </UniFormsItem>
           </template>
 
-          <template v-if="current === 1">
+          <template v-if="current === 1 || !noCustomerPerm">
             <UniFormsItem :label="`${isClient ? '姓名' : '姓名'}：`" name="otherSupplier">
               <UniEasyinput
                 v-model="form.otherSupplier"
@@ -290,7 +384,17 @@ export default {
             <UniEasyinput v-model="form.orderPhone" placeholder="请输入电话" />
           </UniFormsItem>
           <UniFormsItem label="地址：" name="orderAddress">
-            <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+            <view style="display: flex; align-items: center; width: 100%">
+              <view style="flex: 1; width: 100%">
+                <UniEasyinput v-model="form.orderAddress" placeholder="请输入地址" />
+              </view>
+              <PickerAddress
+                v-if="form.supplierId && isPerm('CUSTOMER_ADDRESS_LIST')"
+                :supplierId="form.supplierId"
+                v-model="form.orderAddress"
+                type="sale"
+              />
+            </view>
           </UniFormsItem>
         </view>
       </UniSection>
@@ -306,17 +410,41 @@ export default {
                 type="sale"
                 is-actual
                 ref="PPRef"
-                :is-show-recent="isPerm('Sales_Write')"
+                :shareId="shareId"
+
+                is-show-recent
                 :supplier-id="form.supplierId"
+                :order-address="form.orderAddress"
+
+                :is-fill="isTkCustom && isPerm('FILL_CUSTOMER_PRICE')"
+                :fill-info.sync="TK_FILL_INFO"
               />
             </view>
           </UniFormsItem>
         </view>
       </UniSection>
 
+      <!-- 业务员 -->
+      <UniSection title="业务员" type="line" v-if="isEdit">
+        <view style="padding: 10px;">
+          <UniFormsItem label="业务员：" name="remark">
+            <PickerUser
+              style="width: 100%;"
+              is-input
+              title="选择业务员"
+              v-model="form.purchaserId"
+              type="staffUserList"
+              ref="SRef"
+              :placeholder-label="GET_FUNC(form, 'user.nickName')"
+            />
+          </UniFormsItem>
+        </view>
+      </UniSection>
+
+      <!-- 其它费用 -->
       <UniSection title="其它费用" type="line">
         <view style="padding: 10px;">
-          <FeesList v-model="form.fees" is-form />
+          <FeesList ref="FLRes" v-model="form.fees" is-form />
         </view>
       </UniSection>
 
@@ -338,11 +466,31 @@ export default {
         保存
       </button>
     </view>
+
+    <SendMsg ref="SMRef" />
   </view>
 </template>
 
 <style scoped lang="scss">
 .ko-order {
+  position: relative;
+
+  &__switch {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 99;
+
+    .ko-basic-button__card {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      padding: 0;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
   &__item {
     display: flex;
     flex-direction: row;
@@ -350,7 +498,6 @@ export default {
 
   &__footer {
     padding: 10px 50px 50px;
-
 
     // #ifdef H5
     display: flex;
